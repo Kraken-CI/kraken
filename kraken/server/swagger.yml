@@ -1,0 +1,55 @@
+swagger: "2.0"
+info:
+  description: This is the swagger file that goes with our server code
+  version: "1.0.0"
+  title: Swagger Rest Article
+consumes:
+  - application/json
+produces:
+  - application/json
+
+basePath: /api
+
+# Paths supported by the server application
+paths:
+  /runs:
+    post:
+      operationId: api.create_run
+      tags:
+        - Run
+      summary: Create a run
+      description: Create a new run
+      parameters:
+        - name: run
+          in: body
+          description: Run to create
+          schema:
+            required:
+              - stage
+            properties:
+              stage:
+                type: integer
+      responses:
+        201:
+          description: Successfully created run
+
+  /jobs:
+    post:
+      operationId: api.create_job
+      tags:
+        - Job
+      summary: Create a job
+      description: Create a new job
+      parameters:
+        - name: job
+          in: body
+          description: Job to create
+          schema:
+            required:
+              - run
+            properties:
+              run:
+                type: integer
+      responses:
+        201:
+          description: Successfully created run
