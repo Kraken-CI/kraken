@@ -7,4 +7,4 @@ cd kraken
 docker-compose up
 ```
 
-Then open http://localhost:5000
+Then open http://0.0.0.0:5000/api/ui/#!/Run/api_create_run
