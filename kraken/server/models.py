@@ -365,12 +365,12 @@ def prepare_initial_data():
                 "trigger": "on_new_run",
                 "steps": [{
                     "tool": "git",
-                    "checkout": "git@github.com:godfryd/kraken.git",
+                    "checkout": "https://github.com/frankhjung/python-helloworld.git",
                     "branch": "master"
                 }, {
                     "tool": "pytest",
-                    "params": "tests",
-                    "cwd": "kraken"
+                    "params": "tests/testhelloworld.py",
+                    "cwd": "python-helloworld"
                 }],
                 "environments": [{
                     "system": "ubuntu-18.04",
