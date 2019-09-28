@@ -55,7 +55,7 @@ def create_app():
     app = connex_app.app
 
     # db url
-    db_url = "postgresql://kraken:kk123@localhost:5433/kraken"
+    db_url = os.environ.get('DB_URL', "postgresql://kraken:kk123@localhost:5433/kraken")
 
     # Configure the SqlAlchemy part of the app instance
     app.config["SQLALCHEMY_ECHO"] = False

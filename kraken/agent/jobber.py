@@ -7,7 +7,6 @@ import asyncio
 import datetime
 import traceback
 import socketserver
-import pkg_resources
 import multiprocessing
 
 import config
@@ -19,13 +18,6 @@ log = logging.getLogger(__name__)
 
 
 def _load_tools_list():
-    # tools = {
-    #     entry_point.name: entry_point.load()
-    #     for entry_point
-    #     in pkg_resources.iter_entry_points('kraken.tools')
-    # }
-    # return tools
-
     tools = {}
     tools_dirs = [os.getcwd()]
     cfg_tools_dir = config.get('tools_dirs')

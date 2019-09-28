@@ -231,6 +231,59 @@ class Executor(db.Model, DatesMixin):
         return "<Executor %s, job:%s>" % (self.id, self.job_id)
 
 
+class Preference(db.Model):
+    __tablename__ = "preferences"
+    id = Column(Integer, primary_key=True)
+    name = Column(Unicode(50))
+    value = Column(Text)
+    val_type = Column(String(8))  # integer, text, boolean, password
+
+    def get_json(self):
+        if self.val_type == "integer":
+            val = long(self.value)
+        elif self.val_type == "boolean":
+            val = (self.value == 'True')
+        else:
+            val = self.value
+
+        return {
+            "id": self.id,
+            "name": self.name,
+            "value": val,
+            "type": self.val_type}
+
+    def set_value(self, value):
+        if self.val_type == "integer":
+            self.value = str(value)
+        elif self.val_type == "boolean":
+            self.value = str(value)
+        else:
+            self.value = value
+
+
+INITIAL_PREFERENCES = {
+    "smtp_server": ""
+}
+
+def _prepare_initial_preferences():
+    for name, val in INITIAL_PREFERENCES.items():
+        p = Preference.query.filter_by(name=name).one_or_none()
+        if p is not None:
+            continue
+        if isinstance(val, bool):
+            val_type = 'boolean'
+            val = str(val)
+        elif isinstance(val, int):
+            val_type = 'integer'
+            val = str(val)
+        elif val is None:
+            val_type = 'password'
+            val = ''
+        else:
+            val_type = 'text'
+        Preference(name=name, value=val, val_type=val_type)
+    db.session.commit()
+
 
 def prepare_initial_data():
     log.info("Preparing initial DB data")
@@ -342,3 +395,6 @@ def prepare_initial_data():
         executor = Executor(name='server', executor_group=executor_group, address="server")
         db.session.commit()
         log.info("   created Executor record 'server'")
+
+
+    _prepare_initial_preferences()

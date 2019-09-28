@@ -1,0 +1,74 @@
+version: '3'
+
+services:
+  server:
+    restart: always
+    build:
+      context: .
+      dockerfile: docker-server.txt
+    expose:
+      - "5000"
+    ports:
+      - "5000:5000"
+    networks:
+      - db_net
+      - web_net
+      - lab_net
+    environment:
+      DB_URL: "postgresql://kraken:kk123@postgres:5432/kraken"
+    depends_on:
+      - postgres
+
+  scheduler:
+    restart: always
+    build:
+      context: .
+      dockerfile: docker-scheduler.txt
+    networks:
+      - db_net
+    environment:
+      DB_URL: "postgresql://kraken:kk123@postgres:5432/kraken"
+    depends_on:
+      - postgres
+
+  agent:
+    restart: always
+    build:
+      context: .
+      dockerfile: docker-agent.txt
+    networks:
+      - lab_net
+    environment:
+      SERVER: "server"
+    depends_on:
+      - server
+
+  nginx:
+    image: "nginx"
+    ports:
+      - "8080:80"
+    networks:
+      - web_net
+    depends_on:
+      - server
+
+  postgres:
+    image: postgres:11
+    networks:
+      - db_net
+    environment:
+      POSTGRES_USER: kraken
+      POSTGRES_PASSWORD: kk123
+      POSTGRES_DB: kraken
+
+volumes:
+  db-data:
+  web-data:
+
+networks:
+  db_net:
+    driver: bridge
+  web_net:
+    driver: bridge
+  lab_net:
+    driver: bridge
