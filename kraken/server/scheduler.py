@@ -39,7 +39,7 @@ def assign_jobs_to_executors():
 
         best_executor.job = j
         j.executor_used = best_executor
-        j.assigned = datetime.datetime.now()
+        j.assigned = datetime.datetime.utcnow()
         db.session.commit()
         log.info("assigned job %s to executor %s", j, best_executor)
 

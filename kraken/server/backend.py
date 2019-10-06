@@ -1,5 +1,6 @@
 import json
 import logging
+import datetime
 
 from flask import request
 
@@ -67,6 +68,22 @@ def _handle_step_result(executor, req):
     step.status = consts.STEP_STATUS_TO_INT[status]
     db.session.commit()
 
+    if 'test-results' in result:
+        for tr in result['test-results']:
+            q = TestCaseResult.query.filter_by(job=job, result=consts.TC_RESULT_NOT_RUN)
+            q = q.join('test_case')
+            q = q.filter_by(name=tr['test'])
+            tcr = q.one_or_none()
+            if tcr is None:
+                log.warn('unknown test case reported: %s', tr['test'])
+                tc = TestCase.query.filter_by(tool=step.tool, name=tr['test']).one_or_none()
+                if tc is None:
+                    tc = TestCase(tool=step.tool, name=tr['test'])
+                tcr = TestCaseResult(test_case=tc, job=step.job)
+            tcr.cmd_line = tr['cmd']
+            tcr.result = tr['status']
+            db.session.commit()
+
     job_finished = True
     log.info('checking steps')
     for s in job.steps:
@@ -81,6 +98,7 @@ def _handle_step_result(executor, req):
             break
     if job_finished:
         job.state = consts.JOB_STATE_EXECUTING_FINISHED
+        job.finished = datetime.datetime.utcnow()
         executor.job = None
         db.session.commit()
         log.info('job %s finished by %s', job, executor)

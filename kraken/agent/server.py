@@ -209,8 +209,14 @@ def _send_http_request(url, data):
                 resp = f.read().decode('utf-8')
         except KeyboardInterrupt:
             raise
+        except urllib.error.URLError as e:
+            if e.__context__ and e.__context__.errno == 111: # connection refused
+                log.warn('connection refused, trying one more time in 5s')
+                time.sleep(5)
+            else:
+                raise
         except:
-            log.exception('some problem with connecting to server')
+            log.exception('some problem with connecting to server to %s', url)
             log.info('trying one more time in 5s')
             time.sleep(5)
 

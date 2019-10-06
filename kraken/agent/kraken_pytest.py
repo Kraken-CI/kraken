@@ -29,7 +29,7 @@ def run_tests(step, report_result=None):
         cmd = 'pytest-3 -vv -r ap --junit-xml=result.xml %s %s' % (params, test)
         ret, out = utils.execute(cmd, cwd=cwd) # TODO: check ret
 
-        result = dict(cmd=cmd)
+        result = dict(cmd=cmd, test=test)
 
         tree = ET.parse(os.path.join(cwd, 'result.xml'))
         root = tree.getroot()
@@ -37,13 +37,13 @@ def run_tests(step, report_result=None):
         failures = int(root.get('failures'))
         skips = int(root.get('skips'))
         if errors > 0:
-            result['status'] = 'error'
+            result['status'] = 3  # error
         elif failures > 0:
-            result['status'] = 'fail'
+            result['status'] = 2  # failed
         elif skips > 0:
-            result['status'] = 'skip'
+            result['status'] = 4  # disabled
         else:
-            result['status'] = 'pass'
+            result['status'] = 1  # passed
 
         report_result(result)
 

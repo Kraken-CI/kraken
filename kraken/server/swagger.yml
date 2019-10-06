@@ -12,32 +12,107 @@ basePath: /api
 
 # Paths supported by the server application
 paths:
-  /runs:
+  /branches/{branch_id}/flows:
     post:
-      operationId: api.create_run
+      operationId: create_flow
       tags:
-        - Run
+        - Execution
       summary: Create a run
       description: Create a new run
       parameters:
-        - name: run
-          in: body
-          description: Run to create
-          schema:
-            required:
-              - stage
-            properties:
-              stage:
-                type: integer
+        - name: branch_id
+          in: path
+          description: ID of pet to return
+          required: true
+          type: integer
+          format: int64
       responses:
         201:
           description: Successfully created run
-
+    get:
+      summary: List all runs
+      operationId: get_flows
+      tags:
+        - Execution
+      parameters:
+        - name: branch_id
+          in: path
+          description: ID of pet to return
+          required: true
+          type: integer
+          format: int64
+        - name: limit
+          in: query
+          description: How many items to return at one time (max 100)
+          required: false
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: A paged array of runs
+          headers:
+            x-next:
+              type: string
+              description: A link to the next page of responses
+          schema:
+            $ref: '#/definitions/Flows'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/ApiError'
+  /stages/{stage_id}/runs:
+    post:
+      operationId: create_run
+      tags:
+        - Execution
+      summary: Create a run
+      description: Create a new run
+      parameters:
+        - name: stage_id
+          in: path
+          description: ID of pet to return
+          required: true
+          type: integer
+          format: int64
+      responses:
+        201:
+          description: Successfully created run
+    get:
+      summary: List all runs
+      operationId: get_runs
+      tags:
+        - Execution
+      parameters:
+        - name: stage_id
+          in: path
+          description: ID of pet to return
+          required: true
+          type: integer
+          format: int64
+        - name: limit
+          in: query
+          description: How many items to return at one time (max 100)
+          required: false
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: A paged array of runs
+          headers:
+            x-next:
+              type: string
+              description: A link to the next page of responses
+          schema:
+            $ref: '#/definitions/Runs'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/ApiError'
   /jobs:
     post:
-      operationId: api.create_job
+      operationId: create_job
       tags:
-        - Job
+        - Execution
       summary: Create a job
       description: Create a new job
       parameters:
@@ -53,3 +128,69 @@ paths:
       responses:
         201:
           description: Successfully created run
+
+definitions:
+  Flow:
+    type: "object"
+    required:
+      - id
+      - branch_id
+    properties:
+      id:
+        type: integer
+        format: int64
+      branch_id:
+        type: integer
+        format: int64
+      created:
+        type: string
+        format: date-time
+  Flows:
+    type: object
+    properties:
+      items:
+        type: array
+        $ref: '#/definitions/Flow'
+      total:
+        type: integer
+        format: int64
+
+  Run:
+    type: "object"
+    required:
+      - id
+      - proj_id
+    properties:
+      id:
+        type: integer
+        format: int64
+      proj_id:
+        type: integer
+        format: int64
+      created:
+        type: string
+        format: date-time
+      stage_id:
+        type: integer
+        format: int64
+  Runs:
+    type: object
+    properties:
+      items:
+        type: array
+        $ref: '#/definitions/Run'
+      total:
+        type: integer
+        format: int64
+
+  ApiError:
+    type: "object"
+    required:
+      - code
+      - message
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string

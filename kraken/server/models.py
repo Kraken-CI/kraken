@@ -43,6 +43,7 @@ class Branch(db.Model, DatesMixin):
     project_id = Column(Integer, ForeignKey('projects.id'), nullable=False)
     project = relationship('Project', back_populates="branches")
     stages = relationship("Stage", back_populates="branch")
+    flows = relationship("Flow", back_populates="branch")
 
 
 # PLANNING
@@ -79,6 +80,24 @@ class Stage(db.Model, DatesMixin):
 
 # EXECUTION
 
+class Flow(db.Model, DatesMixin):
+    __tablename__ = "flows"
+    id = Column(Integer, primary_key=True)
+    finished = Column(DateTime)
+    branch_id = Column(Integer, ForeignKey('branches.id'), nullable=False)
+    branch = relationship('Branch', back_populates="flows")
+    runs = relationship('Run', back_populates="flow")
+
+    def get_json(self):
+        return dict(id=self.id,
+                    created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,
+                    deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,
+                    name=self.id,
+                    state="aaa", # TODO
+                    branch_id=self.branch_id,
+                    runs=[r.get_json() for r in self.runs])
+
+
 class Run(db.Model, DatesMixin):
     __tablename__ = "runs"
     id = Column(Integer, primary_key=True)
@@ -89,18 +108,72 @@ class Run(db.Model, DatesMixin):
     note = Column(UnicodeText)
     stage_id = Column(Integer, ForeignKey('stages.id'), nullable=False)
     stage = relationship('Stage', back_populates="runs")
+    flow_id = Column(Integer, ForeignKey('flows.id'), nullable=False)
+    flow = relationship('Flow', back_populates="runs")
     jobs = relationship('Job', back_populates="run")
     hard_timeout_reached = Column(DateTime)
     soft_timeout_reached = Column(DateTime)
 
     def get_json(self):
+        tests_total = 0
+        tests_passed = 0
+        tests_pending = 0
+        jobs_processing = 0
+        jobs_executing = 0
+        jobs_waiting = 0
+        jobs_completed = 0
+        jobs_total = len(self.jobs)
+        last_time = None
+        for job in self.jobs:
+            if job.state == consts.JOB_STATE_EXECUTING_FINISHED:
+                jobs_processing += 1
+            elif job.state == consts.JOB_STATE_ASSIGNED:
+                jobs_executing += 1
+            elif job.state != consts.JOB_STATE_COMPLETED:
+                jobs_waiting += 1
+            elif job.state == consts.JOB_STATE_COMPLETED:
+                jobs_completed += 1
+                if job.completed > last_time:
+                    last_time = job.completed
+            tests_total += len(job.results)
+            for tcr in job.results:
+                if tcr.result == consts.TC_RESULT_PASSED:
+                    tests_passed += 1
+                elif tcr.result == consts.TC_RESULT_NOT_RUN:
+                    tests_pending += 1
+
+        if jobs_total == jobs_completed and last_time:
+            duration = last_time - self.created
+        else:
+            duration = datetime.datetime.utcnow() - self.created
+        duration_txt = ""
+        if duration.days > 0:
+            duration_txt = "%dd " % duration.days
+        if duration.seconds > 3600:
+            duration_txt += "%dh " % (duration.seconds // 3600)
+        if duration.seconds > 60:
+            seconds = duration.seconds % 3600
+            duration_txt += "%dm " % (seconds // 60)
+        duration_txt += "%ds" % (duration.seconds % 60)
+        duration_txt = duration_txt.strip()
+
         return dict(id=self.id,
-                    created=str(self.created) if self.created else None,
-                    deleted=str(self.deleted) if self.deleted else None,
-                    started=str(self.started) if self.started else None,
-                    finished=str(self.finished) if self.finished else None,
+                    created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,
+                    deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,
+                    started=self.started.strftime("%Y-%m-%dT%H:%M:%SZ") if self.started else None,
+                    finished=self.finished.strftime("%Y-%m-%dT%H:%M:%SZ") if self.finished else None,
+                    name=self.stage.name,
                     stage_id=self.stage_id,
-                    jobs_id=[j.id for j in self.jobs])
+                    flow_id=self.flow_id,
+                    jobs_total=jobs_total,
+                    jobs_waiting=jobs_waiting,
+                    jobs_executing=jobs_executing,
+                    jobs_processing=jobs_processing,
+                    jobs_id=[j.id for j in self.jobs],
+                    tests_total=tests_total,
+                    tests_passed=tests_passed,
+                    tests_pending=tests_pending,
+                    duration=duration_txt)
 
 
 class Step(db.Model, DatesMixin):
@@ -134,6 +207,9 @@ class Job(db.Model, DatesMixin):
     name = Column(Unicode(200))
     assigned = Column(DateTime)
     started = Column(DateTime)
+    finished = Column(DateTime)
+    processing_started = Column(DateTime)
+    completed = Column(DateTime)
     run_id = Column(Integer, ForeignKey('runs.id'), nullable=False)
     run = relationship("Run", back_populates="jobs")
     steps = relationship("Step", back_populates="job", order_by="Step.index")
@@ -149,8 +225,8 @@ class Job(db.Model, DatesMixin):
 
     def get_json(self):
         return dict(id=self.id,
-                    created=str(self.created) if self.created else None,
-                    deleted=str(self.deleted) if self.deleted else None,
+                    created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,
+                    deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,
                     state=self.state,
                     run_id=self.run_id,
                     steps=[s.get_json() for s in sorted(self.steps, key=lambda s: s.index)])
@@ -159,7 +235,6 @@ class Job(db.Model, DatesMixin):
         txt = 'Job %s, state:%s' % (self.id, consts.JOB_STATES_NAME[self.state])
         if self.executor_used_id:
             txt += ', ex:%s' % self.executor_used_id
-
         return "<%s>" % txt
 
 
@@ -182,6 +257,9 @@ class TestCaseResult(db.Model):
     result = Column(Integer, default=0)
     cmd_line = Column(UnicodeText)
 
+    def __repr__(self):
+        txt = 'TCR %s, result:%s' % (self.id, consts.TC_RESULTS_NAME[self.result])
+        return "<%s>" % txt
 
 # RESOURCES
 
@@ -329,7 +407,6 @@ def prepare_initial_data():
         #     }],
         #     "jobs": [{
         #         "name": "make dist",
-        #         "trigger": "on_new_run",
         #         "steps": [{
         #             "tool": "git",
         #             "checkout": "git@gitlab.isc.org:isc-projects/kea.git",
@@ -351,6 +428,7 @@ def prepare_initial_data():
         #     }]
         # }
         schema = {
+            "trigger": "initial",
             "configs": [{
                 "name": "c1",
                 "p1": "1",
@@ -362,7 +440,6 @@ def prepare_initial_data():
             }],
             "jobs": [{
                 "name": "make dist",
-                "trigger": "on_new_run",
                 "steps": [{
                     "tool": "git",
                     "checkout": "https://github.com/frankhjung/python-helloworld.git",

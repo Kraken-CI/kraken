@@ -3,7 +3,9 @@ import os
 import logging
 
 from flask import render_template
+from flask_cors import CORS
 import connexion
+from connexion.resolver import Resolver
 
 import models
 import backend
@@ -43,6 +45,13 @@ def notes(person_id, note_id=""):
     return render_template("notes.html", person_id=person_id, note_id=note_id)
 
 
+class MyResolver(Resolver):
+    def resolve_operation_id(self, operation):
+        operation_id = operation.operation_id
+        tags = operation._operation['tags']
+        return '{}.{}'.format(tags[0].lower(), operation_id)
+
+
 def create_app():
     basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -69,7 +78,7 @@ def create_app():
         models.prepare_initial_data()
 
     # Read the swagger.yml file to configure the endpoints
-    connex_app.add_api("swagger.yml")
+    connex_app.add_api("swagger.yml", resolver=MyResolver())
 
     # # Create a URL route in our application for "/"
     # connex_app.add_url_rule('/', view_func=home)
@@ -83,6 +92,9 @@ def create_app():
 
     # backend for serving agents
     connex_app.add_url_rule("/backend", view_func=backend.serve_agent_request, methods=['POST'])
+
+    # add handling CORS
+    CORS(app)
 
     return connex_app
 
