@@ -1,0 +1,82 @@
+<div>
+  <div style="margin-bottom: 5px;">
+    <p-button label="New Flow" (onClick)="newFlow()" style="margin-right: 5px;"></p-button>
+    <p-button label="Refresh" (onClick)="refresh()" style="margin-right: 10px;"></p-button>
+    <!--
+        <p-multiSelect [options]="stagesAvailable" [(ngModel)]="selectedStages" optionLabel="name"></p-multiSelect>
+        <p-multiSelect [options]="stagesAvailable" optionLabel="name" [filter]="false" style="height: 33px;" [style]="{minWidth: '12em'}" [panelStyle]="{minWidth: '12em'}"></p-multiSelect>
+        -->
+        <p-dropdown [options]="stagesAvailable" optionLabel="name" (onChange)="filterStages($event)"></p-dropdown>
+  </div>
+  <div *ngFor="let flow of flows" class="p-grid p-align-stretch">
+    <div class="p-col-1">
+      <b style="font-size: 1.2rem;">{{flow.name}}.</b>
+      <div style="font-size: 0.7rem;">
+        <div>{{flow.created}}</div>
+        <div>8h 40m
+          <span *ngIf="flow.state == 'in-progress'">
+            <i class="pi pi-spin pi-spinner" style="font-size: 16px; vertical-align: text-top;"></i>
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="p-col" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 6px;">
+      <ng-container *ngFor="let run of flow.runs">
+        <div *ngIf="filterStageName=='All' || run.name==filterStageName"  class="round-shadow" [ngStyle]="{'background-color': run.color}">
+          <!-- title bar -->
+          <div style="display: flex;">
+            <b style="font-size: 1.1rem; flex: 1;"><a href="/" style="color: unset;">{{run.name}}</a></b>
+            <div style="font-size: 0.7rem; margin-right: 10px;">
+              <div>{{run.started}}</div>
+              <div>{{run.duration}}
+                <span *ngIf="run.state == 'in-progress'">
+                  <i class="pi pi-spin pi-spinner" style="font-size: 16px; vertical-align: text-top;"></i>
+                </span>
+              </div>
+            </div>
+            <span style="float:right; cursor: pointer;" aria-hidden="true" class="ui-button-icon-left ui-clickable pi pi-chevron-down"></span>
+          </div>
+          <!--- details -->
+          <div class="job-detal-items">
+            <div *ngIf="run.jobs_total">
+              <b style="font-weight: 500;">Execution</b><br>
+              {{run.jobs_total}} jobs
+              <span *ngIf="run.jobs_error">
+                <br>
+                {{run.jobs_error}} errs <i class="pi pi-times-circle" style="color: red; vertical-align: sub;"></i>
+              </span>
+              <span *ngIf="run.jobs_rerun">
+                <br>
+                {{run.jobs_rerun}} reruns
+              </span>
+              <span *ngIf="run.jobs_waiting">
+                <br>
+                {{run.jobs_waiting}} waiting <i class="pi pi-spin pi-spinner" style="font-size: 16px; vertical-align: bottom;"></i>
+              </span>
+              <span *ngIf="run.jobs_executing">
+                <br>
+                {{run.jobs_executing}} executing <i class="pi pi-spin pi-spinner" style="font-size: 16px; vertical-align: bottom;"></i>
+              </span>
+              <span *ngIf="run.jobs_processing">
+                <br>
+                {{run.jobs_processing}} processing <i class="pi pi-spin pi-spinner" style="font-size: 16px; vertical-align: bottom;"></i>
+              </span>
+            </div>
+            <div *ngIf="run.tests_total">
+              <b>Tests</b><br>
+              {{run.tests_passed * 100 / run.tests_total | number:'1.1-1'}}% passed<br>
+              {{run.tests_passed}}/{{run.tests_total}}
+              <span *ngIf="run.tests_pending">
+                <br>{{run.tests_pending}} pending
+              </span>
+            </div>
+            <div *ngIf="run.issues">
+              <b>Issues</b><br>
+              {{run.issues}} <i class="pi pi-exclamation-triangle" style="color: orange; font-size: 26px; vertical-align: sub;"></i>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+</div>

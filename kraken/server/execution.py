@@ -2,6 +2,7 @@ import logging
 import datetime
 
 from flask import make_response, abort
+from sqlalchemy.sql.expression import asc, desc
 
 import consts
 from models import db, Branch, Flow, Run, Stage, Job, Step, ExecutorGroup, Tool
@@ -86,7 +87,7 @@ def create_flow(branch_id):
 
 
 def get_flows(branch_id):
-    q = Flow.query.filter_by(branch_id=branch_id)
+    q = Flow.query.filter_by(branch_id=branch_id).order_by(desc(Flow.created))
     flows = []
     for flow in q.all():
         flows.append(flow.get_json())

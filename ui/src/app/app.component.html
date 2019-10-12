@@ -30,39 +30,22 @@
     font-weight: 600;
   }
 
-.round-shadow {
-    padding: 10px 5px;
-    border: 1px solid #eee;
-    border-radius: 5px;
-    box-shadow: 0 1px 3px #ddd;
-    position: relative;
-}
-
-.job-detal-items {
-    display: flex;
-}
-.job-detal-items div {
-    flex: 1;
-}
-.job-detal-items div:not(:first-child) {
-    border-left-width: 1px;
-    border-left-style: solid;
-    margin-left: -1px;
-    padding-left: 5px;
-}
-.job-detal-items div:not(:last-child) {
-    border-right-width: 1px;
-    border-right-style: solid;
-    padding-right: 5px;
-}
-
+.logo1 {font-family: 'Turret Road', cursive;}
+.logo2 {font-family: 'Orbitron', sans-serif;}
+.logo3 {font-family: 'Rock Salt', cursive;}
+.logo4 {font-family: 'Audiowide', cursive;}
+.logo5 {font-family: 'Love Ya Like A Sister', cursive;}
+.logo6 {font-family: 'ZCOOL KuaiLe', cursive;}
+.logo7 {font-family: 'Patrick Hand SC', cursive;}
+.logo8 {font-family: 'Finger Paint', cursive;}
+.logo9 {font-family: 'Caesar Dressing', cursive;}
 
 </style>
 
 <div class="content" role="main">
 
   <div class="toolbar" role="banner">
-    <span>Kraken</span>
+    <span style="font-size: 2rem;" [class]="logoClass">Kraken</span>
   </div>
 
   <div>
@@ -73,82 +56,13 @@
     <p-splitButton label="Job" styleClass="ui-button-secondary" [model]="sItems"></p-splitButton>
   </div>
 
-  <p-button label="New Flow" (onClick)="newFlow()"></p-button>
-  <p-button label="Refresh" (onClick)="refresh()"></p-button>
-
   <div class="p-grid">
     <div class="p-col-fixed" style="width:130px">
       <p-menu [model]="items" [style]="{width:'120px'}"></p-menu>
     </div>
+
     <div class="p-col" style="margin: 10px;">
-
-      <div *ngFor="let flow of flows" class="p-grid p-align-stretch">
-        <div class="p-col-1">
-          <b style="font-size: 1.2rem;">{{flow.name}}.</b>
-          <div style="font-size: 0.7rem;">
-            <div>{{flow.created}}</div>
-            <div>8h 40m
-              <span *ngIf="flow.state == 'in-progress'">
-                <i class="pi pi-spin pi-spinner" style="font-size: 16px; vertical-align: text-top;"></i>
-              </span>
-            </div>
-          </div>
-        </div>
-        <div class="p-col" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 6px;">
-          <div *ngFor="let run of flow.runs"  class="round-shadow" [ngStyle]="{'background-color': run.color}">
-            <!-- title bar -->
-            <div style="display: flex;">
-              <b style="font-size: 1.1rem; flex: 1;"><a href="/" style="color: unset;">{{run.name}}</a></b>
-              <div style="font-size: 0.7rem; margin-right: 10px;">
-                <div>{{run.started}}</div>
-                <div>{{run.duration}}</div>
-              </div>
-              <span style="float:right; cursor: pointer;" aria-hidden="true" class="ui-button-icon-left ui-clickable pi pi-chevron-down"></span>
-            </div>
-            <!--- details -->
-            <div class="job-detal-items">
-              <div *ngIf="run.jobs_total">
-                <b style="font-weight: 500;">Execution</b><br>
-                {{run.jobs_total}} jobs
-                <span *ngIf="run.jobs_error">
-                <br>
-                {{run.jobs_error}} errs <i class="pi pi-times-circle" style="color: red; vertical-align: sub;"></i>
-                </span>
-                <span *ngIf="run.jobs_rerun">
-                  <br>
-                  {{run.jobs_rerun}} reruns
-                </span>
-                <span *ngIf="run.jobs_waiting">
-                  <br>
-                  {{run.jobs_waiting}} waiting <i class="pi pi-spin pi-spinner" style="font-size: 16px; vertical-align: bottom;"></i>
-                </span>
-                <span *ngIf="run.jobs_executing">
-                  <br>
-                  {{run.jobs_executing}} executing <i class="pi pi-spin pi-spinner" style="font-size: 16px; vertical-align: bottom;"></i>
-                </span>
-                <span *ngIf="run.jobs_processing">
-                  <br>
-                  {{run.jobs_processing}} processing <i class="pi pi-spin pi-spinner" style="font-size: 16px; vertical-align: bottom;"></i>
-                </span>
-              </div>
-              <div *ngIf="run.tests_total">
-                <b>Tests</b><br>
-                {{run.tests_passed * 100 / run.tests_total | number:'1.1-1'}}% passed<br>
-                {{run.tests_passed}}/{{run.tests_total}}
-                <span *ngIf="run.tests_pending">
-                  <br>{{run.tests_pending}} pending
-                </span>
-              </div>
-              <div *ngIf="run.issues">
-                <b>Issues</b><br>
-                {{run.issues}} <i class="pi pi-exclamation-triangle" style="color: orange; font-size: 26px; vertical-align: sub;"></i>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <router-outlet></router-outlet>
     </div>
-
-    <router-outlet></router-outlet>
   </div>
 </div>

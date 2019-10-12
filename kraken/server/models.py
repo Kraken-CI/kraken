@@ -21,6 +21,20 @@ def auto_add(target, args, kwargs):
     db.session.add(target)
 
 
+def duration_to_txt(duration):
+    duration_txt = ""
+    if duration.days > 0:
+        duration_txt = "%dd " % duration.days
+    if duration.seconds > 3600:
+        duration_txt += "%dh " % (duration.seconds // 3600)
+    if duration.seconds > 60:
+        seconds = duration.seconds % 3600
+        duration_txt += "%dm " % (seconds // 60)
+    duration_txt += "%ds" % (duration.seconds % 60)
+    duration_txt = duration_txt.strip()
+    return duration_txt
+
+
 class DatesMixin():
     created = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
     updated = Column(DateTime, nullable=False, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
@@ -80,22 +94,31 @@ class Stage(db.Model, DatesMixin):
 
 # EXECUTION
 
+
 class Flow(db.Model, DatesMixin):
     __tablename__ = "flows"
     id = Column(Integer, primary_key=True)
     finished = Column(DateTime)
+    state = Column(Integer, default=consts.FLOW_STATE_IN_PROGRESS)
     branch_id = Column(Integer, ForeignKey('branches.id'), nullable=False)
     branch = relationship('Branch', back_populates="flows")
     runs = relationship('Run', back_populates="flow")
 
     def get_json(self):
+        if self.state == consts.FLOW_STATE_COMPLETED:
+            duration = self.finished - self.created
+        else:
+            duration = datetime.datetime.utcnow() - self.created
+
         return dict(id=self.id,
                     created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,
+                    finished=self.finished.strftime("%Y-%m-%dT%H:%M:%SZ") if self.finished else None,
                     deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,
                     name=self.id,
-                    state="aaa", # TODO
+                    state=consts.FLOW_STATES_NAME[self.state],
+                    duration=duration_to_txt(duration),
                     branch_id=self.branch_id,
-                    runs=[r.get_json() for r in self.runs])
+                    runs=[r.get_json()for r in self.runs])
 
 
 class Run(db.Model, DatesMixin):
@@ -104,6 +127,7 @@ class Run(db.Model, DatesMixin):
     started = Column(DateTime)    # time when the session got a first non-deleted job
     finished = Column(DateTime)    # time when all tasks finished first time
     finished_again = Column(DateTime)    # time when all tasks finished
+    state = Column(Integer, default=consts.RUN_STATE_IN_PROGRESS)
     email_sent = Column(DateTime)
     note = Column(UnicodeText)
     stage_id = Column(Integer, ForeignKey('stages.id'), nullable=False)
@@ -133,7 +157,7 @@ class Run(db.Model, DatesMixin):
                 jobs_waiting += 1
             elif job.state == consts.JOB_STATE_COMPLETED:
                 jobs_completed += 1
-                if job.completed > last_time:
+                if last_time is None or job.completed > last_time:
                     last_time = job.completed
             tests_total += len(job.results)
             for tcr in job.results:
@@ -146,16 +170,6 @@ class Run(db.Model, DatesMixin):
             duration = last_time - self.created
         else:
             duration = datetime.datetime.utcnow() - self.created
-        duration_txt = ""
-        if duration.days > 0:
-            duration_txt = "%dd " % duration.days
-        if duration.seconds > 3600:
-            duration_txt += "%dh " % (duration.seconds // 3600)
-        if duration.seconds > 60:
-            seconds = duration.seconds % 3600
-            duration_txt += "%dm " % (seconds // 60)
-        duration_txt += "%ds" % (duration.seconds % 60)
-        duration_txt = duration_txt.strip()
 
         return dict(id=self.id,
                     created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,
@@ -163,6 +177,7 @@ class Run(db.Model, DatesMixin):
                     started=self.started.strftime("%Y-%m-%dT%H:%M:%SZ") if self.started else None,
                     finished=self.finished.strftime("%Y-%m-%dT%H:%M:%SZ") if self.finished else None,
                     name=self.stage.name,
+                    state=consts.RUN_STATES_NAME[self.state],
                     stage_id=self.stage_id,
                     flow_id=self.flow_id,
                     jobs_total=jobs_total,
@@ -173,7 +188,7 @@ class Run(db.Model, DatesMixin):
                     tests_total=tests_total,
                     tests_passed=tests_passed,
                     tests_pending=tests_pending,
-                    duration=duration_txt)
+                    duration=duration_to_txt(duration))
 
 
 class Step(db.Model, DatesMixin):

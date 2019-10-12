@@ -52,8 +52,6 @@ def assign_jobs_to_executors():
 
 
 def create_app():
-    basedir = os.path.abspath(os.path.dirname(__file__))
-
     logging.basicConfig(format=consts.CONSOLE_LOG_FMT, level=logging.INFO)
 
     # Create  Flask app instance

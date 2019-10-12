@@ -66,6 +66,11 @@ services:
       POSTGRES_PASSWORD: kk123
       POSTGRES_DB: kraken
 
+  redis:
+    image: "redis:alpine"
+    networks:
+      - db_net
+
 volumes:
   db-data:
   web-data:
