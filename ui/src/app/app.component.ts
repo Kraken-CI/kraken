@@ -57,4 +57,8 @@ export class AppComponent {
             {label: 'Setup', icon: 'pi pi-cog', routerLink: ['/setup']}
         ];
     }
+
+    randomLogoFont() {
+        this.logoClass = 'logo' + (Math.floor(Math.random() * 9) + 1);
+    }
 }

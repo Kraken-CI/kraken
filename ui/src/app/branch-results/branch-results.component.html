@@ -25,7 +25,7 @@
         <div *ngIf="filterStageName=='All' || run.name==filterStageName"  class="round-shadow" [ngStyle]="{'background-color': run.color}">
           <!-- title bar -->
           <div style="display: flex;">
-            <b style="font-size: 1.1rem; flex: 1;"><a href="/" style="color: unset;">{{run.name}}</a></b>
+            <b style="font-size: 1.1rem; flex: 1;"><a  routerLink="/runs/{{run.id}}" routerLinkActive="active" style="color: unset;">{{run.name}}</a></b>
             <div style="font-size: 0.7rem; margin-right: 10px;">
               <div>{{run.started}}</div>
               <div>{{run.duration}}

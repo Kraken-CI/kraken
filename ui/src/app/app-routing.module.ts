@@ -3,6 +3,7 @@ import { Routes, RouterModule } from '@angular/router';
 
 //import { AuthGuard } from './auth.guard';
 import { BranchResultsComponent } from './branch-results/branch-results.component';
+import { RunResultsComponent } from './run-results/run-results.component';
 
 const routes: Routes = [
     {
@@ -19,6 +20,10 @@ const routes: Routes = [
     {
         path: 'branches/:id',
         component: BranchResultsComponent
+    },
+    {
+        path: 'runs/:id',
+        component: RunResultsComponent
     },
 
 

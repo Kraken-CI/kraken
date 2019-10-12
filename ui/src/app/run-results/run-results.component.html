@@ -1,0 +1,27 @@
+
+<p-table [value]="results" id="results">
+    <ng-template pTemplate="header">
+        <tr>
+            <th style="width: 50px;">ID</th>
+            <th style="width: 50px;">Job ID</th>
+            <th style="width: 80px;">Result</th>
+            <th style="width: 50%;">Name</th>
+            <th style="width: 30%;">System</th>
+            <th style="width: 10%;">Executor</th>
+            <th style="width: 10%;">Config</th>
+            <th style="width: 90px;">Cmd Line</th>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-res>
+        <tr>
+            <td>{{res.id}}</td>
+            <td>{{res.job_id}}</td>
+            <td [class]="resultToClass(res.result)">{{resultToTxt(res.result)}}</td>
+            <td>{{res.test_case_name}}</td>
+            <td>Ubuntu 18.04</td>
+            <td>Vagrant</td>
+            <td>default</td>
+            <td><p-button label="CmdLine" (onClick)="newFlow()" styleClass="cmd-line-btn"></p-button></td>
+        </tr>
+    </ng-template>
+</p-table>

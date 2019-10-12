@@ -276,6 +276,14 @@ class TestCaseResult(db.Model):
         txt = 'TCR %s, result:%s' % (self.id, consts.TC_RESULTS_NAME[self.result])
         return "<%s>" % txt
 
+    def get_json(self):
+        return dict(id=self.id,
+                    test_case_id=self.test_case_id,
+                    test_case_name=self.test_case.name,
+                    job_id=self.job_id,
+                    result=self.result,
+                    cmd_line=self.cmd_line)
+
 # RESOURCES
 
 # class System(db.Model):

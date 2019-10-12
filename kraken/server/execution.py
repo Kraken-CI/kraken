@@ -5,7 +5,7 @@ from flask import make_response, abort
 from sqlalchemy.sql.expression import asc, desc
 
 import consts
-from models import db, Branch, Flow, Run, Stage, Job, Step, ExecutorGroup, Tool
+from models import db, Branch, Flow, Run, Stage, Job, Step, ExecutorGroup, Tool, TestCaseResult
 
 
 log = logging.getLogger(__name__)
@@ -149,3 +149,11 @@ def get_runs(stage_id):
     for run in q.all():
         runs.append(run.get_json())
     return runs, 200
+
+
+def get_run_results(run_id):
+    q = TestCaseResult.query.join('job').filter(Job.run_id == run_id)
+    results = []
+    for r in q.all():
+        results.append(r.get_json())
+    return results, 200
