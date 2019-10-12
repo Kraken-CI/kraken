@@ -7,7 +7,8 @@ import { BranchResultsComponent } from './branch-results/branch-results.componen
 const routes: Routes = [
     {
         path: '',
-        component: BranchResultsComponent,
+        //component: BranchResultsComponent,
+        redirectTo: 'branches/1',
         pathMatch: 'full',
         //canActivate: [AuthGuard],
     },
@@ -22,7 +23,7 @@ const routes: Routes = [
 
 
     // otherwise redirect to home
-    { path: '**', redirectTo: '' }
+    { path: '**', redirectTo: 'branches/1' }
 ];
 
 
