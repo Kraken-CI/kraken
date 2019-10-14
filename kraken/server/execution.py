@@ -151,12 +151,14 @@ def get_runs(stage_id):
     return runs, 200
 
 
-def get_run_results(run_id):
+def get_run_results(run_id, start=0, limit=10):
     q = TestCaseResult.query.join('job').filter(Job.run_id == run_id)
+    total = q.count()
+    q = q.offset(start).limit(limit)
     results = []
     for r in q.all():
         results.append(r.get_json())
-    return {'items': results, 'total': len(results)}, 200
+    return {'items': results, 'total': total}, 200
 
 
 def get_run(run_id):

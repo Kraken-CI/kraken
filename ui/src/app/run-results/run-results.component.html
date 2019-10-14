@@ -1,10 +1,19 @@
 
-<p-table [value]="results" id="results">
+<p-table id="results"
+         [value]="results"
+         [lazy]="true"
+         (onLazyLoad)="loadResultsLazy($event)"
+         [paginator]="true"
+         [rows]="30"
+         [totalRecords]="totalRecords"
+         [loading]="loading"
+         [rowsPerPageOptions]="[10,20,30,50,100]"
+         [showCurrentPageReport]="true">
     <ng-template pTemplate="header">
         <tr>
             <th style="width: 50px;">ID</th>
             <th style="width: 50px;">Job ID</th>
-            <th style="width: 80px;">Result</th>
+            <th style="width: 100px;">Result</th>
             <th style="width: 50%;">Name</th>
             <th style="width: 30%;">System</th>
             <th style="width: 10%;">Executor</th>

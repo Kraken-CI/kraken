@@ -44,44 +44,54 @@ class BaseTask(Task):
         log.info('PROBLEMS')
 
 
-@app.task(base=BaseTask)
-def job_completed(job_id):
-    app = create_app()
+@app.task(base=BaseTask, bind=True)
+def job_completed(self, job_id):
+    try:
+        app = create_app()
 
-    with app.app_context():
+        with app.app_context():
 
-        now = datetime.datetime.utcnow()
+            now = datetime.datetime.utcnow()
 
-        job = Job.query.filter_by(id=job_id).one_or_none()
-        job.completed = now
-        job.state = consts.JOB_STATE_COMPLETED
-        job.completion_status = consts.JOB_CMPLT_ALL_OK
-        db.session.commit()
-
-        # establish new run state
-        run = job.run
-        new_state = consts.RUN_STATE_COMPLETED
-        for j in run.jobs:
-            if j.state != consts.JOB_STATE_COMPLETED:
-                new_state = consts.RUN_STATE_IN_PROGRESS
-                break
-
-        if run.state == new_state:
-            return
-
-        run.state = new_state
-        run.finished = now
-        db.session.commit()
-
-        # establish new flow state
-        flow = run.flow
-        new_state = consts.FLOW_STATE_COMPLETED
-        for r in flow.runs:
-            if r.state != consts.RUN_STATE_COMPLETED:
-                new_state = consts.FLOW_STATE_IN_PROGRESS
-                break
-
-        if flow.state != new_state:
-            flow.state = new_state
-            flow.finished = now
+            log.info('completing job %s', job_id)
+            job = Job.query.filter_by(id=job_id).one_or_none()
+            job.completed = now
+            job.state = consts.JOB_STATE_COMPLETED
+            job.completion_status = consts.JOB_CMPLT_ALL_OK
+            log.info('checking steps')
+            for step in job.steps:
+                log.info('%s: %s', step.index, consts.STEP_STATUS_NAME[step.status] if step.status in consts.STEP_STATUS_NAME else step.status)
+                if step.status == consts.STEP_STATUS_ERROR:
+                    job.completion_status = consts.JOB_CMPLT_AGENT_ERROR_RETURNED
+                    break
             db.session.commit()
+
+            # establish new run state
+            run = job.run
+            new_state = consts.RUN_STATE_COMPLETED
+            for j in run.jobs:
+                if j.state != consts.JOB_STATE_COMPLETED:
+                    new_state = consts.RUN_STATE_IN_PROGRESS
+                    break
+
+            if run.state == new_state:
+                return
+
+            run.state = new_state
+            run.finished = now
+            db.session.commit()
+
+            # establish new flow state
+            flow = run.flow
+            new_state = consts.FLOW_STATE_COMPLETED
+            for r in flow.runs:
+                if r.state != consts.RUN_STATE_COMPLETED:
+                    new_state = consts.FLOW_STATE_IN_PROGRESS
+                    break
+
+            if flow.state != new_state:
+                flow.state = new_state
+                flow.finished = now
+                db.session.commit()
+    except Exception as exc:
+        raise self.retry(exc=exc)

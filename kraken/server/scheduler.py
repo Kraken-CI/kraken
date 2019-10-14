@@ -52,7 +52,7 @@ def assign_jobs_to_executors():
 
 
 def create_app():
-    logging.basicConfig(format=consts.CONSOLE_LOG_FMT, level=logging.INFO)
+    logging.basicConfig(format=consts.LOG_FMT, level=logging.INFO)
 
     # Create  Flask app instance
     app = Flask('Kraken Scheduler')

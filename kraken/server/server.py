@@ -55,7 +55,7 @@ class MyResolver(Resolver):
 def create_app():
     basedir = os.path.abspath(os.path.dirname(__file__))
 
-    logging.basicConfig(format=consts.CONSOLE_LOG_FMT, level=logging.INFO)
+    logging.basicConfig(format=consts.LOG_FMT, level=logging.INFO)
 
     # Create the connexion application instance
     connex_app = connexion.App('Kraken Server', specification_dir=basedir)

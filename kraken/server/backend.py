@@ -37,7 +37,7 @@ def _handle_get_job(executor, req):
             tests.append(tcr.test_case.name)
         if tests:
             job['steps'][-1]['tests'] = tests
-    log.info('sending job: %s', job)
+    log.info('sending job: %s', str(job)[:200])
     return {'job': job}
 
 
@@ -88,7 +88,7 @@ def _handle_step_result(executor, req):
     job_finished = True
     log.info('checking steps')
     for s in job.steps:
-        log.info('%s: %s', s.index, s.status)
+        log.info('%s: %s', s.index, consts.STEP_STATUS_NAME[s.status] if s.status in consts.STEP_STATUS_NAME else s.status)
         if s.status == consts.STEP_STATUS_DONE:
             continue
         elif s.status == consts.STEP_STATUS_ERROR:
@@ -116,7 +116,7 @@ def _create_test_records(step, tests):
 
     for t in tests:
         tc = tool_test_cases.get(t, None)
-        if tc == None:
+        if tc is None:
             tc = TestCase(name=t, tool=step.tool)
         tcr = TestCaseResult(test_case=tc, job=step.job)
     db.session.commit()
@@ -144,6 +144,9 @@ def _handle_dispatch_tests(executor, req):
         return {}
 
     tests_cnt = len(tests)
+    if len(set(tests)) != tests_cnt:
+        log.warn('there are tests duplicates')
+        return {}
     if tests_cnt == 0:
         # TODO
         raise NotImplementedError
@@ -173,7 +176,7 @@ def serve_agent_request():
     req = request.get_json()
     # log.info('request headers: %s', request.headers)
     # log.info('request args: %s', request.args)
-    log.info('request data: %s', req)
+    log.info('request data: %s', str(req)[:200])
 
     msg = req['msg']
     address = req['address']

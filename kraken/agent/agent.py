@@ -10,8 +10,7 @@ import config
 import server
 import jobber
 
-FILE_LOG_FMT = '%(asctime)s %(levelname)-4.4s p:%(process)5d %(module)8.8s:%(lineno)-5d %(message)s'
-CONSOLE_LOG_FMT = '%(asctime)s p:%(process)d %(name)6.6s: %(levelname)-5.5s %(message)s'
+LOG_FMT = '%(asctime)s %(levelname)-4.4s p:%(process)5d %(module)8.8s:%(lineno)-5d %(message)s'
 
 
 log = logging.getLogger('agent')
@@ -39,7 +38,7 @@ def dispatch_job(srv, job):
 
 
 def main():
-    logging.basicConfig(format=CONSOLE_LOG_FMT, level=logging.INFO)
+    logging.basicConfig(format=LOG_FMT, level=logging.INFO)
 
     args = parse_args()
     cfg = vars(args)
@@ -57,7 +56,7 @@ def main():
     while True:
         try:
             job = srv.get_job()
-            log.info('received job: %s', job)
+            log.info('received job: %s', str(job)[:200])
 
             if job:
                 dispatch_job(srv, job)

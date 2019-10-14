@@ -1,6 +1,4 @@
-FILE_LOG_FMT = '%(asctime)s %(levelname)-4.4s p:%(process)5d %(module)8.8s:%(lineno)-5d %(message)s'
-CONSOLE_LOG_FMT = '%(asctime)s p:%(process)d %(name)6.6s: %(levelname)-5.5s %(message)s'
-
+LOG_FMT = '%(asctime)s %(levelname)-4.4s p:%(process)5d %(module)8.8s:%(lineno)-5d %(message)s'
 
 JOB_STATE_PREQUEUED = 1
 JOB_STATE_QUEUED = 2
@@ -34,6 +32,12 @@ STEP_STATUS_TO_INT = {
     'in-progress': STEP_STATUS_IN_PROGRES,
     'done': STEP_STATUS_DONE,
     'error': STEP_STATUS_ERROR
+}
+STEP_STATUS_NAME = {
+    STEP_STATUS_NOT_STARTED: 'not-started',
+    STEP_STATUS_IN_PROGRES: 'in-progress',
+    STEP_STATUS_DONE: 'done',
+    STEP_STATUS_ERROR: 'error'
 }
 
 TC_RESULT_NOT_RUN = 0

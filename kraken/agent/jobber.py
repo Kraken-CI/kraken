@@ -100,8 +100,12 @@ class ProcCoord():
 
 
 async def _async_pump_output(proc_coord, stream):
-     while True:
-        line = await stream.readline()
+    while True:
+        try:
+            line = await stream.readline()
+        except ValueError:
+            log.exception('IGNORED')
+            continue
         if line:
             line = line.decode().rstrip()
             log.info(line)
@@ -150,13 +154,14 @@ async def _async_subprocess(proc_coord, cmd, cwd, timeout):
     proc = await asyncio.create_subprocess_shell(
         cmd,
         cwd=cwd,
+        limit=1024 * 128,  # 128 KiB
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.STDOUT)
 
     await _async_pump_output(proc_coord, proc.stdout)
 
     done, pending = await asyncio.wait([proc.wait(), _async_monitor_proc(proc_coord, proc, timeout)],
-                                 timeout=timeout * 1.1)
+                                       timeout=timeout * 1.1)
     #log.info('done %s', done)
     #log.info('pending %s', pending)
     proc_coord.end_time = datetime.datetime.now()
@@ -172,8 +177,8 @@ class RequestHandler():
 
     async def _async_handle_request(self, reader, writer):
         addr = writer.get_extra_info('peername')
-        #data = await reader.read(8192)
         while True:
+            #data = await reader.read(8192)
             data = await reader.readline()
             if not data:
                 break
@@ -188,11 +193,13 @@ class RequestHandler():
             self.proc_coord.result = data
 
             if self.proc_coord.command == 'run_tests':
+                # report partial results
                 srv = self.proc_coord.kk_srv
                 # TODO: check if result is not send twice: here and at the end of process
                 srv.report_step_result(self.proc_coord.job_id,
                                        self.proc_coord.idx,
                                        self.proc_coord.result)
+                self.proc_coord.result = {'status': 'in-progress'}
 
 
 async def _async_tcp_server(proc_coord, server):
@@ -202,7 +209,7 @@ async def _async_tcp_server(proc_coord, server):
 
 async def _async_exec_tool(proc_coord, tool_path, command, cwd, timeout, step_file_path):
     handler = RequestHandler(proc_coord)
-    server = await asyncio.start_server(handler._async_handle_request, '0.0.0.0', 0)
+    server = await asyncio.start_server(handler._async_handle_request, '0.0.0.0', 0, limit=1024 * 1280)
     addr = server.sockets[0].getsockname()
     return_addr = "%s:%s" % addr
 
@@ -238,7 +245,7 @@ def _write_step_file(job_dir, step, idx):
 
 def _run_step(srv, job_dir, job_id, idx, step, tools):
     tool_name = step['tool']
-    log.info('step %s', step)
+    log.info('step %s', str(step)[:200])
     if tool_name not in tools:
         raise Exception('No such Kraken tool: %s' % tool_name)
     tool_path = tools[tool_name]
@@ -257,7 +264,7 @@ def _run_step(srv, job_dir, job_id, idx, step, tools):
     if 'collect_tests' in available_commands and ('tests' not in step or step['tests'] is None or len(step['tests']) == 0):
         # collect tests from tool to execute
         result = _exec_tool(srv, tool_path, 'collect_tests', job_dir, 10, step_file_path, job_id, idx)
-        log.info('result for collect_tests: %s', result)
+        log.info('result for collect_tests: %s', str(result)[:200])
 
         # check result
         if not isinstance(result, dict):
@@ -285,13 +292,14 @@ def _run_step(srv, job_dir, job_id, idx, step, tools):
 
     if 'run_tests' in available_commands:
         result = _exec_tool(srv, tool_path, 'run_tests', job_dir, 60, step_file_path, job_id, idx)
-        log.info('result for run_tests: %s', result)
+        log.info('result for run_tests: %s', str(result)[:200])
+        srv.report_step_result(job_id, idx, result)
 
     if 'run' in available_commands:
         result = _exec_tool(srv, tool_path, 'run', job_dir, 60, step_file_path, job_id, idx)
         log.info('result for run: %s', result)
+        srv.report_step_result(job_id, idx, result)
 
-    srv.report_step_result(job_id, idx, result)
     return result
 
 

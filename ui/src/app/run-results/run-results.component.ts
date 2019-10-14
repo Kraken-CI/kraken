@@ -18,6 +18,7 @@ export class RunResultsComponent implements OnInit {
 
     runId = 0;
     results: any[];
+    totalRecords = 0;
 
     constructor(private route: ActivatedRoute,
                 private router: Router,
@@ -52,13 +53,6 @@ export class RunResultsComponent implements OnInit {
             }];
             this.breadcrumbService.setCrumbs(crumbs);
         });
-        this.refresh();
-    }
-
-    refresh() {
-        this.executionService.getRunResults(this.runId).subscribe(data => {
-            this.results = data.items;
-        });
     }
 
     formatResult(result) {
@@ -90,5 +84,14 @@ export class RunResultsComponent implements OnInit {
 
     resultToClass(result) {
         return 'result' + result;
+    }
+
+    loadResultsLazy(event) {
+        console.info(event);
+
+        this.executionService.getRunResults(this.runId, event.first, event.rows).subscribe(data => {
+            this.results = data.items;
+            this.totalRecords = data.total;
+        });
     }
 }

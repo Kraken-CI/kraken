@@ -9,8 +9,7 @@ import datetime
 import argparse
 import traceback
 
-FILE_LOG_FMT = '%(asctime)s %(levelname)-4.4s p:%(process)5d %(module)8.8s:%(lineno)-5d %(message)s'
-CONSOLE_LOG_FMT = '%(asctime)s p:%(process)d %(name)6.6s: %(levelname)-5.5s %(message)s'
+LOG_FMT = '%(asctime)s %(levelname)-4.4s p:%(process)5d %(module)8.8s:%(lineno)-5d %(message)s'
 
 log = logging.getLogger(__name__)
 
@@ -25,6 +24,7 @@ class TestResultsCollector():
         self.results.append(result)
 
         now = datetime.datetime.now()
+        # report results after 100 results or after 20 seconds
         if len(self.results) > 100 or (now - self.last_reported > datetime.timedelta(seconds=20)):
             self.flush()
 
@@ -37,7 +37,7 @@ class TestResultsCollector():
 
 def execute(sock, command, step_file_path):
     try:
-        logging.basicConfig(format=CONSOLE_LOG_FMT, level=logging.INFO)
+        logging.basicConfig(format=LOG_FMT, level=logging.INFO)
         log.info('started tool for step')
 
         with open(step_file_path) as f:
@@ -92,8 +92,8 @@ class JsonSocket(socket.socket):
         self.connect((address[0], int(address[1])))
 
     def send_json(self, data):
-        log.info('tool response: %s', data)
         data = json.dumps(data) + '\n'
+        log.info('tool response: %s', data[:200])
         self.sendall(bytes(data, "utf-8"))
 
 

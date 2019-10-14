@@ -163,6 +163,7 @@ class Run(db.Model, DatesMixin):
         jobs_executing = 0
         jobs_waiting = 0
         jobs_completed = 0
+        jobs_error = 0
         jobs_total = len(self.jobs)
         last_time = None
         for job in self.jobs:
@@ -176,6 +177,10 @@ class Run(db.Model, DatesMixin):
                 jobs_completed += 1
                 if last_time is None or job.completed > last_time:
                     last_time = job.completed
+
+            if job.completion_status not in [consts.JOB_CMPLT_ALL_OK, None]:
+                jobs_error += 1
+
             tests_total += len(job.results)
             for tcr in job.results:
                 if tcr.result == consts.TC_RESULT_PASSED:
@@ -205,6 +210,7 @@ class Run(db.Model, DatesMixin):
                     jobs_waiting=jobs_waiting,
                     jobs_executing=jobs_executing,
                     jobs_processing=jobs_processing,
+                    jobs_error=jobs_error,
                     jobs_id=[j.id for j in self.jobs],
                     tests_total=tests_total,
                     tests_passed=tests_passed,
@@ -264,6 +270,7 @@ class Job(db.Model, DatesMixin):
                     created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,
                     deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,
                     state=self.state,
+                    completion_status=self.completion_status,
                     run_id=self.run_id,
                     steps=[s.get_json() for s in sorted(self.steps, key=lambda s: s.index)])
 
@@ -414,6 +421,7 @@ def prepare_initial_data():
         'git': {'checkout': 'text', 'branch': 'text'},
         'shell': {'cmd': 'text'},
         'pytest': {'params': 'text', 'directory': 'text'},
+        'rndtest': {'count': 'text'},
         'artifacts': {'type': 'choice:file', 'upload': 'text'}
     }
     tools = {}
@@ -437,7 +445,7 @@ def prepare_initial_data():
         db.session.commit()
         log.info("   created Branch record 'master'")
 
-    stage = Stage.query.filter_by(name="hello-world", branch=branch).one_or_none()
+    stage = Stage.query.filter_by(name="System Tests", branch=branch).one_or_none()
     if stage is None:
         # schema = {
         #     "configs": [{
@@ -500,10 +508,32 @@ def prepare_initial_data():
                 }]
             }]
         }
-        stage = Stage(name='hello-world', description="This is a hello-world stage.", branch=branch,
+        stage = Stage(name='System Tests', description="This is a stage of system tests.", branch=branch,
                       schema=schema)
         db.session.commit()
-        log.info("   created Stage record 'hello-world'")
+        log.info("   created Stage record 'System Tests'")
+
+    stage = Stage.query.filter_by(name="Unit Tests", branch=branch).one_or_none()
+    if stage is None:
+        schema = {
+            "trigger": "initial",
+            "jobs": [{
+                "name": "random tests",
+                "steps": [{
+                    "tool": "rndtest",
+                    "count": "1000"
+                }],
+                "environments": [{
+                    "system": "centos-7",
+                    "executor_group": "server",
+                    "config": "default"
+                }]
+            }]
+        }
+        stage = Stage(name='Unit Tests', description="This is a stage of unit tests.", branch=branch,
+                      schema=schema)
+        db.session.commit()
+        log.info("   created Stage record 'Unit Tests'")
 
     executor_group = ExecutorGroup.query.filter_by(name="server", project=project).one_or_none()
     if executor_group is None:
