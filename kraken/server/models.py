@@ -49,6 +49,14 @@ class Project(db.Model, DatesMixin):
     branches = relationship("Branch", back_populates="project")
     executor_groups = relationship("ExecutorGroup", back_populates="project")
 
+    def get_json(self):
+        return dict(id=self.id,
+                    created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,
+                    deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,
+                    name=self.name,
+                    description=self.description,
+                    branches=[b.get_json() for b in self.branches])
+
 
 class Branch(db.Model, DatesMixin):
     __tablename__ = "branches"
@@ -58,6 +66,15 @@ class Branch(db.Model, DatesMixin):
     project = relationship('Project', back_populates="branches")
     stages = relationship("Stage", back_populates="branch")
     flows = relationship("Flow", back_populates="branch")
+
+    def get_json(self):
+        return dict(id=self.id,
+                    created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,
+                    deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,
+                    name=self.name,
+                    project_id=self.project_id,
+                    project_name=self.project.name,
+                    flows=[f.get_json() for f in self.flows[:10]])
 
 
 # PLANNING
@@ -180,6 +197,10 @@ class Run(db.Model, DatesMixin):
                     state=consts.RUN_STATES_NAME[self.state],
                     stage_id=self.stage_id,
                     flow_id=self.flow_id,
+                    branch_id=self.flow.branch_id,
+                    branch_name=self.flow.branch.name,
+                    project_id=self.flow.branch.project_id,
+                    project_name=self.flow.branch.project.name,
                     jobs_total=jobs_total,
                     jobs_waiting=jobs_waiting,
                     jobs_executing=jobs_executing,

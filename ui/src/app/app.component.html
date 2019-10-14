@@ -22,7 +22,6 @@
   .toolbar {
     height: 40px;
     padding-left: 10px;
-    margin-bottom: 2px;
     display: flex;
     align-items: center;
     background-color: #007ad9;
@@ -48,6 +47,7 @@
     <span style="font-size: 2rem; cursor: pointer;" [class]="logoClass" (click)="randomLogoFont()">Kraken</span>
   </div>
 
+<!--
   <div>
     Project
     <span aria-hidden="true" class="ui-button-icon-left ui-clickable pi pi-chevron-right"></span>
@@ -55,6 +55,9 @@
     <p-splitButton label="Run" styleClass="ui-button-secondary" [model]="sItems"></p-splitButton>
     <p-splitButton label="Job" styleClass="ui-button-secondary" [model]="sItems"></p-splitButton>
   </div>
+-->
+
+  <app-breadcrumbs></app-breadcrumbs>
 
   <div class="p-grid">
     <div class="p-col-fixed" style="width:130px">

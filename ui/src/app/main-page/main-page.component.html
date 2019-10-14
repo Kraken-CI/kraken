@@ -1,0 +1,19 @@
+<div class="p-grid">
+  <div class="p-col-6" *ngFor="let proj of projects">
+    <p-panel>
+      <p-header>
+        Project '{{proj.name}}'
+      </p-header>
+
+      <p-tree [value]="proj.branches" [style]="{width: '100%', 'border-width': 0}">
+        <ng-template let-node  pTemplate="default">
+          {{node.label}}
+        </ng-template>
+        <ng-template let-node  pTemplate="branch">
+          <b style="width: 100px; display: inline-block;"><a routerLink="/branches/{{node.branchId}}" routerLinkActive="active">{{node.label}}</a></b>{{node.extraText}}
+        </ng-template>
+      </p-tree>
+
+    </p-panel>
+  </div>
+</div>

@@ -1,0 +1,14 @@
+<div class="breadcrumb">
+  <span *ngFor="let breadcrumb of breadcrumbs | async; last as isLast;"
+        class="breadcrumb-item"
+        [ngClass]="{'active': isLast}" aria-current="page">
+    <div style="font-size: 1.3rem; margin-right: 7px; cursor: pointer;">{{breadcrumb.label}}</div>
+
+    <div *ngIf="breadcrumb.id" class="pi pi-chevron-right" style="font-size: 0.9rem; color: #888;"></div>
+
+    <a *ngIf="breadcrumb.id" [routerLink]="[breadcrumb.url]"  routerLinkActive="active" style="display: block; padding: 0 10px;">
+      {{ breadcrumb.id }}
+    </a>
+    <div *ngIf="!isLast" class="pi pi-chevron-right" style="font-size: 0.9rem; color: #888;"></div>
+  </span>
+</div>

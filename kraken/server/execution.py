@@ -6,7 +6,7 @@ from sqlalchemy.sql.expression import asc, desc
 
 import consts
 from models import db, Branch, Flow, Run, Stage, Job, Step, ExecutorGroup, Tool, TestCaseResult
-
+from models import Project
 
 log = logging.getLogger(__name__)
 
@@ -156,4 +156,26 @@ def get_run_results(run_id):
     results = []
     for r in q.all():
         results.append(r.get_json())
-    return results, 200
+    return {'items': results, 'total': len(results)}, 200
+
+
+def get_run(run_id):
+    run = Run.query.filter_by(id=run_id).one_or_none()
+    if run:
+        return run.get_json(), 200
+    return {}, 404
+
+
+def get_projects():
+    q = Project.query
+    projects = []
+    for p in q.all():
+        projects.append(p.get_json())
+    return {'items': projects, 'total': len(projects)}, 200
+
+
+def get_branch(branch_id):
+    branch = Branch.query.filter_by(id=branch_id).one_or_none()
+    if branch:
+        return branch.get_json(), 200
+    return {}, 404

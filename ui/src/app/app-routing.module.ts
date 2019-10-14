@@ -4,12 +4,12 @@ import { Routes, RouterModule } from '@angular/router';
 //import { AuthGuard } from './auth.guard';
 import { BranchResultsComponent } from './branch-results/branch-results.component';
 import { RunResultsComponent } from './run-results/run-results.component';
+import { MainPageComponent } from './main-page/main-page.component';
 
 const routes: Routes = [
     {
         path: '',
-        //component: BranchResultsComponent,
-        redirectTo: 'branches/1',
+        component: MainPageComponent,
         pathMatch: 'full',
         //canActivate: [AuthGuard],
     },

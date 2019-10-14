@@ -1,11 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute, ParamMap } from '@angular/router';
-import { Observable } from 'rxjs';
+import { Observable, BehaviorSubject } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
 import {TableModule} from 'primeng/table';
 
 import { ExecutionService } from '../backend/api/execution.service';
+import { BreadcrumbsService } from '../breadcrumbs.service';
 
 
 @Component({
@@ -15,24 +16,48 @@ import { ExecutionService } from '../backend/api/execution.service';
 })
 export class RunResultsComponent implements OnInit {
 
+    runId = 0;
     results: any[];
 
     constructor(private route: ActivatedRoute,
                 private router: Router,
-                protected executionService: ExecutionService) { }
+                protected executionService: ExecutionService,
+                protected breadcrumbService: BreadcrumbsService) { }
 
     ngOnInit() {
+        this.runId = parseInt(this.route.snapshot.paramMap.get("id"));
+        this.breadcrumbService.setCrumbs([{
+            label: 'Stages',
+            url: '/runs/' + this.runId,
+            id: this.runId
+        }]);
         this.results = [];
+        this.executionService.getRun(this.runId).subscribe(run => {
+            let crumbs = [{
+                label: 'Projects',
+                url: '/projects/' + run.project_id,
+                id: run.project_name
+            }, {
+                label: 'Branches',
+                url: '/branches/' + run.branch_id,
+                id: run.branch_name
+            }, {
+                label: 'Flows',
+                url: '/flows/' + run.flow_id,
+                id: run.flow_id
+            }, {
+                label: 'Stages',
+                url: '/runs/' + run.id,
+                id: run.name
+            }];
+            this.breadcrumbService.setCrumbs(crumbs);
+        });
         this.refresh();
     }
 
     refresh() {
-        this.route.paramMap.pipe(
-            switchMap((params: ParamMap) =>
-                      this.executionService.getRunResults(parseInt(params.get('id'))))
-        ).subscribe(data => {
-            console.info(data);
-            this.results = data;
+        this.executionService.getRunResults(this.runId).subscribe(data => {
+            this.results = data.items;
         });
     }
 

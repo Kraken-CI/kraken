@@ -3,35 +3,12 @@ import { Router, ActivatedRoute, ParamMap } from '@angular/router';
 import { Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
-//import moment from 'moment';
-import moment from "moment-timezone";
-
 import {DropdownModule} from 'primeng/dropdown';
 
 import { ExecutionService } from '../backend/api/execution.service';
+import { BreadcrumbsService } from '../breadcrumbs.service';
 import { Run } from '../backend/model/run';
-
-
-function datetimeToLocal(d) {
-    try {
-        var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        if (!tz) {
-            tz = moment.tz.guess()
-        }
-        if (tz) {
-            d = moment(d).tz(tz)
-            tz = ''
-        } else {
-            d = moment(d)
-            tz = ' UTC'
-        }
-
-        return d.format('YYYY-MM-DD hh:mm:ss') + tz;
-    } catch(e) {
-        return d;
-    }
-}
-
+import { datetimeToLocal } from '../utils';
 
 @Component({
   selector: 'app-branch-results',
@@ -39,6 +16,8 @@ function datetimeToLocal(d) {
   styleUrls: ['./branch-results.component.sass']
 })
 export class BranchResultsComponent implements OnInit {
+    branchId = 0;
+
     flows0: any[];
     flows: any[];
 
@@ -49,9 +28,11 @@ export class BranchResultsComponent implements OnInit {
 
     constructor(private route: ActivatedRoute,
                 private router: Router,
-                protected executionService: ExecutionService) { }
+                protected executionService: ExecutionService,
+                protected breadcrumbService: BreadcrumbsService) { }
 
     ngOnInit() {
+        this.branchId = parseInt(this.route.snapshot.paramMap.get("id"));
         this.selectedStage = null;
         this.stagesAvailable = [
             {name: 'All'}
@@ -210,12 +191,25 @@ export class BranchResultsComponent implements OnInit {
             }]
         }];
 
+        this.executionService.getBranch(this.branchId).subscribe(branch => {
+            let crumbs = [{
+                label: 'Projects',
+                url: '/projects/' + branch.project_id,
+                id: branch.project_name
+            }, {
+                label: 'Branches',
+                url: '/branches/' + branch.id,
+                id: branch.name
+            }];
+            this.breadcrumbService.setCrumbs(crumbs);
+        });
+
         this.refresh();
     }
 
     newFlow() {
         this.executionService.createFlow(1).subscribe(data => {
-            console.info(data);
+            //console.info(data);
             let stages = new Set<string>();
             this._processFlowData(data, stages);
             this.flows.unshift(data)
@@ -254,7 +248,7 @@ export class BranchResultsComponent implements OnInit {
             switchMap((params: ParamMap) =>
                       this.executionService.getFlows(parseInt(params.get('id'))))
         ).subscribe(data => {
-            console.info(data);
+            //console.info(data);
             var flows = [];
             let stages = new Set<string>();
             flows = flows.concat(data);

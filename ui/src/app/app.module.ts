@@ -9,6 +9,8 @@ import {SplitButtonModule} from 'primeng/splitbutton';
 import {DropdownModule} from 'primeng/dropdown';
 import {MultiSelectModule} from 'primeng/multiselect';
 import {TableModule} from 'primeng/table';
+import {PanelModule} from 'primeng/panel';
+import {TreeModule} from 'primeng/tree';
 
 import { ConfigService } from './config.service';
 import { BackendService } from './backend.service'
@@ -18,6 +20,9 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { BranchResultsComponent } from './branch-results/branch-results.component';
 import { RunResultsComponent } from './run-results/run-results.component';
+import { BreadcrumbsComponent } from './breadcrumbs/breadcrumbs.component';
+import { BreadcrumbsService } from './breadcrumbs.service';
+import { MainPageComponent } from './main-page/main-page.component';
 
 export function cfgFactory() {
     return new Configuration();
@@ -27,7 +32,9 @@ export function cfgFactory() {
     declarations: [
         AppComponent,
         BranchResultsComponent,
-        RunResultsComponent
+        RunResultsComponent,
+        BreadcrumbsComponent,
+        MainPageComponent
     ],
     imports: [
         BrowserModule,
@@ -42,8 +49,11 @@ export function cfgFactory() {
         DropdownModule,
         MultiSelectModule,
         TableModule,
+        PanelModule,
+        TreeModule,
     ],
-    providers: [ConfigService, BackendService, { provide: BASE_PATH, useValue: 'http://localhost:5000/api' }],
+    providers: [ConfigService, BackendService, { provide: BASE_PATH, useValue: 'http://localhost:5000/api' },
+                BreadcrumbsService],
     bootstrap: [AppComponent]
 })
 export class AppModule { }
