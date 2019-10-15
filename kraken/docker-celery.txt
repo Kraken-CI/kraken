@@ -1,0 +1,22 @@
+# FROM python:3.7-slim
+# RUN groupadd user && useradd --create-home --home-dir /home/user -g user user
+# WORKDIR /home/user
+# RUN pip install redis
+# ENV CELERY_VERSION 4.0.2
+# RUN pip install celery=="$CELERY_VERSION"
+# RUN { \
+# 	echo 'import os'; \
+# 	echo "BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'amqp://')"; \
+# } > celeryconfig.py
+# # --link some-rabbit:rabbit "just works"
+# ENV CELERY_BROKER_URL amqp://guest@rabbit
+# USER user
+# CMD ["celery", "worker"]
+
+FROM ubuntu:19.10
+WORKDIR /server
+COPY server /server
+RUN apt update && apt install -y --no-install-recommends python3 python3-pip python3-setuptools python3-wheel libpq-dev gcc python3-dev
+RUN pip3 install --no-cache-dir -r /server/requirements.txt
+ENV REDIS_HOST localhost
+CMD celery -A bg.clry worker -l info

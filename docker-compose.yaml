@@ -43,6 +43,19 @@ services:
     depends_on:
       - server
 
+  celery:
+    restart: always
+    build:
+      context: kraken
+      dockerfile: docker-celery.txt
+    networks:
+      - db_net
+    environment:
+      REDIS_HOST: "redis"
+    depends_on:
+      - postgres
+      - redis
+
   ui:
     build:
       context: ui
@@ -59,6 +72,8 @@ services:
 
   postgres:
     image: postgres:11
+    volumes:
+      - db-data:/var/lib/postgresql/data
     networks:
       - db_net
     environment:

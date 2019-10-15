@@ -38,8 +38,9 @@ task :build_ui => [NG, :gen_client] do
   end
 end
 
-task :docker_up => [:build_ui] do
-  sh "docker-compose build ui"
+#task :docker_up => [:build_ui] do
+task :docker_up do
+  sh "docker-compose build"
   sh "docker-compose up"
 end
 

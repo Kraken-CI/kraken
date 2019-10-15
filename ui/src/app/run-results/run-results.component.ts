@@ -19,6 +19,7 @@ export class RunResultsComponent implements OnInit {
     runId = 0;
     results: any[];
     totalRecords = 0;
+    loading = false;
 
     constructor(private route: ActivatedRoute,
                 private router: Router,
@@ -93,5 +94,8 @@ export class RunResultsComponent implements OnInit {
             this.results = data.items;
             this.totalRecords = data.total;
         });
+    }
+
+    showCmdLine() {
     }
 }
