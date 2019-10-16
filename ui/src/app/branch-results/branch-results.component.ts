@@ -4,6 +4,8 @@ import { Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
 import {DropdownModule} from 'primeng/dropdown';
+import {MenuModule} from 'primeng/menu';
+import {MenuItem} from 'primeng/api';
 
 import { ExecutionService } from '../backend/api/execution.service';
 import { BreadcrumbsService } from '../breadcrumbs.service';
@@ -26,12 +28,22 @@ export class BranchResultsComponent implements OnInit {
     selectedStage: any;
     filterStageName = 'All';
 
+    runMenuItems: MenuItem[];
+
     constructor(private route: ActivatedRoute,
                 private router: Router,
                 protected executionService: ExecutionService,
                 protected breadcrumbService: BreadcrumbsService) { }
 
     ngOnInit() {
+        this.runMenuItems = [{
+            label: 'Show Details',
+            icon: 'pi pi-folder-open',
+        },
+        {
+            label: 'Rerun',
+            icon: 'pi pi-replay',
+        }];
         this.branchId = parseInt(this.route.snapshot.paramMap.get("id"));
         this.selectedStage = null;
         this.stagesAvailable = [
@@ -267,5 +279,17 @@ export class BranchResultsComponent implements OnInit {
 
     filterStages(event) {
         this.filterStageName = event.value.name;
+    }
+
+    showRunMenu($event, runMenu, run) {
+        console.info(runMenu);
+        console.info(run);
+        this.runMenuItems[0].routerLink = "/runs/" + run.id;
+        this.runMenuItems[1].command = () => {
+            this.executionService.replayRun(run.id).subscribe(data => {
+                console.info(data);
+            });
+        };
+        runMenu.toggle($event);
     }
 }

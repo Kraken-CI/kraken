@@ -38,9 +38,13 @@ export class MainPageComponent implements OnInit {
             for (let proj of data.items) {
                 let branches = []
                 for (let b of proj.branches) {
+                    let extraText = 'no flows yet';
+                    if (b.flows.length > 0) {
+                        extraText = 'last flow: ' + datetimeToLocal(b.flows[0].created);
+                    }
                     let br = {
                         label: b.name,
-                        extraText: 'last flow: ' + datetimeToLocal(b.flows[0].created),
+                        extraText: extraText,
                         branchId: b.id,
                         'type': 'branch',
                         icon: "fa fa-code-fork",

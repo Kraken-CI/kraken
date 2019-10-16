@@ -198,6 +198,31 @@ paths:
           description: unexpected error
           schema:
             $ref: '#/definitions/ApiError'
+    put:
+      summary: Replay run, start again same jobs
+      operationId: replay_run
+      tags:
+        - Execution
+      parameters:
+        - name: run_id
+          in: path
+          description: ID of pet to return
+          required: true
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: A paged array of runs
+          headers:
+            x-next:
+              type: string
+              description: A link to the next page of responses
+          schema:
+            $ref: '#/definitions/Run'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/ApiError'
   /jobs:
     post:
       operationId: create_job

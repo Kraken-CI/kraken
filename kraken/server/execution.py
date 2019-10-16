@@ -117,6 +117,18 @@ def create_run(stage_id):
     return data, 201
 
 
+def replay_run(run_id):
+    run = Run.query.filter_by(id=run_id).one_or_none()
+    if run is None:
+        abort(404, "Run not found")
+
+    _trigger_jobs(run)
+
+    data = run.get_json()
+
+    return data, 200
+
+
 def create_job(job):
     """
     This function creates a new person in the people structure

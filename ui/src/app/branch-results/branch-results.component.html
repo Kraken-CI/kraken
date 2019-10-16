@@ -8,6 +8,7 @@
         -->
         <p-dropdown [options]="stagesAvailable" optionLabel="name" (onChange)="filterStages($event)"></p-dropdown>
   </div>
+  <p-menu #runMenu [popup]="true" [model]="runMenuItems"></p-menu>
   <div *ngFor="let flow of flows" class="p-grid p-align-stretch">
     <div class="p-col-1">
       <b style="font-size: 1.2rem;">{{flow.name}}.</b>
@@ -34,7 +35,7 @@
                 </span>
               </div>
             </div>
-            <span style="float:right; cursor: pointer;" aria-hidden="true" class="ui-button-icon-left ui-clickable pi pi-chevron-down"></span>
+            <span style="float:right; cursor: pointer;" aria-hidden="true" class="ui-button-icon-left ui-clickable pi pi-chevron-down" (click)="showRunMenu($event, runMenu, run)"></span>
           </div>
           <!--- details -->
           <div class="job-detal-items">
