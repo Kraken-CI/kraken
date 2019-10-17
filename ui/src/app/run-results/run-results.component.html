@@ -11,25 +11,27 @@
          [showCurrentPageReport]="true">
     <ng-template pTemplate="header">
         <tr>
-            <th style="width: 50px;">ID</th>
-            <th style="width: 50px;">Job ID</th>
+            <th style="width: 150px;">Job Name</th>
+            <th style="width: 60px;">Job ID</th>
             <th style="width: 100px;">Result</th>
             <th style="width: 50%;">Name</th>
             <th style="width: 30%;">System</th>
-            <th style="width: 10%;">Executor</th>
             <th style="width: 10%;">Config</th>
+            <th style="width: 10%;">Executor Group</th>
+            <th style="width: 10%;">Executor</th>
             <th style="width: 90px;">Cmd Line</th>
         </tr>
     </ng-template>
     <ng-template pTemplate="body" let-res>
         <tr>
-            <td>{{res.id}}</td>
-            <td>{{res.job_id}}</td>
+            <td>{{res.job_name}}</td>
+            <td><a routerLink="/jobs/{{res.job_id}}">{{res.job_id}}</a></td>
             <td [class]="resultToClass(res.result)">{{resultToTxt(res.result)}}</td>
-            <td>{{res.test_case_name}}</td>
+            <td><a routerLink="/test_case_results/{{res.id}}">{{res.test_case_name}}</a></td>
             <td>Ubuntu 18.04</td>
-            <td>Vagrant</td>
             <td>default</td>
+            <td>{{res.executor_group_name}}</td>
+            <td>{{res.executor_name}}</td>
             <td><p-button label="CmdLine" (onClick)="showCmdLine()" styleClass="cmd-line-btn"></p-button></td>
         </tr>
     </ng-template>

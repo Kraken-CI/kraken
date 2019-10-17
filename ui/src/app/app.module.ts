@@ -11,6 +11,8 @@ import {MultiSelectModule} from 'primeng/multiselect';
 import {TableModule} from 'primeng/table';
 import {PanelModule} from 'primeng/panel';
 import {TreeModule} from 'primeng/tree';
+import {ToastModule} from 'primeng/toast';
+import {MessageService} from 'primeng/api';
 
 import { ConfigService } from './config.service';
 import { BackendService } from './backend.service'
@@ -51,9 +53,10 @@ export function cfgFactory() {
         TableModule,
         PanelModule,
         TreeModule,
+        ToastModule,
     ],
     providers: [ConfigService, BackendService, { provide: BASE_PATH, useValue: 'http://localhost:5000/api' },
-                BreadcrumbsService],
+                BreadcrumbsService, MessageService],
     bootstrap: [AppComponent]
 })
 export class AppModule { }

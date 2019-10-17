@@ -6,6 +6,7 @@ import { switchMap } from 'rxjs/operators';
 import {DropdownModule} from 'primeng/dropdown';
 import {MenuModule} from 'primeng/menu';
 import {MenuItem} from 'primeng/api';
+import {MessageService} from 'primeng/api';
 
 import { ExecutionService } from '../backend/api/execution.service';
 import { BreadcrumbsService } from '../breadcrumbs.service';
@@ -33,7 +34,8 @@ export class BranchResultsComponent implements OnInit {
     constructor(private route: ActivatedRoute,
                 private router: Router,
                 protected executionService: ExecutionService,
-                protected breadcrumbService: BreadcrumbsService) { }
+                protected breadcrumbService: BreadcrumbsService,
+                private msgSrv: MessageService) { }
 
     ngOnInit() {
         this.runMenuItems = [{
@@ -286,9 +288,15 @@ export class BranchResultsComponent implements OnInit {
         console.info(run);
         this.runMenuItems[0].routerLink = "/runs/" + run.id;
         this.runMenuItems[1].command = () => {
-            this.executionService.replayRun(run.id).subscribe(data => {
-                console.info(data);
-            });
+            this.executionService.replayRun(run.id).subscribe(
+                data => {
+                    console.info(data);
+                    this.msgSrv.add({severity:'success', summary:'Replay succeeded', detail:'Replay operation succeeded.'});
+                },
+                err => {
+                    console.info(err);
+                    this.msgSrv.add({severity:'error', summary:'Replay erred', detail:'Replay operation erred: ' + err.statusText, sticky: true});
+                });
         };
         runMenu.toggle($event);
     }

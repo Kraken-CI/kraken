@@ -11,11 +11,21 @@ from models import Project
 log = logging.getLogger(__name__)
 
 
-def _trigger_jobs(run):
+def _trigger_jobs(run, replay=False):
     schema = run.stage.schema
 
-    if 'jobs' not in schema:
+    if 'jobs' not in schema or len(schema['jobs']) == 0:
         return
+
+    covered_jobs = {}
+    if replay:
+        q = Job.query.filter_by(run=run).filter_by(covered=False)
+        for j in q.all():
+            key = '%s-%s' % (j.name, j.executor_group_id)
+            if key not in covered_jobs:
+                covered_jobs[key] = [j]
+            else:
+                covered_jobs[key].append(j)
 
     started_any = False
     now = datetime.datetime.utcnow()
@@ -48,6 +58,13 @@ def _trigger_jobs(run):
                     fields = s.copy()
                     del fields['tool']
                     Step(job=job, index=idx, tool=tools[idx], fields=fields)
+
+            if replay:
+                key = '%s-%s' % (j['name'], executor_group.id)
+                if key in covered_jobs:
+                    for cj in covered_jobs[key]:
+                        cj.covered = True
+
             db.session.commit()
             log.info('created job %s', job.get_json())
             started_any = True
@@ -122,7 +139,7 @@ def replay_run(run_id):
     if run is None:
         abort(404, "Run not found")
 
-    _trigger_jobs(run)
+    _trigger_jobs(run, replay=True)
 
     data = run.get_json()
 
@@ -164,7 +181,7 @@ def get_runs(stage_id):
 
 
 def get_run_results(run_id, start=0, limit=10):
-    q = TestCaseResult.query.join('job').filter(Job.run_id == run_id)
+    q = TestCaseResult.query.join('job').filter(Job.run_id == run_id, Job.covered == False)
     total = q.count()
     q = q.offset(start).limit(limit)
     results = []

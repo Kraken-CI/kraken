@@ -156,6 +156,7 @@ class Run(db.Model, DatesMixin):
     soft_timeout_reached = Column(DateTime)
 
     def get_json(self):
+        non_covered_jobs = Job.query.filter_by(run=self).filter_by(covered=False).all()
         tests_total = 0
         tests_passed = 0
         tests_pending = 0
@@ -164,9 +165,9 @@ class Run(db.Model, DatesMixin):
         jobs_waiting = 0
         jobs_completed = 0
         jobs_error = 0
-        jobs_total = len(self.jobs)
+        jobs_total = len(non_covered_jobs)
         last_time = None
-        for job in self.jobs:
+        for job in non_covered_jobs:
             if job.state == consts.JOB_STATE_EXECUTING_FINISHED:
                 jobs_processing += 1
             elif job.state == consts.JOB_STATE_ASSIGNED:
@@ -211,7 +212,7 @@ class Run(db.Model, DatesMixin):
                     jobs_executing=jobs_executing,
                     jobs_processing=jobs_processing,
                     jobs_error=jobs_error,
-                    jobs_id=[j.id for j in self.jobs],
+                    jobs_id=[j.id for j in non_covered_jobs],
                     tests_total=tests_total,
                     tests_passed=tests_passed,
                     tests_pending=tests_pending,
@@ -257,6 +258,7 @@ class Job(db.Model, DatesMixin):
     steps = relationship("Step", back_populates="job", order_by="Step.index")
     state = Column(Integer, default=consts.JOB_STATE_QUEUED)
     completion_status = Column(Integer)
+    covered = Column(Boolean, default=False)
     notes = Column(Unicode(2048))
     executor = relationship('Executor', uselist=False, back_populates="job", foreign_keys="Executor.job_id", post_update=True)
     executor_group_id = Column(Integer, ForeignKey('executor_groups.id'), nullable=False)
@@ -309,8 +311,13 @@ class TestCaseResult(db.Model):
                     test_case_id=self.test_case_id,
                     test_case_name=self.test_case.name,
                     job_id=self.job_id,
+                    job_name=self.job.name,
                     result=self.result,
-                    cmd_line=self.cmd_line)
+                    cmd_line=self.cmd_line,
+                    executor_group_name=self.job.executor_group.name,
+                    executor_group_id=self.job.executor_group_id,
+                    executor_name=self.job.executor_used.name,
+                    executor_id=self.job.executor_used_id)
 
 # RESOURCES
 

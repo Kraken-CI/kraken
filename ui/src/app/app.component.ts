@@ -5,7 +5,7 @@ import {MenuModule} from 'primeng/menu';
 import {MenuItem} from 'primeng/api';
 import {SplitButtonModule} from 'primeng/splitbutton';
 import {MultiSelectModule} from 'primeng/multiselect';
-
+import {ToastModule} from 'primeng/toast';
 
 @Component({
   selector: 'app-root',
