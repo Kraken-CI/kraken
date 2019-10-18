@@ -3,6 +3,7 @@ import datetime
 
 from flask import make_response, abort
 from sqlalchemy.sql.expression import asc, desc
+from sqlalchemy.orm import joinedload
 
 import consts
 from models import db, Branch, Flow, Run, Stage, Job, Step, ExecutorGroup, Tool, TestCaseResult
@@ -181,12 +182,18 @@ def get_runs(stage_id):
 
 
 def get_run_results(run_id, start=0, limit=10):
-    q = TestCaseResult.query.join('job').filter(Job.run_id == run_id, Job.covered == False)
+    q = TestCaseResult.query
+    q = q.options(joinedload('test_case'),
+                  joinedload('job'),
+                  joinedload('job.executor_group'),
+                  joinedload('job.executor_used'))
+    q = q.join('job')
+    q = q.filter(Job.run_id == run_id, Job.covered == False)
     total = q.count()
     q = q.offset(start).limit(limit)
     results = []
-    for r in q.all():
-        results.append(r.get_json())
+    for tcr in q.all():
+        results.append(tcr.get_json())
     return {'items': results, 'total': total}, 200
 
 

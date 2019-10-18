@@ -301,6 +301,9 @@ class TestCaseResult(db.Model):
     job = relationship('Job', back_populates="results")
     result = Column(Integer, default=0)
     cmd_line = Column(UnicodeText)
+    stability = Column(Integer, default=-1)
+    age = Column(Integer, default=0)
+    change = Column(Integer, default=consts.TC_RESULT_CHANGE_NO)
 
     def __repr__(self):
         txt = 'TCR %s, result:%s' % (self.id, consts.TC_RESULTS_NAME[self.result])
@@ -314,6 +317,9 @@ class TestCaseResult(db.Model):
                     job_name=self.job.name,
                     result=self.result,
                     cmd_line=self.cmd_line,
+                    stability=self.stability,
+                    age=self.age,
+                    change=self.change,
                     executor_group_name=self.job.executor_group.name,
                     executor_group_id=self.job.executor_group_id,
                     executor_name=self.job.executor_used.name,

@@ -25,6 +25,7 @@ import { RunResultsComponent } from './run-results/run-results.component';
 import { BreadcrumbsComponent } from './breadcrumbs/breadcrumbs.component';
 import { BreadcrumbsService } from './breadcrumbs.service';
 import { MainPageComponent } from './main-page/main-page.component';
+import { TestCaseResultComponent } from './test-case-result/test-case-result.component';
 
 export function cfgFactory() {
     return new Configuration();
@@ -36,7 +37,8 @@ export function cfgFactory() {
         BranchResultsComponent,
         RunResultsComponent,
         BreadcrumbsComponent,
-        MainPageComponent
+        MainPageComponent,
+        TestCaseResultComponent
     ],
     imports: [
         BrowserModule,

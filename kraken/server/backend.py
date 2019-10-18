@@ -1,8 +1,11 @@
 import json
+import time
 import logging
 import datetime
 
 from flask import request
+from sqlalchemy import or_
+from sqlalchemy.orm import joinedload
 
 from models import db, Run, Stage, Job, Step, Executor, TestCase, TestCaseResult
 import consts
@@ -70,20 +73,24 @@ def _handle_step_result(executor, req):
     db.session.commit()
 
     if 'test-results' in result:
+        t0 = time.time()
+        q = TestCaseResult.query.filter_by(job=job)
+        q = q.options(joinedload('test_case'))
+        q = q.join('test_case')
+        or_list = []
+        results = {}
         for tr in result['test-results']:
-            q = TestCaseResult.query.filter_by(job=job, result=consts.TC_RESULT_NOT_RUN)
-            q = q.join('test_case')
-            q = q.filter_by(name=tr['test'])
-            tcr = q.one_or_none()
-            if tcr is None:
-                log.warn('unknown test case reported: %s', tr['test'])
-                tc = TestCase.query.filter_by(tool=step.tool, name=tr['test']).one_or_none()
-                if tc is None:
-                    tc = TestCase(tool=step.tool, name=tr['test'])
-                tcr = TestCaseResult(test_case=tc, job=step.job)
+            or_list.append(TestCase.name == tr['test'])
+            results[tr['test']] = tr
+        q = q.filter(or_(*or_list))
+
+        for tcr in q.all():
+            tr = results[tcr.test_case.name]
             tcr.cmd_line = tr['cmd']
             tcr.result = tr['status']
-            db.session.commit()
+        db.session.commit()
+        t1 = time.time()
+        log.info('reporting %s test records took %ss', len(result['test-results']), (t1 - t0))
 
     job_finished = True
     log.info('checking steps')
@@ -109,6 +116,7 @@ def _handle_step_result(executor, req):
 
 
 def _create_test_records(step, tests):
+    t0 = time.time()
     tool_test_cases = {}
     q = TestCase.query.filter_by(tool=step.tool)
     for tc in q.all():
@@ -120,6 +128,8 @@ def _create_test_records(step, tests):
             tc = TestCase(name=t, tool=step.tool)
         tcr = TestCaseResult(test_case=tc, job=step.job)
     db.session.commit()
+    t1 = time.time()
+    log.info('creating %s test records took %ss', len(tests), (t1 - t0))
 
 
 def _handle_dispatch_tests(executor, req):

@@ -14,7 +14,10 @@
             <th style="width: 150px;">Job Name</th>
             <th style="width: 60px;">Job ID</th>
             <th style="width: 100px;">Result</th>
+            <th style="width: 70px;">Change</th>
             <th style="width: 50%;">Name</th>
+            <th style="width: 40px;">Age</th>
+            <th style="width: 40px;">Stability</th>
             <th style="width: 30%;">System</th>
             <th style="width: 10%;">Config</th>
             <th style="width: 10%;">Executor Group</th>
@@ -27,7 +30,10 @@
             <td>{{res.job_name}}</td>
             <td><a routerLink="/jobs/{{res.job_id}}">{{res.job_id}}</a></td>
             <td [class]="resultToClass(res.result)">{{resultToTxt(res.result)}}</td>
+            <td>{{res.change}}</td>
             <td><a routerLink="/test_case_results/{{res.id}}">{{res.test_case_name}}</a></td>
+            <td>{{res.age}}</td>
+            <td>{{res.stability}}</td>
             <td>Ubuntu 18.04</td>
             <td>default</td>
             <td>{{res.executor_group_name}}</td>
