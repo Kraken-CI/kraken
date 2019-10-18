@@ -1,12 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute, ParamMap } from '@angular/router';
-import { Observable, BehaviorSubject } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
 
 import {TableModule} from 'primeng/table';
 
 import { ExecutionService } from '../backend/api/execution.service';
 import { BreadcrumbsService } from '../breadcrumbs.service';
+import { TestCaseResults } from '../test-case-results';
 
 
 @Component({
@@ -33,6 +32,7 @@ export class RunResultsComponent implements OnInit {
             url: '/runs/' + this.runId,
             id: this.runId
         }]);
+
         this.results = [];
         this.executionService.getRun(this.runId).subscribe(run => {
             let crumbs = [{
@@ -57,30 +57,11 @@ export class RunResultsComponent implements OnInit {
     }
 
     formatResult(result) {
-        var resultMapping = {
-            0: {style: 'color: #FF8800;', txt: 'Not run'},
-            1: {style: 'color: #008800;', txt: 'Passed'},
-            2: {style: 'color: #FF2200;', txt: 'Failed'},
-            3: {style: 'color: #880000;', txt: 'ERROR'},
-            4: {style: 'color: #888888;', txt: 'Disabled'},
-            5: {style: 'color: #444444;', txt: 'Unsupported'},
-        };
-
-        let val = resultMapping[result]
-
-        return '<span style="' + val.style + '">' + val.txt + '</span>';
+        return TestCaseResults.formatResult(result);
     }
 
     resultToTxt(result) {
-        var resultMapping = {
-            0: 'Not run',
-            1: 'Passed',
-            2: 'Failed',
-            3: 'ERROR',
-            4: 'Disabled',
-            5: 'Unsupported',
-        };
-        return resultMapping[result];
+        return TestCaseResults.resultToTxt(result);
     }
 
     resultToClass(result) {
@@ -88,8 +69,6 @@ export class RunResultsComponent implements OnInit {
     }
 
     loadResultsLazy(event) {
-        console.info(event);
-
         this.executionService.getRunResults(this.runId, event.first, event.rows).subscribe(data => {
             this.results = data.items;
             this.totalRecords = data.total;

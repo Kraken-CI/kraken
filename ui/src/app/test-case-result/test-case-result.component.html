@@ -1,1 +1,36 @@
-<p>test-case-result works!</p>
+
+<p-table id="results"
+         [value]="results"
+         [lazy]="true"
+         (onLazyLoad)="loadResultsLazy($event)"
+         [paginator]="true"
+         [rows]="30"
+         [totalRecords]="totalRecords"
+         [loading]="loading"
+         [rowsPerPageOptions]="[10,20,30,50,100]"
+         [showCurrentPageReport]="true">
+    <ng-template pTemplate="header">
+        <tr>
+            <th style="width: 150px;">Job Name</th>
+            <th style="width: 60px;">Job ID</th>
+            <th style="width: 100px;">Result</th>
+            <th style="width: 70px;">Change</th>
+            <th style="width: 50%;">Name</th>
+            <th style="width: 40px;">Age</th>
+            <th style="width: 100px;">Stability</th>
+            <th style="width: 90px;">Cmd Line</th>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-res>
+        <tr>
+            <td>{{res.job_name}}</td>
+            <td><a routerLink="/jobs/{{res.job_id}}">{{res.job_id}}</a></td>
+            <td [class]="resultToClass(res.result)">{{resultToTxt(res.result)}}</td>
+            <td>{{res.change}}</td>
+            <td><a routerLink="/test_case_results/{{res.id}}">{{res.test_case_name}} [{{res.id}}]</a></td>
+            <td>{{res.age}}</td>
+            <td>{{res.stability}}</td>
+            <td><p-button label="CmdLine" (onClick)="showCmdLine()" styleClass="cmd-line-btn"></p-button></td>
+        </tr>
+    </ng-template>
+</p-table>

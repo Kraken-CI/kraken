@@ -309,8 +309,8 @@ class TestCaseResult(db.Model):
         txt = 'TCR %s, result:%s' % (self.id, consts.TC_RESULTS_NAME[self.result])
         return "<%s>" % txt
 
-    def get_json(self):
-        return dict(id=self.id,
+    def get_json(self, with_extra=False):
+        data = dict(id=self.id,
                     test_case_id=self.test_case_id,
                     test_case_name=self.test_case.name,
                     job_id=self.job_id,
@@ -324,6 +324,18 @@ class TestCaseResult(db.Model):
                     executor_group_id=self.job.executor_group_id,
                     executor_name=self.job.executor_used.name,
                     executor_id=self.job.executor_used_id)
+
+        if with_extra:
+            data['project_id'] = self.job.run.flow.branch.project_id
+            data['project_name'] = self.job.run.flow.branch.project.name
+            data['branch_id'] = self.job.run.flow.branch_id
+            data['branch_name'] = self.job.run.flow.branch.name
+            data['flow_id'] = self.job.run.flow_id
+            data['run_id'] = self.job.run_id
+            data['stage_id'] = self.job.run.stage_id
+            data['stage_name'] = self.job.run.stage.name
+
+        return data
 
 # RESOURCES
 

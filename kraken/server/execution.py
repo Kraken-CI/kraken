@@ -197,6 +197,36 @@ def get_run_results(run_id, start=0, limit=10):
     return {'items': results, 'total': total}, 200
 
 
+def get_result_history(test_case_result_id, start=0, limit=10):
+    tcr = TestCaseResult.query.filter_by(id=test_case_result_id).one_or_none()
+
+    q = TestCaseResult.query
+    q = q.options(joinedload('test_case'),
+                  joinedload('job'),
+                  joinedload('job.executor_group'),
+                  joinedload('job.executor_used'))
+    q = q.filter_by(test_case_id=tcr.test_case_id)
+    q = q.join('job')
+    q = q.filter_by(executor_group_id=tcr.job.executor_group_id)
+    q = q.join('job', 'run', 'flow', 'branch')
+    q = q.filter(Branch.id == tcr.job.run.flow.branch_id)
+    q = q.order_by(desc(Flow.created))
+
+    total = q.count()
+    q = q.offset(start).limit(limit)
+    results = []
+    for tcr in q.all():
+        results.append(tcr.get_json())
+    return {'items': results, 'total': total}, 200
+
+
+def get_result(test_case_result_id):
+    tcr = TestCaseResult.query.filter_by(id=test_case_result_id).one_or_none()
+    if tcr is None:
+        abort(404, "Run not found")
+    return tcr.get_json(with_extra=True), 200
+
+
 def get_run(run_id):
     run = Run.query.filter_by(id=run_id).one_or_none()
     if run:

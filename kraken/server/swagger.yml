@@ -223,6 +223,70 @@ paths:
           description: unexpected error
           schema:
             $ref: '#/definitions/ApiError'
+  /test_case_results/{test_case_result_id}:
+    get:
+      summary: List all results
+      operationId: get_result
+      tags:
+        - Execution
+      parameters:
+        - name: test_case_result_id
+          in: path
+          description: ID of pet to return
+          required: true
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: A paged array of runs
+          headers:
+            x-next:
+              type: string
+              description: A link to the next page of responses
+          schema:
+            $ref: '#/definitions/Result'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/ApiError'
+  /test_case_results/{test_case_result_id}/history:
+    get:
+      summary: List all results
+      operationId: get_result_history
+      tags:
+        - Execution
+      parameters:
+        - name: test_case_result_id
+          in: path
+          description: ID of pet to return
+          required: true
+          type: integer
+          format: int64
+        - name: start
+          in: query
+          description: How many items to return at one time (max 100)
+          required: false
+          type: integer
+          format: int32
+        - name: limit
+          in: query
+          description: How many items to return at one time (max 100)
+          required: false
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: A paged array of runs
+          headers:
+            x-next:
+              type: string
+              description: A link to the next page of responses
+          schema:
+            $ref: '#/definitions/Results'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/ApiError'
   /jobs:
     post:
       operationId: create_job

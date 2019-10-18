@@ -2,9 +2,10 @@ import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 
 //import { AuthGuard } from './auth.guard';
+import { MainPageComponent } from './main-page/main-page.component';
 import { BranchResultsComponent } from './branch-results/branch-results.component';
 import { RunResultsComponent } from './run-results/run-results.component';
-import { MainPageComponent } from './main-page/main-page.component';
+import { TestCaseResultComponent } from './test-case-result/test-case-result.component';
 
 const routes: Routes = [
     {
@@ -25,10 +26,14 @@ const routes: Routes = [
         path: 'runs/:id',
         component: RunResultsComponent
     },
+    {
+        path: 'test_case_results/:id',
+        component: TestCaseResultComponent
+    },
 
 
     // otherwise redirect to home
-    { path: '**', redirectTo: 'branches/1' }
+    { path: '**', redirectTo: '' }
 ];
 
 
