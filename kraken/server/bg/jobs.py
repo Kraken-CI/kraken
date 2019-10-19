@@ -61,22 +61,23 @@ def analyze_results_history(job):
         tcrs = q.all()
         for idx, tcr in enumerate(tcrs):
             if idx == 0:
-                job_tcr.stability = 0
-            elif tcr.result == tcrs[idx - 1].result:
-                job_tcr.stability += 1
+                job_tcr.instability = 0
+            elif tcr.result != tcrs[idx - 1].result:
+                job_tcr.instability += 1
 
             log.info('TCR: %s %s %s', tcr, tcr.test_case.name, tcr.job.run.flow.created)
 
         # determine age
-        if tcrs[-1].result == job_tcr.result:
-            job_tcr.age = tcrs[-1].age + 1
-            job_tcr.stability += 1
-        else:
-            job_tcr.age = 0
-            if job_tcr.result == consts.TC_RESULT_PASSED and tcrs[-1].result != consts.TC_RESULT_PASSED:
-                job_tcr.change = consts.TC_RESULT_CHANGE_FIX
-            elif job_tcr.result != consts.TC_RESULT_PASSED and tcrs[-1].result == consts.TC_RESULT_PASSED:
-                job_tcr.change = consts.TC_RESULT_CHANGE_REGR
+        if len(tcrs) > 0:
+            if tcrs[-1].result == job_tcr.result:
+                job_tcr.age = tcrs[-1].age + 1
+            else:
+                job_tcr.instability += 1
+                job_tcr.age = 0
+                if job_tcr.result == consts.TC_RESULT_PASSED and tcrs[-1].result != consts.TC_RESULT_PASSED:
+                    job_tcr.change = consts.TC_RESULT_CHANGE_FIX
+                elif job_tcr.result != consts.TC_RESULT_PASSED and tcrs[-1].result == consts.TC_RESULT_PASSED:
+                    job_tcr.change = consts.TC_RESULT_CHANGE_REGR
 
         db.session.commit()
 

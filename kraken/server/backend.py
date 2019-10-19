@@ -88,6 +88,7 @@ def _handle_step_result(executor, req):
             tr = results[tcr.test_case.name]
             tcr.cmd_line = tr['cmd']
             tcr.result = tr['status']
+            tcr.values = tr['values'] if 'values' in tr else None
         db.session.commit()
         t1 = time.time()
         log.info('reporting %s test records took %ss', len(result['test-results']), (t1 - t0))

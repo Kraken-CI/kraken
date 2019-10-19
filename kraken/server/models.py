@@ -300,8 +300,9 @@ class TestCaseResult(db.Model):
     job_id = Column(Integer, ForeignKey('jobs.id'), nullable=False)
     job = relationship('Job', back_populates="results")
     result = Column(Integer, default=0)
+    values = Column(JSONB)
     cmd_line = Column(UnicodeText)
-    stability = Column(Integer, default=-1)
+    instability = Column(Integer, default=0)
     age = Column(Integer, default=0)
     change = Column(Integer, default=consts.TC_RESULT_CHANGE_NO)
 
@@ -316,8 +317,9 @@ class TestCaseResult(db.Model):
                     job_id=self.job_id,
                     job_name=self.job.name,
                     result=self.result,
+                    values=self.values,
                     cmd_line=self.cmd_line,
-                    stability=self.stability,
+                    instability=self.instability,
                     age=self.age,
                     change=self.change,
                     executor_group_name=self.job.executor_group.name,
@@ -546,7 +548,7 @@ def prepare_initial_data():
                 "name": "random tests",
                 "steps": [{
                     "tool": "rndtest",
-                    "count": "1000"
+                    "count": "10"
                 }],
                 "environments": [{
                     "system": "centos-7",

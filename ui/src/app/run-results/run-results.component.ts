@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute, ParamMap } from '@angular/router';
 
 import {TableModule} from 'primeng/table';
+import {TabViewModule} from 'primeng/tabview';
 
 import { ExecutionService } from '../backend/api/execution.service';
 import { BreadcrumbsService } from '../breadcrumbs.service';

@@ -14,10 +14,11 @@
             <th style="width: 150px;">Job Name</th>
             <th style="width: 60px;">Job ID</th>
             <th style="width: 100px;">Result</th>
-            <th style="width: 70px;">Change</th>
+            <th style="width: 80px;">Change</th>
             <th style="width: 50%;">Name</th>
             <th style="width: 40px;">Age</th>
-            <th style="width: 100px;">Stability</th>
+            <th style="width: 100px;">Instability</th>
+            <th style="width: 150px;">Values</th>
             <th style="width: 90px;">Cmd Line</th>
         </tr>
     </ng-template>
@@ -26,10 +27,15 @@
             <td>{{res.job_name}}</td>
             <td><a routerLink="/jobs/{{res.job_id}}">{{res.job_id}}</a></td>
             <td [class]="resultToClass(res.result)">{{resultToTxt(res.result)}}</td>
-            <td>{{res.change}}</td>
+            <td [class]="changeToClass(res.change)">{{changeToTxt(res.change)}}</td>
             <td><a routerLink="/test_case_results/{{res.id}}">{{res.test_case_name}} [{{res.id}}]</a></td>
             <td>{{res.age}}</td>
-            <td>{{res.stability}}</td>
+            <td>{{res.instability}}</td>
+            <td>
+              <div *ngFor="let v of res.values | keyvalue">
+                {{v.key}}:&nbsp;{{v.value.value}}
+              </div>
+            </td>
             <td><p-button label="CmdLine" (onClick)="showCmdLine()" styleClass="cmd-line-btn"></p-button></td>
         </tr>
     </ng-template>

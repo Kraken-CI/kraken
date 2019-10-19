@@ -13,6 +13,7 @@ import {PanelModule} from 'primeng/panel';
 import {TreeModule} from 'primeng/tree';
 import {ToastModule} from 'primeng/toast';
 import {MessageService} from 'primeng/api';
+import {TabViewModule} from 'primeng/tabview';
 
 import { ConfigService } from './config.service';
 import { BackendService } from './backend.service'
@@ -56,6 +57,7 @@ export function cfgFactory() {
         PanelModule,
         TreeModule,
         ToastModule,
+        TabViewModule,
     ],
     providers: [ConfigService, BackendService, { provide: BASE_PATH, useValue: 'http://localhost:5000/api' },
                 BreadcrumbsService, MessageService],

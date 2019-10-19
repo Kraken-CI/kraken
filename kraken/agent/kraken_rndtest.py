@@ -1,5 +1,6 @@
 import logging
 import random
+import statistics
 
 import tool
 
@@ -61,6 +62,31 @@ def run_tests(step, report_result=None):
         cmd = 'random_test %s' % test
 
         result = dict(cmd=cmd, test=test, status=random.choice([0, 1, 2, 3, 4, 5]))
+
+        num = random.randint(0, 3)
+        if num > 0:
+            result['values'] = {}
+            for name in random.sample(['FPS', 'pressure', 'speed', 'duration', 'temperature'], num):
+                population = random.choices(range(random.choice([100, 1000, 10000])), k=random.choice([10, 50, 100]))
+                pmin = min(population)
+                pmax = max(population)
+                pstdev = statistics.stdev(population)
+                pmean = statistics.mean(population)
+                val = {'value': pmean,
+                       'median': statistics.median_low(population),
+                       'min': pmin,
+                       'max': pmax,
+                       'range': pmax - pmin,
+                       'stddev': pstdev,
+                       'variance': statistics.variance(population),
+                       'cv': pstdev / pmean,
+                       'iterations': len(population)}
+                try:
+                    val['mode'] = statistics.mode(population)
+                except:
+                    pass
+                result['values'][name] = val
+
         report_result(result)
 
     return 0, ''

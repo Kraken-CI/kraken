@@ -80,4 +80,17 @@ export class TestCaseResultComponent implements OnInit {
     resultToClass(result) {
         return 'result' + result;
     }
+
+    changeToTxt(change) {
+        if (change == 0) {
+            return "";
+        } else if (change == 1) {
+            return "fix";
+        } else {
+            return "regression";
+        }
+    }
+    changeToClass(change) {
+        return "change" + change;
+    }
 }
