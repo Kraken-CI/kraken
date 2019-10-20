@@ -47,14 +47,14 @@
       <div class="p-col-6">
       </div>
       <div class="p-col-6">
-        <p-selectButton [options]="valueNames" [(ngModel)]="selectedValue" optionLabel="name"></p-selectButton>
+        <p-selectButton [options]="valueNames" [(ngModel)]="selectedValue" optionLabel="name" (onChange)="valueChange()"></p-selectButton>
       </div>
 
       <div class="p-col-6">
         <p-chart type="bar" [data]="statusData" [options]="statusOptions"></p-chart>
       </div>
       <div class="p-col-6">
-        <p-chart type="bar" [data]="valueData" [options]="valueOptions"></p-chart>
+        <p-chart type="line" [data]="valueData" [options]="valueOptions"></p-chart>
       </div>
     </div>
   </p-tabPanel>

@@ -25,7 +25,7 @@ export class TestCaseResultComponent implements OnInit {
     statusData = {};
     statusOptions = {};
     valueNames: any[];
-    selectedValue: string;
+    selectedValue: any;
     valueData = {};
     valueOptions = {};
 
@@ -72,6 +72,7 @@ export class TestCaseResultComponent implements OnInit {
                 valueNames.push({name: name});
             }
             this.valueNames = valueNames;
+            this.selectedValue = valueNames[0];
         });
 
         this.statusOptions = {
@@ -110,6 +111,35 @@ export class TestCaseResultComponent implements OnInit {
         return resultMapping[res];
     }
 
+    prepareValueChartData() {
+        let flowIds = [];
+        let values = [];
+        let median = [];
+        for (let res of this.results.slice().reverse()) {
+            flowIds.push(res.flow_id);
+            let val = res.values[this.selectedValue.name]
+            values.push(val.value);
+            if (val.median) {
+                median.push(val.median);
+            }
+        }
+
+        let valueData = {
+            labels: flowIds,
+            datasets: [{
+                label: this.selectedValue.name,
+                data: values
+            }]
+        };
+        if (median.length > 0) {
+            valueData.datasets.push({
+                label: 'median',
+                data: median
+            });
+        }
+        this.valueData = valueData;
+    }
+
     loadResultsLazy(event) {
         this.executionService.getResultHistory(this.tcrId, event.first, event.rows).subscribe(data => {
             this.results = data.items;
@@ -134,6 +164,8 @@ export class TestCaseResultComponent implements OnInit {
                     origData: origStatuses
                 }]
             };
+
+            this.prepareValueChartData();
         });
     }
 
@@ -165,5 +197,9 @@ export class TestCaseResultComponent implements OnInit {
 
     handleTabChange(event) {
         console.info(event);
+    }
+
+    valueChange() {
+        this.prepareValueChartData();
     }
 }

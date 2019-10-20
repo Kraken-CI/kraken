@@ -2,6 +2,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NgModule } from '@angular/core';
 import { HttpClientModule } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
 
 import {PanelMenuModule} from 'primeng/panelmenu';
 import {MenuModule} from 'primeng/menu';
@@ -52,6 +53,7 @@ export function cfgFactory() {
         HttpClientModule,
         ApiModule.forRoot(cfgFactory),
         AppRoutingModule,
+        FormsModule,
 
         PanelMenuModule,
         MenuModule,
