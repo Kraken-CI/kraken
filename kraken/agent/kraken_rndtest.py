@@ -1,6 +1,7 @@
 import logging
 import random
 import statistics
+import time
 
 import tool
 
@@ -58,16 +59,22 @@ def collect_tests(step):
 def run_tests(step, report_result=None):
     tests = step['tests']
 
-    for test in tests:
+    for idx1, test in enumerate(tests):
         cmd = 'random_test %s' % test
 
+        random.seed(time.time())
         result = dict(cmd=cmd, test=test, status=random.choice([0, 1, 2, 3, 4, 5]))
 
+        random.seed(idx1)
         num = random.randint(0, 3)
         if num > 0:
             result['values'] = {}
-            for name in random.sample(['FPS', 'pressure', 'speed', 'duration', 'temperature'], num):
-                population = random.choices(range(random.choice([100, 1000, 10000])), k=random.choice([10, 50, 100]))
+            for idx2, name in enumerate(random.sample(['FPS', 'pressure', 'speed', 'duration', 'temperature'], num)):
+                random.seed(idx1 * idx2)
+                data_range = range(random.choice([100, 1000, 10000]))
+                data_size = random.choice([10, 50, 100])
+                random.seed(time.time())
+                population = random.choices(data_range, k=data_size)
                 pmin = min(population)
                 pmax = max(population)
                 pstdev = statistics.stdev(population)

@@ -11,15 +11,17 @@
   <p-menu #runMenu [popup]="true" [model]="runMenuItems"></p-menu>
   <div *ngFor="let flow of flows" class="p-grid p-align-stretch">
     <div class="p-col-1">
-      <b style="font-size: 1.2rem;">{{flow.name}}.</b>
-      <div style="font-size: 0.7rem;">
-        <div>{{flow.created}}</div>
-        <div>{{flow.duration}}
-          <span *ngIf="flow.state == 'in-progress'">
-            <i class="pi pi-spin pi-spinner" style="font-size: 16px; vertical-align: text-top;"></i>
-          </span>
+      <a routerLink="/flows/{{flow.id}}" style="color: unset;">
+        <b style="font-size: 1.2rem;">{{flow.name}}.</b>
+        <div style="font-size: 0.7rem;">
+          <div>{{flow.created}}</div>
+          <div>{{flow.duration}}
+            <span *ngIf="flow.state == 'in-progress'">
+              <i class="pi pi-spin pi-spinner" style="font-size: 16px; vertical-align: text-top;"></i>
+            </span>
+          </div>
         </div>
-      </div>
+      </a>
     </div>
     <div class="p-col" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 6px;">
       <ng-container *ngFor="let run of flow.runs">

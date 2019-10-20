@@ -1,42 +1,61 @@
+<p-tabView (onChange)="handleTabChange($event)">
+  <p-tabPanel header="Results">
+    <p-table id="results"
+             [value]="results"
+             [lazy]="true"
+             (onLazyLoad)="loadResultsLazy($event)"
+             [paginator]="true"
+             [rows]="30"
+             [totalRecords]="totalRecords"
+             [loading]="loading"
+             [rowsPerPageOptions]="[10,20,30,50,100]"
+             [showCurrentPageReport]="true">
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 50px;">Flow ID</th>
+          <th style="width: 140px;">Job</th>
+          <th style="width: 100px;">Result</th>
+          <th style="width: 80px;">Change</th>
+          <th style="width: 50%;">Name</th>
+          <th style="width: 40px;">Age</th>
+          <th style="width: 100px;">Instability</th>
+          <th style="width: 150px;">Values</th>
+          <th style="width: 100px;">Cmd Line</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-res>
+        <tr>
+          <td><a routerLink="/flows/{{res.flow_id}}">{{res.flow_id}}</a></td>
+          <td><a routerLink="/jobs/{{res.job_id}}">[{{res.job_id}}] {{res.job_name}}</a></td>
+          <td [class]="resultToClass(res.result)">{{resultToTxt(res.result)}}</td>
+          <td [class]="changeToClass(res.change)">{{changeToTxt(res.change)}}</td>
+          <td><a routerLink="/test_case_results/{{res.id}}">[{{res.id}}] {{res.test_case_name}}</a></td>
+          <td>{{res.age}}</td>
+          <td>{{res.instability}}</td>
+          <td>
+            <div *ngFor="let v of res.values | keyvalue">
+              {{v.key}}:&nbsp;{{v.value.value}}
+            </div>
+          </td>
+          <td><p-button label="CmdLine" (onClick)="showCmdLine()" styleClass="cmd-line-btn"></p-button></td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-tabPanel>
+  <p-tabPanel header="Charts">
+    <div class="p-grid">
+      <div class="p-col-6">
+      </div>
+      <div class="p-col-6">
+        <p-selectButton [options]="valueNames" [(ngModel)]="selectedValue" optionLabel="name"></p-selectButton>
+      </div>
 
-<p-table id="results"
-         [value]="results"
-         [lazy]="true"
-         (onLazyLoad)="loadResultsLazy($event)"
-         [paginator]="true"
-         [rows]="30"
-         [totalRecords]="totalRecords"
-         [loading]="loading"
-         [rowsPerPageOptions]="[10,20,30,50,100]"
-         [showCurrentPageReport]="true">
-    <ng-template pTemplate="header">
-        <tr>
-            <th style="width: 150px;">Job Name</th>
-            <th style="width: 60px;">Job ID</th>
-            <th style="width: 100px;">Result</th>
-            <th style="width: 80px;">Change</th>
-            <th style="width: 50%;">Name</th>
-            <th style="width: 40px;">Age</th>
-            <th style="width: 100px;">Instability</th>
-            <th style="width: 150px;">Values</th>
-            <th style="width: 90px;">Cmd Line</th>
-        </tr>
-    </ng-template>
-    <ng-template pTemplate="body" let-res>
-        <tr>
-            <td>{{res.job_name}}</td>
-            <td><a routerLink="/jobs/{{res.job_id}}">{{res.job_id}}</a></td>
-            <td [class]="resultToClass(res.result)">{{resultToTxt(res.result)}}</td>
-            <td [class]="changeToClass(res.change)">{{changeToTxt(res.change)}}</td>
-            <td><a routerLink="/test_case_results/{{res.id}}">{{res.test_case_name}} [{{res.id}}]</a></td>
-            <td>{{res.age}}</td>
-            <td>{{res.instability}}</td>
-            <td>
-              <div *ngFor="let v of res.values | keyvalue">
-                {{v.key}}:&nbsp;{{v.value.value}}
-              </div>
-            </td>
-            <td><p-button label="CmdLine" (onClick)="showCmdLine()" styleClass="cmd-line-btn"></p-button></td>
-        </tr>
-    </ng-template>
-</p-table>
+      <div class="p-col-6">
+        <p-chart type="bar" [data]="statusData" [options]="statusOptions"></p-chart>
+      </div>
+      <div class="p-col-6">
+        <p-chart type="bar" [data]="valueData" [options]="valueOptions"></p-chart>
+      </div>
+    </div>
+  </p-tabPanel>
+</p-tabView>

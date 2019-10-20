@@ -6,6 +6,7 @@ import { MainPageComponent } from './main-page/main-page.component';
 import { BranchResultsComponent } from './branch-results/branch-results.component';
 import { RunResultsComponent } from './run-results/run-results.component';
 import { TestCaseResultComponent } from './test-case-result/test-case-result.component';
+import { FlowResultsComponent } from './flow-results/flow-results.component';
 
 const routes: Routes = [
     {
@@ -21,6 +22,10 @@ const routes: Routes = [
     {
         path: 'branches/:id',
         component: BranchResultsComponent
+    },
+    {
+        path: 'flows/:id',
+        component: FlowResultsComponent
     },
     {
         path: 'runs/:id',

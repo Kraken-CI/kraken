@@ -14,6 +14,9 @@ import {TreeModule} from 'primeng/tree';
 import {ToastModule} from 'primeng/toast';
 import {MessageService} from 'primeng/api';
 import {TabViewModule} from 'primeng/tabview';
+import {OrganizationChartModule} from 'primeng/organizationchart';
+import {ChartModule} from 'primeng/chart';
+import {SelectButtonModule} from 'primeng/selectbutton';
 
 import { ConfigService } from './config.service';
 import { BackendService } from './backend.service'
@@ -27,6 +30,7 @@ import { BreadcrumbsComponent } from './breadcrumbs/breadcrumbs.component';
 import { BreadcrumbsService } from './breadcrumbs.service';
 import { MainPageComponent } from './main-page/main-page.component';
 import { TestCaseResultComponent } from './test-case-result/test-case-result.component';
+import { FlowResultsComponent } from './flow-results/flow-results.component';
 
 export function cfgFactory() {
     return new Configuration();
@@ -39,7 +43,8 @@ export function cfgFactory() {
         RunResultsComponent,
         BreadcrumbsComponent,
         MainPageComponent,
-        TestCaseResultComponent
+        TestCaseResultComponent,
+        FlowResultsComponent
     ],
     imports: [
         BrowserModule,
@@ -58,6 +63,9 @@ export function cfgFactory() {
         TreeModule,
         ToastModule,
         TabViewModule,
+        OrganizationChartModule,
+        ChartModule,
+        SelectButtonModule,
     ],
     providers: [ConfigService, BackendService, { provide: BASE_PATH, useValue: 'http://localhost:5000/api' },
                 BreadcrumbsService, MessageService],

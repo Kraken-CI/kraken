@@ -1,0 +1,19 @@
+<p-organizationChart [value]="runsTree">
+  <ng-template let-node pTemplate="root">
+    <div style="text-align: left;">
+      <div style="font-weight: bold; font-size: 1.3rem;">{{node.label}}</div>
+      <div>{{node.data.created}}</div>
+    </div>
+    </ng-template>
+    <ng-template let-node pTemplate="default">
+      <div style="text-align: left;">
+        <div style="font-weight: bold; font-size: 1.1rem;">
+          <a routerLink="/runs/{{node.data.id}}">{{node.label}}</a>
+        </div>
+        <div>{{node.data.created}}</div>
+        <div>{{node.data.duration}}</div>
+        <div>jobs: {{node.data.jobs_total}}</div>
+        <div>passed: {{node.data.tests_passed * 100 / node.data.tests_total}}%, {{node.data.tests_passed}}/{{node.data.tests_total}}</div>
+      </div>
+    </ng-template>
+</p-organizationChart>

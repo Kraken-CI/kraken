@@ -86,6 +86,58 @@ paths:
           description: unexpected error
           schema:
             $ref: '#/definitions/ApiError'
+  /flows/{flow_id}:
+    get:
+      summary: List all results
+      operationId: get_flow
+      tags:
+        - Execution
+      parameters:
+        - name: flow_id
+          in: path
+          description: ID of pet to return
+          required: true
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: A paged array of runs
+          headers:
+            x-next:
+              type: string
+              description: A link to the next page of responses
+          schema:
+            $ref: '#/definitions/Flow'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/ApiError'
+  /flows/{flow_id}/runs:
+    get:
+      summary: List all results
+      operationId: get_flow_runs
+      tags:
+        - Execution
+      parameters:
+        - name: flow_id
+          in: path
+          description: ID of pet to return
+          required: true
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: A paged array of runs
+          headers:
+            x-next:
+              type: string
+              description: A link to the next page of responses
+          schema:
+            $ref: '#/definitions/Runs'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/ApiError'
   /stages/{stage_id}/runs:
     post:
       operationId: create_run
@@ -335,6 +387,18 @@ definitions:
       created:
         type: string
         format: date-time
+      project_id:
+        type: integer
+        format: int64
+      project_name:
+        type: string
+      branch_id:
+        type: integer
+        format: int64
+      branch_name:
+        type: string
+      runs:
+        type: object
   Flows:
     type: object
     properties:
@@ -397,6 +461,8 @@ definitions:
       job_id:
         type: integer
         format: int64
+      values:
+        type: object
   Results:
     type: object
     properties:

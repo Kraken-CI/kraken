@@ -21,6 +21,14 @@ export class TestCaseResultComponent implements OnInit {
     totalRecords = 0;
     loading = false;
 
+    // charts
+    statusData = {};
+    statusOptions = {};
+    valueNames: any[];
+    selectedValue: string;
+    valueData = {};
+    valueOptions = {};
+
     constructor(private route: ActivatedRoute,
                 private router: Router,
                 protected executionService: ExecutionService,
@@ -58,14 +66,74 @@ export class TestCaseResultComponent implements OnInit {
                 id: this.result.test_case_name
             }];
             this.breadcrumbService.setCrumbs(crumbs);
+
+            let valueNames = [];
+            for (let name in result.values) {
+                valueNames.push({name: name});
+            }
+            this.valueNames = valueNames;
         });
+
+        this.statusOptions = {
+            elements: {
+		rectangle: {
+		    backgroundColor: this.statusColors
+		}
+	    },
+            tooltips: {
+		mode: 'index',
+		callbacks: {
+		    title: function(tooltipItems, data) {
+                        let res = data.datasets[0].origData[tooltipItems[0].index];
+                        return TestCaseResults.resultToTxt(res);
+		    },
+		},
+		footerFontStyle: 'normal'
+	    }
+        };
+    }
+
+    statusColors(ctx) {
+        let res = ctx.dataset.origData[ctx.dataIndex];
+        return TestCaseResults.resultColor(res);
+    }
+
+    resultToChartVal(res) {
+        var resultMapping = {
+            0: 0, // 'Not run',
+            1: 5, // 'Passed',
+            2: 2, // 'Failed',
+            3: 1, // 'ERROR',
+            4: 3, // 'Disabled',
+            5: 4, // 'Unsupported',
+        };
+        return resultMapping[res];
     }
 
     loadResultsLazy(event) {
-
         this.executionService.getResultHistory(this.tcrId, event.first, event.rows).subscribe(data => {
             this.results = data.items;
             this.totalRecords = data.total;
+
+            let flowIds = [];
+            let statuses = [];
+            let origStatuses = [];
+            for (let res of this.results.slice().reverse()) {
+                flowIds.push(res.flow_id);
+                statuses.push(this.resultToChartVal(res.result));
+                //statuses.push(TestCaseResults.resultToTxt(res.result));
+                origStatuses.push(res.result);
+            }
+
+            this.statusData = {
+                labels: flowIds,
+                //yLabels: ['Not run', 'ERROR', 'Failed', 'Disabled', 'Unsupported', 'Passed'],
+                datasets: [{
+                    label: 'Status',
+                    data: statuses,
+                    origData: origStatuses
+                }]
+            };
         });
     }
 
@@ -90,7 +158,12 @@ export class TestCaseResultComponent implements OnInit {
             return "regression";
         }
     }
+
     changeToClass(change) {
         return "change" + change;
+    }
+
+    handleTabChange(event) {
+        console.info(event);
     }
 }

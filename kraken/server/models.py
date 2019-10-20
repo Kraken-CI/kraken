@@ -64,7 +64,7 @@ class Branch(db.Model, DatesMixin):
     name = Column(Unicode(255))
     project_id = Column(Integer, ForeignKey('projects.id'), nullable=False)
     project = relationship('Project', back_populates="branches")
-    stages = relationship("Stage", back_populates="branch")
+    stages = relationship("Stage", back_populates="branch", order_by="Stage.name")
     flows = relationship("Flow", back_populates="branch")
 
     def get_json(self):
@@ -119,7 +119,7 @@ class Flow(db.Model, DatesMixin):
     state = Column(Integer, default=consts.FLOW_STATE_IN_PROGRESS)
     branch_id = Column(Integer, ForeignKey('branches.id'), nullable=False)
     branch = relationship('Branch', back_populates="flows")
-    runs = relationship('Run', back_populates="flow")
+    runs = relationship('Run', back_populates="flow", order_by="Run.created")
 
     def get_json(self):
         if self.state == consts.FLOW_STATE_COMPLETED:
@@ -135,6 +135,9 @@ class Flow(db.Model, DatesMixin):
                     state=consts.FLOW_STATES_NAME[self.state],
                     duration=duration_to_txt(duration),
                     branch_id=self.branch_id,
+                    branch_name=self.branch.name,
+                    project_id=self.branch.project_id,
+                    project_name=self.branch.project.name,
                     runs=[r.get_json()for r in self.runs])
 
 

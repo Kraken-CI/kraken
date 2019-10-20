@@ -45,7 +45,7 @@ class BaseTask(Task):
         log.info('PROBLEMS')
 
 
-def analyze_results_history(job):
+def analyze_job_history(job):
     for job_tcr in job.results:
         log.info('Analyze %s %s', job_tcr, job_tcr.test_case.name)
         q = TestCaseResult.query
@@ -59,6 +59,7 @@ def analyze_results_history(job):
         q = q.limit(10)
 
         tcrs = q.all()
+        # determine instability
         for idx, tcr in enumerate(tcrs):
             if idx == 0:
                 job_tcr.instability = 0
@@ -80,6 +81,56 @@ def analyze_results_history(job):
                     job_tcr.change = consts.TC_RESULT_CHANGE_REGR
 
         db.session.commit()
+
+
+@app.task(base=BaseTask, bind=True)
+def analyze_results_history(self, run_id):
+    try:
+        app = create_app()
+
+        with app.app_context():
+            log.info('starting analysis of run %s', run_id)
+            run = Run.query.filter_by(id=run_id).one_or_none()
+            if run is None:
+                log.error('got unknown run to analyze: %s', run_id)
+                return
+
+            # check prev run
+            q = Run.query
+            q = q.filter_by(stage_id=run.stage_id)
+            q = q.join('flow')
+            q = q.filter(Flow.created < run.flow.created)
+            q = q.order_by(desc(Flow.created))
+            prev_run = q.first()
+            if prev_run is None:
+                log.info('skip anlysis of run %s as there is no prev run', run)
+                return
+            elif prev_run.state != consts.RUN_STATE_COMPLETED:
+                # prev run is not completed yet
+                log.info('postpone anlysis of run %s as prev run %s is not completed yet', run, prev_run)
+                return
+
+            # analyze jobs of this run
+            for job in run.jobs:
+                if job.covered:
+                    continue
+                analyze_job_history(job)
+            log.info('anlysis of run %s completed', run)
+
+            # trigger analysis of the following run
+            q = Run.query
+            q = q.filter_by(stage_id=run.stage_id)
+            q = q.join('flow')
+            q = q.filter(Flow.created > run.flow.created)
+            q = q.order_by(asc(Flow.created))
+            next_run = q.first()
+            if next_run is not None:
+                t = analyze_results_history.delay(next_run.id)
+                log.info('enqueued anlysis of run %s, bg processing: %s', next_run, t)
+
+    except Exception as exc:
+        log.exception('will retry')
+        raise self.retry(exc=exc)
 
 
 @app.task(base=BaseTask, bind=True)
@@ -113,6 +164,7 @@ def job_completed(self, job_id):
                     break
 
             if run.state != new_state:
+                log.info('completed run %s', run)
                 run.state = new_state
                 run.finished = now
                 db.session.commit()
@@ -126,11 +178,14 @@ def job_completed(self, job_id):
                         break
 
                 if flow.state != new_state:
+                    log.info('completed flow %s', flow)
                     flow.state = new_state
                     flow.finished = now
                     db.session.commit()
 
-            # analyze history of results
-            analyze_results_history(job)
+                # trigger history of results analysis
+                t = analyze_results_history.delay(run.id)
+                log.info('run %s finished, bg processing: %s', run, t)
     except Exception as exc:
+        log.exception('will retry')
         raise self.retry(exc=exc)

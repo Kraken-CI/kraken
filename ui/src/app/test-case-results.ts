@@ -1,13 +1,25 @@
 export class TestCaseResults {
 
+    static resultColor(result) {
+        var mapping = {
+            0: '#FF8800',
+            1: '#008800',
+            2: '#FF2200',
+            3: '#880000',
+            4: '#888888',
+            5: '#444444',
+        };
+        return mapping[result]
+    }
+
     static formatResult(result) {
         var resultMapping = {
-            0: {style: 'color: #FF8800;', txt: 'Not run'},
-            1: {style: 'color: #008800;', txt: 'Passed'},
-            2: {style: 'color: #FF2200;', txt: 'Failed'},
-            3: {style: 'color: #880000;', txt: 'ERROR'},
-            4: {style: 'color: #888888;', txt: 'Disabled'},
-            5: {style: 'color: #444444;', txt: 'Unsupported'},
+            0: {style: 'color: ' + TestCaseResults.resultColor(result) + ';', txt: 'Not run'},
+            1: {style: 'color: ' + TestCaseResults.resultColor(result) + ';', txt: 'Passed'},
+            2: {style: 'color: ' + TestCaseResults.resultColor(result) + ';', txt: 'Failed'},
+            3: {style: 'color: ' + TestCaseResults.resultColor(result) + ';', txt: 'ERROR'},
+            4: {style: 'color: ' + TestCaseResults.resultColor(result) + ';', txt: 'Disabled'},
+            5: {style: 'color: ' + TestCaseResults.resultColor(result) + ';', txt: 'Unsupported'},
         };
 
         let val = resultMapping[result]

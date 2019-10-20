@@ -112,6 +112,24 @@ def get_flows(branch_id):
     return flows, 200
 
 
+def get_flow(flow_id):
+    flow = Flow.query.filter_by(id=flow_id).one_or_none()
+    if flow is None:
+        abort(404, "Flow not found")
+    return flow.get_json()
+
+
+def get_flow_runs(flow_id):
+    flow = Flow.query.filter_by(id=flow_id).one_or_none()
+    if flow is None:
+        abort(404, "Flow not found")
+
+    runs = []
+    for run in flow.runs:
+        runs.append(runs.get_json())
+    return runs, 200
+
+
 def create_run(stage_id):
     """
     This function creates a new person in the people structure
@@ -216,7 +234,7 @@ def get_result_history(test_case_result_id, start=0, limit=10):
     q = q.offset(start).limit(limit)
     results = []
     for tcr in q.all():
-        results.append(tcr.get_json())
+        results.append(tcr.get_json(with_extra=True))
     return {'items': results, 'total': total}, 200
 
 
