@@ -30,6 +30,7 @@ export class FlowResultsComponent implements OnInit {
             label: `Flow [${this.flowId}]`,
             expanded: true,
             'type': 'root',
+            data: {created: ''},
             children: []
         }];
 

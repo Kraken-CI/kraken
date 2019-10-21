@@ -1,16 +1,37 @@
 <div class="p-grid">
+  <p-dialog header="New Branch in {{selectedProject.name}}" [(visible)]="newBranchDlgVisible">
+    <input type="text" pInputText [(ngModel)]="branchName" (keydown)="keyDown($event)"/>
+    <p-footer>
+      <button type="button" (click)="cancelNewBranch()" pButton icon="pi pi-times" label="Cancel"></button>
+      <button type="button" (click)="addNewBranch()" pButton icon="pi pi-check" label="Add"></button>
+    </p-footer>
+  </p-dialog>
+
   <div class="p-col-6" *ngFor="let proj of projects">
     <p-panel>
       <p-header>
-        Project '{{proj.name}}'
+        <div class="ui-helper-clearfix">
+          <span style="font-size:16px; display:inline-block; margin-top: 2px;">Project <b>{{proj.name}}</b></span>
+          <div style="display:inline-block; float: right;">
+            <p-button label="New Branch" icon="pi pi-plus" (onClick)="newBranch(proj)"></p-button>
+          </div>
+        </div>
       </p-header>
 
-      <p-tree [value]="proj.branches" [style]="{width: '100%', 'border-width': 0}">
+      <p-tree [value]="proj.branches"
+              selectionMode="single"
+              [style]="{width: '100%', 'border-width': 0}">
         <ng-template let-node  pTemplate="default">
-          {{node.label}}
+          <a routerLink="/flows/{{node.id}}">{{node.id}}.</a> {{node.label}}
         </ng-template>
         <ng-template let-node  pTemplate="branch">
-          <b style="width: 100px; display: inline-block;"><a routerLink="/branches/{{node.branchId}}" routerLinkActive="active">{{node.label}}</a></b>{{node.extraText}}
+          <div style="width: 600px;">
+            <b style="width: 100px; display: inline-block;"><a routerLink="/branches/{{node.branchId}}" routerLinkActive="active">{{node.label}}</a></b> {{node.extraText}}
+            <a routerLink="/branches/{{node.branchId}}/mgmt" style="float: right;">
+              <i class="pi pi-cog" style="vertical-align: bottom;"></i>
+              management
+            </a>
+          </div>
         </ng-template>
       </p-tree>
 

@@ -18,6 +18,8 @@ import {TabViewModule} from 'primeng/tabview';
 import {OrganizationChartModule} from 'primeng/organizationchart';
 import {ChartModule} from 'primeng/chart';
 import {SelectButtonModule} from 'primeng/selectbutton';
+import {DialogModule} from 'primeng/dialog';
+import {InputTextModule} from 'primeng/inputtext';
 
 import { ConfigService } from './config.service';
 import { BackendService } from './backend.service'
@@ -32,6 +34,7 @@ import { BreadcrumbsService } from './breadcrumbs.service';
 import { MainPageComponent } from './main-page/main-page.component';
 import { TestCaseResultComponent } from './test-case-result/test-case-result.component';
 import { FlowResultsComponent } from './flow-results/flow-results.component';
+import { BranchMgmtComponent } from './branch-mgmt/branch-mgmt.component';
 
 export function cfgFactory() {
     return new Configuration();
@@ -45,7 +48,8 @@ export function cfgFactory() {
         BreadcrumbsComponent,
         MainPageComponent,
         TestCaseResultComponent,
-        FlowResultsComponent
+        FlowResultsComponent,
+        BranchMgmtComponent
     ],
     imports: [
         BrowserModule,
@@ -68,6 +72,8 @@ export function cfgFactory() {
         OrganizationChartModule,
         ChartModule,
         SelectButtonModule,
+        DialogModule,
+        InputTextModule,
     ],
     providers: [ConfigService, BackendService, { provide: BASE_PATH, useValue: 'http://localhost:5000/api' },
                 BreadcrumbsService, MessageService],

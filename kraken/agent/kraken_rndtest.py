@@ -72,7 +72,7 @@ def run_tests(step, report_result=None):
             for idx2, name in enumerate(random.sample(['FPS', 'pressure', 'speed', 'duration', 'temperature'], num)):
                 random.seed(idx1 * idx2)
                 data_range = range(random.choice([100, 1000, 10000]))
-                data_size = random.choice([10, 50, 100])
+                data_size = random.choice([1, 10, 50, 100])
                 random.seed(time.time())
                 population = random.choices(data_range, k=data_size)
                 pmin = min(population)

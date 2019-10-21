@@ -1,11 +1,11 @@
 <div>
   <div style="margin-bottom: 5px;">
-    <p-button label="New Flow" (onClick)="newFlow()" style="margin-right: 5px;"></p-button>
-    <p-button label="Refresh" (onClick)="refresh()" style="margin-right: 10px;"></p-button>
+    <p-button label="New Flow" (onClick)="newFlow()" [style]="{'margin-right': '5px'}"></p-button>
+    <p-button label="Refresh" (onClick)="refresh()" [style]="{'margin-right': '10px'}"></p-button>
     <!--
         <p-multiSelect [options]="stagesAvailable" [(ngModel)]="selectedStages" optionLabel="name"></p-multiSelect>
         <p-multiSelect [options]="stagesAvailable" optionLabel="name" [filter]="false" style="height: 33px;" [style]="{minWidth: '12em'}" [panelStyle]="{minWidth: '12em'}"></p-multiSelect>
-        -->
+    -->
         <p-dropdown [options]="stagesAvailable" optionLabel="name" (onChange)="filterStages($event)"></p-dropdown>
   </div>
   <p-menu #runMenu [popup]="true" [model]="runMenuItems"></p-menu>

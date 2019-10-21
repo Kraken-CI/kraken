@@ -12,6 +12,33 @@ basePath: /api
 
 # Paths supported by the server application
 paths:
+  /projects/{project_id}/branches:
+    post:
+      operationId: create_branch
+      tags:
+        - Management
+      summary: Create a branch
+      description: Create a new branch
+      parameters:
+        - name: project_id
+          in: path
+          description: ID of pet to return
+          required: true
+          type: integer
+          format: int64
+        - name: branch
+          in: body
+          description: branch
+          schema:
+            type: object
+            required:
+              - name
+            properties:
+              name:
+                type: string
+      responses:
+        201:
+          description: Successfully created run
   /branches/{branch_id}:
     get:
       summary: List all results

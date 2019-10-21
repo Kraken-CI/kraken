@@ -37,6 +37,7 @@
             ],
             "scripts": [
                 "./node_modules/chart.js/dist/Chart.js",
+                "./node_modules/chartjs-plugin-error-bars/build/Plugin.Errorbars.js"
             ]
           },
           "configurations": {

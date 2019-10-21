@@ -3,6 +3,8 @@ import { Router, ActivatedRoute, ParamMap } from '@angular/router';
 
 import {TableModule} from 'primeng/table';
 
+import 'chartjs-plugin-error-bars';
+
 import { ExecutionService } from '../backend/api/execution.service';
 import { BreadcrumbsService } from '../breadcrumbs.service';
 import { TestCaseResults } from '../test-case-results';
@@ -28,6 +30,7 @@ export class TestCaseResultComponent implements OnInit {
     selectedValue: any;
     valueData = {};
     valueOptions = {};
+    chartPlugins: any[];
 
     constructor(private route: ActivatedRoute,
                 private router: Router,
@@ -115,6 +118,9 @@ export class TestCaseResultComponent implements OnInit {
         let flowIds = [];
         let values = [];
         let median = [];
+        let errorBars = {};
+        let minVal = 0;
+        let maxVal = null;
         for (let res of this.results.slice().reverse()) {
             flowIds.push(res.flow_id);
             let val = res.values[this.selectedValue.name]
@@ -122,22 +128,54 @@ export class TestCaseResultComponent implements OnInit {
             if (val.median) {
                 median.push(val.median);
             }
+            errorBars[res.flow_id] = {plus: val.stddev, minus: -val.stddev};
+
+            let v = val.value - val.stddev;
+            if (minVal > v) {
+                minVal = v;
+            }
+            v = val.value + val.stddev;
+            if (maxVal == null || maxVal < v) {
+                maxVal = v;
+            }
         }
 
         let valueData = {
             labels: flowIds,
             datasets: [{
                 label: this.selectedValue.name,
-                data: values
+                data: values,
+                fill: false,
+		borderColor: '#f00',
+		backgroundColor: '#f00',
+                lineTension: 0,
+                errorBars: errorBars
             }]
         };
         if (median.length > 0) {
             valueData.datasets.push({
                 label: 'median',
-                data: median
+                data: median,
+                fill: false,
+		borderColor: '#f88',
+		backgroundColor: '#f88',
+                lineTension: 0,
+                borderWidth: 1
             });
         }
         this.valueData = valueData;
+
+        this.valueOptions = {
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        suggestedMin: minVal,
+                        suggestedMax: maxVal
+                    }
+                }]
+            }
+        };
+
     }
 
     loadResultsLazy(event) {

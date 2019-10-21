@@ -21,6 +21,7 @@
     "@angular/platform-browser-dynamic": "~8.2.8",
     "@angular/router": "~8.2.8",
     "chart.js": "^2.8.0",
+    "chartjs-plugin-error-bars": "^1.2.2",
     "font-awesome": "^4.7.0",
     "moment": "^2.24.0",
     "moment-timezone": "^0.5.26",

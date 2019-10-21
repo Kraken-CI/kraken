@@ -54,7 +54,7 @@
         <p-chart type="bar" [data]="statusData" [options]="statusOptions"></p-chart>
       </div>
       <div class="p-col-6">
-        <p-chart type="line" [data]="valueData" [options]="valueOptions"></p-chart>
+        <p-chart type="line" [data]="valueData" [options]="valueOptions" [plugins]="chartPlugins"></p-chart>
       </div>
     </div>
   </p-tabPanel>

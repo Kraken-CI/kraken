@@ -46,7 +46,7 @@ class Project(db.Model, DatesMixin):
     id = Column(Integer, primary_key=True)
     name = Column(Unicode(50))
     description = Column(Unicode(200))
-    branches = relationship("Branch", back_populates="project")
+    branches = relationship("Branch", back_populates="project", order_by="Branch.created")
     executor_groups = relationship("ExecutorGroup", back_populates="project")
 
     def get_json(self):
@@ -65,7 +65,7 @@ class Branch(db.Model, DatesMixin):
     project_id = Column(Integer, ForeignKey('projects.id'), nullable=False)
     project = relationship('Project', back_populates="branches")
     stages = relationship("Stage", back_populates="branch", order_by="Stage.name")
-    flows = relationship("Flow", back_populates="branch")
+    flows = relationship("Flow", back_populates="branch", order_by="desc(Flow.created)")
 
     def get_json(self):
         return dict(id=self.id,
