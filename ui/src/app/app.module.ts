@@ -4,6 +4,8 @@ import { NgModule } from '@angular/core';
 import { HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 
+import { CodemirrorModule } from '@ctrl/ngx-codemirror';
+
 import {PanelMenuModule} from 'primeng/panelmenu';
 import {MenuModule} from 'primeng/menu';
 import {SplitButtonModule} from 'primeng/splitbutton';
@@ -20,6 +22,8 @@ import {ChartModule} from 'primeng/chart';
 import {SelectButtonModule} from 'primeng/selectbutton';
 import {DialogModule} from 'primeng/dialog';
 import {InputTextModule} from 'primeng/inputtext';
+import {InputTextareaModule} from 'primeng/inputtextarea';
+import {MessageModule} from 'primeng/message';
 
 import { ConfigService } from './config.service';
 import { BackendService } from './backend.service'
@@ -59,6 +63,8 @@ export function cfgFactory() {
         AppRoutingModule,
         FormsModule,
 
+        CodemirrorModule,
+
         PanelMenuModule,
         MenuModule,
         SplitButtonModule,
@@ -74,6 +80,8 @@ export function cfgFactory() {
         SelectButtonModule,
         DialogModule,
         InputTextModule,
+        InputTextareaModule,
+        MessageModule,
     ],
     providers: [ConfigService, BackendService, { provide: BASE_PATH, useValue: 'http://localhost:5000/api' },
                 BreadcrumbsService, MessageService],

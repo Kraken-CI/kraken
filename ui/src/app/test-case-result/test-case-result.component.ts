@@ -149,7 +149,8 @@ export class TestCaseResultComponent implements OnInit {
 		borderColor: '#f00',
 		backgroundColor: '#f00',
                 lineTension: 0,
-                errorBars: errorBars
+                errorBars: errorBars,
+                borderWidth: 2
             }]
         };
         if (median.length > 0) {
@@ -160,6 +161,7 @@ export class TestCaseResultComponent implements OnInit {
 		borderColor: '#f88',
 		backgroundColor: '#f88',
                 lineTension: 0,
+                errorBars: {},
                 borderWidth: 1
             });
         }

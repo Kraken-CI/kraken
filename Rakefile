@@ -9,7 +9,7 @@ SWAGGER_FILE = File.expand_path("kraken/server/swagger.yml")
 
 task :gen_client => SWAGGER_CODEGEN do
   Dir.chdir('ui') do
-    sh "java -jar #{SWAGGER_CODEGEN} generate -l typescript-angular -i #{SWAGGER_FILE} -o src/app/backend --additional-properties snapshot=true,ngVersion=8.2.8,modelPropertyNaming=snake_case"
+    sh "java -jar #{SWAGGER_CODEGEN} generate  -l typescript-angular -i #{SWAGGER_FILE} -o src/app/backend --additional-properties snapshot=true,ngVersion=8.2.8,modelPropertyNaming=snake_case"
   end
 end
 

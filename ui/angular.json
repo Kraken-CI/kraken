@@ -33,11 +33,16 @@
                 "./node_modules/primeng/resources/themes/nova-light/theme.css",
                 "./node_modules/primeng/resources/primeng.min.css",
                 "./node_modules/primeflex/primeflex.css",
+                "./node_modules/codemirror/lib/codemirror.css",
+                "./node_modules/codemirror/theme/material.css",
+                "./node_modules/codemirror/addon/lint/lint.css",
                 "./src/styles.sass"
             ],
             "scripts": [
                 "./node_modules/chart.js/dist/Chart.js",
-                "./node_modules/chartjs-plugin-error-bars/build/Plugin.Errorbars.js"
+                "./node_modules/chartjs-plugin-error-bars/build/Plugin.Errorbars.js",
+                "./node_modules/codemirror/addon/lint/json-lint.js",
+                "./node_modules/codemirror/addon/lint/lint.js"
             ]
           },
           "configurations": {

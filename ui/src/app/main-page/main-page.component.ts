@@ -20,7 +20,7 @@ export class MainPageComponent implements OnInit {
 
     projects: any[];
 
-    selectedProject = {name: ''};
+    selectedProject = {name: '', id: 0};
     newBranchDlgVisible = false;
     branchName = "";
 

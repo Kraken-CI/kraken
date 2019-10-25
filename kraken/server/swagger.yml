@@ -30,15 +30,36 @@ paths:
           in: body
           description: branch
           schema:
-            type: object
-            required:
-              - name
-            properties:
-              name:
-                type: string
+            $ref: '#/definitions/Branch'
       responses:
         201:
           description: Successfully created run
+  /branches/{branch_id}/cfg:
+    get:
+      summary: List all results
+      operationId: get_branch
+      tags:
+        - Management
+      parameters:
+        - name: branch_id
+          in: path
+          description: ID of pet to return
+          required: true
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: A paged array of runs
+          headers:
+            x-next:
+              type: string
+              description: A link to the next page of responses
+          schema:
+            $ref: '#/definitions/Branch'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/ApiError'
   /branches/{branch_id}:
     get:
       summary: List all results
@@ -113,6 +134,28 @@ paths:
           description: unexpected error
           schema:
             $ref: '#/definitions/ApiError'
+  /branches/{branch_id}/stages:
+    post:
+      operationId: create_stage
+      tags:
+        - Management
+      summary: Create a stage
+      description: Create a new stage
+      parameters:
+        - name: branch_id
+          in: path
+          description: ID of pet to return
+          required: true
+          type: integer
+          format: int64
+        - name: stage
+          in: body
+          description: stage
+          schema:
+            $ref: '#/definitions/Stage'
+      responses:
+        201:
+          description: Successfully created run
   /flows/{flow_id}:
     get:
       summary: List all results
@@ -165,6 +208,28 @@ paths:
           description: unexpected error
           schema:
             $ref: '#/definitions/ApiError'
+  /stages/{stage_id}:
+    put:
+      operationId: update_stage
+      tags:
+        - Management
+      summary: Update a stage
+      description: Update stage settings
+      parameters:
+        - name: stage_id
+          in: path
+          description: ID of pet to return
+          required: true
+          type: integer
+          format: int64
+        - name: stage
+          in: body
+          description: stage
+          schema:
+            $ref: '#/definitions/Stage'
+      responses:
+        201:
+          description: Successfully created run
   /stages/{stage_id}/runs:
     post:
       operationId: create_run
@@ -522,7 +587,7 @@ definitions:
   Branch:
     type: "object"
     required:
-      - id
+      - name
     properties:
       id:
         type: integer
@@ -533,6 +598,29 @@ definitions:
         type: integer
         format: int64
       project_name:
+        type: string
+      stages:
+        type: object
+      flows:
+        type: object
+  Stage:
+    type: "object"
+    required:
+      - name
+    properties:
+      id:
+        type: integer
+        format: int64
+      name:
+        type: string
+      branch_id:
+        type: integer
+        format: int64
+      branch_name:
+        type: string
+      schema:
+        type: object
+      schema_txt:
         type: string
 
   ApiError:

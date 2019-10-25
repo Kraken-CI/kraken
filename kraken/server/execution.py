@@ -247,9 +247,9 @@ def get_result(test_case_result_id):
 
 def get_run(run_id):
     run = Run.query.filter_by(id=run_id).one_or_none()
-    if run:
-        return run.get_json(), 200
-    return {}, 404
+    if run is None:
+        abort(404, "Run not found")
+    return run.get_json(), 200
 
 
 def get_projects():
@@ -262,6 +262,6 @@ def get_projects():
 
 def get_branch(branch_id):
     branch = Branch.query.filter_by(id=branch_id).one_or_none()
-    if branch:
-        return branch.get_json(), 200
-    return {}, 404
+    if branch is None:
+        abort(404, "Branch not found")
+    return branch.get_json(with_results=True), 200

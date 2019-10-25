@@ -1,0 +1,49 @@
+<p-dialog header="New Stage in {{branch.name}} branch" [(visible)]="newStageDlgVisible">
+  <input type="text" pInputText [(ngModel)]="stageName" (keydown)="keyDown($event)"/>
+  <p-footer>
+    <button type="button" (click)="cancelNewStage()" pButton icon="pi pi-times" label="Cancel"></button>
+    <button type="button" (click)="addNewStage()" pButton icon="pi pi-check" label="Add"></button>
+  </p-footer>
+</p-dialog>
+
+
+<div>
+  <input type="text" pInputText [(ngModel)]="branch.name"/>
+  <button type="button" (click)="saveBranch()" pButton icon="pi pi-check" label="Save"></button>
+</div>
+
+<p-tabView>
+  <p-tabPanel header="Stages">
+    <div class="p-grid">
+      <div class="p-col-12">
+        <button type="button" (click)="newStage()" pButton icon="pi pi-plus" label="New Stage"></button>
+      </div>
+      <div class="p-col-3">
+        <div *ngFor="let stage of branch.stages" style="margin: 6px 0 12px 0; cursor: pointer;" class="round-shadow" (click)="selectStage(stage)">
+          <div style="font-size: 1.1rem; font-weight: bold; margin-bottom: 4px;">{{stage.name}}</div>
+          <div>{{stage.description}}</div>
+        </div>
+      </div>
+      <div class="p-col-9" style="padding-left: 40px;">
+        <div *ngIf="branch.stages.length">
+          <h1>{{stage.name}}</h1>
+          <p>{{stage.description}}</p>
+
+          <div style="padding: 20px 0 0 0;">Stage Schema:</div>
+          <div style="height: calc(100vh - 450px); padding: 10px 0 10px 0;">
+            <ngx-codemirror
+              id="ngx-cm"
+              [(ngModel)]="stage.schema_txt"
+              [options]="codeMirrorOpts"></ngx-codemirror>
+          </div>
+          <button type="button" (click)="saveStage()" pButton icon="pi pi-check" label="Save Stage"></button>
+          <span *ngIf="saveErrorMsg.length > 0">
+            <p-message severity="error" [text]="saveErrorMsg" style="margin-left: 40px;"></p-message>
+          </span>
+        </div>
+      </div>
+    </div>
+  </p-tabPanel>
+  <p-tabPanel header="Configs">
+  </p-tabPanel>
+</p-tabView>

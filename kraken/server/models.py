@@ -55,7 +55,7 @@ class Project(db.Model, DatesMixin):
                     deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,
                     name=self.name,
                     description=self.description,
-                    branches=[b.get_json() for b in self.branches])
+                    branches=[b.get_json(with_results=True) for b in self.branches])
 
 
 class Branch(db.Model, DatesMixin):
@@ -67,14 +67,19 @@ class Branch(db.Model, DatesMixin):
     stages = relationship("Stage", back_populates="branch", order_by="Stage.name")
     flows = relationship("Flow", back_populates="branch", order_by="desc(Flow.created)")
 
-    def get_json(self):
-        return dict(id=self.id,
+    def get_json(self, with_results=False, with_cfg=False):
+        data = dict(id=self.id,
                     created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,
                     deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,
                     name=self.name,
                     project_id=self.project_id,
-                    project_name=self.project.name,
-                    flows=[f.get_json() for f in self.flows[:10]])
+                    project_name=self.project.name)
+        if with_results:
+            data['flows'] = [f.get_json() for f in self.flows[:10]]
+        if with_cfg:
+            data['stages'] = [s.get_json() for s in self.stages]
+        return data
+
 
 
 # PLANNING
@@ -89,6 +94,15 @@ class Stage(db.Model, DatesMixin):
     schema = Column(JSONB, nullable=False)
     runs = relationship('Run', back_populates="stage")
     #services
+
+    def get_json(self):
+        return dict(id=self.id,
+                    created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,
+                    deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,
+                    name=self.name,
+                    description=self.description,
+                    schema=self.schema,
+                    schema_txt=json.dumps(self.schema, indent=4, separators=(',', ': ')))
 
 # class Config(db.Model, DatesMixin):
 #     __tablename__ = "configs"
