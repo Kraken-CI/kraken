@@ -46,7 +46,7 @@ class Project(db.Model, DatesMixin):
     id = Column(Integer, primary_key=True)
     name = Column(Unicode(50))
     description = Column(Unicode(200))
-    branches = relationship("Branch", back_populates="project", order_by="Branch.created")
+    base_branches = relationship("BaseBranch", back_populates="project", order_by="BaseBranch.created")
     executor_groups = relationship("ExecutorGroup", back_populates="project")
 
     def get_json(self):
@@ -57,14 +57,23 @@ class Project(db.Model, DatesMixin):
                     description=self.description,
                     branches=[b.get_json(with_results=True) for b in self.branches])
 
+class BaseBranch(db.Model, DatesMixin):
+    __tablename__ = "base_branches"
+    id = Column(Integer, primary_key=True)
+    name = Column(Unicode(255))
+    project_id = Column(Integer, ForeignKey('projects.id'), nullable=False)
+    project = relationship('Project', back_populates="base_branches")
+    ci_branch_id = Column(Integer, ForeignKey('branches.id'), nullable=False)
+    ci_branch = relationship("Branch", back_populates="base_branch")
+    dev_branch_id = Column(Integer, ForeignKey('branches.id'), nullable=False)
+    dev_branch = relationship("Branch", back_populates="base_branch")
+    stages = relationship("Stage", back_populates="branch", lazy="dynamic", order_by="Stage.name")
+
 
 class Branch(db.Model, DatesMixin):
     __tablename__ = "branches"
     id = Column(Integer, primary_key=True)
-    name = Column(Unicode(255))
-    project_id = Column(Integer, ForeignKey('projects.id'), nullable=False)
-    project = relationship('Project', back_populates="branches")
-    stages = relationship("Stage", back_populates="branch", order_by="Stage.name")
+    base_branch = relationship('BaseBranch')
     flows = relationship("Flow", back_populates="branch", order_by="desc(Flow.created)")
 
     def get_json(self, with_results=False, with_cfg=False):
@@ -77,7 +86,7 @@ class Branch(db.Model, DatesMixin):
         if with_results:
             data['flows'] = [f.get_json() for f in self.flows[:10]]
         if with_cfg:
-            data['stages'] = [s.get_json() for s in self.stages]
+            data['stages'] = [s.get_json() for s in self.stages.filter_by(deleted=None)]
         return data
 
 
@@ -89,8 +98,8 @@ class Stage(db.Model, DatesMixin):
     id = Column(Integer, primary_key=True)
     name = Column(Unicode(50))
     description = Column(Unicode(1024))
-    branch_id = Column(Integer, ForeignKey('branches.id'), nullable=False)
-    branch = relationship('Branch', back_populates="stages")
+    base_branch_id = Column(Integer, ForeignKey('base_branches.id'), nullable=False)
+    base_branch = relationship('BaseBranch', back_populates="stages")
     schema = Column(JSONB, nullable=False)
     runs = relationship('Run', back_populates="stage")
     #services
@@ -103,6 +112,9 @@ class Stage(db.Model, DatesMixin):
                     description=self.description,
                     schema=self.schema,
                     schema_txt=json.dumps(self.schema, indent=4, separators=(',', ': ')))
+
+    def __repr__(self):
+        return "<Stage %s, '%s'>" % (self.id, self.name)
 
 # class Config(db.Model, DatesMixin):
 #     __tablename__ = "configs"
@@ -131,6 +143,7 @@ class Flow(db.Model, DatesMixin):
     id = Column(Integer, primary_key=True)
     finished = Column(DateTime)
     state = Column(Integer, default=consts.FLOW_STATE_IN_PROGRESS)
+    branch_name = Column(Unicode(255))
     branch_id = Column(Integer, ForeignKey('branches.id'), nullable=False)
     branch = relationship('Branch', back_populates="flows")
     runs = relationship('Run', back_populates="flow", order_by="Run.created")
@@ -152,7 +165,8 @@ class Flow(db.Model, DatesMixin):
                     branch_name=self.branch.name,
                     project_id=self.branch.project_id,
                     project_name=self.branch.project.name,
-                    runs=[r.get_json()for r in self.runs])
+                    stages=[s.get_json() for s in self.branch.stages.filter_by(deleted=None)],
+                    runs=[r.get_json() for r in self.runs])
 
 
 class Run(db.Model, DatesMixin):
@@ -523,8 +537,22 @@ def prepare_initial_data():
         #         }]
         #     }]
         # }
+        #
+        # TRIGGER:
+        # kind: parent | interval | date | cron | repository | webhook
+        # interval: duration e.g. '1d' or '3h 30m'
+        # cron: cron rule e.g. '* * 10 * *'
+        # repository: url with branch
+        # webhook: from GitHub or GitLab or Bitbucket
         schema = {
-            "trigger": "initial",
+            "parent": "Unit Tests",
+            "trigger": {
+                "parent": True,
+                "cron": "1 * * * *",
+                "interval": "10m",
+                "repository": True,
+                "webhook": True
+            },
             "configs": [{
                 "name": "c1",
                 "p1": "1",
@@ -560,7 +588,10 @@ def prepare_initial_data():
     stage = Stage.query.filter_by(name="Unit Tests", branch=branch).one_or_none()
     if stage is None:
         schema = {
-            "trigger": "initial",
+            "parent": "root",
+            "trigger": {
+                "parent": True
+            },
             "jobs": [{
                 "name": "random tests",
                 "steps": [{

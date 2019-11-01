@@ -8,13 +8,14 @@ from flask import Flask
 from sqlalchemy.sql.expression import asc, desc
 
 from bg.clry import app
-from models import db, Executor, Run, Job, TestCaseResult, Branch, Flow
+from models import db, Executor, Run, Job, TestCaseResult, Branch, Flow, Stage
+import execution
 import consts
 
 log = logging.getLogger(__name__)
 
 
-def create_app():
+def _create_app():
     #logging.basicConfig(format=consts.LOG_FMT, level=logging.INFO)
 
     # Create  Flask app instance
@@ -86,7 +87,7 @@ def analyze_job_history(job):
 @app.task(base=BaseTask, bind=True)
 def analyze_results_history(self, run_id):
     try:
-        app = create_app()
+        app = _create_app()
 
         with app.app_context():
             log.info('starting analysis of run %s', run_id)
@@ -134,9 +135,40 @@ def analyze_results_history(self, run_id):
 
 
 @app.task(base=BaseTask, bind=True)
+def trigger_stages(self, run_id):
+    try:
+        app = _create_app()
+
+        with app.app_context():
+            log.info('starting triggering stages after run %s', run_id)
+            run = Run.query.filter_by(id=run_id).one_or_none()
+            if run is None:
+                log.error('got unknown run: %s', run_id)
+                return
+
+            curr_stage_name = run.stage.name
+            branch = run.stage.branch
+            for stage in branch.stages.filter_by(deleted=None):
+                if stage.schema['parent'] != curr_stage_name:
+                    continue
+                if not stage.schema['trigger'].get('parent', False):
+                    continue
+
+                new_run = Run(stage=stage, flow=run.flow)
+                db.session.commit()
+                log.info('triggered run %s for stage %s of branch %s', new_run, stage, branch)
+
+                execution.trigger_jobs(new_run)
+
+    except Exception as exc:
+        log.exception('will retry')
+        raise self.retry(exc=exc)
+
+
+@app.task(base=BaseTask, bind=True)
 def job_completed(self, job_id):
     try:
-        app = create_app()
+        app = _create_app()
 
         with app.app_context():
 
@@ -144,6 +176,10 @@ def job_completed(self, job_id):
 
             log.info('completing job %s', job_id)
             job = Job.query.filter_by(id=job_id).one_or_none()
+            if job is None:
+                log.error('got unknown job: %s', job_id)
+                return
+
             job.completed = now
             job.state = consts.JOB_STATE_COMPLETED
             job.completion_status = consts.JOB_CMPLT_ALL_OK
@@ -157,35 +193,80 @@ def job_completed(self, job_id):
 
             # establish new run state
             run = job.run
-            new_state = consts.RUN_STATE_COMPLETED
+            is_completed = True
             for j in run.jobs:
                 if j.state != consts.JOB_STATE_COMPLETED:
-                    new_state = consts.RUN_STATE_IN_PROGRESS
+                    is_completed = False
                     break
 
-            if run.state != new_state:
-                log.info('completed run %s', run)
-                run.state = new_state
-                run.finished = now
+            if is_completed:
+                execution.complete_run(run, now)
+
+    except Exception as exc:
+        log.exception('will retry')
+        raise self.retry(exc=exc)
+
+
+@app.task(base=BaseTask, bind=True)
+def trigger_run(self, stage_id):
+    try:
+        app = _create_app()
+
+        with app.app_context():
+            log.info('triggering run for stage %s', stage_id)
+            stage = Stage.query.filter_by(id=stage_id).one_or_none()
+            if stage is None:
+                log.error('got unknown stage: %s', stage_id)
+                return
+
+            # if this stage does not have parent then start new flow
+            if stage.schema['parent'] == 'root':
+                flow = Flow(branch=stage.branch)
                 db.session.commit()
 
-                # establish new flow state
-                flow = run.flow
-                new_state = consts.FLOW_STATE_COMPLETED
-                for r in flow.runs:
-                    if r.state != consts.RUN_STATE_COMPLETED:
-                        new_state = consts.FLOW_STATE_IN_PROGRESS
-                        break
+            else:
+                # if this stage has parent then find latest flow with this parent stage run
 
-                if flow.state != new_state:
-                    log.info('completed flow %s', flow)
-                    flow.state = new_state
-                    flow.finished = now
-                    db.session.commit()
+                # first find parent stage using its name
+                q = Stage.query.filter_by(name=stage.schema['parent'])
+                q = q.filter_by(deleted=None)
+                q = q.filter_by(branch_id=stage.branch_id)
+                parent_stage = q.one_or_none()
+                if parent_stage is None:
+                    log.error('parent stage %s for stage %s is missing', stage.schema['parent'], stage)
+                    return
 
-                # trigger history of results analysis
-                t = analyze_results_history.delay(run.id)
-                log.info('run %s finished, bg processing: %s', run, t)
+                # find latest run of parent stage
+                q = Run.query
+                q = q.filter_by(deleted=None)
+                q = q.filter_by(stage_id=parent_stage.id)
+                q = q.join('flow')
+                q = q.order_by(desc(Flow.created))
+                parent_run = q.first()
+                if parent_run is None:
+                    log.info('no run for parent stage %s', parent_stage)
+                    return
+
+                # find if there is no run for current stage
+                q = Run.query
+                q = q.filter_by(deleted=None)
+                q = q.filter_by(stage_id=stage.id)
+                q = q.filter_by(flow_id=parent_run.flow_id)
+                run = q.first()
+                if run is not None:
+                    log.info('latest flow %s with parent run %s already has run %s for current stage %s',
+                             parent_run.flow_id, parent_run, run, stage)
+                    return
+
+                flow = parent_run.flow
+
+            # create run for current stage
+            run = Run(flow=flow, stage=stage)
+            db.session.commit()
+
+            # trigger jobs for new run
+            execution.trigger_jobs(run)
+
     except Exception as exc:
         log.exception('will retry')
         raise self.retry(exc=exc)

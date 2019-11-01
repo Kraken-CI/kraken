@@ -12,12 +12,41 @@ from models import Project
 log = logging.getLogger(__name__)
 
 
-def _trigger_jobs(run, replay=False):
+def complete_run(run, now):
+    import bg.jobs
+    log.info('completed run %s', run)
+    run.state = consts.RUN_STATE_COMPLETED
+    run.finished = now
+    db.session.commit()
+
+    # trigger any following stages to currently completed run
+    t = bg.jobs.trigger_stages.delay(run.id)
+    log.info('run %s completed, trigger the following stages: %s', run, t)
+
+    # establish new flow state
+    flow = run.flow
+    is_completed = True
+    for r in flow.runs:
+        if r.state != consts.RUN_STATE_COMPLETED:
+            is_completed = False
+            break
+
+    if is_completed:
+        log.info('completed flow %s', flow)
+        flow.state = consts.FLOW_STATE_COMPLETED
+        flow.finished = now
+        db.session.commit()
+
+    # trigger history of results analysis
+    t = bg.jobs.analyze_results_history.delay(run.id)
+    log.info('run %s completed, process results: %s', run, t)
+
+
+def trigger_jobs(run, replay=False):
+    log.info('triggering jobs for run %s', run)
     schema = run.stage.schema
 
-    if 'jobs' not in schema or len(schema['jobs']) == 0:
-        return
-
+    # find any prev jobs that will be covered by jobs triggered here in this function
     covered_jobs = {}
     if replay:
         q = Job.query.filter_by(run=run).filter_by(covered=False)
@@ -28,6 +57,7 @@ def _trigger_jobs(run, replay=False):
             else:
                 covered_jobs[key].append(j)
 
+    # trigger new jobs based on jobs defined in stage schema
     started_any = False
     now = datetime.datetime.utcnow()
     for j in schema['jobs']:
@@ -70,9 +100,12 @@ def _trigger_jobs(run, replay=False):
             log.info('created job %s', job.get_json())
             started_any = True
 
-    if started_any:
+    if started_any or len(schema['jobs']) == 0:
         run.started = now
         db.session.commit()
+
+        if len(schema['jobs']) == 0:
+            complete_run(run, now)
 
 
 def create_flow(branch_id):
@@ -90,26 +123,30 @@ def create_flow(branch_id):
     flow = Flow(branch=branch)
     db.session.commit()
 
-    for stage in branch.stages:
-        if stage.schema['trigger'] != 'initial':
+    for stage in branch.stages.filter_by(deleted=None):
+        if stage.schema['parent'] != 'root' or stage.schema['trigger'].get('parent', False) is False:
             continue
 
         run = Run(flow=flow, stage=stage)
         db.session.commit()
 
-        _trigger_jobs(run)
+        log.info('triggered run %s for stage %s of branch %s', run, stage, branch)
+
+        trigger_jobs(run)
 
     data = flow.get_json()
 
     return data, 201
 
 
-def get_flows(branch_id):
-    q = Flow.query.filter_by(branch_id=branch_id).order_by(desc(Flow.created))
+def get_flows(branch_id, start=0, limit=10):
     flows = []
+    q = Flow.query.filter_by(branch_id=branch_id).order_by(desc(Flow.created))
+    total = q.count()
+    q = q.offset(start).limit(limit)
     for flow in q.all():
         flows.append(flow.get_json())
-    return flows, 200
+    return {'items': flows, 'total': total}, 200
 
 
 def get_flow(flow_id):
@@ -130,7 +167,7 @@ def get_flow_runs(flow_id):
     return runs, 200
 
 
-def create_run(stage_id):
+def create_run(flow_id, stage_id):
     """
     This function creates a new person in the people structure
     based on the passed in person data
@@ -138,14 +175,18 @@ def create_run(stage_id):
     :param person:  person to create in people structure
     :return:        201 on success, 406 on person exists
     """
+    flow = Flow.query.filter_by(id=flow_id).one_or_none()
+    if flow is None:
+        abort(404, "Flow not found")
+
     stage = Stage.query.filter_by(id=stage_id).one_or_none()
     if stage is None:
         abort(404, "Stage not found")
 
-    new_run = Run(stage=stage)
+    new_run = Run(stage=stage, flow=flow)
     db.session.commit()
 
-    _trigger_jobs(new_run)
+    trigger_jobs(new_run)
 
     # Serialize and return the newly created run in the response
     data = new_run.get_json()
@@ -158,7 +199,7 @@ def replay_run(run_id):
     if run is None:
         abort(404, "Run not found")
 
-    _trigger_jobs(run, replay=True)
+    trigger_jobs(run, replay=True)
 
     data = run.get_json()
 

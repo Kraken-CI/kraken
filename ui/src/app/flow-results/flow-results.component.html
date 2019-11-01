@@ -1,3 +1,7 @@
+<p-menu #nodeMenu [popup]="true" [model]="nodeMenuItems"></p-menu>
+
+<p-button label="Refresh" (onClick)="refresh()"></p-button>
+
 <p-organizationChart [value]="runsTree">
   <ng-template let-node pTemplate="root">
     <div style="text-align: left;">
@@ -8,13 +12,23 @@
     </ng-template>
     <ng-template let-node pTemplate="default">
       <div style="text-align: left;">
-        <div style="font-weight: bold; font-size: 1.1rem;">
-          <a routerLink="/runs/{{node.data.id}}">{{node.label}}</a>
+        <div *ngIf="node.data.run">
+          <div style="font-weight: bold; font-size: 1.1rem; display: flex; justify-content: space-between;">
+            <div><a routerLink="/runs/{{node.data.run.id}}">{{node.label}}</a></div>
+            <div style="cursor: pointer;" (click)="showNodeMenu($event, nodeMenu, node)"><i class="pi pi-bars"></i></div>
+          </div>
+          <div>{{node.data.run.created}}</div>
+          <div>{{node.data.run.duration}}</div>
+          <div>jobs: {{node.data.run.jobs_total}}</div>
+          <div>passed: {{node.data.run.tests_passed * 100 / node.data.run.tests_total}}%, {{node.data.run.tests_passed}}/{{node.data.run.tests_total}}</div>
         </div>
-        <div>{{node.data.created}}</div>
-        <div>{{node.data.duration}}</div>
-        <div>jobs: {{node.data.jobs_total}}</div>
-        <div>passed: {{node.data.tests_passed * 100 / node.data.tests_total}}%, {{node.data.tests_passed}}/{{node.data.tests_total}}</div>
+        <div *ngIf="!node.data.run">
+          <div style="font-weight: bold; font-size: 1.1rem; display: flex; justify-content: space-between;">
+            <div>{{node.label}}</div>
+            <div style="cursor: pointer;" (click)="showNodeMenu($event, nodeMenu, node)"><i class="pi pi-bars"></i></div>
+          </div>
+          not run
+        </div>
       </div>
     </ng-template>
 </p-organizationChart>

@@ -1,5 +1,5 @@
 <p-dialog header="New Stage in {{branch.name}} branch" [(visible)]="newStageDlgVisible">
-  <input type="text" pInputText [(ngModel)]="stageName" (keydown)="keyDown($event)"/>
+  <input type="text" pInputText [(ngModel)]="stageName" (keydown)="newStageKeyDown($event)"/>
   <p-footer>
     <button type="button" (click)="cancelNewStage()" pButton icon="pi pi-times" label="Cancel"></button>
     <button type="button" (click)="addNewStage()" pButton icon="pi pi-check" label="Add"></button>
@@ -7,36 +7,76 @@
 </p-dialog>
 
 
-<div>
-  <input type="text" pInputText [(ngModel)]="branch.name"/>
-  <button type="button" (click)="saveBranch()" pButton icon="pi pi-check" label="Save"></button>
+<div style="margin-bottom: 15px; display: flex; align-items: baseline;">
+  <p-inplace #branchNameInplace>
+    <span pInplaceDisplay style="font-size: 2rem; font-weight: bold;">
+      {{branch.name}}
+    </span>
+    <span pInplaceContent>
+      <input type="text" pInputText [(ngModel)]="newBranchName" (keydown)="branchNameKeyDown($event, branchNameInplace)"/>
+    </span>
+  </p-inplace>
+
+  <div style="margin-left: 40px;">
+    <a routerLink="/branches/{{branchId}}">Results</a>
+  </div>
 </div>
 
 <p-tabView>
   <p-tabPanel header="Stages">
     <div class="p-grid">
-      <div class="p-col-12">
-        <button type="button" (click)="newStage()" pButton icon="pi pi-plus" label="New Stage"></button>
-      </div>
       <div class="p-col-3">
+        <button type="button" (click)="newStage()" pButton icon="pi pi-plus" label="New Stage"></button>
         <div *ngFor="let stage of branch.stages" style="margin: 6px 0 12px 0; cursor: pointer;" class="round-shadow" (click)="selectStage(stage)">
           <div style="font-size: 1.1rem; font-weight: bold; margin-bottom: 4px;">{{stage.name}}</div>
-          <div>{{stage.description}}</div>
+          <div style="margin-bottom: 6px;">{{stage.description}}</div>
+          <div style="font-size: 1.05rem;">Parent: {{stage.schema.parent}}</div>
+          <div style="font-size: 1.05rem;">Trigger:
+            <div *ngIf="stage.schema.trigger.parent === false || stage.schema.trigger.parent === true">
+              - parent: {{stage.schema.trigger.parent}}
+            </div>
+            <div *ngIf="stage.schema.trigger.interval">
+              - interval: {{stage.schema.trigger.interval}}
+            </div>
+            <div *ngIf="stage.schema.trigger.cron">
+              - cron: {{stage.schema.trigger.cron}}
+            </div>
+            <div *ngIf="stage.schema.trigger.date">
+              - date: {{stage.schema.trigger.date}}
+            </div>
+          </div>
         </div>
       </div>
       <div class="p-col-9" style="padding-left: 40px;">
         <div *ngIf="branch.stages.length">
-          <h1>{{stage.name}}</h1>
-          <p>{{stage.description}}</p>
+          <p-inplace #stageNameInplace (onActivate)="stageNameInplaceActivated()">
+            <span pInplaceDisplay style="font-size: 1.5rem; font-weight: bold;">
+              {{stage.name}}
+            </span>
+            <span pInplaceContent>
+              <input type="text" pInputText [(ngModel)]="newStageName" (keydown)="stageNameKeyDown($event, stageNameInplace)"/>
+            </span>
+          </p-inplace>
+
+          Description:
+          <p-inplace #stageDescrInplace (onActivate)="stageDescrInplaceActivated()">
+            <span pInplaceDisplay>
+              {{stage.description || '(empty)'}}
+            </span>
+            <span pInplaceContent>
+              <textarea pInputTextarea [(ngModel)]="newStageDescr" (keydown)="stageDescrKeyDown($event, stageDescrInplace)"  [rows]="5" [cols]="60"></textarea>
+            </span>
+          </p-inplace>
 
           <div style="padding: 20px 0 0 0;">Stage Schema:</div>
-          <div style="height: calc(100vh - 450px); padding: 10px 0 10px 0;">
+          <div style="height: calc(100vh - 450px); padding: 5px 0 10px 0;">
             <ngx-codemirror
               id="ngx-cm"
               [(ngModel)]="stage.schema_txt"
               [options]="codeMirrorOpts"></ngx-codemirror>
           </div>
           <button type="button" (click)="saveStage()" pButton icon="pi pi-check" label="Save Stage"></button>
+          <button type="button" (click)="deleteStage()" pButton icon="pi pi-times" class="ui-button-danger" style="margin-left: 50px;" label="Delete Stage"></button>
           <span *ngIf="saveErrorMsg.length > 0">
             <p-message severity="error" [text]="saveErrorMsg" style="margin-left: 40px;"></p-message>
           </span>

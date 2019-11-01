@@ -3,8 +3,6 @@ import { Router, ActivatedRoute, ParamMap } from '@angular/router';
 import { Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
-import {DropdownModule} from 'primeng/dropdown';
-import {MenuModule} from 'primeng/menu';
 import {MenuItem} from 'primeng/api';
 import {MessageService} from 'primeng/api';
 
@@ -23,6 +21,8 @@ export class BranchResultsComponent implements OnInit {
 
     flows0: any[];
     flows: any[];
+
+    totalFlows = 100
 
     stagesAvailable: any[];
     selectedStages: any[];
@@ -218,12 +218,11 @@ export class BranchResultsComponent implements OnInit {
             this.breadcrumbService.setCrumbs(crumbs);
         });
 
-        this.refresh();
+        this.refresh(0, 10);
     }
 
     newFlow() {
-        this.executionService.createFlow(1).subscribe(data => {
-            //console.info(data);
+        this.executionService.createFlow(this.branchId).subscribe(data => {
             let stages = new Set<string>();
             this._processFlowData(data, stages);
             this.flows.unshift(data)
@@ -253,22 +252,18 @@ export class BranchResultsComponent implements OnInit {
         }
     }
 
-    refresh() {
-        // this.hero$ = this.route.paramMap.pipe(
-        //     switchMap((params: ParamMap) =>
-        //               this.service.getHero(params.get('id')))
-        // );
+    refresh(start, limit) {
         this.route.paramMap.pipe(
             switchMap((params: ParamMap) =>
-                      this.executionService.getFlows(parseInt(params.get('id'))))
+                      this.executionService.getFlows(parseInt(params.get('id')), start, limit))
         ).subscribe(data => {
-            //console.info(data);
             var flows = [];
             let stages = new Set<string>();
-            flows = flows.concat(data);
+            this.totalFlows = data.total
+            flows = flows.concat(data.items);
             flows = flows.concat(this.flows0)
             for (let flow of flows) {
-                              this._processFlowData(flow, stages);
+                this._processFlowData(flow, stages);
             }
             this.flows = flows;
             let newStages = [{name: 'All'}];
@@ -279,22 +274,22 @@ export class BranchResultsComponent implements OnInit {
         });
     }
 
+    paginateFlows(event) {
+        this.refresh(event.first, event.rows)
+    }
+
     filterStages(event) {
         this.filterStageName = event.value.name;
     }
 
     showRunMenu($event, runMenu, run) {
-        console.info(runMenu);
-        console.info(run);
         this.runMenuItems[0].routerLink = "/runs/" + run.id;
         this.runMenuItems[1].command = () => {
             this.executionService.replayRun(run.id).subscribe(
                 data => {
-                    console.info(data);
                     this.msgSrv.add({severity:'success', summary:'Replay succeeded', detail:'Replay operation succeeded.'});
                 },
                 err => {
-                    console.info(err);
                     this.msgSrv.add({severity:'error', summary:'Replay erred', detail:'Replay operation erred: ' + err.statusText, sticky: true});
                 });
         };

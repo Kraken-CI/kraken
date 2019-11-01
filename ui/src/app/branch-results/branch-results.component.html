@@ -6,7 +6,8 @@
         <p-multiSelect [options]="stagesAvailable" [(ngModel)]="selectedStages" optionLabel="name"></p-multiSelect>
         <p-multiSelect [options]="stagesAvailable" optionLabel="name" [filter]="false" style="height: 33px;" [style]="{minWidth: '12em'}" [panelStyle]="{minWidth: '12em'}"></p-multiSelect>
     -->
-        <p-dropdown [options]="stagesAvailable" optionLabel="name" (onChange)="filterStages($event)"></p-dropdown>
+    <p-dropdown [options]="stagesAvailable" optionLabel="name" (onChange)="filterStages($event)"></p-dropdown>
+    <a routerLink="/branches/{{branchId}}/mgmt" style="margin-left: 40px;"><i class="pi pi-cog" style="vertical-align: text-bottom;"></i> Management</a>
   </div>
   <p-menu #runMenu [popup]="true" [model]="runMenuItems"></p-menu>
   <div *ngFor="let flow of flows" class="p-grid p-align-stretch">
@@ -37,7 +38,7 @@
                 </span>
               </div>
             </div>
-            <span style="float:right; cursor: pointer;" aria-hidden="true" class="ui-button-icon-left ui-clickable pi pi-chevron-down" (click)="showRunMenu($event, runMenu, run)"></span>
+            <span style="float:right; cursor: pointer;" aria-hidden="true" class="ui-button-icon-left ui-clickable pi pi-bars" (click)="showRunMenu($event, runMenu, run)"></span>
           </div>
           <!--- details -->
           <div class="job-detal-items">
@@ -82,4 +83,11 @@
       </ng-container>
     </div>
   </div>
+
+  <p-paginator [rows]="10"
+               [totalRecords]="totalFlows"
+               [rowsPerPageOptions]="[10,20,30,50,100]"
+               [showCurrentPageReport]="true"
+               (onPageChange)="paginateFlows($event)"></p-paginator>
+
 </div>

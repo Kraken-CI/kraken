@@ -18,6 +18,7 @@ services:
       DB_URL: "postgresql://kraken:kk123@postgres:5432/kraken"
     depends_on:
       - postgres
+      - planner
 
   scheduler:
     restart: always
@@ -30,6 +31,16 @@ services:
       DB_URL: "postgresql://kraken:kk123@postgres:5432/kraken"
     depends_on:
       - postgres
+
+  planner:
+    restart: always
+    build:
+      context: kraken
+      dockerfile: docker-planner.txt
+    networks:
+      - db_net
+    depends_on:
+      - celery
 
   agent:
     restart: always

@@ -4,6 +4,7 @@ import { Router, ActivatedRoute, ParamMap } from '@angular/router';
 import 'codemirror/mode/javascript/javascript';
 
 import {MessageService} from 'primeng/api';
+import {ConfirmationService} from 'primeng/api';
 
 import { ManagementService } from '../backend/api/management.service';
 import { BreadcrumbsService } from '../breadcrumbs.service';
@@ -18,9 +19,12 @@ export class BranchMgmtComponent implements OnInit {
 
     branchId: number;
     branch: Branch = {id: 0, name: 'noname', stages: []};
+    newBranchName: string
 
     newStageDlgVisible = false
     stageName = ""
+    newStageName: string
+    newStageDescr: string
 
     stage: any = {name: '', description: ''};
     saveErrorMsg = "";
@@ -37,7 +41,8 @@ export class BranchMgmtComponent implements OnInit {
                 private router: Router,
                 protected managementService: ManagementService,
                 protected breadcrumbService: BreadcrumbsService,
-                private msgSrv: MessageService) {
+                private msgSrv: MessageService,
+                private confirmationService: ConfirmationService) {
     }
 
     ngOnInit() {
@@ -48,7 +53,22 @@ export class BranchMgmtComponent implements OnInit {
     refresh() {
         this.managementService.getBranch(this.branchId).subscribe(branch => {
             this.branch = branch;
-            this.stage = branch.stages[0];
+            this.newBranchName = branch.name
+            this.stage = null
+            if (this.stageName != '') {
+                // this is a finish of adding new stage ie. select newly created stage
+                for (let s of this.branch.stages) {
+                    if (s.name == this.stageName) {
+                        this.stage = s
+                        this.stageName = ''
+                        break
+                    }
+                }
+            }
+            if (this.stage == null) {
+                this.stage = branch.stages[0];
+            }
+
             let crumbs = [{
                 label: 'Projects',
                 url: '/projects/' + branch.project_id,
@@ -74,7 +94,7 @@ export class BranchMgmtComponent implements OnInit {
         this.newStageDlgVisible = false;
     }
 
-    keyDown(event) {
+    newStageKeyDown(event) {
         if (event.key == "Enter") {
             this.addNewStage();
         }
@@ -100,10 +120,12 @@ export class BranchMgmtComponent implements OnInit {
     }
 
     saveStage() {
+        this.saveErrorMsg = ""
         let schema: string
         try {
             schema = JSON.parse(this.stage.schema_txt);
         } catch (e) {
+            console.info(this.stage.schema_txt)
             this.saveErrorMsg = 'Syntax error in schema content: ' + e.message;
             return
         }
@@ -111,14 +133,97 @@ export class BranchMgmtComponent implements OnInit {
             name: this.stage.name,
             schema: schema
         }
-        this.managementService.updateStage(this.stage.id, stage).subscribe(stage => {
-            this.stage = stage
-            for (let idx in this.branch.stages) {
-                if (this.branch.stages[idx].id == stage.id) {
-                    this.branch.stages[idx] = stage
-                    break
-                }
+        this.doSaveStage(stage)
+    }
+
+    deleteStage() {
+        this.confirmationService.confirm({
+            message: 'Do you really want to delete stage "' + this.stage.name + '"?',
+            accept: () => {
+                this.managementService.deleteStage(this.stage.id).subscribe(
+                    stage => {
+                        this.stage = this.branch.stages[0]
+                        this.msgSrv.add({severity:'success', summary:'Stage deletion succeeded', detail:'Stage deletion operation succeeded.'});
+                        this.refresh()
+                    },
+                    err => {
+                        console.info(err);
+                        let msg = err.statusText;
+                        if (err.error && err.error.detail) {
+                            msg = err.error.detail;
+                        }
+                        this.msgSrv.add({severity:'error', summary:'Stage deletion erred', detail:'Stage deletion operation erred: ' + msg, sticky: true});
+                    }
+                );
             }
-        });
+        })
+    }
+
+    branchNameKeyDown(event, branchNameInplace) {
+        if (event.key == "Enter") {
+            branchNameInplace.deactivate()
+        }
+        if (event.key == "Escape") {
+            branchNameInplace.deactivate()
+            this.newBranchName = this.branch.name
+        }
+    }
+
+    doSaveStage(stageData) {
+        this.managementService.updateStage(this.stage.id, stageData).subscribe(
+            stage => {
+                this.stage = stage
+                for (let idx in this.branch.stages) {
+                    if (this.branch.stages[idx].id == stage.id) {
+                        this.branch.stages[idx] = stage
+                        break
+                    }
+                }
+                this.msgSrv.add({severity:'success', summary:'Stage update succeeded', detail:'Stage update operation succeeded.'});
+            },
+            err => {
+                console.info(err);
+                let msg = err.statusText;
+                if (err.error && err.error.detail) {
+                    msg = err.error.detail;
+                }
+                this.msgSrv.add({severity:'error', summary:'Stage update erred', detail:'Stage update operation erred: ' + msg, sticky: true});
+            }
+        );
+    }
+
+    stageNameInplaceActivated() {
+        this.newStageName = this.stage.name
+    }
+
+    stageNameKeyDown($event, stageNameInplace) {
+        if (event['key'] == "Enter") {
+            stageNameInplace.deactivate()
+            let stage = {
+                name: this.newStageName,
+            }
+            this.doSaveStage(stage)
+        }
+        if (event['key'] == "Escape") {
+            stageNameInplace.deactivate()
+        }
+    }
+
+    stageDescrInplaceActivated() {
+        this.newStageDescr = this.stage.description
+    }
+
+    stageDescrKeyDown($event, stageDescrInplace) {
+        if (event['key'] == "Enter") {
+            stageDescrInplace.deactivate()
+            let stage = {
+                name: this.stage.name,
+                description: this.newStageDescr,
+            }
+            this.doSaveStage(stage)
+        }
+        if (event['key'] == "Escape") {
+            stageDescrInplace.deactivate()
+        }
     }
 }

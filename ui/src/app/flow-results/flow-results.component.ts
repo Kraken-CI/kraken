@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute, ParamMap } from '@angular/router';
 
 import {TreeNode} from 'primeng/api';
+import {MenuItem} from 'primeng/api';
+import {MessageService} from 'primeng/api';
 
 import { ExecutionService } from '../backend/api/execution.service';
 import { BreadcrumbsService } from '../breadcrumbs.service';
@@ -18,10 +20,42 @@ export class FlowResultsComponent implements OnInit {
     runs: any[];
     runsTree: TreeNode[];
 
+    nodeMenuItems: MenuItem[];
+
     constructor(private route: ActivatedRoute,
                 private router: Router,
                 protected executionService: ExecutionService,
-                protected breadcrumbService: BreadcrumbsService) { }
+                protected breadcrumbService: BreadcrumbsService,
+                private msgSrv: MessageService) { }
+
+    _getRunForStage(stageName) {
+        for (let run of this.flow.runs) {
+            if (run.name == stageName) {
+                return run;
+            }
+        }
+        return null;
+    }
+
+    _buildSubtree(node, allParents, children) {
+        for (let c of children) {
+            let subtree = {
+                label: c.name,
+                expanded: true,
+                data: {
+                    stage: c,
+                    run: this._getRunForStage(c.name)
+                }
+            }
+            if (allParents[c.name] != undefined) {
+                this._buildSubtree(subtree, allParents, allParents[c.name])
+            }
+            if (node['children'] == undefined) {
+                node['children'] = []
+            }
+            node['children'].push(subtree)
+        }
+    }
 
     ngOnInit() {
         this.flowId = parseInt(this.route.snapshot.paramMap.get("id"));
@@ -34,9 +68,12 @@ export class FlowResultsComponent implements OnInit {
             children: []
         }];
 
+        this.refresh()
+    }
+
+    refresh() {
         this.executionService.getFlow(this.flowId).subscribe(flow => {
             this.flow = flow;
-            this.runsTree[0].data = flow;
             let crumbs = [{
                 label: 'Projects',
                 url: '/projects/' + flow.project_id,
@@ -52,18 +89,56 @@ export class FlowResultsComponent implements OnInit {
             }];
             this.breadcrumbService.setCrumbs(crumbs);
 
-            for (let run of flow.runs) {
-                if (run.parent) {
-                    // TODO
-                } else {
-                    this.runsTree[0].children.push({
-                        label: run.name,
-                        data: run
-                    });
-                }
+            // build tree of runs
+            let allParents = {
+                root: []
             }
+            for (let stage of flow.stages) {
+                if (allParents[stage.schema.parent] == undefined) {
+                    allParents[stage.schema.parent] = []
+                }
+                allParents[stage.schema.parent].push(stage)
+            }
+
+            this.runsTree = [{
+                label: `Flow [${this.flowId}]`,
+                expanded: true,
+                'type': 'root',
+                data: flow
+            }];
+            this._buildSubtree(this.runsTree[0], allParents, allParents['root'])
             console.info(this.runsTree);
         });
     }
 
+    showNodeMenu($event, nodeMenu, node) {
+        console.info(node)
+
+        if (node.data.run) {
+            this.nodeMenuItems = [{
+                label: 'Show Details',
+                icon: 'pi pi-folder-open',
+                routerLink: "/runs/" + node.data.run.id,
+            }, {
+                label: 'Rerun',
+                icon: 'pi pi-replay',
+            }];
+        } else {
+            this.nodeMenuItems = [{
+                label: 'Run this stage',
+                icon: 'pi pi-caret-right',
+                command: () => {
+                    this.executionService.createRun(this.flowId, node.data.stage.id).subscribe(
+                        data => {
+                            this.msgSrv.add({severity:'success', summary:'Run succeeded', detail:'Run operation succeeded.'});
+                            this.refresh()
+                        },
+                        err => {
+                            this.msgSrv.add({severity:'error', summary:'Run erred', detail:'Run operation erred: ' + err.statusText, sticky: true});
+                        });
+                }
+            }];
+        }
+        nodeMenu.toggle($event);
+    }
 }

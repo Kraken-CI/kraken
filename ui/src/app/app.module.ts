@@ -24,6 +24,10 @@ import {DialogModule} from 'primeng/dialog';
 import {InputTextModule} from 'primeng/inputtext';
 import {InputTextareaModule} from 'primeng/inputtextarea';
 import {MessageModule} from 'primeng/message';
+import {ConfirmDialogModule} from 'primeng/confirmdialog';
+import {ConfirmationService} from 'primeng/api';
+import {InplaceModule} from 'primeng/inplace';
+import {PaginatorModule} from 'primeng/paginator';
 
 import { ConfigService } from './config.service';
 import { BackendService } from './backend.service'
@@ -82,9 +86,12 @@ export function cfgFactory() {
         InputTextModule,
         InputTextareaModule,
         MessageModule,
+        ConfirmDialogModule,
+        InplaceModule,
+        PaginatorModule,
     ],
     providers: [ConfigService, BackendService, { provide: BASE_PATH, useValue: 'http://localhost:5000/api' },
-                BreadcrumbsService, MessageService],
+                BreadcrumbsService, MessageService, ConfirmationService],
     bootstrap: [AppComponent]
 })
 export class AppModule { }

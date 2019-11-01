@@ -115,6 +115,12 @@ paths:
           required: true
           type: integer
           format: int64
+        - name: start
+          in: query
+          description: How many items to return at one time (max 100)
+          required: false
+          type: integer
+          format: int32
         - name: limit
           in: query
           description: How many items to return at one time (max 100)
@@ -230,13 +236,12 @@ paths:
       responses:
         201:
           description: Successfully created run
-  /stages/{stage_id}/runs:
-    post:
-      operationId: create_run
+    delete:
+      operationId: delete_stage
       tags:
-        - Execution
-      summary: Create a run
-      description: Create a new run
+        - Management
+      summary: Delete a stage
+      description: Delete a stage
       parameters:
         - name: stage_id
           in: path
@@ -245,8 +250,37 @@ paths:
           type: integer
           format: int64
       responses:
+        200:
+          description: Successfully deleted stage
+
+  /flows/{flow_id}/runs:
+    post:
+      operationId: create_run
+      tags:
+        - Execution
+      summary: Create a run
+      description: Create a new run
+      parameters:
+        - name: flow_id
+          in: path
+          description: ID of pet to return
+          required: true
+          type: integer
+          format: int64
+        - name: stage_id
+          in: body
+          description: Stage id
+          schema:
+            required:
+              - stage_id
+            properties:
+              stage_id:
+                type: integer
+      responses:
         201:
           description: Successfully created run
+
+  /stages/{stage_id}/runs:
     get:
       summary: List all runs
       operationId: get_runs
@@ -490,6 +524,8 @@ definitions:
       branch_name:
         type: string
       runs:
+        type: object
+      stages:
         type: object
   Flows:
     type: object

@@ -6,7 +6,7 @@ NG = File.expand_path('webui/node_modules/.bin/ng')
 SWAGGER_CODEGEN = "#{TOOLS_DIR}/swagger-codegen-cli-2.4.8.jar"
 SWAGGER_FILE = File.expand_path("kraken/server/swagger.yml")
 
-
+# UI
 task :gen_client => SWAGGER_CODEGEN do
   Dir.chdir('ui') do
     sh "java -jar #{SWAGGER_CODEGEN} generate  -l typescript-angular -i #{SWAGGER_FILE} -o src/app/backend --additional-properties snapshot=true,ngVersion=8.2.8,modelPropertyNaming=snake_case"
@@ -35,6 +35,52 @@ end
 task :build_ui => [NG, :gen_client] do
   Dir.chdir('ui') do
     sh 'npx ng build --prod'
+  end
+end
+
+task :serve_ui => [NG, :gen_client] do
+  Dir.chdir('ui') do
+    sh 'npx ng serve --disable-host-check --proxy-config proxy.conf.json'
+  end
+end
+
+task :lint_ui => [NG, :gen_client] do
+  Dir.chdir('ui') do
+    sh 'npm ci'
+    sh 'npx ng lint'
+  end
+end
+
+
+# BACKEND
+
+task :run_server do
+  Dir.chdir('kraken/server') do
+    sh '../../venv/bin/python ./server.py'
+  end
+end
+
+task :run_scheduler do
+  Dir.chdir('kraken/server') do
+    sh '../../venv/bin/python ./scheduler.py'
+  end
+end
+
+task :run_agent do
+  Dir.chdir('kraken/agent') do
+    sh 'rm -rf /tmp/kk-jobs/ && ./agent.py -d /tmp/kk-jobs -s http://localhost:5000/backend'
+  end
+end
+
+task :run_celery do
+  Dir.chdir('kraken/server') do
+    sh '../../venv/bin/celery -A bg.clry worker -l info'
+  end
+end
+
+task :run_planner do
+  Dir.chdir('kraken/server') do
+    sh '../../venv/bin/python ./planner.py'
   end
 end
 
