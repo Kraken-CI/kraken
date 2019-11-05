@@ -22,11 +22,11 @@ const routes: Routes = [
     // },
     {
         path: 'branches/:id',
-        component: BranchResultsComponent
+        component: BranchMgmtComponent
     },
     {
-        path: 'branches/:id/mgmt',
-        component: BranchMgmtComponent
+        path: 'branches/:id/:kind',
+        component: BranchResultsComponent
     },
     {
         path: 'flows/:id',

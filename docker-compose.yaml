@@ -16,9 +16,11 @@ services:
       - lab_net
     environment:
       DB_URL: "postgresql://kraken:kk123@postgres:5432/kraken"
+      REDIS_HOST: "redis"
     depends_on:
       - postgres
       - planner
+      - celery
 
   scheduler:
     restart: always
@@ -39,6 +41,8 @@ services:
       dockerfile: docker-planner.txt
     networks:
       - db_net
+    environment:
+      REDIS_HOST: "redis"
     depends_on:
       - celery
 

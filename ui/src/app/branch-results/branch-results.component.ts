@@ -3,7 +3,6 @@ import { Router, ActivatedRoute, ParamMap } from '@angular/router';
 import { Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
-import {MenuItem} from 'primeng/api';
 import {MessageService} from 'primeng/api';
 
 import { ExecutionService } from '../backend/api/execution.service';
@@ -18,6 +17,8 @@ import { datetimeToLocal } from '../utils';
 })
 export class BranchResultsComponent implements OnInit {
     branchId = 0;
+    branch: any
+    kind: string
 
     flows0: any[];
     flows: any[];
@@ -29,8 +30,6 @@ export class BranchResultsComponent implements OnInit {
     selectedStage: any;
     filterStageName = 'All';
 
-    runMenuItems: MenuItem[];
-
     constructor(private route: ActivatedRoute,
                 private router: Router,
                 protected executionService: ExecutionService,
@@ -38,15 +37,9 @@ export class BranchResultsComponent implements OnInit {
                 private msgSrv: MessageService) { }
 
     ngOnInit() {
-        this.runMenuItems = [{
-            label: 'Show Details',
-            icon: 'pi pi-folder-open',
-        },
-        {
-            label: 'Rerun',
-            icon: 'pi pi-replay',
-        }];
+        this.branch = null
         this.branchId = parseInt(this.route.snapshot.paramMap.get("id"));
+        this.kind = this.route.snapshot.paramMap.get("kind")
         this.selectedStage = null;
         this.stagesAvailable = [
             {name: 'All'}
@@ -206,23 +199,47 @@ export class BranchResultsComponent implements OnInit {
         }];
 
         this.executionService.getBranch(this.branchId).subscribe(branch => {
-            let crumbs = [{
-                label: 'Projects',
-                url: '/projects/' + branch.project_id,
-                id: branch.project_name
-            }, {
-                label: 'Branches',
-                url: '/branches/' + branch.id,
-                id: branch.name
-            }];
-            this.breadcrumbService.setCrumbs(crumbs);
+            this.branch = branch
+            this.updateBreadcrumb()
         });
 
-        this.refresh(0, 10);
+        this.route.paramMap.subscribe(params => {
+            this.branchId = parseInt(params.get("id"));
+            this.kind = params.get("kind")
+            this.updateBreadcrumb()
+            this.refresh(0, 10);
+        });
+    }
+
+    updateBreadcrumb() {
+        if (this.branch == null) {
+            return
+        }
+        let crumbs = [{
+            label: 'Projects',
+            url: '/projects/' + this.branch.project_id,
+            id: this.branch.project_name
+        }, {
+            label: 'Branches',
+            url: '/branches/' + this.branch.id,
+            id: this.branch.name
+        }, {
+            label: 'Results',
+            url: '/branches/' + this.branch.id + '/' + this.kind,
+            id: this.kind,
+            items: [{
+                label: 'CI',
+                routerLink: '/branches/' + this.branch.id + '/ci'
+            }, {
+                label: 'dev',
+                routerLink: '/branches/' + this.branch.id + '/dev'
+            }]
+        }];
+        this.breadcrumbService.setCrumbs(crumbs);
     }
 
     newFlow() {
-        this.executionService.createFlow(this.branchId).subscribe(data => {
+        this.executionService.createFlow(this.branchId, this.kind).subscribe(data => {
             let stages = new Set<string>();
             this._processFlowData(data, stages);
             this.flows.unshift(data)
@@ -235,27 +252,15 @@ export class BranchResultsComponent implements OnInit {
     }
 
     _processFlowData(flow, stages) {
-        flow['created'] = datetimeToLocal(flow['created']);
         for (let run of flow['runs']) {
             stages.add(run['name']);
-            run['started'] = datetimeToLocal(run['started']);
-            if (run['jobs_error'] && run['jobs_error'] > 0) {
-                run['color'] = '#ffe6e6';
-            }
-            else if (run['state'] == 'completed') {
-                if (run['tests_passed'] && run['tests_total'] && run['tests_passed'] < run['tests_total']) {
-                    run['color'] = '#fff9e6';
-                } else {
-                    run['color'] = '#e6ffe6';
-                }
-            }
         }
     }
 
     refresh(start, limit) {
         this.route.paramMap.pipe(
             switchMap((params: ParamMap) =>
-                      this.executionService.getFlows(parseInt(params.get('id')), start, limit))
+                      this.executionService.getFlows(parseInt(params.get('id')), this.kind, start, limit))
         ).subscribe(data => {
             var flows = [];
             let stages = new Set<string>();
@@ -282,17 +287,6 @@ export class BranchResultsComponent implements OnInit {
         this.filterStageName = event.value.name;
     }
 
-    showRunMenu($event, runMenu, run) {
-        this.runMenuItems[0].routerLink = "/runs/" + run.id;
-        this.runMenuItems[1].command = () => {
-            this.executionService.replayRun(run.id).subscribe(
-                data => {
-                    this.msgSrv.add({severity:'success', summary:'Replay succeeded', detail:'Replay operation succeeded.'});
-                },
-                err => {
-                    this.msgSrv.add({severity:'error', summary:'Replay erred', detail:'Replay operation erred: ' + err.statusText, sticky: true});
-                });
-        };
-        runMenu.toggle($event);
+    onStageRun(newRun) {
     }
 }

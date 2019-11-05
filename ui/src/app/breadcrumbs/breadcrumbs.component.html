@@ -1,8 +1,9 @@
+<p-menu #crumbMenu [popup]="true" [model]="crumbMenuItems"></p-menu>
 <div class="breadcrumb">
   <span *ngFor="let breadcrumb of breadcrumbs | async; last as isLast;"
         class="breadcrumb-item"
         [ngClass]="{'active': isLast}" aria-current="page">
-    <div style="font-size: 1.3rem; margin-right: 7px; cursor: pointer;">{{breadcrumb.label}}</div>
+    <div style="font-size: 1.3rem; margin-right: 7px; cursor: pointer;" (click)="showCrumbMenu($event, crumbMenu, breadcrumb)">{{breadcrumb.label}}</div>
 
     <div *ngIf="breadcrumb.id" class="pi pi-chevron-right" style="font-size: 0.9rem; color: #888;"></div>
 

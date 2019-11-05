@@ -43,6 +43,8 @@ import { MainPageComponent } from './main-page/main-page.component';
 import { TestCaseResultComponent } from './test-case-result/test-case-result.component';
 import { FlowResultsComponent } from './flow-results/flow-results.component';
 import { BranchMgmtComponent } from './branch-mgmt/branch-mgmt.component';
+import { RunBoxComponent } from './run-box/run-box.component';
+import { LocaltimePipe } from './localtime.pipe';
 
 export function cfgFactory() {
     return new Configuration();
@@ -57,7 +59,9 @@ export function cfgFactory() {
         MainPageComponent,
         TestCaseResultComponent,
         FlowResultsComponent,
-        BranchMgmtComponent
+        BranchMgmtComponent,
+        RunBoxComponent,
+        LocaltimePipe
     ],
     imports: [
         BrowserModule,

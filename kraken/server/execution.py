@@ -108,7 +108,7 @@ def trigger_jobs(run, replay=False):
             complete_run(run, now)
 
 
-def create_flow(branch_id):
+def create_flow(branch_id, kind):
     """
     This function creates a new person in the people structure
     based on the passed in person data
@@ -120,7 +120,12 @@ def create_flow(branch_id):
     if branch is None:
         abort(404, "Branch not found")
 
-    flow = Flow(branch=branch)
+    if kind == 'dev':
+        kind = 1
+    else:
+        kind = 0
+
+    flow = Flow(branch=branch, kind=kind)
     db.session.commit()
 
     for stage in branch.stages.filter_by(deleted=None):
@@ -139,9 +144,14 @@ def create_flow(branch_id):
     return data, 201
 
 
-def get_flows(branch_id, start=0, limit=10):
+def get_flows(branch_id, kind, start=0, limit=10):
     flows = []
-    q = Flow.query.filter_by(branch_id=branch_id).order_by(desc(Flow.created))
+    if kind == 'dev':
+        kind = 1
+    else:
+        kind = 0
+    q = Flow.query.filter_by(branch_id=branch_id, kind=kind)
+    q = q.order_by(desc(Flow.created))
     total = q.count()
     q = q.offset(start).limit(limit)
     for flow in q.all():
@@ -179,7 +189,7 @@ def create_run(flow_id, stage_id):
     if flow is None:
         abort(404, "Flow not found")
 
-    stage = Stage.query.filter_by(id=stage_id).one_or_none()
+    stage = Stage.query.filter_by(id=stage_id['stage_id']).one_or_none()
     if stage is None:
         abort(404, "Stage not found")
 

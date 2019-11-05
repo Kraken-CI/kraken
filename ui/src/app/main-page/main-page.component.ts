@@ -46,20 +46,42 @@ export class MainPageComponent implements OnInit {
             for (let proj of data.items) {
                 let branches = []
                 for (let b of proj.branches) {
-                    let extraText = 'no flows yet';
-                    if (b.flows.length > 0) {
-                        extraText = 'last flow: ' + datetimeToLocal(b.flows[0].created);
+                    let ciExtraText = 'no flows yet';
+                    if (b.ci_flows.length > 0) {
+                        ciExtraText = 'last flow: ' + datetimeToLocal(b.ci_flows[0].created);
+                    }
+                    let devExtraText = 'no flows yet';
+                    if (b.dev_flows.length > 0) {
+                        devExtraText = 'last flow: ' + datetimeToLocal(b.dev_flows[0].created);
                     }
                     let br = {
                         label: b.name,
-                        extraText: extraText,
                         branchId: b.id,
                         'type': 'branch',
                         icon: "fa fa-code-fork",
-                        children: []
+                        children: [{
+                            label: 'CI',
+                            'type': 'ci_dev',
+                            extraText: ciExtraText,
+                            url: '/branches/' + b.id + '/ci',
+                            children: []
+                        }, {
+                            label: 'dev',
+                            'type': 'ci_dev',
+                            extraText: devExtraText,
+                            url: '/branches/' + b.id + '/dev',
+                            children: []
+                        }]
                     };
-                    for (let f of b.flows) {
-                        br.children.push({
+                    for (let f of b.ci_flows) {
+                        br.children[0].children.push({
+                            label: datetimeToLocal(f.created) + ', stages:' + f.runs.length,
+                            icon: 'fa fa-th-list',
+                            id: f.id
+                        });
+                    }
+                    for (let f of b.dev_flows) {
+                        br.children[1].children.push({
                             label: datetimeToLocal(f.created) + ', stages:' + f.runs.length,
                             icon: 'fa fa-th-list',
                             id: f.id

@@ -138,7 +138,7 @@ def create_stage(branch_id, stage):
     _check_and_correct_stage_schema(branch, stage)
 
     # create record
-    new_stage = Stage(branch=branch, name=stage['name'])
+    new_stage = Stage(branch=branch, name=stage['name'], schema=stage['schema'])
     db.session.flush()
 
     _prepare_new_planner_trigger(new_stage.id, stage['schema']['trigger'], None)

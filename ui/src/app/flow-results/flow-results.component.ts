@@ -19,6 +19,7 @@ export class FlowResultsComponent implements OnInit {
     flow = null;
     runs: any[];
     runsTree: TreeNode[];
+    flatTree: any[]
 
     nodeMenuItems: MenuItem[];
 
@@ -27,6 +28,20 @@ export class FlowResultsComponent implements OnInit {
                 protected executionService: ExecutionService,
                 protected breadcrumbService: BreadcrumbsService,
                 private msgSrv: MessageService) { }
+
+    ngOnInit() {
+        this.flowId = parseInt(this.route.snapshot.paramMap.get("id"));
+
+        this.runsTree = [{
+            label: `Flow [${this.flowId}]`,
+            expanded: true,
+            'type': 'root',
+            data: {created: ''},
+            children: []
+        }];
+
+        this.refresh()
+    }
 
     _getRunForStage(stageName) {
         for (let run of this.flow.runs) {
@@ -57,18 +72,17 @@ export class FlowResultsComponent implements OnInit {
         }
     }
 
-    ngOnInit() {
-        this.flowId = parseInt(this.route.snapshot.paramMap.get("id"));
-
-        this.runsTree = [{
-            label: `Flow [${this.flowId}]`,
-            expanded: true,
-            'type': 'root',
-            data: {created: ''},
-            children: []
-        }];
-
-        this.refresh()
+    _traverseTree(node, level) {
+        let item = node.data.run || node.data.stage
+        if (item) {
+            item['level'] = level
+            this.flatTree.push(item)
+        }
+        if (node['children']) {
+            for (let c of node['children']) {
+                this._traverseTree(c, level + 1)
+            }
+        }
     }
 
     refresh() {
@@ -81,7 +95,7 @@ export class FlowResultsComponent implements OnInit {
             }, {
                 label: 'Branches',
                 url: '/branches/' + flow.branch_id,
-                id: flow.branch_name
+                id: flow.base_branch_name
             }, {
                 label: 'Flows',
                 url: '/flows/' + flow.id,
@@ -107,7 +121,11 @@ export class FlowResultsComponent implements OnInit {
                 data: flow
             }];
             this._buildSubtree(this.runsTree[0], allParents, allParents['root'])
-            console.info(this.runsTree);
+            //console.info(this.runsTree);
+
+            this.flatTree = []
+            this._traverseTree(this.runsTree[0], 0)
+            console.info('flatTree', this.flatTree);
         });
     }
 
@@ -140,5 +158,10 @@ export class FlowResultsComponent implements OnInit {
             }];
         }
         nodeMenu.toggle($event);
+    }
+
+    onStageRun(newRun) {
+        //console.info(newRun)
+        this.refresh()
     }
 }

@@ -86,7 +86,7 @@ paths:
           description: unexpected error
           schema:
             $ref: '#/definitions/ApiError'
-  /branches/{branch_id}/flows:
+  /branches/{branch_id}/flows/{kind}:
     post:
       operationId: create_flow
       tags:
@@ -100,6 +100,11 @@ paths:
           required: true
           type: integer
           format: int64
+        - name: kind
+          in: path
+          description: ID of pet to return
+          required: true
+          type: string
       responses:
         201:
           description: Successfully created run
@@ -115,6 +120,11 @@ paths:
           required: true
           type: integer
           format: int64
+        - name: kind
+          in: path
+          description: ID of pet to return
+          required: true
+          type: string
         - name: start
           in: query
           description: How many items to return at one time (max 100)
@@ -521,6 +531,8 @@ definitions:
       branch_id:
         type: integer
         format: int64
+      base_branch_name:
+        type: string
       branch_name:
         type: string
       runs:
@@ -562,6 +574,9 @@ definitions:
         type: integer
         format: int64
       created:
+        type: string
+        format: date-time
+      started:
         type: string
         format: date-time
       stage_id:

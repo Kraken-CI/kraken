@@ -46,7 +46,7 @@ class Project(db.Model, DatesMixin):
     id = Column(Integer, primary_key=True)
     name = Column(Unicode(50))
     description = Column(Unicode(200))
-    base_branches = relationship("BaseBranch", back_populates="project", order_by="BaseBranch.created")
+    branches = relationship("Branch", back_populates="project", order_by="Branch.created")
     executor_groups = relationship("ExecutorGroup", back_populates="project")
 
     def get_json(self):
@@ -57,24 +57,20 @@ class Project(db.Model, DatesMixin):
                     description=self.description,
                     branches=[b.get_json(with_results=True) for b in self.branches])
 
-class BaseBranch(db.Model, DatesMixin):
-    __tablename__ = "base_branches"
-    id = Column(Integer, primary_key=True)
-    name = Column(Unicode(255))
-    project_id = Column(Integer, ForeignKey('projects.id'), nullable=False)
-    project = relationship('Project', back_populates="base_branches")
-    ci_branch_id = Column(Integer, ForeignKey('branches.id'), nullable=False)
-    ci_branch = relationship("Branch", back_populates="base_branch")
-    dev_branch_id = Column(Integer, ForeignKey('branches.id'), nullable=False)
-    dev_branch = relationship("Branch", back_populates="base_branch")
-    stages = relationship("Stage", back_populates="branch", lazy="dynamic", order_by="Stage.name")
-
-
 class Branch(db.Model, DatesMixin):
     __tablename__ = "branches"
     id = Column(Integer, primary_key=True)
-    base_branch = relationship('BaseBranch')
-    flows = relationship("Flow", back_populates="branch", order_by="desc(Flow.created)")
+    name = Column(Unicode(255))
+    project_id = Column(Integer, ForeignKey('projects.id'), nullable=False)
+    project = relationship('Project', back_populates="branches")
+
+    ci_flows = relationship("Flow", order_by="desc(Flow.created)", primaryjoin="and_(Branch.id==Flow.branch_id, Flow.kind==0)", viewonly=True)
+    dev_flows = relationship("Flow", order_by="desc(Flow.created)", primaryjoin="and_(Branch.id==Flow.branch_id, Flow.kind==1)", viewonly=True)
+
+    stages = relationship("Stage", back_populates="branch", lazy="dynamic", order_by="Stage.name")
+
+    #base_branch = relationship('BaseBranch', uselist=False, primaryjoin="or_(Branch.id==BaseBranch.ci_branch_id, Branch.id==BaseBranch.dev_branch_id)")
+    #flows = relationship("Flow", back_populates="branch", order_by="desc(Flow.created)")
 
     def get_json(self, with_results=False, with_cfg=False):
         data = dict(id=self.id,
@@ -84,7 +80,8 @@ class Branch(db.Model, DatesMixin):
                     project_id=self.project_id,
                     project_name=self.project.name)
         if with_results:
-            data['flows'] = [f.get_json() for f in self.flows[:10]]
+            data['ci_flows'] = [f.get_json() for f in self.ci_flows[:10]]
+            data['dev_flows'] = [f.get_json() for f in self.dev_flows[:10]]
         if with_cfg:
             data['stages'] = [s.get_json() for s in self.stages.filter_by(deleted=None)]
         return data
@@ -98,8 +95,8 @@ class Stage(db.Model, DatesMixin):
     id = Column(Integer, primary_key=True)
     name = Column(Unicode(50))
     description = Column(Unicode(1024))
-    base_branch_id = Column(Integer, ForeignKey('base_branches.id'), nullable=False)
-    base_branch = relationship('BaseBranch', back_populates="stages")
+    branch_id = Column(Integer, ForeignKey('branches.id'), nullable=False)
+    branch = relationship('Branch', back_populates="stages")
     schema = Column(JSONB, nullable=False)
     runs = relationship('Run', back_populates="stage")
     #services
@@ -143,9 +140,10 @@ class Flow(db.Model, DatesMixin):
     id = Column(Integer, primary_key=True)
     finished = Column(DateTime)
     state = Column(Integer, default=consts.FLOW_STATE_IN_PROGRESS)
+    kind = Column(Integer, default=0)  # 0 - CI, 1 - dev
     branch_name = Column(Unicode(255))
     branch_id = Column(Integer, ForeignKey('branches.id'), nullable=False)
-    branch = relationship('Branch', back_populates="flows")
+    branch = relationship('Branch')
     runs = relationship('Run', back_populates="flow", order_by="Run.created")
 
     def get_json(self):
@@ -162,7 +160,8 @@ class Flow(db.Model, DatesMixin):
                     state=consts.FLOW_STATES_NAME[self.state],
                     duration=duration_to_txt(duration),
                     branch_id=self.branch_id,
-                    branch_name=self.branch.name,
+                    base_branch_name=self.branch.name,
+                    branch_name=self.branch_name,
                     project_id=self.branch.project_id,
                     project_name=self.branch.project.name,
                     stages=[s.get_json() for s in self.branch.stages.filter_by(deleted=None)],

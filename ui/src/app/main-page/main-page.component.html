@@ -21,18 +21,26 @@
       <p-tree [value]="proj.branches"
               selectionMode="single"
               [style]="{width: '100%', 'border-width': 0}">
+
+        <ng-template let-node  pTemplate="branch">
+          <div style="width: 600px;">
+            <b style="width: 100px; display: inline-block;">
+              <a routerLink="/branches/{{node.branchId}}" routerLinkActive="active">
+                {{node.label}} <i class="pi pi-cog" style="vertical-align: bottom;"></i>
+              </a>
+            </b>
+          </div>
+        </ng-template>
+
+        <ng-template let-node  pTemplate="ci_dev">
+          <b style="width: 100px; display: inline-block;"><a routerLink="{{node.url}}" routerLinkActive="active">{{node.label}}</a></b>
+          {{node.extraText}}
+        </ng-template>
+
         <ng-template let-node  pTemplate="default">
           <a routerLink="/flows/{{node.id}}">{{node.id}}.</a> {{node.label}}
         </ng-template>
-        <ng-template let-node  pTemplate="branch">
-          <div style="width: 600px;">
-            <b style="width: 100px; display: inline-block;"><a routerLink="/branches/{{node.branchId}}" routerLinkActive="active">{{node.label}}</a></b> {{node.extraText}}
-            <a routerLink="/branches/{{node.branchId}}/mgmt" style="float: right;">
-              <i class="pi pi-cog" style="vertical-align: bottom;"></i>
-              management
-            </a>
-          </div>
-        </ng-template>
+
       </p-tree>
 
     </p-panel>

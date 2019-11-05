@@ -1,0 +1,60 @@
+<p-menu #runBoxMenu [popup]="true" [model]="runBoxMenuItems"></p-menu>
+<div class="round-shadow" [ngStyle]="{'background-color': bgColor, 'height': '100%'}">
+  <!-- title bar -->
+  <div style="display: flex;">
+    <b *ngIf="run.started" style="font-size: 1.1rem; flex: 1;"><a routerLink="/runs/{{run.id}}" routerLinkActive="active" style="color: unset;">{{run.name}}</a></b>
+    <b *ngIf="!run.started" style="font-size: 1.1rem; flex: 1; color: #aaa;">{{run.name}}</b>
+    <div style="font-size: 0.7rem; margin-right: 10px;">
+      <div>{{run.started | localtime}}</div>
+      <div>{{run.duration}}
+        <span *ngIf="run.state == 'in-progress'">
+          <i class="pi pi-spin pi-spinner" style="font-size: 16px; vertical-align: text-top;"></i>
+        </span>
+      </div>
+    </div>
+    <span style="float:right; cursor: pointer;" aria-hidden="true" class="ui-button-icon-left ui-clickable pi pi-bars" (click)="showRunMenu($event, runBoxMenu, run)"></span>
+  </div>
+  <!--- details -->
+  <div *ngIf="run.started" class="job-detal-items">
+    <div *ngIf="run.jobs_total">
+      <b style="font-weight: 500;">Execution</b><br>
+      {{run.jobs_total}} jobs
+      <span *ngIf="run.jobs_error">
+        <br>
+        {{run.jobs_error}} errs <i class="pi pi-times-circle" style="color: red; vertical-align: sub;"></i>
+      </span>
+      <span *ngIf="run.jobs_rerun">
+        <br>
+        {{run.jobs_rerun}} reruns
+      </span>
+      <span *ngIf="run.jobs_waiting">
+        <br>
+        {{run.jobs_waiting}} waiting <i class="pi pi-spin pi-spinner" style="font-size: 16px; vertical-align: bottom;"></i>
+      </span>
+      <span *ngIf="run.jobs_executing">
+        <br>
+        {{run.jobs_executing}} executing <i class="pi pi-spin pi-spinner" style="font-size: 16px; vertical-align: bottom;"></i>
+      </span>
+      <span *ngIf="run.jobs_processing">
+        <br>
+        {{run.jobs_processing}} processing <i class="pi pi-spin pi-spinner" style="font-size: 16px; vertical-align: bottom;"></i>
+      </span>
+    </div>
+    <div *ngIf="run.tests_total">
+      <b>Tests</b><br>
+      {{run.tests_passed * 100 / run.tests_total | number:'1.1-1'}}% passed<br>
+      {{run.tests_passed}}/{{run.tests_total}}
+      <span *ngIf="run.tests_pending">
+        <br>{{run.tests_pending}} pending
+      </span>
+    </div>
+    <div *ngIf="run.issues">
+      <b>Issues</b><br>
+      {{run.issues}} <i class="pi pi-exclamation-triangle" style="color: orange; font-size: 26px; vertical-align: sub;"></i>
+    </div>
+  </div>
+
+  <div *ngIf="!run.started">
+    not run
+  </div>
+</div>
