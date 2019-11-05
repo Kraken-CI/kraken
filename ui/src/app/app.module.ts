@@ -29,9 +29,6 @@ import {ConfirmationService} from 'primeng/api';
 import {InplaceModule} from 'primeng/inplace';
 import {PaginatorModule} from 'primeng/paginator';
 
-import { ConfigService } from './config.service';
-import { BackendService } from './backend.service'
-
 import { ApiModule, BASE_PATH, Configuration } from './backend';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -94,7 +91,7 @@ export function cfgFactory() {
         InplaceModule,
         PaginatorModule,
     ],
-    providers: [ConfigService, BackendService, { provide: BASE_PATH, useValue: 'http://localhost:5000/api' },
+    providers: [{ provide: BASE_PATH, useValue: 'http://localhost:5000/api' },
                 BreadcrumbsService, MessageService, ConfirmationService],
     bootstrap: [AppComponent]
 })
