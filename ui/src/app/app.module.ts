@@ -42,6 +42,7 @@ import { FlowResultsComponent } from './flow-results/flow-results.component';
 import { BranchMgmtComponent } from './branch-mgmt/branch-mgmt.component';
 import { RunBoxComponent } from './run-box/run-box.component';
 import { LocaltimePipe } from './localtime.pipe';
+import { NewFlowComponent } from './new-flow/new-flow.component';
 
 export function cfgFactory() {
     return new Configuration();
@@ -58,7 +59,8 @@ export function cfgFactory() {
         FlowResultsComponent,
         BranchMgmtComponent,
         RunBoxComponent,
-        LocaltimePipe
+        LocaltimePipe,
+        NewFlowComponent
     ],
     imports: [
         BrowserModule,

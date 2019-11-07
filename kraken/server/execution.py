@@ -108,7 +108,7 @@ def trigger_jobs(run, replay=False):
             complete_run(run, now)
 
 
-def create_flow(branch_id, kind):
+def create_flow(branch_id, kind, flow):
     """
     This function creates a new person in the people structure
     based on the passed in person data
@@ -125,14 +125,20 @@ def create_flow(branch_id, kind):
     else:
         kind = 0
 
-    flow = Flow(branch=branch, kind=kind)
+    args = flow.get('args', {})
+    flow_args = args.get('Common', {})
+    branch_name = flow_args.get('BRANCH', branch.branch_name)
+    if 'BRANCH' in flow_args:
+        del flow_args['BRANCH']
+
+    flow = Flow(branch=branch, kind=kind, branch_name=branch_name, args=flow_args)
     db.session.commit()
 
     for stage in branch.stages.filter_by(deleted=None):
         if stage.schema['parent'] != 'root' or stage.schema['trigger'].get('parent', False) is False:
             continue
 
-        run = Run(flow=flow, stage=stage)
+        run = Run(flow=flow, stage=stage, args=args.get(stage.name, {}))
         db.session.commit()
 
         log.info('triggered run %s for stage %s of branch %s', run, stage, branch)

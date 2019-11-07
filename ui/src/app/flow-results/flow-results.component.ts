@@ -5,6 +5,7 @@ import {TreeNode} from 'primeng/api';
 import {MenuItem} from 'primeng/api';
 import {MessageService} from 'primeng/api';
 
+import { ManagementService } from '../backend/api/management.service';
 import { ExecutionService } from '../backend/api/execution.service';
 import { BreadcrumbsService } from '../breadcrumbs.service';
 
@@ -21,10 +22,13 @@ export class FlowResultsComponent implements OnInit {
     runsTree: TreeNode[];
     flatTree: any[]
 
+    args: any[]
+
     nodeMenuItems: MenuItem[];
 
     constructor(private route: ActivatedRoute,
                 private router: Router,
+                protected managementService: ManagementService,
                 protected executionService: ExecutionService,
                 protected breadcrumbService: BreadcrumbsService,
                 private msgSrv: MessageService) { }
@@ -47,6 +51,19 @@ export class FlowResultsComponent implements OnInit {
         for (let run of this.flow.runs) {
             if (run.name == stageName) {
                 return run;
+            }
+        }
+        return null;
+    }
+
+    _getParamFromStage(stageName, paramName) {
+        for (let stage of this.flow.stages) {
+            if (stage.name == stageName) {
+                for (let param of stage.schema.parameters) {
+                    if (param.name == paramName) {
+                        return param
+                    }
+                }
             }
         }
         return null;
@@ -97,11 +114,63 @@ export class FlowResultsComponent implements OnInit {
                 url: '/branches/' + flow.branch_id,
                 id: flow.base_branch_name
             }, {
+                label: 'Results',
+                url: '/branches/' + flow.branch_id + '/' + flow.kind,
+                id: flow.kind,
+                items: [{
+                    label: 'CI',
+                    routerLink: '/branches/' + flow.branch_id + '/ci'
+                }, {
+                    label: 'dev',
+                    routerLink: '/branches/' + flow.branch_id + '/dev'
+                }]
+            }, {
                 label: 'Flows',
                 url: '/flows/' + flow.id,
                 id: flow.id
             }];
             this.breadcrumbService.setCrumbs(crumbs);
+
+            // collect args from flow
+            let args = []
+            let sectionArgs = []
+            if (this.flow.kind == 'dev') {
+                sectionArgs.push({
+                    name: 'BRANCH',
+                    value: this.flow.branch_name,
+                })
+            }
+            args.push({
+                name: 'Common',
+                args: sectionArgs
+            })
+            // collect args from runs
+            for (let run of this.flow.runs) {
+                sectionArgs = []
+                for (let a in run.args) {
+                    let param = this._getParamFromStage(run.name, a)
+                    let description = ''
+                    let defaultValue
+                    if (param) {
+                        description = param.description
+                        defaultValue = param['default']
+                    }
+
+                    sectionArgs.push({
+                        name: a,
+                        value: run.args[a],
+                        description: description,
+                        'default': defaultValue
+                    })
+                }
+                if (sectionArgs.length > 0) {
+                    args.push({
+                        name: run.name,
+                        args: sectionArgs
+                    })
+                }
+            }
+            this.args = args
 
             // build tree of runs
             let allParents = {

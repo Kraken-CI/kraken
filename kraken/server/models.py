@@ -7,7 +7,7 @@ from sqlalchemy import Column, Boolean, DateTime, ForeignKey, Index, Integer, Se
 from sqlalchemy import event
 from sqlalchemy.types import TypeDecorator
 from sqlalchemy.orm import relationship, mapper
-from sqlalchemy.dialects.postgresql import JSONB, ARRAY
+from sqlalchemy.dialects.postgresql import JSONB
 
 import consts
 
@@ -63,10 +63,9 @@ class Branch(db.Model, DatesMixin):
     name = Column(Unicode(255))
     project_id = Column(Integer, ForeignKey('projects.id'), nullable=False)
     project = relationship('Project', back_populates="branches")
-
+    branch_name = Column(Unicode(255))
     ci_flows = relationship("Flow", order_by="desc(Flow.created)", primaryjoin="and_(Branch.id==Flow.branch_id, Flow.kind==0)", viewonly=True)
     dev_flows = relationship("Flow", order_by="desc(Flow.created)", primaryjoin="and_(Branch.id==Flow.branch_id, Flow.kind==1)", viewonly=True)
-
     stages = relationship("Stage", back_populates="branch", lazy="dynamic", order_by="Stage.name")
 
     #base_branch = relationship('BaseBranch', uselist=False, primaryjoin="or_(Branch.id==BaseBranch.ci_branch_id, Branch.id==BaseBranch.dev_branch_id)")
@@ -78,7 +77,8 @@ class Branch(db.Model, DatesMixin):
                     deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,
                     name=self.name,
                     project_id=self.project_id,
-                    project_name=self.project.name)
+                    project_name=self.project.name,
+                    branch_name=self.branch_name)
         if with_results:
             data['ci_flows'] = [f.get_json() for f in self.ci_flows[:10]]
             data['dev_flows'] = [f.get_json() for f in self.dev_flows[:10]]
@@ -145,6 +145,7 @@ class Flow(db.Model, DatesMixin):
     branch_id = Column(Integer, ForeignKey('branches.id'), nullable=False)
     branch = relationship('Branch')
     runs = relationship('Run', back_populates="flow", order_by="Run.created")
+    args = Column(JSONB, nullable=False, default={})
 
     def get_json(self):
         if self.state == consts.FLOW_STATE_COMPLETED:
@@ -158,12 +159,14 @@ class Flow(db.Model, DatesMixin):
                     deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,
                     name=self.id,
                     state=consts.FLOW_STATES_NAME[self.state],
+                    kind='ci' if self.kind == 0 else 'dev',
                     duration=duration_to_txt(duration),
                     branch_id=self.branch_id,
                     base_branch_name=self.branch.name,
                     branch_name=self.branch_name,
                     project_id=self.branch.project_id,
                     project_name=self.branch.project.name,
+                    args=self.args,
                     stages=[s.get_json() for s in self.branch.stages.filter_by(deleted=None)],
                     runs=[r.get_json() for r in self.runs])
 
@@ -184,6 +187,7 @@ class Run(db.Model, DatesMixin):
     jobs = relationship('Job', back_populates="run")
     hard_timeout_reached = Column(DateTime)
     soft_timeout_reached = Column(DateTime)
+    args = Column(JSONB, nullable=False, default={})
 
     def get_json(self):
         non_covered_jobs = Job.query.filter_by(run=self).filter_by(covered=False).all()
@@ -237,6 +241,7 @@ class Run(db.Model, DatesMixin):
                     branch_name=self.flow.branch.name,
                     project_id=self.flow.branch.project_id,
                     project_name=self.flow.branch.project.name,
+                    args=self.args,
                     jobs_total=jobs_total,
                     jobs_waiting=jobs_waiting,
                     jobs_executing=jobs_executing,
@@ -498,7 +503,7 @@ def prepare_initial_data():
 
     branch = Branch.query.filter_by(name="master", project=project).one_or_none()
     if branch is None:
-        branch = Branch(name='master', project=project)
+        branch = Branch(name='Master', branch_name='master', project=project)
         db.session.commit()
         log.info("   created Branch record 'master'")
 
@@ -591,6 +596,12 @@ def prepare_initial_data():
             "trigger": {
                 "parent": True
             },
+            "parameters": [{
+                "name": "COUNT",
+                "type": "string",
+                "default": "10",
+                "description": "Number of tests to generate"
+            }],
             "jobs": [{
                 "name": "random tests",
                 "steps": [{

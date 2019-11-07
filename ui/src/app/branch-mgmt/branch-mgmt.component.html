@@ -20,6 +20,15 @@
   <div style="margin-left: 40px;">
     <a routerLink="/branches/{{branchId}}/ci">CI Results</a>   &nbsp;&nbsp;&nbsp; | &nbsp;&nbsp;&nbsp;   <a routerLink="/branches/{{branchId}}/dev">Dev Results</a>
   </div>
+
+  <a routerLink="/branches/{{branchId}}/ci/flows/new">
+    <button type="button" pButton icon="pi pi-caret-right" label="Run CI Flow" style="margin: 0 10px 0 100px;"></button>
+  </a>
+  <a routerLink="/branches/{{branchId}}/dev/flows/new">
+    <button type="button" pButton icon="pi pi-caret-right" label="Run Dev Flow"></button>
+  </a>
+
+  <button type="button" (click)="forkBranch()" pButton icon="fa fa-code-fork" label="Fork Branch" style="margin: 0 10px 0 100px;"></button>
 </div>
 
 <p-tabView>

@@ -105,6 +105,11 @@ paths:
           description: ID of pet to return
           required: true
           type: string
+        - name: flow
+          in: body
+          description: flow
+          schema:
+            $ref: '#/definitions/Flow'
       responses:
         201:
           description: Successfully created run
@@ -509,10 +514,7 @@ paths:
 
 definitions:
   Flow:
-    type: "object"
-    required:
-      - id
-      - branch_id
+    type: object
     properties:
       id:
         type: integer
@@ -539,6 +541,10 @@ definitions:
         type: object
       stages:
         type: object
+      args:
+        type: object
+      kind:
+        type: string
   Flows:
     type: object
     properties:
@@ -582,6 +588,8 @@ definitions:
       stage_id:
         type: integer
         format: int64
+      args:
+        type: object
   Runs:
     type: object
     properties:
@@ -644,6 +652,8 @@ definitions:
         type: integer
         format: int64
       name:
+        type: string
+      branch_name:
         type: string
       project_id:
         type: integer

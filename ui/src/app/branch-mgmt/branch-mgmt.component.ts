@@ -226,4 +226,7 @@ export class BranchMgmtComponent implements OnInit {
             stageDescrInplace.deactivate()
         }
     }
+
+    forkBranch() {
+    }
 }

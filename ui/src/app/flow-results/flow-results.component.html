@@ -1,5 +1,4 @@
-
-<p-button label="Refresh" (onClick)="refresh()"></p-button>
+<p-button label="Refresh" icon="pi pi-refresh" (onClick)="refresh()"></p-button>
 
 <p-tabView>
   <p-tabPanel header="Stages">
@@ -23,8 +22,34 @@
     </div>
   </p-tabPanel>
 
-  <p-tabPanel header="Parameters">
+  <p-tabPanel header="Arguments">
+    <div *ngFor="let section of args" style="margin-bottom: 10px;">
+      <span style="font-size: 1.2rem; font-weight: bold;">{{section.name}}</span>
+      <table>
+        <tr>
+          <th style="width: 20rem;"></th>
+          <th style="width: 20rem;"></th>
+        </tr>
+
+        <tr *ngFor="let a of section.args">
+          <td style="text-align: right; padding-right: 10px;">
+            {{a.name}}
+            <br>
+            <span style="font-size: 0.8rem; font-weight: 100;">
+              {{a.description}}
+              <span *ngIf="a.default">
+                <br>Default value is {{a.default}}.
+              </span>
+            </span>
+          </td>
+          <td>
+            {{a.value}}
+          </td>
+        </tr>
+      </table>
+    </div>
   </p-tabPanel>
+
 
   <p-tabPanel header="Repo Changes">
   </p-tabPanel>

@@ -238,19 +238,6 @@ export class BranchResultsComponent implements OnInit {
         this.breadcrumbService.setCrumbs(crumbs);
     }
 
-    newFlow() {
-        this.executionService.createFlow(this.branchId, this.kind).subscribe(data => {
-            let stages = new Set<string>();
-            this._processFlowData(data, stages);
-            this.flows.unshift(data)
-            let newStages = [{name: 'All'}];
-            for (let st of Array.from(stages).sort()) {
-                newStages.push({name: st});
-            }
-            this.stagesAvailable = newStages;
-        });
-    }
-
     _processFlowData(flow, stages) {
         for (let run of flow['runs']) {
             stages.add(run['name']);
