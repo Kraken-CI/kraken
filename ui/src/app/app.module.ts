@@ -43,6 +43,7 @@ import { BranchMgmtComponent } from './branch-mgmt/branch-mgmt.component';
 import { RunBoxComponent } from './run-box/run-box.component';
 import { LocaltimePipe } from './localtime.pipe';
 import { NewFlowComponent } from './new-flow/new-flow.component';
+import { NewRunComponent } from './new-run/new-run.component';
 
 export function cfgFactory() {
     return new Configuration();
@@ -60,7 +61,8 @@ export function cfgFactory() {
         BranchMgmtComponent,
         RunBoxComponent,
         LocaltimePipe,
-        NewFlowComponent
+        NewFlowComponent,
+        NewRunComponent
     ],
     imports: [
         BrowserModule,

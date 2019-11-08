@@ -183,7 +183,7 @@ def get_flow_runs(flow_id):
     return runs, 200
 
 
-def create_run(flow_id, stage_id):
+def create_run(flow_id, run):
     """
     This function creates a new person in the people structure
     based on the passed in person data
@@ -195,11 +195,13 @@ def create_run(flow_id, stage_id):
     if flow is None:
         abort(404, "Flow not found")
 
-    stage = Stage.query.filter_by(id=stage_id['stage_id']).one_or_none()
+    stage = Stage.query.filter_by(id=run['stage_id']).one_or_none()
     if stage is None:
         abort(404, "Stage not found")
 
-    new_run = Run(stage=stage, flow=flow)
+    args = run.get('args', {})
+
+    new_run = Run(stage=stage, flow=flow, args=args)
     db.session.commit()
 
     trigger_jobs(new_run)

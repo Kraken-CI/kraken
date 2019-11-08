@@ -282,15 +282,11 @@ paths:
           required: true
           type: integer
           format: int64
-        - name: stage_id
+        - name: run
           in: body
-          description: Stage id
+          description: run
           schema:
-            required:
-              - stage_id
-            properties:
-              stage_id:
-                type: integer
+            $ref: '#/definitions/Run'
       responses:
         201:
           description: Successfully created run
@@ -557,9 +553,6 @@ definitions:
 
   Run:
     type: "object"
-    required:
-      - id
-      - project_id
     properties:
       id:
         type: integer
@@ -590,6 +583,8 @@ definitions:
         format: int64
       args:
         type: object
+      flow_kind:
+        type: string
   Runs:
     type: object
     properties:

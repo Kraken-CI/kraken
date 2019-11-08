@@ -114,7 +114,7 @@ export class BranchMgmtComponent implements OnInit {
                 if (err.error && err.error.detail) {
                     msg = err.error.detail;
                 }
-                this.msgSrv.add({severity:'error', summary:'New stage erred', detail:'New stage operation erred: ' + msg, sticky: true});
+                this.msgSrv.add({severity:'error', summary:'New stage erred', detail:'New stage operation erred: ' + msg, life: 10000});
                 this.newStageDlgVisible = false;
             });
     }
@@ -152,7 +152,7 @@ export class BranchMgmtComponent implements OnInit {
                         if (err.error && err.error.detail) {
                             msg = err.error.detail;
                         }
-                        this.msgSrv.add({severity:'error', summary:'Stage deletion erred', detail:'Stage deletion operation erred: ' + msg, sticky: true});
+                        this.msgSrv.add({severity:'error', summary:'Stage deletion erred', detail:'Stage deletion operation erred: ' + msg, life: 10000});
                     }
                 );
             }
@@ -187,7 +187,7 @@ export class BranchMgmtComponent implements OnInit {
                 if (err.error && err.error.detail) {
                     msg = err.error.detail;
                 }
-                this.msgSrv.add({severity:'error', summary:'Stage update erred', detail:'Stage update operation erred: ' + msg, sticky: true});
+                this.msgSrv.add({severity:'error', summary:'Stage update erred', detail:'Stage update operation erred: ' + msg, life: 10000});
             }
         );
     }

@@ -90,10 +90,12 @@ export class FlowResultsComponent implements OnInit {
     }
 
     _traverseTree(node, level) {
-        let item = node.data.run || node.data.stage
-        if (item) {
-            item['level'] = level
-            this.flatTree.push(item)
+        if (node.data.run || node.data.stage) {
+            this.flatTree.push({
+                level: level,
+                run: node.data.run,
+                stage: node.data.stage,
+            })
         }
         if (node['children']) {
             for (let c of node['children']) {
@@ -194,7 +196,7 @@ export class FlowResultsComponent implements OnInit {
 
             this.flatTree = []
             this._traverseTree(this.runsTree[0], 0)
-            console.info('flatTree', this.flatTree);
+            //console.info('flatTree', this.flatTree);
         });
     }
 
@@ -215,14 +217,20 @@ export class FlowResultsComponent implements OnInit {
                 label: 'Run this stage',
                 icon: 'pi pi-caret-right',
                 command: () => {
-                    this.executionService.createRun(this.flowId, node.data.stage.id).subscribe(
-                        data => {
-                            this.msgSrv.add({severity:'success', summary:'Run succeeded', detail:'Run operation succeeded.'});
-                            this.refresh()
-                        },
-                        err => {
-                            this.msgSrv.add({severity:'error', summary:'Run erred', detail:'Run operation erred: ' + err.statusText, sticky: true});
-                        });
+                    let stage = node.data.stage
+                    console.info(stage.schema.parameters)
+                    if (stage.schema.parameters.length == 0) {
+                        this.executionService.createRun(this.flowId, stage.id).subscribe(
+                            data => {
+                                this.msgSrv.add({severity:'success', summary:'Run succeeded', detail:'Run operation succeeded.'});
+                                this.refresh()
+                            },
+                            err => {
+                                this.msgSrv.add({severity:'error', summary:'Run erred', detail:'Run operation erred: ' + err.statusText, life: 10000});
+                            });
+                    } else {
+                        this.router.navigate(['/flows/' + this.flowId + '/runs/new']);
+                    }
                 }
             }];
         }

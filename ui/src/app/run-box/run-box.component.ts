@@ -1,10 +1,11 @@
 import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 
 import {MenuItem} from 'primeng/api';
 import {MessageService} from 'primeng/api';
 
 import { ExecutionService } from '../backend/api/execution.service';
-import { Run } from '../backend/model/run';
+import { Run, Stage } from '../backend/model/models';
 
 @Component({
   selector: 'app-run-box',
@@ -14,6 +15,7 @@ import { Run } from '../backend/model/run';
 export class RunBoxComponent implements OnInit {
 
     @Input() run: Run
+    @Input() stage: Stage
     @Input() flowId: number
     @Output() onStageRun = new EventEmitter<any>();
 
@@ -21,11 +23,12 @@ export class RunBoxComponent implements OnInit {
 
     bgColor = '#fff';
 
-    constructor(protected executionService: ExecutionService,
+    constructor(private router: Router,
+                protected executionService: ExecutionService,
                 private msgSrv: MessageService) { }
 
     ngOnInit() {
-        if (this.run.started) {
+        if (this.run) {
             // prepare menu items for run box
             this.runBoxMenuItems = [{
                 label: 'Show Details',
@@ -40,7 +43,7 @@ export class RunBoxComponent implements OnInit {
                             this.msgSrv.add({severity:'success', summary:'Replay succeeded', detail:'Replay operation succeeded.'});
                         },
                         err => {
-                            this.msgSrv.add({severity:'error', summary:'Replay erred', detail:'Replay operation erred: ' + err.statusText, sticky: true});
+                            this.msgSrv.add({severity:'error', summary:'Replay erred', detail:'Replay operation erred: ' + err.statusText, life: 10000});
                         });
                 }
             }];
@@ -63,14 +66,18 @@ export class RunBoxComponent implements OnInit {
                 label: 'Run this stage',
                 icon: 'pi pi-caret-right',
                 command: () => {
-                    this.executionService.createRun(this.flowId, {stage_id: this.run.id}).subscribe(
-                        data => {
-                            this.msgSrv.add({severity:'success', summary:'Run succeeded', detail:'Run operation succeeded.'});
-                            this.onStageRun.emit(data)
-                        },
-                        err => {
-                            this.msgSrv.add({severity:'error', summary:'Run erred', detail:'Run operation erred: ' + err.statusText, sticky: true});
-                        });
+                    if (this.stage.schema.parameters.length == 0) {
+                        this.executionService.createRun(this.flowId, {stage_id: this.stage.id}).subscribe(
+                            data => {
+                                this.msgSrv.add({severity:'success', summary:'Run succeeded', detail:'Run operation succeeded.'});
+                                this.onStageRun.emit(data)
+                            },
+                            err => {
+                                this.msgSrv.add({severity:'error', summary:'Run erred', detail:'Run operation erred: ' + err.statusText, life: 10000});
+                            });
+                    } else {
+                        this.router.navigate(['/flows/' + this.flowId + '/stages/' + this.stage.id + '/new']);
+                    }
                 }
             }];
         }

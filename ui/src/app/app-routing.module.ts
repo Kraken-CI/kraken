@@ -9,6 +9,7 @@ import { RunResultsComponent } from './run-results/run-results.component';
 import { TestCaseResultComponent } from './test-case-result/test-case-result.component';
 import { FlowResultsComponent } from './flow-results/flow-results.component';
 import { NewFlowComponent } from './new-flow/new-flow.component';
+import { NewRunComponent } from './new-run/new-run.component';
 
 const routes: Routes = [
     {
@@ -32,6 +33,10 @@ const routes: Routes = [
     {
         path: 'branches/:id/:kind/flows/new',
         component: NewFlowComponent
+    },
+    {
+        path: 'flows/:flow_id/stages/:stage_id/new',
+        component: NewRunComponent
     },
     {
         path: 'flows/:id',

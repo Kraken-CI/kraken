@@ -13,7 +13,7 @@
 * support for on-demand building/testing from private/developer branch (support for CI and OD/PM)
 ** DONE split ci/dev
 ** DONE add submit form for new flow
-** TODO add submit form for triggering run
+** DONE add submit form for triggering run
 * canceling job or run
 * nie pozwalać na run stage gdy parent stage nie był jeszcze puszczony
 * stage definition files from repo

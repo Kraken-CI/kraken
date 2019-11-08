@@ -228,7 +228,7 @@ class Run(db.Model, DatesMixin):
         else:
             duration = datetime.datetime.utcnow() - self.created
 
-        return dict(id=self.id,
+        data = dict(id=self.id,
                     created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,
                     deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,
                     started=self.started.strftime("%Y-%m-%dT%H:%M:%SZ") if self.started else None,
@@ -237,6 +237,7 @@ class Run(db.Model, DatesMixin):
                     state=consts.RUN_STATES_NAME[self.state],
                     stage_id=self.stage_id,
                     flow_id=self.flow_id,
+                    flow_kind='ci' if self.flow.kind == 0 else 'dev',
                     branch_id=self.flow.branch_id,
                     branch_name=self.flow.branch.name,
                     project_id=self.flow.branch.project_id,
@@ -252,6 +253,8 @@ class Run(db.Model, DatesMixin):
                     tests_passed=tests_passed,
                     tests_pending=tests_pending,
                     duration=duration_to_txt(duration))
+
+        return data
 
 
 class Step(db.Model, DatesMixin):

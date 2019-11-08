@@ -124,7 +124,7 @@ export class MainPageComponent implements OnInit {
                 if (err.error && err.error.detail) {
                     msg = err.error.detail;
                 }
-                this.msgSrv.add({severity:'error', summary:'New branch erred', detail:'New branch operation erred: ' + msg, sticky: true});
+                this.msgSrv.add({severity:'error', summary:'New branch erred', detail:'New branch operation erred: ' + msg, life: 10000});
                 this.newBranchDlgVisible = false;
             });
     }

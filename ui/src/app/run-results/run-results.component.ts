@@ -45,6 +45,17 @@ export class RunResultsComponent implements OnInit {
                 url: '/branches/' + run.branch_id,
                 id: run.branch_name
             }, {
+                label: 'Results',
+                url: '/branches/' + run.branch_id + '/' + run.flow_kind,
+                id: run.flow_kind,
+                items: [{
+                    label: 'CI',
+                    routerLink: '/branches/' + run.branch_id + '/ci'
+                }, {
+                    label: 'dev',
+                    routerLink: '/branches/' + run.branch_id + '/dev'
+                }]
+            }, {
                 label: 'Flows',
                 url: '/flows/' + run.flow_id,
                 id: run.flow_id

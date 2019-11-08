@@ -59,6 +59,9 @@ def _check_and_correct_stage_schema(branch, stage):
     if 'trigger' not in schema or schema['trigger'] == {}:
         schema['trigger'] = {'parent': True}
 
+    if 'parameters' not in schema:
+        schema['parameters'] = []
+
     # check parent in schema
     if schema['parent'] != 'root':
         found = False
