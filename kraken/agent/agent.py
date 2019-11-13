@@ -5,13 +5,14 @@ import time
 import argparse
 import logging
 import traceback
+import sys
 
 import config
 import server
 import jobber
 
-LOG_FMT = '%(asctime)s %(levelname)-4.4s p:%(process)5d %(module)8.8s:%(lineno)-5d %(message)s'
-
+sys.path.append('../server')
+import logs
 
 log = logging.getLogger('agent')
 
@@ -38,7 +39,7 @@ def dispatch_job(srv, job):
 
 
 def main():
-    logging.basicConfig(format=LOG_FMT, level=logging.INFO)
+    logs.setup_logging('agent')
 
     args = parse_args()
     cfg = vars(args)
@@ -56,6 +57,8 @@ def main():
     while True:
         try:
             job = srv.get_job()
+            if job:
+                log.set_ctx(job=job['id'], run=job['run_id'])
             log.info('received job: %s', str(job)[:200])
 
             if job:
@@ -68,6 +71,7 @@ def main():
         except:
             log.exception('ignored exception in agent main loop')
             time.sleep(5)
+        log.reset_ctx()
 
 
 

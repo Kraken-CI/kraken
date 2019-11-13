@@ -44,6 +44,10 @@ const routes: Routes = [
     },
     {
         path: 'runs/:id',
+        redirectTo: 'runs/:id/'
+    },
+    {
+        path: 'runs/:id/:tab',
         component: RunResultsComponent
     },
     {
@@ -53,7 +57,10 @@ const routes: Routes = [
 
 
     // otherwise redirect to home
-    { path: '**', redirectTo: '' }
+    {
+        path: '**',
+        redirectTo: ''
+    }
 ];
 
 

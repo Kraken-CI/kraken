@@ -37,3 +37,4 @@ json-rpc==1.12.1
 jsonrpcclient[requests]==3.3.4
 pytimeparse==1.1.8
 python-dateutil==2.8.0
+elasticsearch==7.0.5

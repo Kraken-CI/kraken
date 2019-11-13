@@ -1,9 +1,12 @@
+import os
+import re
 import logging
 import datetime
 
 from flask import make_response, abort
 from sqlalchemy.sql.expression import asc, desc
 from sqlalchemy.orm import joinedload
+from elasticsearch import Elasticsearch
 
 import consts
 from models import db, Branch, Flow, Run, Stage, Job, Step, ExecutorGroup, Tool, TestCaseResult
@@ -40,6 +43,18 @@ def complete_run(run, now):
     # trigger history of results analysis
     t = bg.jobs.analyze_results_history.delay(run.id)
     log.info('run %s completed, process results: %s', run, t)
+
+
+def _substitute_vars(fields, args):
+    new_fields = {}
+    for f, val in fields.items():
+        for var in re.findall('#{[A-Z]+}', val):
+            name = var[2:-1]
+            if name in args:
+                arg_val = args[name]
+                val = val.replace(var, arg_val)
+        new_fields[f] = val
+    return new_fields
 
 
 def trigger_jobs(run, replay=False):
@@ -86,7 +101,7 @@ def trigger_jobs(run, replay=False):
                 job.notes = "cannot find tool '%s' in database" % s['tool']
             else:
                 for idx, s in enumerate(j['steps']):
-                    fields = s.copy()
+                    fields = _substitute_vars(s, run.args)
                     del fields['tool']
                     Step(job=job, index=idx, tool=tools[idx], fields=fields)
 
@@ -274,6 +289,17 @@ def get_run_results(run_id, start=0, limit=10):
     return {'items': results, 'total': total}, 200
 
 
+def get_run_jobs(run_id, start=0, limit=10):
+    q = Job.query
+    q = q.filter_by(run_id=run_id)
+    total = q.count()
+    q = q.offset(start).limit(limit)
+    jobs = []
+    for j in q.all():
+        jobs.append(j.get_json())
+    return {'items': jobs, 'total': total}, 200
+
+
 def get_result_history(test_case_result_id, start=0, limit=10):
     tcr = TestCaseResult.query.filter_by(id=test_case_result_id).one_or_none()
 
@@ -324,3 +350,99 @@ def get_branch(branch_id):
     if branch is None:
         abort(404, "Branch not found")
     return branch.get_json(with_results=True), 200
+
+
+def get_job_logs(job_id, start=0, limit=200, order=None, filters=None):
+    job = Job.query.filter_by(id=job_id).one()
+    job_json = job.get_json()
+
+    es_server = os.environ.get('KRAKEN_ELASTICSEARCH', 'http://elastic:changeme@localhost')
+    es = Elasticsearch(es_server)
+
+    query = {"query": {"bool": {"must": []}}}
+
+    query["query"]["bool"]["must"].append({"match": {"job": int(job_id)}})
+
+    filters = {'service': ['tool']}
+
+    if filters:
+        if 'origin' in filters:
+            processName = filters['origin']
+            del filters['origin']
+            if "^" in processName or "*" in processName:
+                rx = processName
+            else:
+                rx = ".*%s.*" % processName.lower()
+            query["query"]["bool"]["must"].append({"regexp": {"processName": rx}})
+
+        if "level" in filters:
+            level = filters['level']
+            del filters['level']
+            if level == 'error':
+                levels = "ERROR"
+            elif level == 'warning':
+                levels = "ERROR WARNING"
+            elif level == 'important':
+                levels = "ERROR WARNING IMPORTANT"
+            elif level == 'info':
+                levels = "ERROR WARNING IMPORTANT INFO"
+            elif level == 'debug':
+                levels = "ERROR WARNING IMPORTANT INFO DEBUG"
+            query["query"]["bool"]["must"].append({"match": {"levelname": levels}})
+
+        if "service" in filters:
+            services = filters['service']
+            del filters['service']
+            if any(services):
+                query["query"]["bool"]["must"].append({"terms": {"service": services}})
+
+        if "message" in filters:
+            message = filters['message']
+            del filters['message']
+            if "^" in message or "*" in message:
+                rx = message
+            else:
+                rx = ".*%s.*" % message.lower()
+            query["query"]["bool"]["must"].append({"regexp": {"message": rx}})
+
+        if "recent" in filters:
+            recent = filters['recent']
+            del filters['recent']
+            if recent.lower() == 'true':
+                start_date = datetime.datetime.now() - datetime.timedelta(days=7)
+                query["query"]["bool"]["must"].append({"range": {"@timestamp": {"gt": start_date.strftime("%Y-%m-%d")}}})
+
+        query["query"]["bool"]["must"].extend([{"match": {k: v}} for k, v in filters.items()])
+
+    query["from"] = start
+    query["size"] = limit
+    if order is None:
+        query["sort"] = {"@timestamp": {"order": "asc"}}  # , "ignore_unmapped": True}}
+    elif order in ['asc', 'desc']:
+        query["sort"] = {"@timestamp": {"order": order}}
+    else:
+        query["sort"] = order
+
+    try:
+        res = es.search(index="logstash*", body=query)
+    except:
+        # try one more time
+        res = es.search(index="logstash*", body=query)
+    log.info(query)
+
+    logs = []
+    for hit in res['hits']['hits']:
+        l = hit[u'_source']
+        entry = dict(time=l[u'@timestamp'],
+                     message=l['message'],
+                     service=l['service'] if u'service' in l else "",
+                     origin=l['processName'] if u'processName' in l else "",
+                     host=l['host'],
+                     level=l['level'].lower()[:4] if u'level' in l else "info",
+                     job=l['job'],
+                     tool=l['tool'] if 'tool' in l else "",
+                     step=l['step'] if 'step' in l else "")
+        logs.append(entry)
+
+    total = res['hits']['total']['value']
+    return {'items': logs, 'total': total, 'job': job_json}, 200

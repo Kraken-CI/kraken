@@ -1,6 +1,6 @@
+<p-tabMenu [model]="tabs" [activeItem]="activeTab"></p-tabMenu>
 
-<p-tabView>
-  <p-tabPanel header="Results">
+<div *ngIf="activeTab.label === 'Results'">
     <p-table id="results"
              [value]="results"
              [lazy]="true"
@@ -50,8 +50,65 @@
         </tr>
       </ng-template>
     </p-table>
-  </p-tabPanel>
-  <p-tabPanel header="Jobs">
-    Content 3
-  </p-tabPanel>
-</p-tabView>
+</div>
+
+
+<div *ngIf="activeTab.label === 'Jobs'">
+  <div class="p-grid">
+    <div class="p-col-5">
+
+      <p-table id="jobs"
+               [value]="jobs"
+               [lazy]="true"
+               selectionMode="single"
+               [(selection)]="job"
+               (onLazyLoad)="loadJobsLazy($event)"
+               [paginator]="true"
+               [rows]="30"
+               [totalRecords]="totalJob"
+               [loading]="loadingJobs"
+               (onRowSelect)="jobSelected($event)"
+               [rowsPerPageOptions]="[10,20,30,50,100]"
+               [showCurrentPageReport]="true">
+        <ng-template pTemplate="header">
+          <tr>
+            <th style="width: 150px;">Job Name</th>
+            <th style="width: 60px;">Job ID</th>
+            <th style="width: 30%;">System</th>
+            <th style="width: 10%;">Config</th>
+            <th style="width: 10%;">Executor Group</th>
+            <th style="width: 10%;">Executor</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-job>
+          <tr [pSelectableRow]="job">
+            <td>{{job.name}}</td>
+            <td><a routerLink="/jobs/{{job.job_id}}">{{job.id}}</a></td>
+            <td>Ubuntu 18.04</td>
+            <td>default</td>
+            <td>{{job.executor_group_name}}</td>
+            <td>{{job.executor_name}}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+
+    </div>
+
+    <div class="p-col-7">
+      <div *ngIf="job">
+        {{job.name}}
+        <div style="background-color: black; color: #ccc; padding: 10px; height: 80vh; font-family: Menlo, DejaVu Sans Mono, Liberation Mono, Consolas, Ubuntu Mono, Courier New, andale mono, lucida console, monospace; font-size: 12px; overflow-y: auto;" #logBox [scrollTop]="logBox.scrollHeight">
+          <div *ngFor="let frag of logFragments">
+            <div *ngIf="frag.title" style="font-size: 1.2em; font-weight: bold; color: lawngreen; cursor: pointer;" (click)="frag.expanded = !frag.expanded">
+              <i *ngIf="!frag.expanded" class="pi pi-caret-right" style="vertical-align: bottom;"></i>
+              <i *ngIf="frag.expanded" class="pi pi-caret-down" style="vertical-align: bottom;"></i>
+              {{frag.title}}
+            </div>
+            <div *ngIf="frag.expanded">
+              <div *ngFor="let log of frag.logs" style="white-space: pre-wrap; overflow-x: auto; word-break: break-word; margin: 0;" [ngStyle]="log.style" [innerHTML]="log.message"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+</div>

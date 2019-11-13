@@ -361,6 +361,44 @@ paths:
           description: unexpected error
           schema:
             $ref: '#/definitions/ApiError'
+  /runs/{run_id}/jobs:
+    get:
+      summary: List jobs
+      operationId: get_run_jobs
+      tags:
+        - Execution
+      parameters:
+        - name: run_id
+          in: path
+          description: ID of pet to return
+          required: true
+          type: integer
+          format: int64
+        - name: start
+          in: query
+          description: How many items to return at one time (max 100)
+          required: false
+          type: integer
+          format: int32
+        - name: limit
+          in: query
+          description: How many items to return at one time (max 100)
+          required: false
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: A paged array of runs
+          headers:
+            x-next:
+              type: string
+              description: A link to the next page of responses
+          schema:
+            $ref: '#/definitions/Jobs'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/ApiError'
   /runs/{run_id}:
     get:
       summary: List all results
@@ -484,7 +522,7 @@ paths:
       summary: Create a job
       description: Create a new job
       parameters:
-        - name: job
+        - name: job2  # TODO
           in: body
           description: Job to create
           schema:
@@ -496,6 +534,50 @@ paths:
       responses:
         201:
           description: Successfully created run
+  /jobs/{job_id}/logs:
+    get:
+      operationId: get_job_logs
+      tags:
+        - Execution
+      summary: Get a job lobs
+      description: Get a job lobs
+      parameters:
+        - name: job_id
+          in: path
+          description: ID of pet to return
+          required: true
+          type: integer
+        - name: start
+          in: query
+          description: ID of pet to return
+          required: true
+          type: integer
+        - name: limit
+          in: query
+          description: ID of pet to return
+          required: true
+          type: integer
+        - name: order
+          in: query
+          description: ID of pet to return
+          type: string
+        - name: filters
+          in: query
+          description: ID of pet to return
+          type: string
+      responses:
+        "200":
+          description: A paged array of logs
+          headers:
+            x-next:
+              type: string
+              description: A link to the next page of responses
+          schema:
+            $ref: '#/definitions/Logs'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/ApiError'
   /projects:
     get:
       operationId: get_projects
@@ -572,12 +654,6 @@ definitions:
       flow_id:
         type: integer
         format: int64
-      created:
-        type: string
-        format: date-time
-      started:
-        type: string
-        format: date-time
       stage_id:
         type: integer
         format: int64
@@ -585,6 +661,36 @@ definitions:
         type: object
       flow_kind:
         type: string
+      created:
+        type: string
+        format: date-time
+      started:
+        type: string
+        format: date-time
+      duration:
+        type: string
+      state:
+        type: string
+      jobs_error:
+        type: integer
+      jobs_rerun:
+        type: integer
+      jobs_waiting:
+        type: integer
+      jobs_executing:
+        type: integer
+      jobs_processing:
+        type: integer
+      jobs_total:
+        type: integer
+      tests_pending:
+        type: integer
+      tests_passed:
+        type: integer
+      tests_total:
+        type: integer
+      issues:
+        type: integer
   Runs:
     type: object
     properties:
@@ -616,6 +722,79 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/Result'
+      total:
+        type: integer
+        format: int64
+
+  Log:
+    type: "object"
+    properties:
+      time:
+        type: string
+      message:
+        type: string
+      service:
+        type: string
+      origin:
+        type: string
+      host:
+        type: string
+      level:
+        type: string
+      run:
+        type: integer
+      job:
+        type: integer
+      step:
+        type: integer
+      tool:
+        type: string
+  Logs:
+    type: object
+    properties:
+      items:
+        type: array
+        items:
+          $ref: '#/definitions/Log'
+      total:
+        type: integer
+        format: int64
+      job:
+        $ref: '#/definitions/Job'
+
+  Job:
+    type: "object"
+    properties:
+      id:
+        type: integer
+      created:
+        type: string
+        format: date-time
+      state:
+        type: integer
+      completion_status:
+        type: integer
+      run_id:
+        type: integer
+      steps:
+        type: array
+        items:
+          type: object
+      executor_group_id:
+        type: integer
+      executor_group_name:
+        type: string
+      executor_id:
+        type: integer
+      executor_name:
+        type: string
+  Jobs:
+    type: object
+    properties:
+      items:
+        type: array
+        items:
+          $ref: '#/definitions/Job'
       total:
         type: integer
         format: int64

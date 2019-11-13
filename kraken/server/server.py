@@ -7,42 +7,12 @@ from flask_cors import CORS
 import connexion
 from connexion.resolver import Resolver
 
+import logs
 import models
 import backend
 import consts
 
 log = logging.getLogger('server')
-
-
-def home():
-    """
-    This function just responds to the browser URL
-    localhost:5000/
-
-    :return:        the rendered template "home.html"
-    """
-    return render_template("home.html")
-
-
-def people(person_id=""):
-    """
-    This function just responds to the browser URL
-    localhost:5000/people
-
-    :return:        the rendered template "people.html"
-    """
-    return render_template("people.html", person_id=person_id)
-
-
-def notes(person_id, note_id=""):
-    """
-    This function responds to the browser URL
-    localhost:5000/notes/<person_id>
-
-    :param person_id:   Id of the person to show notes for
-    :return:            the rendered template "notes.html"
-    """
-    return render_template("notes.html", person_id=person_id, note_id=note_id)
 
 
 class MyResolver(Resolver):
@@ -53,12 +23,12 @@ class MyResolver(Resolver):
 
 
 def create_app():
-    basedir = os.path.abspath(os.path.dirname(__file__))
-
-    logging.basicConfig(format=consts.LOG_FMT, level=logging.INFO)
+    logs.setup_logging('server')
 
     # Create the connexion application instance
-    connex_app = connexion.App('Kraken Server', specification_dir=basedir)
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    port = int(os.environ.get('KRAKEN_PORT', 8080))
+    connex_app = connexion.App('Kraken Server', port=port, specification_dir=basedir)
 
     # Get the underlying Flask app instance
     app = connex_app.app
@@ -101,6 +71,7 @@ def create_app():
 
 def main():
     app = create_app()
+    log.info('server initiated', version='0.1')
     app.run(debug=True)
 
 

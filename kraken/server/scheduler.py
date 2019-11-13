@@ -7,6 +7,7 @@ import datetime
 from flask import Flask
 from sqlalchemy.sql.expression import asc, desc, func, cast
 
+import logs
 from models import db, Executor, Run, Job
 import consts
 
@@ -52,7 +53,7 @@ def assign_jobs_to_executors():
 
 
 def create_app():
-    logging.basicConfig(format=consts.LOG_FMT, level=logging.INFO)
+    logs.setup_logging('scheduler')
 
     # Create  Flask app instance
     app = Flask('Kraken Scheduler')

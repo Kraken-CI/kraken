@@ -60,6 +60,7 @@ def run_tests(step, report_result=None):
     tests = step['tests']
 
     for idx1, test in enumerate(tests):
+        log.info('executing test %s', test)
         cmd = 'random_test %s' % test
 
         random.seed(time.time())
@@ -75,26 +76,29 @@ def run_tests(step, report_result=None):
                 data_size = random.choice([1, 10, 50, 100])
                 random.seed(time.time())
                 population = random.choices(data_range, k=data_size)
-                pmin = min(population)
-                pmax = max(population)
-                pstdev = statistics.stdev(population)
                 pmean = statistics.mean(population)
                 val = {'value': pmean,
-                       'median': statistics.median_low(population),
-                       'min': pmin,
-                       'max': pmax,
-                       'range': pmax - pmin,
-                       'stddev': pstdev,
-                       'variance': statistics.variance(population),
-                       'cv': pstdev / pmean,
                        'iterations': len(population)}
-                try:
-                    val['mode'] = statistics.mode(population)
-                except:
-                    pass
+                if len(population) > 1:
+                    pmin = min(population)
+                    pmax = max(population)
+                    val['median'] = statistics.median_low(population)
+                    val['min'] = pmin
+                    val['max'] = pmax
+                    val['range'] = pmax - pmin,
+                    pstdev = statistics.stdev(population)
+                    val['stddev'] = pstdev
+                    val['variance'] = statistics.variance(population)
+                    val['cv'] = pstdev / pmean
+                    try:
+                        val['mode'] = statistics.mode(population)
+                    except:
+                        pass
                 result['values'][name] = val
 
+        log.info('result %s', result)
         report_result(result)
+        time.sleep(0.1)
 
     return 0, ''
 

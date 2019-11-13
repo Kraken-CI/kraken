@@ -68,7 +68,7 @@ end
 
 task :run_agent do
   Dir.chdir('kraken/agent') do
-    sh 'rm -rf /tmp/kk-jobs/ && ./agent.py -d /tmp/kk-jobs -s http://localhost:5000/backend'
+    sh 'rm -rf /tmp/kk-jobs/ && ./agent.py -d /tmp/kk-jobs -s http://localhost:8080/backend'
   end
 end
 

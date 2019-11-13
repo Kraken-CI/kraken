@@ -12,10 +12,9 @@ from apscheduler.triggers.date import DateTrigger
 from apscheduler.triggers.cron import CronTrigger
 
 import consts
-
+import logs
 
 log = logging.getLogger('planner')
-
 
 
 class Planner:
@@ -121,7 +120,7 @@ class Planner:
         return response(environ, start_response)
 
 def main():
-    logging.basicConfig(format=consts.LOG_FMT, level=logging.INFO)
+    logs.setup_logging('planner')
 
     host = os.environ.get('PLANNER_HOST', 'localhost')
     port = os.environ.get('PLANNER_PORT', 8000)

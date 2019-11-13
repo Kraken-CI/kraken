@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute, ParamMap } from '@angular/router';
 
-import {TableModule} from 'primeng/table';
+import {MenuItem} from 'primeng/api';
 
 import 'chartjs-plugin-error-bars';
 
@@ -115,6 +115,10 @@ export class TestCaseResultComponent implements OnInit {
     }
 
     prepareValueChartData() {
+        if (this.results[0].values === null) {
+            // no perf data, skip processing
+            return
+        }
         let flowIds = [];
         let values = [];
         let median = [];
@@ -241,5 +245,8 @@ export class TestCaseResultComponent implements OnInit {
 
     valueChange() {
         this.prepareValueChartData();
+    }
+
+    showCmdLine() {
     }
 }

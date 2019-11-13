@@ -9,9 +9,10 @@ import datetime
 import argparse
 import traceback
 
-LOG_FMT = '%(asctime)s %(levelname)-4.4s p:%(process)5d %(module)8.8s:%(lineno)-5d %(message)s'
+sys.path.append('../server')
+import logs
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('tool')
 
 
 class TestResultsCollector():
@@ -37,14 +38,18 @@ class TestResultsCollector():
 
 def execute(sock, command, step_file_path):
     try:
-        logging.basicConfig(format=LOG_FMT, level=logging.INFO)
-        log.info('started tool for step')
+        logs.setup_logging('tool')
 
         with open(step_file_path) as f:
             data = f.read()
         step = json.loads(data)
 
         tool_name = step['tool']
+
+        log.set_ctx(job=step['job_id'], step=step['index'], tool=tool_name)
+
+        log.info('started tool for step')
+
         #base_dir = os.path.dirname(os.path.abspath(__file__))
         #sys.path.append(base_dir)
         tool = sys.modules['__main__']

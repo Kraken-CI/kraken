@@ -1,4 +1,4 @@
-version: '3'
+version: '3.6'
 
 services:
   server:
@@ -15,8 +15,11 @@ services:
       - web_net
       - lab_net
     environment:
+      KRAKEN_PORT: "5000"
       DB_URL: "postgresql://kraken:kk123@postgres:5432/kraken"
       REDIS_HOST: "redis"
+      KRAKEN_ELASTICSEARCH: "http://elastic:changeme@elasticsearch"
+      KRAKEN_LOGSTASH: "logstash"
     depends_on:
       - postgres
       - planner
@@ -31,6 +34,7 @@ services:
       - db_net
     environment:
       DB_URL: "postgresql://kraken:kk123@postgres:5432/kraken"
+      KRAKEN_LOGSTASH: "logstash"
     depends_on:
       - postgres
 
@@ -43,6 +47,8 @@ services:
       - db_net
     environment:
       REDIS_HOST: "redis"
+      DB_URL: "postgresql://kraken:kk123@postgres:5432/kraken"
+      KRAKEN_LOGSTASH: "logstash"
     depends_on:
       - celery
 
@@ -55,6 +61,7 @@ services:
       - lab_net
     environment:
       SERVER: "server"
+      KRAKEN_LOGSTASH: "logstash"
     depends_on:
       - server
 
@@ -67,6 +74,8 @@ services:
       - db_net
     environment:
       REDIS_HOST: "redis"
+      DB_URL: "postgresql://kraken:kk123@postgres:5432/kraken"
+      KRAKEN_LOGSTASH: "logstash"
     depends_on:
       - postgres
       - redis
@@ -101,9 +110,76 @@ services:
     networks:
       - db_net
 
+# ELK
+  elasticsearch:
+    build:
+      context: docker-elk/elasticsearch/
+      args:
+        ELK_VERSION: $ELK_VERSION
+    volumes:
+      - type: bind
+        source: ./docker-elk/elasticsearch/config/elasticsearch.yml
+        target: /usr/share/elasticsearch/config/elasticsearch.yml
+        read_only: true
+      - type: volume
+        source: elasticsearch
+        target: /usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
+      ELASTIC_PASSWORD: changeme
+    networks:
+      - db_net
+
+  logstash:
+    build:
+      context: docker-elk/logstash/
+      args:
+        ELK_VERSION: $ELK_VERSION
+    volumes:
+      - type: bind
+        source: ./docker-elk/logstash/config/logstash.yml
+        target: /usr/share/logstash/config/logstash.yml
+        read_only: true
+      - type: bind
+        source: ./docker-elk/logstash/pipeline
+        target: /usr/share/logstash/pipeline
+        read_only: true
+    ports:
+      - "5959:5959/udp"
+      - "9600:9600"
+    environment:
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+    networks:
+      - db_net
+      - lab_net
+    depends_on:
+      - elasticsearch
+
+  kibana:
+    build:
+      context: docker-elk/kibana/
+      args:
+        ELK_VERSION: $ELK_VERSION
+    volumes:
+      - type: bind
+        source: ./docker-elk/kibana/config/kibana.yml
+        target: /usr/share/kibana/config/kibana.yml
+        read_only: true
+    ports:
+      - "5601:5601"
+    networks:
+      - db_net
+    depends_on:
+      - elasticsearch
+
+
+
 volumes:
   db-data:
-  web-data:
+  elasticsearch:
 
 networks:
   db_net:

@@ -315,6 +315,8 @@ def run(srv, job):
 
     last_status = None
     for idx, step in enumerate(job['steps']):
+        step['job_id'] = job['id']
+        log.set_ctx(step=idx)
         if step['status'] == 2:
             continue
         try:
@@ -330,7 +332,6 @@ def run(srv, job):
 
         if last_status == 'error':
             break
-
 
     log.info('completed job %s with status %s', job['id'], last_status)
 

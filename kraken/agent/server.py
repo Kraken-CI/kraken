@@ -5,6 +5,7 @@ import time
 import urllib.request
 
 import config
+import consts
 
 log = logging.getLogger(__name__)
 
@@ -203,18 +204,40 @@ def _send_http_request(url, data):
     data = data.encode('utf-8')
     req = urllib.request.Request(url=url, data=data, headers={'content-type': 'application/json'})
     resp = None
+
+    # Codes description:
+    #     -2 - 'Name or service not known'
+    #     32 - 'Broken pipe'
+    #     100 - 'Network is down'
+    #     101 - 'Network is unreachable'
+    #     110 - 'Connection timed out'
+    #     111 - 'Connection refused'
+    #     112 - 'Host is down'
+    #     113 - 'No route to host'
+    #     10053 - 'An established connection was aborted by the software in your host machine'
+    #     10054 - An existing connection was forcibly closed by the remote host
+    #     10060 - 'Connection timed out'
+    #     10061 - 'No connection could be made because the target machine actively refused it'
+    CONNECTION_ERRORS = [-2, 32, 100, 101, 110, 111, 112, 113, 10053, 10054, 10060, 10061]
+
     while resp is None:
         try:
             with urllib.request.urlopen(req) as f:
                 resp = f.read().decode('utf-8')
         except KeyboardInterrupt:
             raise
+        # except socket.error as e:
+        #     if e.errno in CONNECTION_ERRORS:
+        #         # TODO: just warn and sleep for a moment
         except urllib.error.URLError as e:
-            if e.__context__ and e.__context__.errno == 111: # connection refused
-                log.warn('connection refused, trying one more time in 5s')
+            if e.__context__ and e.__context__.errno in CONNECTION_ERRORS:
+                log.warn('connection problem to %s: %s, trying one more time in 5s', url, str(e))
                 time.sleep(5)
             else:
                 raise
+        except ConnectionError as e:
+            log.warn('connection problem to %s: %s, trying one more time in 5s', url, str(e))
+            time.sleep(5)
         except:
             log.exception('some problem with connecting to server to %s', url)
             log.info('trying one more time in 5s')

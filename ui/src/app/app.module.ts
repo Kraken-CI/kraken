@@ -28,6 +28,7 @@ import {ConfirmDialogModule} from 'primeng/confirmdialog';
 import {ConfirmationService} from 'primeng/api';
 import {InplaceModule} from 'primeng/inplace';
 import {PaginatorModule} from 'primeng/paginator';
+import {TabMenuModule} from 'primeng/tabmenu';
 
 import { ApiModule, BASE_PATH, Configuration } from './backend';
 import { AppRoutingModule } from './app-routing.module';
@@ -94,8 +95,9 @@ export function cfgFactory() {
         ConfirmDialogModule,
         InplaceModule,
         PaginatorModule,
+        TabMenuModule,
     ],
-    providers: [{ provide: BASE_PATH, useValue: 'http://localhost:5000/api' },
+    providers: [{ provide: BASE_PATH, useValue: '/api' },
                 BreadcrumbsService, MessageService, ConfirmationService],
     bootstrap: [AppComponent]
 })

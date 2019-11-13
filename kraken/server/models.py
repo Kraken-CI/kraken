@@ -275,6 +275,7 @@ class Step(db.Model, DatesMixin):
                     index=self.index,
                     tool=self.tool.name,
                     tool_id=self.tool_id,
+                    job_id=self.job_id,
                     status=self.status,
                     result=self.result)
         for f, v in self.fields.items():
@@ -309,9 +310,14 @@ class Job(db.Model, DatesMixin):
         return dict(id=self.id,
                     created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,
                     deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,
+                    name=self.name,
                     state=self.state,
                     completion_status=self.completion_status,
                     run_id=self.run_id,
+                    executor_group_id=self.executor_group_id,
+                    executor_group_name=self.executor_group.name,
+                    executor_id=self.executor_used_id if self.executor_used else 0,
+                    executor_name=self.executor_used.name if self.executor_used else '',
                     steps=[s.get_json() for s in sorted(self.steps, key=lambda s: s.index)])
 
     def __repr__(self):
@@ -504,7 +510,7 @@ def prepare_initial_data():
         db.session.commit()
         log.info("   created Project record 'demo'")
 
-    branch = Branch.query.filter_by(name="master", project=project).one_or_none()
+    branch = Branch.query.filter_by(name="Master", project=project).one_or_none()
     if branch is None:
         branch = Branch(name='Master', branch_name='master', project=project)
         db.session.commit()
@@ -560,6 +566,7 @@ def prepare_initial_data():
                 "repository": True,
                 "webhook": True
             },
+            "parameters": [],
             "configs": [{
                 "name": "c1",
                 "p1": "1",
@@ -609,7 +616,7 @@ def prepare_initial_data():
                 "name": "random tests",
                 "steps": [{
                     "tool": "rndtest",
-                    "count": "10"
+                    "count": "#{COUNT}"
                 }],
                 "environments": [{
                     "system": "centos-7",
