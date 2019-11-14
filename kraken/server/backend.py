@@ -40,6 +40,11 @@ def _handle_get_job(executor, req):
             tests.append(tcr.test_case.name)
         if tests:
             job['steps'][-1]['tests'] = tests
+
+        if not executor.job.started:
+            executor.job.started = datetime.datetime.utcnow()
+            db.session.commit()
+
     log.info('sending job: %s', str(job)[:200])
     return {'job': job}
 

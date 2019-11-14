@@ -45,6 +45,7 @@ import { RunBoxComponent } from './run-box/run-box.component';
 import { LocaltimePipe } from './localtime.pipe';
 import { NewFlowComponent } from './new-flow/new-flow.component';
 import { NewRunComponent } from './new-run/new-run.component';
+import { LogBoxComponent } from './log-box/log-box.component';
 
 export function cfgFactory() {
     return new Configuration();
@@ -63,7 +64,8 @@ export function cfgFactory() {
         RunBoxComponent,
         LocaltimePipe,
         NewFlowComponent,
-        NewRunComponent
+        NewRunComponent,
+        LogBoxComponent
     ],
     imports: [
         BrowserModule,

@@ -13,10 +13,10 @@
 ** support for lxc executor
 ** support for vagrant executor
 ** support for bare metal executor
-* TODO collect logs to logstash
+* DONE collect logs to logstash
 ** DONE add collecting logs
 ** DONE add presenting logs in UI
-** TODO fine tune presenting logs in UI (auto scroll, etc)
+** DONE fine tune presenting logs in UI (auto scroll, etc)
 * canceling job or run
 * nie pozwalać na run stage gdy parent stage nie był jeszcze puszczony
 * stage definition files from repo

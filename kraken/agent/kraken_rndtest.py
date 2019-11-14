@@ -98,7 +98,7 @@ def run_tests(step, report_result=None):
 
         log.info('result %s', result)
         report_result(result)
-        time.sleep(0.1)
+        time.sleep(0.5)
 
     return 0, ''
 

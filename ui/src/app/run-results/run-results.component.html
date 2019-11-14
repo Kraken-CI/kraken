@@ -72,8 +72,8 @@
                [showCurrentPageReport]="true">
         <ng-template pTemplate="header">
           <tr>
-            <th style="width: 150px;">Job Name</th>
             <th style="width: 60px;">Job ID</th>
+            <th style="width: 150px;">Job Name</th>
             <th style="width: 30%;">System</th>
             <th style="width: 10%;">Config</th>
             <th style="width: 10%;">Executor Group</th>
@@ -82,8 +82,8 @@
         </ng-template>
         <ng-template pTemplate="body" let-job>
           <tr [pSelectableRow]="job">
-            <td>{{job.name}}</td>
             <td><a routerLink="/jobs/{{job.job_id}}">{{job.id}}</a></td>
+            <td>{{job.name}}</td>
             <td>Ubuntu 18.04</td>
             <td>default</td>
             <td>{{job.executor_group_name}}</td>
@@ -96,19 +96,12 @@
 
     <div class="p-col-7">
       <div *ngIf="job">
-        {{job.name}}
-        <div style="background-color: black; color: #ccc; padding: 10px; height: 80vh; font-family: Menlo, DejaVu Sans Mono, Liberation Mono, Consolas, Ubuntu Mono, Courier New, andale mono, lucida console, monospace; font-size: 12px; overflow-y: auto;" #logBox [scrollTop]="logBox.scrollHeight">
-          <div *ngFor="let frag of logFragments">
-            <div *ngIf="frag.title" style="font-size: 1.2em; font-weight: bold; color: lawngreen; cursor: pointer;" (click)="frag.expanded = !frag.expanded">
-              <i *ngIf="!frag.expanded" class="pi pi-caret-right" style="vertical-align: bottom;"></i>
-              <i *ngIf="frag.expanded" class="pi pi-caret-down" style="vertical-align: bottom;"></i>
-              {{frag.title}}
-            </div>
-            <div *ngIf="frag.expanded">
-              <div *ngFor="let log of frag.logs" style="white-space: pre-wrap; overflow-x: auto; word-break: break-word; margin: 0;" [ngStyle]="log.style" [innerHTML]="log.message"></div>
-            </div>
-          </div>
+        <div style="margin-bottom: 10px;">
+          <h3>{{job.id}}. {{job.name}}</h3>
+          <span>Started: {{ job.started | localtime }}</span>
+          <span style="margin-left: 30px;">Completed: {{ job.completed | localtime }}</span>
         </div>
+        <app-log-box [jobId]="selectedJobId"></app-log-box>
       </div>
     </div>
 </div>
