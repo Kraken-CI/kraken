@@ -12,6 +12,32 @@ basePath: /api
 
 # Paths supported by the server application
 paths:
+  /projects:
+    get:
+      operationId: get_projects
+      tags:
+        - Execution
+      summary: Create a job
+      description: Create a new job
+      responses:
+        201:
+          description: Successfully created run
+    post:
+      operationId: create_project
+      tags:
+        - Management
+      summary: Create a project
+      description: Create a new project
+      parameters:
+        - name: project
+          in: body
+          description: project
+          schema:
+            $ref: '#/definitions/Project'
+      responses:
+        201:
+          description: Successfully created run
+
   /projects/{project_id}/branches:
     post:
       operationId: create_branch
@@ -578,16 +604,6 @@ paths:
           description: unexpected error
           schema:
             $ref: '#/definitions/ApiError'
-  /projects:
-    get:
-      operationId: get_projects
-      tags:
-        - Execution
-      summary: Create a job
-      description: Create a new job
-      responses:
-        201:
-          description: Successfully created run
 
 
 definitions:
@@ -801,12 +817,12 @@ definitions:
 
   Project:
     type: "object"
-    required:
-      - id
     properties:
       id:
         type: integer
         format: int64
+      name:
+        type: string
   Projects:
     type: object
     properties:

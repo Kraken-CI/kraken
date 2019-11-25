@@ -2,8 +2,6 @@ billiard==3.6.1.0
 celery==4.3.0
 certifi==2018.11.29
 chardet==3.0.4
-Click==7.0
-clickclick==1.2.2
 connexion==2.2.0
 Flask==1.0.2
 Flask-Cors==3.0.8
@@ -13,7 +11,6 @@ importlib-metadata==0.23
 inflection==0.3.1
 itsdangerous==1.1.0
 Jinja2==2.10
-jsonschema==2.6.0
 kombu==4.6.5
 MarkupSafe==1.1.0
 more-itertools==7.2.0
@@ -33,8 +30,6 @@ vine==1.3.0
 Werkzeug==0.14.1
 zipp==0.6.0
 apscheduler==3.6.1
-json-rpc==1.12.1
-jsonrpcclient[requests]==3.3.4
 pytimeparse==1.1.8
 python-dateutil==2.8.0
 elasticsearch==7.0.5

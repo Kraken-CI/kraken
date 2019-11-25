@@ -17,12 +17,14 @@ import { datetimeToLocal } from '../utils';
   styleUrls: ['./main-page.component.sass']
 })
 export class MainPageComponent implements OnInit {
+    newProjectDlgVisible = false;
+    projectName = ""
 
     projects: any[];
 
     selectedProject = {name: '', id: 0};
     newBranchDlgVisible = false;
-    branchName = "";
+    branchName = ""
 
     constructor(private route: ActivatedRoute,
                 private router: Router,
@@ -95,6 +97,40 @@ export class MainPageComponent implements OnInit {
         });
     }
 
+    newProject() {
+        this.newProjectDlgVisible = true;
+    }
+
+    cancelNewProject() {
+        this.newProjectDlgVisible = false;
+    }
+
+    newProjectKeyDown(event) {
+        if (event.key == "Enter") {
+            this.addNewProject();
+        }
+    }
+
+    addNewProject() {
+        this.managementService.createProject({name: this.projectName}).subscribe(
+            data => {
+                console.info(data);
+                this.msgSrv.add({severity:'success', summary:'New project succeeded', detail:'New project operation succeeded.'});
+                this.newProjectDlgVisible = false;
+                this.selectedProject = data;
+                this.refresh();
+            },
+            err => {
+                console.info(err);
+                let msg = err.statusText;
+                if (err.error && err.error.detail) {
+                    msg = err.error.detail;
+                }
+                this.msgSrv.add({severity:'error', summary:'New project erred', detail:'New project operation erred: ' + msg, life: 10000});
+                this.newProjectDlgVisible = false;
+            });
+    }
+
     newBranch(project) {
         this.newBranchDlgVisible = true;
         this.selectedProject = project;
@@ -104,7 +140,7 @@ export class MainPageComponent implements OnInit {
         this.newBranchDlgVisible = false;
     }
 
-    keyDown(event) {
+    newBranchKeyDown(event) {
         if (event.key == "Enter") {
             this.addNewBranch();
         }

@@ -3,9 +3,7 @@
 import os
 import logging
 
-from werkzeug.wrappers import Request, Response
-from werkzeug.serving import run_simple
-from jsonrpc import JSONRPCResponseManager, dispatcher
+from xmlrpc.server import SimpleXMLRPCServer
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.triggers.date import DateTrigger
@@ -19,11 +17,6 @@ log = logging.getLogger('planner')
 
 class Planner:
     def __init__(self):
-        self.dispatcher = dict(add_job=self.add_job,
-                               get_jobs=self.get_jobs,
-                               reschedule_job=self.reschedule_job,
-                               remove_job=self.remove_job)
-
         job_defaults = dict(misfire_grace_time=180, coalesce=True, max_instances=1, next_run_time=None)
         self.scheduler = BackgroundScheduler(timezone='UTC', job_defaults=job_defaults)
         db_url = os.environ.get('DB_URL', "postgresql://kraken:kk123@localhost:5433/kraken")
@@ -44,7 +37,7 @@ class Planner:
         return dict(id=job.id, name=job.name, func=job.func_ref, args=job.args, kwargs=job.kwargs, trigger=trigger)
 
     def add_job(self, func=None, trigger=None, args=None, kwargs=None, job_id=None, name=None, misfire_grace_time=None,
-                coalesce=None, max_instances=None, next_run_time=None, replace_existing=False, **trigger_args):
+                coalesce=None, max_instances=None, next_run_time=None, replace_existing=False, trigger_args={}):
         all_kw_args = dict(args=args, kwargs=kwargs, id=job_id, name=name, replace_existing=replace_existing)
 
         if misfire_grace_time is not None:
@@ -89,7 +82,7 @@ class Planner:
             raise
         return jobs
 
-    def reschedule_job(self, job_id=None, trigger=None, **trigger_args):
+    def reschedule_job(self, job_id=None, trigger=None, trigger_args={}):
         log.info('reschedule_job args: %s %s %s', job_id, trigger, trigger_args)
 
         try:
@@ -111,14 +104,6 @@ class Planner:
             #raise
 
 
-    def __call__(self, environ, start_response):
-        request = Request(environ)
-        response = JSONRPCResponseManager.handle(
-            request.data, self.dispatcher)
-        #import pudb; pudb.set_trace()
-        response = Response(response.json, mimetype='application/json')
-        return response(environ, start_response)
-
 def main():
     logs.setup_logging('planner')
 
@@ -128,7 +113,12 @@ def main():
     planner = Planner()
 
     log.info('starting json-rpc server for planner')
-    run_simple(host, port,  planner, use_debugger=True, use_reloader=True)
+    with SimpleXMLRPCServer((host, port), allow_none=True) as server:
+        server.register_instance(planner)
+        try:
+            server.serve_forever()
+        except KeyboardInterrupt:
+            print("\nKeyboard interrupt received, exiting.")
 
 
 if __name__ == '__main__':

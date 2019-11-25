@@ -33,7 +33,7 @@ class StructLogger(logging.Logger):
 
 
 logging.setLoggerClass(StructLogger)
-root_logger = StructLogger(logging.WARNING)
+root_logger = StructLogger('root', logging.WARNING)
 logging.root = root_logger
 logging.Logger.root = root_logger
 logging.Logger.manager.root = root_logger

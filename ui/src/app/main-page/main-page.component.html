@@ -1,6 +1,18 @@
+<div style="margin-bottom: 10px;">
+  <p-button label="New Project" icon="pi pi-plus" (onClick)="newProject(proj)"></p-button>
+
+  <p-dialog header="New Project" [(visible)]="newProjectDlgVisible">
+    <input type="text" pInputText [(ngModel)]="projectName" (keydown)="newProjectKeyDown($event)"/>
+    <p-footer>
+      <button type="button" (click)="cancelNewProject()" pButton icon="pi pi-times" label="Cancel"></button>
+      <button type="button" (click)="addNewProject()" pButton icon="pi pi-check" label="Add"></button>
+    </p-footer>
+  </p-dialog>
+</div>
+
 <div class="p-grid">
   <p-dialog header="New Branch in {{selectedProject.name}}" [(visible)]="newBranchDlgVisible">
-    <input type="text" pInputText [(ngModel)]="branchName" (keydown)="keyDown($event)"/>
+    <input type="text" pInputText [(ngModel)]="branchName" (keydown)="newBranchKeyDown($event)"/>
     <p-footer>
       <button type="button" (click)="cancelNewBranch()" pButton icon="pi pi-times" label="Cancel"></button>
       <button type="button" (click)="addNewBranch()" pButton icon="pi pi-check" label="Add"></button>
@@ -20,6 +32,7 @@
 
       <p-tree [value]="proj.branches"
               selectionMode="single"
+              emptyMessage="No branches yet."
               [style]="{width: '100%', 'border-width': 0}">
 
         <ng-template let-node  pTemplate="branch">
