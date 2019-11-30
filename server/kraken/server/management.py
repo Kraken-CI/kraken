@@ -8,9 +8,9 @@ import pytimeparse
 import dateutil.parser
 import xmlrpc.client
 
-import consts
-from models import db, Branch, Flow, Run, Stage, Job, Step, ExecutorGroup, Tool, TestCaseResult
-from models import Project
+from . import consts
+from .models import db, Branch, Flow, Run, Stage, Job, Step, ExecutorGroup, Tool, TestCaseResult
+from .models import Project
 
 log = logging.getLogger(__name__)
 
@@ -92,7 +92,7 @@ def _prepare_new_planner_trigger(stage_id, trigger, prev_trigger):
     if 'interval' in trigger:
         interval = int(pytimeparse.parse(trigger['interval']))
         if prev_trigger is None or 'interval' not in prev_trigger or 'interval_planner_job' not in prev_trigger:
-            job = planner.add_job('pljobs:trigger_run', 'interval', (stage_id,), None,
+            job = planner.add_job('kraken.server.pljobs:trigger_run', 'interval', (stage_id,), None,
                                   None, None, None, None, None, None, False, dict(seconds=int(interval)))
             trigger['interval_planner_job'] = job['id']
         else:
@@ -106,7 +106,7 @@ def _prepare_new_planner_trigger(stage_id, trigger, prev_trigger):
     if 'date' in trigger:
         run_date = dateutil.parser.parse(trigger['date'])
         if prev_trigger is None or 'date' not in prev_trigger or 'date_planner_job' not in prev_trigger:
-            job = planner.add_job('pljobs:trigger_run', 'date', (stage_id,), None,
+            job = planner.add_job('kraken.server.pljobs:trigger_run', 'date', (stage_id,), None,
                                   None, None, None, None, None, None, False, dict(run_date=str(run_date)))
             trigger['date_planner_job'] = job['id']
         else:
@@ -121,7 +121,7 @@ def _prepare_new_planner_trigger(stage_id, trigger, prev_trigger):
         cron_rule = trigger['cron']
         if prev_trigger is None or 'cron' not in prev_trigger or 'cron_planner_job' not in prev_trigger:
             minutes, hours, days, months, dow = cron_rule.split()
-            job = planner.add_job('pljobs:trigger_run', 'cron', (stage_id,), None,
+            job = planner.add_job('kraken.server.pljobs:trigger_run', 'cron', (stage_id,), None,
                                   None, None, None, None, None, None, False,
                                   dict(minute=minutes, hour=hours, day=days, month=months, day_of_week=dow))
             trigger['cron_planner_job'] = job['id']

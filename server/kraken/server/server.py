@@ -7,10 +7,10 @@ from flask_cors import CORS
 import connexion
 from connexion.resolver import Resolver
 
-import logs
-import models
-import backend
-import consts
+from . import logs
+from . import models
+from . import backend
+from . import consts
 
 log = logging.getLogger('server')
 
@@ -19,7 +19,8 @@ class MyResolver(Resolver):
     def resolve_operation_id(self, operation):
         operation_id = operation.operation_id
         tags = operation._operation['tags']
-        return '{}.{}'.format(tags[0].lower(), operation_id)
+        name = 'kraken.server.{}.{}'.format(tags[0].lower(), operation_id)
+        return name
 
 
 def create_app():

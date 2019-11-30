@@ -9,8 +9,8 @@ from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.triggers.date import DateTrigger
 from apscheduler.triggers.cron import CronTrigger
 
-import consts
-import logs
+from . import consts
+from . import logs
 
 log = logging.getLogger('planner')
 
@@ -112,7 +112,7 @@ def main():
 
     planner = Planner()
 
-    log.info('starting json-rpc server for planner')
+    log.info('starting xml-rpc server for planner')
     with SimpleXMLRPCServer((host, port), allow_none=True) as server:
         server.register_instance(planner)
         try:

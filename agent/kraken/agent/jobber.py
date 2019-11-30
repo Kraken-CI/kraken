@@ -9,9 +9,9 @@ import traceback
 import socketserver
 import multiprocessing
 
-import config
-import tool
-import utils
+from . import config
+from . import tool
+from . import utils
 
 
 log = logging.getLogger(__name__)

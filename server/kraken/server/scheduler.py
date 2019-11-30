@@ -7,9 +7,9 @@ import datetime
 from flask import Flask
 from sqlalchemy.sql.expression import asc, desc, func, cast
 
-import logs
-from models import db, Executor, Run, Job
-import consts
+from . import logs
+from .models import db, Executor, Run, Job
+from . import consts
 
 log = logging.getLogger('scheduler')
 

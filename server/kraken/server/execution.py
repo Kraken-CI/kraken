@@ -8,22 +8,22 @@ from sqlalchemy.sql.expression import asc, desc
 from sqlalchemy.orm import joinedload
 from elasticsearch import Elasticsearch
 
-import consts
-from models import db, Branch, Flow, Run, Stage, Job, Step, ExecutorGroup, Tool, TestCaseResult
-from models import Project
+from . import consts
+from .models import db, Branch, Flow, Run, Stage, Job, Step, ExecutorGroup, Tool, TestCaseResult
+from .models import Project
 
 log = logging.getLogger(__name__)
 
 
 def complete_run(run, now):
-    import bg.jobs
+    from .bg import jobs as bg_jobs
     log.info('completed run %s', run)
     run.state = consts.RUN_STATE_COMPLETED
     run.finished = now
     db.session.commit()
 
     # trigger any following stages to currently completed run
-    t = bg.jobs.trigger_stages.delay(run.id)
+    t = bg_jobs.trigger_stages.delay(run.id)
     log.info('run %s completed, trigger the following stages: %s', run, t)
 
     # establish new flow state
@@ -41,7 +41,7 @@ def complete_run(run, now):
         db.session.commit()
 
     # trigger history of results analysis
-    t = bg.jobs.analyze_results_history.delay(run.id)
+    t = bg_jobs.analyze_results_history.delay(run.id)
     log.info('run %s completed, process results: %s', run, t)
 
 

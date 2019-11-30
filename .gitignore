@@ -6,3 +6,14 @@ node_modules
 venv
 /old
 /tools
+/agent/kraken/agent/consts.py
+/agent/kraken/agent/logs.py
+/agent/kraken_agent.egg-info
+/server/kraken_server.egg-info
+/agent/dist/
+/agent/kkagent
+/server/dist/
+/server/kkcelery
+/server/kkplanner
+/server/kkscheduler
+/server/kkserver

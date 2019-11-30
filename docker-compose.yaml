@@ -4,7 +4,7 @@ services:
   server:
     restart: always
     build:
-      context: kraken
+      context: server
       dockerfile: docker-server.txt
     expose:
       - "5000"
@@ -28,7 +28,7 @@ services:
   scheduler:
     restart: always
     build:
-      context: kraken
+      context: server
       dockerfile: docker-scheduler.txt
     networks:
       - db_net
@@ -41,7 +41,7 @@ services:
   planner:
     restart: always
     build:
-      context: kraken
+      context: server
       dockerfile: docker-planner.txt
     networks:
       - db_net
@@ -52,23 +52,10 @@ services:
     depends_on:
       - celery
 
-  agent:
-    restart: always
-    build:
-      context: kraken
-      dockerfile: docker-agent.txt
-    networks:
-      - lab_net
-    environment:
-      SERVER: "server"
-      KRAKEN_LOGSTASH: "logstash"
-    depends_on:
-      - server
-
   celery:
     restart: always
     build:
-      context: kraken
+      context: server
       dockerfile: docker-celery.txt
     networks:
       - db_net
@@ -79,6 +66,19 @@ services:
     depends_on:
       - postgres
       - redis
+
+  agent:
+    restart: always
+    build:
+      context: agent
+      dockerfile: docker-agent.txt
+    networks:
+      - lab_net
+    environment:
+      SERVER: "server"
+      KRAKEN_LOGSTASH: "logstash"
+    depends_on:
+      - server
 
   ui:
     build:

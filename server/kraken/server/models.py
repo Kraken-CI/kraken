@@ -9,7 +9,7 @@ from sqlalchemy.types import TypeDecorator
 from sqlalchemy.orm import relationship, mapper
 from sqlalchemy.dialects.postgresql import JSONB
 
-import consts
+from . import consts
 
 log = logging.getLogger(__name__)
 

@@ -4,8 +4,8 @@ import json
 import time
 import urllib.request
 
-import config
-import consts
+from . import config
+from . import consts
 
 log = logging.getLogger(__name__)
 

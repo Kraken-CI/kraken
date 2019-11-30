@@ -7,9 +7,9 @@ from flask import request
 from sqlalchemy import or_
 from sqlalchemy.orm import joinedload
 
-from models import db, Run, Stage, Job, Step, Executor, TestCase, TestCaseResult
-import consts
-import bg.jobs
+from .models import db, Run, Stage, Job, Step, Executor, TestCase, TestCaseResult
+from . import consts
+from .bg import jobs as bg_jobs
 
 log = logging.getLogger(__name__)
 
@@ -115,7 +115,7 @@ def _handle_step_result(executor, req):
         job.finished = datetime.datetime.utcnow()
         executor.job = None
         db.session.commit()
-        t = bg.jobs.job_completed.delay(job.id)
+        t = bg_jobs.job_completed.delay(job.id)
         log.info('job %s finished by %s, bg processing: %s', job, executor, t)
 
     return {}

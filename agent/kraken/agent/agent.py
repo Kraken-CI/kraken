@@ -7,21 +7,19 @@ import logging
 import traceback
 import sys
 
-import config
-import server
-import jobber
-
-sys.path.append('../server')
-import logs
+from . import config
+from . import server
+from . import jobber
+from . import logs
 
 log = logging.getLogger('agent')
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Kraken Agent')
-    parser.add_argument('-s', '--server', help='Server URL')
-    parser.add_argument('-t', '--tools-dirs', help='List of tools directories')
-    parser.add_argument('-d', '--data-dir', help='Directory for presistent data')
+    parser.add_argument('-s', '--server', help='Server URL', required=True)
+    parser.add_argument('-d', '--data-dir', help='Directory for presistent data', required=True)
+    parser.add_argument('-t', '--tools-dirs', help='List of tools directories'  )
 
     args = parser.parse_args()
     return args

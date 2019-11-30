@@ -6,7 +6,7 @@ import datetime
 import traceback
 from logging.handlers import DatagramHandler, SocketHandler
 
-import consts
+from . import consts
 
 
 class StructLogger(logging.Logger):

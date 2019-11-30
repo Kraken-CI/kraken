@@ -7,10 +7,10 @@ from celery import Task
 from flask import Flask
 from sqlalchemy.sql.expression import asc, desc
 
-from bg.clry import app
-from models import db, Executor, Run, Job, TestCaseResult, Branch, Flow, Stage
-import execution
-import consts
+from .clry import app
+from ..models import db, Executor, Run, Job, TestCaseResult, Branch, Flow, Stage
+from .. import execution
+from .. import consts
 
 log = logging.getLogger(__name__)
 

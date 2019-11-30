@@ -9,8 +9,7 @@ import datetime
 import argparse
 import traceback
 
-sys.path.append('../server')
-import logs
+from . import logs
 
 log = logging.getLogger('tool')
 
