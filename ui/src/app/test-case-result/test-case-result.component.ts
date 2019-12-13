@@ -58,6 +58,17 @@ export class TestCaseResultComponent implements OnInit {
                 url: '/branches/' + this.result.branch_id,
                 id: this.result.branch_name
             }, {
+                label: 'Results',
+                url: '/branches/' + this.result.branch_id + '/' + this.result.flow_kind,
+                id: this.result.flow_kind,
+                items: [{
+                    label: 'CI',
+                    routerLink: '/branches/' + this.result.branch_id + '/ci'
+                }, {
+                    label: 'dev',
+                    routerLink: '/branches/' + this.result.branch_id + '/dev'
+                }]
+            }, {
                 label: 'Flows',
                 url: '/flows/' + this.result.flow_id,
                 id: this.result.flow_id
