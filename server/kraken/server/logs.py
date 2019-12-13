@@ -158,11 +158,12 @@ class LogstashHandler(DatagramHandler, SocketHandler):
         return self.formatter.format(record)
 
 
-def setup_logging(service, logstash_server='logstash'):
+def setup_logging(service):
     logging.basicConfig(format=consts.LOG_FMT, level=logging.INFO)
 
-    logstash_server = os.environ.get('KRAKEN_LOGSTASH', 'localhost')
-    g_logstash_handler = LogstashHandler(logstash_server, 5959, fqdn=True)
+    logstash_addr = os.environ.get('KRAKEN_LOGSTASH_ADDR', consts.DEFAULT_LOGSTASH_ADDR)
+    host, port = logstash_addr.split(':')
+    g_logstash_handler = LogstashHandler(host, int(port), fqdn=True)
     l = logging.getLogger()
     l.set_initial_ctx(service=service)
     l.addHandler(g_logstash_handler)

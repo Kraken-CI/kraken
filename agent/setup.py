@@ -8,6 +8,12 @@ setup(
     entry_points={
         'console_scripts': [
             'kkagent = kraken.agent.agent:main',
+            'kktool = kraken.agent.tool:main',
         ],
+        'kraken.tools': [
+            'git = kraken.agent.kraken_git',
+            'pytest = kraken.agent.kraken_pytest',
+            'rndtest = kraken.agent.kraken_rndtest',
+        ]
     },
 )

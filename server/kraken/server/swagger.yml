@@ -786,6 +786,14 @@ definitions:
       created:
         type: string
         format: date-time
+      started:
+        type: string
+        format: date-time
+      completed:
+        type: string
+        format: date-time
+      name:
+        type: string
       state:
         type: integer
       completion_status:

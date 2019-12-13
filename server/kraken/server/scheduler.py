@@ -10,6 +10,7 @@ from sqlalchemy.sql.expression import asc, desc, func, cast
 from . import logs
 from .models import db, Executor, Run, Job
 from . import consts
+from . import srvcheck
 
 log = logging.getLogger('scheduler')
 
@@ -53,13 +54,17 @@ def assign_jobs_to_executors():
 
 
 def create_app():
+    # addresses
+    db_url = os.environ.get('KRAKEN_DB_URL', consts.DEFAULT_DB_URL)
+    planner_url = os.environ.get('KRAKEN_PLANNER_URL', consts.DEFAULT_PLANNER_URL)
+
+    srvcheck.check_postgresql(db_url)
+    srvcheck.check_url('planner', planner_url, 7997)
+
     logs.setup_logging('scheduler')
 
     # Create  Flask app instance
     app = Flask('Kraken Scheduler')
-
-    # db url
-    db_url = os.environ.get('DB_URL', "postgresql://kraken:kk123@localhost:5433/kraken")
 
     # Configure the SqlAlchemy part of the app instance
     app.config["SQLALCHEMY_ECHO"] = False
@@ -68,7 +73,6 @@ def create_app():
 
     # initialize SqlAlchemy
     db.init_app(app)
-    db.create_all(app=app)
 
     return app
 

@@ -12,8 +12,10 @@ venv
 /server/kraken_server.egg-info
 /agent/dist/
 /agent/kkagent
+/agent/kktool
 /server/dist/
 /server/kkcelery
 /server/kkplanner
 /server/kkscheduler
 /server/kkserver
+/server/kkgunicorn

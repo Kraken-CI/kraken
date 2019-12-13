@@ -76,3 +76,11 @@ TC_RESULT_CHANGE_FIX = 1
 TC_RESULT_CHANGE_REGR = 2
 
 NETWORK_TIMEOUT = 2  # minutes
+
+
+DEFAULT_DB_URL = 'postgresql://kraken:kk123@localhost:5433/kraken'
+DEFAULT_REDIS_ADDR = 'localhost'
+DEFAULT_ELASTICSEARCH_URL = 'http://elastic:changeme@localhost:9200'
+DEFAULT_LOGSTASH_ADDR = 'localhost:5959'
+DEFAULT_PLANNER_URL = 'http://localhost:7997/'
+DEFAULT_SERVER_ADDR = 'localhost:8080'

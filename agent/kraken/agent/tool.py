@@ -7,6 +7,7 @@ import inspect
 import logging
 import datetime
 import argparse
+import importlib
 import traceback
 
 from . import logs
@@ -35,7 +36,7 @@ class TestResultsCollector():
         self.last_reported = datetime.datetime.now()
 
 
-def execute(sock, command, step_file_path):
+def execute(sock, module, command, step_file_path):
     try:
         logs.setup_logging('tool')
 
@@ -49,9 +50,8 @@ def execute(sock, command, step_file_path):
 
         log.info('started tool for step')
 
-        #base_dir = os.path.dirname(os.path.abspath(__file__))
-        #sys.path.append(base_dir)
-        tool = sys.modules['__main__']
+        #tool = sys.modules['__main__']
+        tool = importlib.import_module(module)
 
         log.info('run step tool %s, cmd %s', tool_name, command)
 
@@ -105,8 +105,13 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-r', '--return-address', help="TCP return address for reporting progress and end status.")
     parser.add_argument('-s', '--step-file', help="A path to step file.")
+    parser.add_argument('-m', '--module', help="A full module name.")
     parser.add_argument('command', help="A command to execute")
     args = parser.parse_args()
 
     with JsonSocket(args.return_address.split(':')) as sock:
-        execute(sock, args.command, args.step_file)
+        execute(sock, args.module, args.command, args.step_file)
+
+
+if __name__ == '__main__':
+    main()

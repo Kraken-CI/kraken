@@ -65,7 +65,7 @@
                (onLazyLoad)="loadJobsLazy($event)"
                [paginator]="true"
                [rows]="30"
-               [totalRecords]="totalJob"
+               [totalRecords]="totalJobs"
                [loading]="loadingJobs"
                (onRowSelect)="jobSelected($event)"
                [rowsPerPageOptions]="[10,20,30,50,100]"
@@ -97,7 +97,7 @@
     <div class="p-col-7">
       <div *ngIf="job">
         <div style="margin-bottom: 10px;">
-          <h3>{{job.id}}. {{job.name}}</h3>
+          <h3>{{job.id}}. {{ job.name }}</h3>
           <span>Started: {{ job.started | localtime }}</span>
           <span style="margin-left: 30px;">Completed: {{ job.completed | localtime }}</span>
         </div>

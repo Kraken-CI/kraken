@@ -1,3 +1,4 @@
+import os
 import logging
 import datetime
 
@@ -87,7 +88,8 @@ def _check_and_correct_stage_schema(branch, stage):
 
 
 def _prepare_new_planner_trigger(stage_id, trigger, prev_trigger):
-    planner = xmlrpc.client.ServerProxy("http://localhost:8000/", allow_none=True)
+    planner_url = os.environ.get('KRAKEN_PLANNER_URL', const.DEFAULT_PLANNER_URL)
+    planner = xmlrpc.client.ServerProxy(planner_url, allow_none=True)
 
     if 'interval' in trigger:
         interval = int(pytimeparse.parse(trigger['interval']))

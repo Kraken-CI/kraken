@@ -28,7 +28,7 @@ export class TestCaseResultComponent implements OnInit {
     statusOptions = {};
     valueNames: any[];
     selectedValue: any;
-    valueData = {};
+    valueData: any
     valueOptions = {};
     chartPlugins: any[];
 
@@ -38,6 +38,8 @@ export class TestCaseResultComponent implements OnInit {
                 protected breadcrumbService: BreadcrumbsService) { }
 
     ngOnInit() {
+        this.valueData = {}
+
         this.tcrId = parseInt(this.route.snapshot.paramMap.get("id"));
         this.breadcrumbService.setCrumbs([{
             label: 'Result',

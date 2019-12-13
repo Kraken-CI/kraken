@@ -3,7 +3,7 @@ import random
 import statistics
 import time
 
-import tool
+from . import tool
 
 log = logging.getLogger(__name__)
 

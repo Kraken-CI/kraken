@@ -7,6 +7,7 @@ import asyncio
 import datetime
 import traceback
 import socketserver
+import pkg_resources
 import multiprocessing
 
 from . import config
@@ -31,8 +32,14 @@ def _load_tools_list():
         n = name.replace('kraken_', '')
         spec = finder.find_spec(name)
         tools[n] = spec.origin
-    return tools
 
+    log.info("TOOLS")
+    for entry_point in pkg_resources.iter_entry_points('kraken.tools'):
+        t = entry_point.load()
+        log.info("TOOL %s: %s", entry_point.name, entry_point.module_name)
+        tools[entry_point.name] = 'kktool -m %s' % entry_point.module_name
+
+    return tools
 
 
 # class MyTCPHandler(socketserver.BaseRequestHandler):

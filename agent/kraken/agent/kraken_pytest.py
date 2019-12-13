@@ -2,8 +2,8 @@ import os
 import logging
 import xml.etree.ElementTree as ET
 
-import utils
-import tool
+from . import utils
+from . import tool
 
 log = logging.getLogger(__name__)
 

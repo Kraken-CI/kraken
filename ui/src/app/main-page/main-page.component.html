@@ -1,5 +1,5 @@
 <div style="margin-bottom: 10px;">
-  <p-button label="New Project" icon="pi pi-plus" (onClick)="newProject(proj)"></p-button>
+  <p-button label="New Project" icon="pi pi-plus" (onClick)="newProject()"></p-button>
 
   <p-dialog header="New Project" [(visible)]="newProjectDlgVisible">
     <input type="text" pInputText [(ngModel)]="projectName" (keydown)="newProjectKeyDown($event)"/>

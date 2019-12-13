@@ -16,13 +16,13 @@ log = logging.getLogger(__name__)
 
 
 def _create_app():
+    # addresses
+    db_url = os.environ.get('KRAKEN_DB_URL', consts.DEFAULT_DB_URL)
+
     #logging.basicConfig(format=consts.LOG_FMT, level=logging.INFO)
 
     # Create  Flask app instance
     app = Flask('Kraken Background')
-
-    # db url
-    db_url = os.environ.get('DB_URL', "postgresql://kraken:kk123@localhost:5433/kraken")
 
     # Configure the SqlAlchemy part of the app instance
     app.config["SQLALCHEMY_ECHO"] = False

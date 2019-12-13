@@ -356,7 +356,7 @@ def get_job_logs(job_id, start=0, limit=200, order=None, filters=None):
     job = Job.query.filter_by(id=job_id).one()
     job_json = job.get_json()
 
-    es_server = os.environ.get('KRAKEN_ELASTICSEARCH', 'http://elastic:changeme@localhost')
+    es_server = os.environ.get('KRAKEN_ELASTICSEARCH_URL', consts.DEFAULT_ELASTICSEARCH_URL)
     es = Elasticsearch(es_server)
 
     query = {"query": {"bool": {"must": []}}}

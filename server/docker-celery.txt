@@ -16,6 +16,7 @@
 FROM ubuntu:19.10
 WORKDIR /server
 RUN apt-get update && apt-get install -y --no-install-recommends python3 libpq5
+RUN groupadd user && useradd --create-home --home-dir /home/user -g user user
 COPY kkcelery /server
-ENV REDIS_HOST localhost
+USER user
 CMD ./kkcelery

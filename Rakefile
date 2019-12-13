@@ -114,6 +114,7 @@ task :build_server => './venv/bin/shiv' do
     sh 'rm -rf dist'
     sh '../venv/bin/pip install --target dist -r requirements.txt'
     sh '../venv/bin/pip install --target dist --upgrade .'
+    sh "../venv/bin/shiv --site-packages dist --compressed -p '/usr/bin/env python3' -o kkgunicorn -c gunicorn"
     sh "../venv/bin/shiv --site-packages dist --compressed -p '/usr/bin/env python3' -o kkserver -c kkserver"
     sh "../venv/bin/shiv --site-packages dist --compressed -p '/usr/bin/env python3' -o kkscheduler -c kkscheduler"
     sh "../venv/bin/shiv --site-packages dist --compressed -p '/usr/bin/env python3' -o kkcelery -c kkcelery"
@@ -128,6 +129,7 @@ task :build_agent => './venv/bin/shiv' do
     sh 'rm -rf dist'
     sh '../venv/bin/pip install --target dist --upgrade .'
     sh "../venv/bin/shiv --site-packages dist --compressed -p '/usr/bin/env python3' -o kkagent -c kkagent"
+    sh "../venv/bin/shiv --site-packages dist --compressed -p '/usr/bin/env python3' -o kktool -c kktool"
   end
 end
 
@@ -140,6 +142,9 @@ task :clean_backend do
 end
 
 
+task :build_all => [:build_py, :build_ui]
+
+
 # DOCKER
 
 #task :docker_up => [:build_ui] do
@@ -150,9 +155,40 @@ task :docker_up do
 end
 
 task :docker_down do
-  sh "docker-compose down"
+  sh "docker-compose down -v"
 end
 
 task :run_elk do
   sh 'docker-compose up kibana logstash elasticsearch'
+end
+
+task :build_docker_deploy do
+  sh 'docker-compose -f docker-compose-swarm.yaml config > docker-compose-swarm-deploy.yaml'
+end
+
+task :docker_release do
+  kk_ver = ENV['kk_ver']
+  sh "docker-compose -f docker-compose-swarm.yaml config > kraken-docker-stack-#{kk_ver}.yaml"
+  sh "sed -i -e s/kk_ver/#{kk_ver}/g kraken-docker-stack-#{kk_ver}.yaml"
+  sh "docker-compose -f docker-compose.yaml config > docker-compose-#{kk_ver}.yaml"
+  sh "sed -i -e s/kk_ver/#{kk_ver}/g docker-compose-#{kk_ver}.yaml"
+  sh "sed -i -e 's#127.0.0.1:5000#eu.gcr.io/kraken-261806#g' docker-compose-#{kk_ver}.yaml"
+  sh "docker-compose -f docker-compose-#{kk_ver}.yaml build"
+  sh "docker-compose -f docker-compose-#{kk_ver}.yaml push"
+end
+
+task :prepare_swarm do
+  sh 'sudo DEBIAN_FRONTEND=noninteractive apt-get install -y docker.io docker-compose gnupg2 pass'
+  sh 'docker swarm init || true'
+  sh 'docker login --username=godfryd --password=donotchange cloud.canister.io:5000'
+
+end
+
+task :run_swarm => :build_docker_deploy do
+  sh 'docker stack deploy --with-registry-auth -c docker-compose-swarm-deploy.yaml kraken'
+end
+
+task :run_portainer do
+  sh 'docker volume create portainer_data'
+  sh 'docker run -d -p 8000:8000 -p 9000:9000 -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer'
 end

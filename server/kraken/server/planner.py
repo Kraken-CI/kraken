@@ -2,7 +2,9 @@
 
 import os
 import logging
+from urllib.parse import urlparse
 
+from flask import Flask
 from xmlrpc.server import SimpleXMLRPCServer
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
@@ -11,15 +13,16 @@ from apscheduler.triggers.cron import CronTrigger
 
 from . import consts
 from . import logs
+from . import srvcheck
+from . import models
 
 log = logging.getLogger('planner')
 
 
 class Planner:
-    def __init__(self):
+    def __init__(self, db_url):
         job_defaults = dict(misfire_grace_time=180, coalesce=True, max_instances=1, next_run_time=None)
         self.scheduler = BackgroundScheduler(timezone='UTC', job_defaults=job_defaults)
-        db_url = os.environ.get('DB_URL', "postgresql://kraken:kk123@localhost:5433/kraken")
         self.scheduler.add_jobstore('sqlalchemy', url=db_url)
         self.scheduler.start()
         log.info('started planner scheduler')
@@ -104,16 +107,41 @@ class Planner:
             #raise
 
 
+def _db_migration(db_url):
+    # Create  Flask app instance
+    app = Flask('Kraken Scheduler')
+
+    # Configure the SqlAlchemy part of the app instance
+    app.config["SQLALCHEMY_ECHO"] = False
+    app.config["SQLALCHEMY_DATABASE_URI"] = db_url
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+    # initialize SqlAlchemy
+    models.db.init_app(app)
+    models.db.create_all(app=app)
+    with app.app_context():
+        models.prepare_initial_data()
+
+
 def main():
+    db_url = os.environ.get('KRAKEN_DB_URL', consts.DEFAULT_DB_URL)
+    planner_url = os.environ.get('KRAKEN_PLANNER_URL', consts.DEFAULT_PLANNER_URL)
+
+    srvcheck.check_postgresql(db_url)
+
     logs.setup_logging('planner')
 
-    host = os.environ.get('PLANNER_HOST', 'localhost')
-    port = os.environ.get('PLANNER_PORT', 8000)
+    # db migration
+    _db_migration(db_url)
 
-    planner = Planner()
+    # prepare planner and start it
+    planner = Planner(db_url)
 
-    log.info('starting xml-rpc server for planner')
-    with SimpleXMLRPCServer((host, port), allow_none=True) as server:
+    o = urlparse(planner_url)
+    planner_port = int(o.port)
+
+    log.info('starting xml-rpc server for planner on port %d', planner_port)
+    with SimpleXMLRPCServer(('0.0.0.0', planner_port), allow_none=True) as server:
         server.register_instance(planner)
         try:
             server.serve_forever()

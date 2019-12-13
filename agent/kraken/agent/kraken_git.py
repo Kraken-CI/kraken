@@ -1,8 +1,8 @@
 import subprocess
 import logging
 
-import utils
-import tool
+from . import utils
+from . import tool
 
 log = logging.getLogger(__name__)
 

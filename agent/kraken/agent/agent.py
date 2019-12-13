@@ -43,6 +43,10 @@ def main():
     cfg = vars(args)
     config.set_config(cfg)
 
+    # allow running kktool from current dir in container
+    os.environ["PATH"] += os.pathsep + os.getcwd()
+    os.environ["PATH"] += os.pathsep + os.path.abspath(__file__)
+
     data_dir = config.get('data_dir')
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
