@@ -10,6 +10,7 @@ from sqlalchemy.orm import relationship, mapper
 from sqlalchemy.dialects.postgresql import JSONB
 
 from . import consts
+from .schema import execute_schema_code
 
 log = logging.getLogger(__name__)
 
@@ -98,6 +99,8 @@ class Stage(db.Model, DatesMixin):
     branch_id = Column(Integer, ForeignKey('branches.id'), nullable=False)
     branch = relationship('Branch', back_populates="stages")
     schema = Column(JSONB, nullable=False)
+    schema_code = Column(UnicodeText)
+    triggers = Column(JSONB)
     runs = relationship('Run', back_populates="stage")
     #services
 
@@ -108,7 +111,7 @@ class Stage(db.Model, DatesMixin):
                     name=self.name,
                     description=self.description,
                     schema=self.schema,
-                    schema_txt=json.dumps(self.schema, indent=4, separators=(',', ': ')))
+                    schema_code=self.schema_code)
 
     def __repr__(self):
         return "<Stage %s, '%s'>" % (self.id, self.name)
@@ -562,76 +565,78 @@ def prepare_initial_data():
         # cron: cron rule e.g. '* * 10 * *'
         # repository: url with branch
         # webhook: from GitHub or GitLab or Bitbucket
-        schema = {
-            "parent": "Unit Tests",
-            "trigger": {
-                "parent": True,
-                "cron": "1 * * * *",
-                "interval": "10m",
-                "repository": True,
-                "webhook": True
-            },
-            "parameters": [],
-            "configs": [{
-                "name": "c1",
-                "p1": "1",
-                "p2": "3"
+        schema_code = '''def stage(ctx):
+    return {
+        "parent": "Unit Tests",
+        "triggers": {
+            "parent": True,
+            "cron": "1 * * * *",
+            "interval": "10m",
+            "repository": True,
+            "webhook": True
+        },
+        "parameters": [],
+        "configs": [{
+            "name": "c1",
+            "p1": "1",
+            "p2": "3"
+        }, {
+            "name": "c2",
+            "n3": "33",
+            "t2": "asdf"
+        }],
+        "jobs": [{
+            "name": "make dist",
+            "steps": [{
+                "tool": "git",
+                "checkout": "https://github.com/frankhjung/python-helloworld.git",
+                "branch": "master"
             }, {
-                "name": "c2",
-                "n3": "33",
-                "t2": "asdf"
+                "tool": "pytest",
+                "params": "tests/testhelloworld.py",
+                "cwd": "python-helloworld"
             }],
-            "jobs": [{
-                "name": "make dist",
-                "steps": [{
-                    "tool": "git",
-                    "checkout": "https://github.com/frankhjung/python-helloworld.git",
-                    "branch": "master"
-                }, {
-                    "tool": "pytest",
-                    "params": "tests/testhelloworld.py",
-                    "cwd": "python-helloworld"
-                }],
-                "environments": [{
-                    "system": "ubuntu-18.04",
-                    "executor_group": "server",
-                    "config": "c1"
-                }]
+            "environments": [{
+                "system": "ubuntu-18.04",
+                "executor_group": "server",
+                "config": "c1"
             }]
-        }
+        }]
+    }'''
         stage = Stage(name='System Tests', description="This is a stage of system tests.", branch=branch,
-                      schema=schema)
+                      schema_code=schema_code, schema=execute_schema_code(branch, schema_code))
         db.session.commit()
         log.info("   created Stage record 'System Tests'")
 
     stage = Stage.query.filter_by(name="Unit Tests", branch=branch).one_or_none()
     if stage is None:
-        schema = {
-            "parent": "root",
-            "trigger": {
-                "parent": True
-            },
-            "parameters": [{
-                "name": "COUNT",
-                "type": "string",
-                "default": "10",
-                "description": "Number of tests to generate"
+        schema_code = '''def stage(ctx):
+    return {
+        "parent": "root",
+        "triggers": {
+            "parent": True
+        },
+        "parameters": [{
+            "name": "COUNT",
+            "type": "string",
+            "default": "10",
+            "description": "Number of tests to generate"
+        }],
+        "jobs": [{
+            "name": "random tests",
+            "steps": [{
+                "tool": "rndtest",
+                "count": "#{COUNT}"
             }],
-            "jobs": [{
-                "name": "random tests",
-                "steps": [{
-                    "tool": "rndtest",
-                    "count": "#{COUNT}"
-                }],
-                "environments": [{
-                    "system": "centos-7",
-                    "executor_group": "server",
-                    "config": "default"
-                }]
+            "environments": [{
+                "system": "centos-7",
+                "executor_group": "server",
+                "config": "default"
             }]
-        }
+        }]
+    }'''
         stage = Stage(name='Unit Tests', description="This is a stage of unit tests.", branch=branch,
-                      schema=schema)
+                      schema_code=schema_code, schema=execute_schema_code(branch, schema_code))
         db.session.commit()
         log.info("   created Stage record 'Unit Tests'")
 

@@ -294,6 +294,38 @@ paths:
         200:
           description: Successfully deleted stage
 
+  /stages/{stage_id}/schema:
+    put:
+      summary: Execute schema_code and return schema in JSON format
+      operationId: get_stage_schema_as_json
+      tags:
+        - Management
+      parameters:
+        - name: stage_id
+          in: path
+          description: ID of pet to return
+          required: true
+          type: integer
+          format: int64
+        - name: schema_code
+          in: body
+          description: Schema code to execute
+          schema:
+            $ref: '#/definitions/StageSchemaCode'
+      responses:
+        "200":
+          description: A paged array of runs
+          headers:
+            x-next:
+              type: string
+              description: A link to the next page of responses
+          schema:
+            $ref: '#/definitions/StageSchemaJson'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/ApiError'
+
   /flows/{flow_id}/runs:
     post:
       operationId: create_run
@@ -879,7 +911,28 @@ definitions:
         type: string
       schema:
         type: object
-      schema_txt:
+      schema_code:
+        type: string
+
+  StageSchemaJson:
+    type: "object"
+    required:
+      - name
+    properties:
+      stage_id:
+        type: integer
+        format: int64
+      schema:
+        type: string
+      error:
+        type: string
+
+  StageSchemaCode:
+    type: "object"
+    required:
+      - schema_code
+    properties:
+      schema_code:
         type: string
 
   ApiError:

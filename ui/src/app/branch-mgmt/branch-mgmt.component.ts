@@ -30,10 +30,20 @@ export class BranchMgmtComponent implements OnInit {
     codeMirrorOpts = {
         lineNumbers: true,
         theme: 'material',
-        mode: "application/json",
+        mode: "text/x-python",
+        indentUnit: 4,
         gutters: ["CodeMirror-lint-markers"],
         lint: true
     };
+
+    codeMirrorJsonOpts = {
+        lineNumbers: true,
+        theme: 'material',
+        mode: "application/json"
+    };
+
+    schemaCheckDisplay = false
+    schemaCheckContent: any
 
     constructor(private route: ActivatedRoute,
                 private router: Router,
@@ -44,6 +54,7 @@ export class BranchMgmtComponent implements OnInit {
     }
 
     ngOnInit() {
+        this.schemaCheckContent = {schema: '', error: ''}
         this.branchId = parseInt(this.route.snapshot.paramMap.get("id"));
         this.refresh()
     }
@@ -119,19 +130,28 @@ export class BranchMgmtComponent implements OnInit {
 
     saveStage() {
         this.saveErrorMsg = ""
-        let schema: string
-        try {
-            schema = JSON.parse(this.stage.schema_txt);
-        } catch (e) {
-            console.info(this.stage.schema_txt)
-            this.saveErrorMsg = 'Syntax error in schema content: ' + e.message;
-            return
-        }
         let stage = {
             name: this.stage.name,
-            schema: schema
+            schema_code: this.stage.schema_code
         }
         this.doSaveStage(stage)
+    }
+
+    checkStageSchema() {
+        this.managementService.getStageSchemaAsJson(this.stage.id, {schema_code: this.stage.schema_code}).subscribe(
+            data => {
+                console.info(data);
+                this.schemaCheckContent = data
+                this.schemaCheckDisplay = true
+            },
+            err => {
+                console.info(err);
+                let msg = err.statusText;
+                if (err.error && err.error.detail) {
+                    msg = err.error.detail;
+                }
+                this.msgSrv.add({severity:'error', summary:'Check schema erred', detail:'Check schema operation erred: ' + msg, life: 10000});
+            });
     }
 
     deleteStage() {

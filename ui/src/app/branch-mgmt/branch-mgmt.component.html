@@ -7,6 +7,28 @@
 </p-dialog>
 
 
+<p-dialog header="Schema Validation" [(visible)]="schemaCheckDisplay" [modal]="true" [responsive]="true"
+          [style]="{minWidth: '400px'}" [minY]="70" [maximizable]="true">
+  <pre *ngIf="schemaCheckContent.error">{{ schemaCheckContent.error }}</pre>
+  <ngx-codemirror *ngIf="schemaCheckContent.schema"
+    id="ngx-cm-json"
+    [(ngModel)]="schemaCheckContent.schema"
+    [options]="codeMirrorJsonOpts"></ngx-codemirror>
+
+  <p-footer style="display: flex; justify-content: space-between; align-items: center;">
+    <div *ngIf="schemaCheckContent.schema">
+      <i class="pi pi-check" style="vertical-align: text-bottom;"></i>
+      All ok
+    </div>
+    <div *ngIf="schemaCheckContent.error">
+      <i class="pi pi-exclamation-triangle" style="vertical-align: text-bottom;"></i>
+      Error in schema code
+    </div>
+    <button type="button" pButton icon="pi pi-close" (click)="schemaCheckDisplay=false" label="Close" class="ui-button-secondary"></button>
+  </p-footer>
+</p-dialog>
+
+
 <div style="margin-bottom: 15px; display: flex; align-items: baseline;">
   <p-inplace #branchNameInplace>
     <span pInplaceDisplay style="font-size: 2rem; font-weight: bold;">
@@ -41,17 +63,17 @@
           <div style="margin-bottom: 6px;">{{stage.description}}</div>
           <div style="font-size: 1.05rem;">Parent: {{stage.schema.parent}}</div>
           <div style="font-size: 1.05rem;">Trigger:
-            <div *ngIf="stage.schema.trigger.parent === false || stage.schema.trigger.parent === true">
-              - parent: {{stage.schema.trigger.parent}}
+            <div *ngIf="stage.schema.triggers.parent === false || stage.schema.triggers.parent === true">
+              - parent: {{stage.schema.triggers.parent}}
             </div>
-            <div *ngIf="stage.schema.trigger.interval">
-              - interval: {{stage.schema.trigger.interval}}
+            <div *ngIf="stage.schema.triggers.interval">
+              - interval: {{stage.schema.triggers.interval}}
             </div>
-            <div *ngIf="stage.schema.trigger.cron">
-              - cron: {{stage.schema.trigger.cron}}
+            <div *ngIf="stage.schema.triggers.cron">
+              - cron: {{stage.schema.triggers.cron}}
             </div>
-            <div *ngIf="stage.schema.trigger.date">
-              - date: {{stage.schema.trigger.date}}
+            <div *ngIf="stage.schema.triggers.date">
+              - date: {{stage.schema.triggers.date}}
             </div>
           </div>
           <div *ngIf="stage.schema.parameters" style="font-size: 1.05rem;">Parameters: {{stage.schema.parameters.length}}</div>
@@ -82,10 +104,11 @@
           <div style="height: calc(100vh - 450px); padding: 5px 0 10px 0;">
             <ngx-codemirror
               id="ngx-cm"
-              [(ngModel)]="stage.schema_txt"
+              [(ngModel)]="stage.schema_code"
               [options]="codeMirrorOpts"></ngx-codemirror>
           </div>
-          <button type="button" (click)="saveStage()" pButton icon="pi pi-check" label="Save Stage"></button>
+          <button type="button" (click)="checkStageSchema()" pButton icon="pi pi-eye" label="Check Schema"></button>
+          <button type="button" (click)="saveStage()" pButton icon="pi pi-check" style="margin-left: 20px;" label="Save Stage"></button>
           <button type="button" (click)="deleteStage()" pButton icon="pi pi-times" class="ui-button-danger" style="margin-left: 50px;" label="Delete Stage"></button>
           <span *ngIf="saveErrorMsg.length > 0">
             <p-message severity="error" [text]="saveErrorMsg" style="margin-left: 40px;"></p-message>
