@@ -63,7 +63,7 @@ export class NewFlowComponent implements OnInit {
             }
 
             for (let s of branch.stages) {
-                if (s.schema.parent != 'root' || s.schema.trigger.parent === false) {
+                if (s.schema.parent != 'root' || s.schema.triggers.parent === false) {
                     continue;
                 }
                 params.push({

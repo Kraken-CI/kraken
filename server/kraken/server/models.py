@@ -3,7 +3,7 @@ import datetime
 import logging
 
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Column, Boolean, DateTime, ForeignKey, Index, Integer, Sequence, String, Text, Unicode, UnicodeText
+from sqlalchemy import Table, Column, Boolean, DateTime, ForeignKey, Index, Integer, Sequence, String, Text, Unicode, UnicodeText
 from sqlalchemy import event
 from sqlalchemy.types import TypeDecorator
 from sqlalchemy.orm import relationship, mapper
@@ -410,13 +410,22 @@ class Tool(db.Model, DatesMixin):
     test_cases = relationship("TestCase", back_populates="tool")
 
 
+class ExecutorAssignment(db.Model):
+    __tablename__ = "executor_assignments"
+    executor_id = Column(Integer, ForeignKey('executors.id'), primary_key=True)
+    executor = relationship('Executor', back_populates="executor_groups")
+    executor_group_id = Column(Integer, ForeignKey('executor_groups.id'), primary_key=True)
+    executor_group = relationship('ExecutorGroup', back_populates="executors")
+
+
 class ExecutorGroup(db.Model, DatesMixin):
     __tablename__ = "executor_groups"
     id = Column(Integer, primary_key=True)
     name = Column(Unicode(50))
     project_id = Column(Integer, ForeignKey('projects.id'), nullable=False)
     project = relationship('Project', back_populates="executor_groups")
-    executors = relationship("Executor", back_populates="executor_group")  # static assignments
+    #executors = relationship("Executor", back_populates="executor_group")  # static assignments
+    executors = relationship('ExecutorAssignment', back_populates="executor_group")
     jobs = relationship("Job", back_populates="executor_group")
 
 
@@ -430,8 +439,8 @@ class Executor(db.Model, DatesMixin):
     disabled = Column(Boolean, default=False)
     comment = Column(Text)
     status_line = Column(Text)
-    executor_group_id = Column(Integer, ForeignKey('executor_groups.id'))  # static assignment to exactly one machines group, if NULL then not authorized
-    executor_group = relationship('ExecutorGroup', back_populates="executors")
+    #executor_group_id = Column(Integer, ForeignKey('executor_groups.id'))  # static assignment to exactly one machines group, if NULL then not authorized
+    executor_groups = relationship('ExecutorAssignment', back_populates="executor")
     job_id = Column(Integer, ForeignKey('jobs.id'))
     job = relationship('Job', back_populates="executor", foreign_keys=[job_id])
 
@@ -512,11 +521,18 @@ def prepare_initial_data():
             log.info("   created Tool record '%s'", name)
         tools[name] = tool
 
-    project = Project.query.filter_by(name="demo").one_or_none()
-    if project is None:
-        project = Project(name='demo', description="This is a demo project.")
+    executor = Executor.query.filter_by(name="server").one_or_none()
+    if executor is None:
+        executor = Executor(name='server', address="server")
         db.session.commit()
-        log.info("   created Project record 'demo'")
+        log.info("   created Executor record 'server'")
+
+    # Project DEMO
+    project = Project.query.filter_by(name="Demo").one_or_none()
+    if project is None:
+        project = Project(name='Demo', description="This is a demo project.")
+        db.session.commit()
+        log.info("   created Project record 'Demo'")
 
     branch = Branch.query.filter_by(name="Master", project=project).one_or_none()
     if branch is None:
@@ -646,11 +662,103 @@ def prepare_initial_data():
         db.session.commit()
         log.info("   created ExecutorGroup record 'server'")
 
-    executor = Executor.query.filter_by(name="server", executor_group=executor_group).one_or_none()
-    if executor is None:
-        executor = Executor(name='server', executor_group=executor_group, address="server")
+        ExecutorAssignment(executor=executor, executor_group=executor_group)
         db.session.commit()
-        log.info("   created Executor record 'server'")
+        log.info("   created ExecutorAssignment for record 'server'")
 
+    # Project KRAKEN
+    project = Project.query.filter_by(name="Kraken").one_or_none()
+    if project is None:
+        project = Project(name='Kraken', description="This is a Kraken project.")
+        db.session.commit()
+        log.info("   created Project record 'Kraken'")
+
+    branch = Branch.query.filter_by(name="Master", project=project).one_or_none()
+    if branch is None:
+        branch = Branch(name='Master', branch_name='master', project=project)
+        db.session.commit()
+        log.info("   created Branch record 'master'")
+
+    stage = Stage.query.filter_by(name="Static Analysis", branch=branch).one_or_none()
+    if stage is None:
+            # TODO: pylint
+            # }, {
+            #     "tool": "pylint",
+            #     "rcfile": "../pylint.rc",
+            #     "modules_or_packages": "kraken.agent",
+            #     "cwd": "kraken/agent"
+        schema_code = '''def stage(ctx):
+    return {
+        "parent": "root",
+        "triggers": {
+            "parent": True
+        },
+        "parameters": [],
+        "configs": [],
+        "jobs": [{
+            "name": "pylint",
+            "steps": [{
+                "tool": "git",
+                "checkout": "git@github.com:godfryd/kraken.git",
+                "branch": "master"
+            }, {
+                "tool": "shell",
+                "cmd": "pylint --rcfile=pylint.rc agent/kraken/agent",
+                "cwd": "kraken"
+            }],
+            "environments": [{
+                "system": "ubuntu-18.04",
+                "executor_group": "server",
+                "config": "c1"
+            }]
+        }]
+    }'''
+        stage = Stage(name='Static Analysis', description="This is a stage of Static Analysis.", branch=branch,
+                      schema_code=schema_code, schema=execute_schema_code(branch, schema_code))
+        db.session.commit()
+        log.info("   created Stage record 'System Tests'")
+
+    stage = Stage.query.filter_by(name="Unit Tests", branch=branch).one_or_none()
+    if stage is None:
+        schema_code = '''def stage(ctx):
+    return {
+        "parent": "root",
+        "triggers": {
+            "parent": True
+        },
+        "parameters": [],
+        "configs": [],
+        "jobs": [{
+            "name": "pytest",
+            "steps": [{
+                "tool": "git",
+                "checkout": "git@github.com:godfryd/kraken.git",
+                "branch": "master"
+            }, {
+                "tool": "pytest",
+                "params": "-vv",
+                "cwd": "kraken/agent"
+            }],
+            "environments": [{
+                "system": "centos-7",
+                "executor_group": "server",
+                "config": "default"
+            }]
+        }]
+    }'''
+        stage = Stage(name='Unit Tests', description="This is a stage of unit tests.", branch=branch,
+                      schema_code=schema_code, schema=execute_schema_code(branch, schema_code))
+        db.session.commit()
+        log.info("   created Stage record 'Unit Tests'")
+
+    executor_group = ExecutorGroup.query.filter_by(name="server", project=project).one_or_none()
+    if executor_group is None:
+        executor_group = ExecutorGroup(name='server', project=project)
+        db.session.commit()
+        log.info("   created ExecutorGroup record 'server'")
+
+        ExecutorAssignment(executor=executor, executor_group=executor_group)
+        db.session.commit()
+        log.info("   created ExecutorAssignment for record 'server'")
 
     _prepare_initial_preferences()

@@ -14,6 +14,7 @@ setup(
             'git = kraken.agent.kraken_git',
             'pytest = kraken.agent.kraken_pytest',
             'rndtest = kraken.agent.kraken_rndtest',
+            'shell = kraken.agent.kraken_shell',
         ]
     },
 )

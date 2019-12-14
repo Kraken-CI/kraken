@@ -18,10 +18,17 @@ log = logging.getLogger('scheduler')
 def assign_jobs_to_executors():
     counter = 0
 
-    idle_executors = Executor.query.filter_by(job=None).all()
-    if len(idle_executors) == 0:
+    all_idle_executors = Executor.query.filter_by(job=None).all()
+    executors_count = len(all_idle_executors)
+    if executors_count == 0:
         return 0
-    idle_executors = {e.id: e for e in idle_executors}
+    idle_executors_by_group = {}
+    for e in all_idle_executors:
+        for asm in e.executor_groups:
+            grp_id = asm.executor_group_id
+            if grp_id not in idle_executors_by_group:
+                idle_executors_by_group[grp_id] = []
+            idle_executors_by_group[grp_id].append(e)
 
     q = Job.query.filter_by(state=consts.JOB_STATE_QUEUED, executor_used=None)
     q = q.join('run')
@@ -30,15 +37,20 @@ def assign_jobs_to_executors():
         log.info('waiting jobs %s', waiting_jobs)
 
     for j in waiting_jobs:
+        # find idle executor from given executors group
         best_executor = None
-        for e_id, e in idle_executors.items():
-            if e.executor_group_id == j.executor_group_id:
-                best_executor = e
+        idle_executors = idle_executors_by_group.get(j.executor_group_id, [])
+        while best_executor is None:
+            if len(idle_executors) == 0:
                 break
-        if best_executor is None:
-            continue
-        idle_executors.pop(best_executor.id)
+            best_executor = idle_executors.pop()
+            if best_executor.job:
+                best_executor = None
 
+        if best_executor is None:
+            break
+
+        # assign job to found executor
         best_executor.job = j
         j.executor_used = best_executor
         j.assigned = datetime.datetime.utcnow()
@@ -46,8 +58,8 @@ def assign_jobs_to_executors():
         log.info("assigned job %s to executor %s", j, best_executor)
 
         counter += 1
-
-        if len(idle_executors) == 0:
+        # if all idle executors used then stop assigning
+        if counter == executors_count:
             break
 
     return counter

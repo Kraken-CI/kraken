@@ -98,8 +98,8 @@
       <div *ngIf="job">
         <div style="margin-bottom: 10px;">
           <h3>{{job.id}}. {{ job.name }}</h3>
-          <span>Started: {{ job.started | localtime }}</span>
-          <span style="margin-left: 30px;">Completed: {{ job.completed | localtime }}</span>
+          <span>Started: {{ job.started ? (job.started | localtime) : 'not yet' }}</span>
+          <span style="margin-left: 30px;">Completed: {{ job.completed ? (job.completed | localtime) : 'not yet' }}</span>
         </div>
         <app-log-box [jobId]="selectedJobId"></app-log-box>
       </div>

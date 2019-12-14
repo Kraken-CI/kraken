@@ -49,11 +49,11 @@ export class RunResultsComponent implements OnInit {
         let tab = this.route.snapshot.paramMap.get("tab");
 
         this.tabs = [
-            {label: 'Results', routerLink: '/runs/' + this.runId + '/results'},
             {label: 'Jobs', routerLink: '/runs/' + this.runId + '/jobs'},
+            {label: 'Results', routerLink: '/runs/' + this.runId + '/results'},
         ]
         this.activeTab = this.tabs[0]
-        if (tab === 'jobs') {
+        if (tab === 'results') {
             this.activeTab = this.tabs[1]
         }
 
@@ -72,13 +72,14 @@ export class RunResultsComponent implements OnInit {
 
         this.results = [];
         this.executionService.getRun(this.runId).subscribe(run => {
-            if (run.state !== 'completed') {
-                this.tabs = [
-                    {label: 'Jobs', routerLink: '/runs/' + this.runId + '/jobs'},
-                    {label: 'Results', routerLink: '/runs/' + this.runId + '/results'},
-                ]
+            let tab = this.route.snapshot.paramMap.get("tab");
+            if (tab === '') {
+                if (run.state === 'completed') {
+                    this.router.navigate([this.tabs[1].routerLink]);
+                } else {
+                    this.router.navigate([this.tabs[0].routerLink]);
+                }
             }
-            this.switchToTab(this.activeTab.label)
 
             let crumbs = [{
                 label: 'Projects',

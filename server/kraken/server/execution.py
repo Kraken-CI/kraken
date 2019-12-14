@@ -150,7 +150,7 @@ def create_flow(branch_id, kind, flow):
     db.session.commit()
 
     for stage in branch.stages.filter_by(deleted=None):
-        if stage.schema['parent'] != 'root' or stage.schema['trigger'].get('parent', False) is False:
+        if stage.schema['parent'] != 'root' or stage.schema['triggers'].get('parent', False) is False:
             continue
 
         run = Run(flow=flow, stage=stage, args=args.get(stage.name, {}))

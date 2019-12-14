@@ -58,8 +58,10 @@ def get_branch(branch_id):
 def _check_and_correct_stage_schema(branch, stage, prev_schema_code):
     if 'schema_code' in stage:
         schema_code = stage['schema_code']
+        log.info('new schema_code %s', schema_code)
     elif prev_schema_code:
         schema_code = prev_schema_code
+        log.info('prev schema_code %s', schema_code)
     else:
         schema_code = '''def stage(ctx):
     return {
@@ -201,12 +203,20 @@ def update_stage(stage_id, stage):
 
     if 'schema_code' in stage:
         _, schema = _check_and_correct_stage_schema(stage_rec.branch, stage, stage_rec.schema_code)
+        stage_rec.schema = schema
+        stage_rec.schema_code = stage['schema_code']
+        flag_modified(stage_rec, 'schema')
+        if stage_rec.triggers is None:
+            stage_rec.triggers = {}
         _prepare_new_planner_triggers(stage_rec.id, schema['triggers'], stage_rec.schema['triggers'], stage_rec.triggers)
         flag_modified(stage_rec, 'triggers')
+        log.info('new schema: %s', stage_rec.schema)
 
     db.session.commit()
 
-    return stage_rec.get_json(), 200
+    result = stage_rec.get_json()
+    log.info('result: %s', result)
+    return result, 200
 
 
 def delete_stage(stage_id):

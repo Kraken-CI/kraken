@@ -151,7 +151,7 @@ def trigger_stages(self, run_id):
             for stage in branch.stages.filter_by(deleted=None):
                 if stage.schema['parent'] != curr_stage_name:
                     continue
-                if not stage.schema['trigger'].get('parent', False):
+                if not stage.schema['triggers'].get('parent', False):
                     continue
 
                 new_run = Run(stage=stage, flow=run.flow)
