@@ -59,6 +59,6 @@ export class AppComponent {
     }
 
     randomLogoFont() {
-        this.logoClass = 'logo' + (Math.floor(Math.random() * 9) + 1);
+        this.logoClass = 'logo' + (Math.floor(Math.random() * 3) + 1);
     }
 }
