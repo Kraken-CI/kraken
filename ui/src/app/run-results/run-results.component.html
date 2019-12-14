@@ -96,8 +96,8 @@
 
     <div class="p-col-7">
       <div *ngIf="job">
-        <div style="margin-bottom: 10px;">
-          <h3>{{job.id}}. {{ job.name }}</h3>
+        <div style="margin: 10px 0;">
+          <span style="font-size: 1.2rem; font-weight: bold; margin-right: 20px;">{{job.id}}. {{ job.name }}</span>
           <span>Started: {{ job.started ? (job.started | localtime) : 'not yet' }}</span>
           <span style="margin-left: 30px;">Completed: {{ job.completed ? (job.completed | localtime) : 'not yet' }}</span>
         </div>

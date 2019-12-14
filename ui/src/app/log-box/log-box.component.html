@@ -1,3 +1,11 @@
+<div style="display: flex; justify-content: flex-end; margin: -10px 20px 5px 0;">
+  <p-button icon="pi pi-download" [style]="{'margin-right': '7px'}" styleClass="ui-button-rounded" (click)="logDownload()"></p-button>
+  <p-button icon="pi pi-plus" [style]="{'margin-right': '7px'}" styleClass="ui-button-rounded" (click)="logZoomIn()"></p-button>
+  <p-button icon="pi pi-minus" [style]="{'margin-right': '7px'}" styleClass="ui-button-rounded" (click)="logZoomOut()"></p-button>
+  <p-button icon="pi pi-arrow-up" [style]="{'margin-right': '7px'}" styleClass="ui-button-rounded" (click)="logScrollUp()"></p-button>
+  <p-button icon="pi pi-arrow-down" styleClass="ui-button-rounded" (click)="logScrollDown()"></p-button>
+</div>
+
 <div style="background-color: black; color: #ccc; padding: 10px; height: 75vh; font-family: Menlo, DejaVu Sans Mono, Liberation Mono, Consolas, Ubuntu Mono, Courier New, andale mono, lucida console, monospace; font-size: 12px; overflow-y: auto;" #logBox  (scroll)="scrolled($event)">
   <div *ngFor="let frag of logFragments" #logFrag>
     <div *ngIf="frag.title" style="font-size: 1.2em; font-weight: bold; color: lawngreen; cursor: pointer;" (click)="frag.expanded = !frag.expanded">
@@ -6,7 +14,7 @@
       {{frag.title}}
     </div>
     <div *ngIf="frag.expanded">
-      <div *ngFor="let log of frag.logs" style="white-space: pre-wrap; overflow-x: auto; word-break: break-word; margin: 0;" [ngStyle]="log.style" [innerHTML]="log.message"></div>
+      <div *ngFor="let log of frag.logs" [ngClass]="['log-entry-base', log.cls]" [ngStyle]="{'font-size': '' + fontSize + 'em'}" [innerHTML]="log.message"></div>
     </div>
   </div>
 </div>

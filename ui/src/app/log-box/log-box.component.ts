@@ -16,6 +16,7 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
     logFragments: any[]
     skippedAngLoadedLogs = 0
     lastAttempts = 0
+    fontSize = 1.0
 
     _jobId: number
     @Input()
@@ -74,9 +75,9 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
             if (fragment.title === '' && l.tool !== '') {
                 fragment.title = l.tool
             }
-            l['style'] = {}
+            l['cls'] = ''
             if (l.message.includes('ERRO') || l.level === 'ERROR') {
-                l['style'] = {color: 'red'}
+                l['cls'] = 'log-red'
             }
             fragment.logs.push(l)
         }
@@ -89,7 +90,7 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
             loading: true,
             logs: [{
                 message: '... loading more ...',
-                style: {}
+                cls: {}
             }]
         })
     }
@@ -102,7 +103,7 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
                 expanded: true,
                 logs: [{
                     message: '... skipped ' + skippedLogsCount + ' lines ...',
-                    style: {}
+                    cls: {}
                 }]
             })
         }
@@ -209,6 +210,13 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
         });
     }
 
+    scrollToTop() {
+        this.logBoxEl.scroll({
+            top: 0,
+            left: 0,
+        });
+    }
+
     isScrollNearBottom(): boolean {
         const threshold = 150;
         const position = this.logBoxEl.scrollTop + this.logBoxEl.offsetHeight;
@@ -218,5 +226,24 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
 
     scrolled(event: any): void {
         this.isNearBottom = this.isScrollNearBottom();
+    }
+
+    logDownload() {
+    }
+
+    logZoomIn() {
+        this.fontSize += 0.05
+    }
+
+    logZoomOut() {
+        this.fontSize -= 0.05
+    }
+
+    logScrollUp() {
+        this.scrollToTop()
+    }
+
+    logScrollDown() {
+        this.scrollToBottom()
     }
 }
