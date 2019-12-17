@@ -6,6 +6,12 @@ NG = File.expand_path('webui/node_modules/.bin/ng')
 SWAGGER_CODEGEN = "#{TOOLS_DIR}/swagger-codegen-cli-2.4.8.jar"
 SWAGGER_FILE = File.expand_path("server/kraken/server/swagger.yml")
 
+# prepare env
+task :prepare_env do
+  sh 'sudo DEBIAN_FRONTEND=noninteractive apt-get install -y default-jre python3-venv npm libpq-dev libpython3.7-dev'
+  sh 'python3 -m venv venv && ./venv/bin/pip install -U pip'
+end
+
 # UI
 task :gen_client => [SWAGGER_CODEGEN, SWAGGER_FILE] do
   Dir.chdir('ui') do
@@ -40,7 +46,7 @@ end
 
 task :serve_ui => [NG, :gen_client] do
   Dir.chdir('ui') do
-    sh 'npx ng serve --disable-host-check --proxy-config proxy.conf.json'
+    sh 'npx ng serve --host 0.0.0.0 --disable-host-check --proxy-config proxy.conf.json'
   end
 end
 
@@ -69,12 +75,18 @@ file './agent/venv/bin/python3' do
   sh './agent/venv/bin/pip install -U pip'
 end
 
-file ['./server/venv/bin/kkserver', './server/venv/bin/kkscheduler', './server/venv/bin/kkcelery', './server/venv/bin/kkplanner'] => ['./server/venv/bin/python3', './server/requirements.txt'] do
+def setup_py_develop
   Dir.chdir('server') do
     sh './venv/bin/pip install -r requirements.txt'
     sh './venv/bin/python3 setup.py develop --upgrade'
   end
 end
+
+['./server/venv/bin/kkserver', './server/venv/bin/kkscheduler', './server/venv/bin/kkcelery', './server/venv/bin/kkplanner'].each {|f|
+  file f => ['./server/venv/bin/python3', './server/requirements.txt'] do
+    setup_py_develop
+  end
+}
 
 task :run_server => './server/venv/bin/kkserver' do
   sh './server/venv/bin/kkserver'
@@ -160,6 +172,14 @@ end
 
 task :run_elk do
   sh 'docker-compose up kibana logstash elasticsearch'
+end
+
+task :run_pgsql do
+  sh 'docker run --rm -p 5433:5432 -e POSTGRES_USER=kraken -e POSTGRES_PASSWORD=kk123 -e POSTGRES_DB=kraken postgres:11'
+end
+
+task :run_redis do
+  sh 'docker run --rm -p 6379:6379 redis:alpine'
 end
 
 task :build_docker_deploy do

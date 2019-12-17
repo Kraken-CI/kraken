@@ -15,6 +15,7 @@ setup(
             'pytest = kraken.agent.kraken_pytest',
             'rndtest = kraken.agent.kraken_rndtest',
             'shell = kraken.agent.kraken_shell',
+            'pylint = kraken.agent.kraken_pylint',
         ]
     },
 )

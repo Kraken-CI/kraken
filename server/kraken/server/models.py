@@ -510,7 +510,8 @@ def prepare_initial_data():
         'shell': {'cmd': 'text'},
         'pytest': {'params': 'text', 'directory': 'text'},
         'rndtest': {'count': 'text'},
-        'artifacts': {'type': 'choice:file', 'upload': 'text'}
+        'artifacts': {'type': 'choice:file', 'upload': 'text'},
+        'pylint': {'rcfile': 'text', 'modules_or_packages': 'text'},
     }
     tools = {}
     for name, fields in tool_fields.items():

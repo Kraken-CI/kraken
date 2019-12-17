@@ -265,7 +265,7 @@ def _run_step(srv, job_dir, job_id, idx, step, tools):
         raise Exception('bad result received from tool: %s' % result)
     available_commands = result['commands']
 
-    if 'run' not in available_commands and 'run_tests' not in available_commands:
+    if 'run' not in available_commands and 'run_tests' not in available_commands and 'run_analysis' not in available_commands:
         raise Exception('missing run and run_tests in available commands: %s' % available_commands)
 
     if 'collect_tests' in available_commands and ('tests' not in step or step['tests'] is None or len(step['tests']) == 0):
@@ -300,6 +300,11 @@ def _run_step(srv, job_dir, job_id, idx, step, tools):
     if 'run_tests' in available_commands:
         result = _exec_tool(srv, tool_path, 'run_tests', job_dir, 60, step_file_path, job_id, idx)
         log.info('result for run_tests: %s', str(result)[:200])
+        srv.report_step_result(job_id, idx, result)
+
+    if 'run_analysis' in available_commands:
+        result = _exec_tool(srv, tool_path, 'run_analysis', job_dir, 60, step_file_path, job_id, idx)
+        log.info('result for run_analysis: %s', str(result)[:200])
         srv.report_step_result(job_id, idx, result)
 
     if 'run' in available_commands:

@@ -36,6 +36,27 @@ class TestResultsCollector():
         self.last_reported = datetime.datetime.now()
 
 
+class IssuesCollector():
+    def __init__(self, sock):
+        self.sock = sock
+        self.issues = []
+        self.last_reported = datetime.datetime.now()
+
+    def report_issue(self, issue):
+        self.issues.append(issue)
+
+        now = datetime.datetime.now()
+        # report issues after 100 issues or after 20 seconds
+        if len(self.issues) > 100 or (now - self.last_reported > datetime.timedelta(seconds=20)):
+            self.flush()
+
+    def flush(self):
+        self.sock.send_json({'status': 'in-progress',
+                             'issues': self.issues})
+        self.issues = []
+        self.last_reported = datetime.datetime.now()
+
+
 def execute(sock, module, command, step_file_path):
     try:
         logs.setup_logging('tool')
@@ -72,6 +93,12 @@ def execute(sock, module, command, step_file_path):
             ret, msg = tool.run_tests(step, report_result=report_result_cb)
             test_results_collector.flush()
 
+        elif command == 'run_analysis':
+            issues_collector = IssuesCollector(sock)
+            report_issue_cb = issues_collector.report_issue
+            ret, msg = tool.run_analysis(step, report_issue=report_issue_cb)
+            issues_collector.flush()
+
         elif command == 'run':
             ret, msg = tool.run(step)
 
@@ -101,6 +128,12 @@ class JsonSocket(socket.socket):
         self.sendall(bytes(data, "utf-8"))
 
 
+class StdoutSock:
+    def send_json(self, data):
+        data = json.dumps(data) + '\n'
+        log.info('tool response: %s', data[:200])
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-r', '--return-address', help="TCP return address for reporting progress and end status.")
@@ -109,7 +142,11 @@ def main():
     parser.add_argument('command', help="A command to execute")
     args = parser.parse_args()
 
-    with JsonSocket(args.return_address.split(':')) as sock:
+    if args.return_address:
+        with JsonSocket(args.return_address.split(':')) as sock:
+            execute(sock, args.module, args.command, args.step_file)
+    else:
+        sock = StdoutSock()
         execute(sock, args.module, args.command, args.step_file)
 
 
