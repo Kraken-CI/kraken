@@ -101,6 +101,7 @@ class Stage(db.Model, DatesMixin):
     schema = Column(JSONB, nullable=False)
     schema_code = Column(UnicodeText)
     triggers = Column(JSONB)
+    webhooks = Column(JSONB)
     runs = relationship('Run', back_populates="stage")
     #services
 
@@ -111,10 +112,17 @@ class Stage(db.Model, DatesMixin):
                     name=self.name,
                     description=self.description,
                     schema=self.schema,
-                    schema_code=self.schema_code)
+                    schema_code=self.schema_code,
+                    webhooks=self.webhooks if self.webhooks else {})
 
     def __repr__(self):
         return "<Stage %s, '%s'>" % (self.id, self.name)
+
+    def get_default_args(self):
+        args = {}
+        for param in self.schema['parameters']:
+            args[param['name']] = param['default']
+        return args
 
 # class Config(db.Model, DatesMixin):
 #     __tablename__ = "configs"
@@ -191,6 +199,7 @@ class Run(db.Model, DatesMixin):
     hard_timeout_reached = Column(DateTime)
     soft_timeout_reached = Column(DateTime)
     args = Column(JSONB, nullable=False, default={})
+    trigger_data = Column(JSONB)
 
     def get_json(self):
         non_covered_jobs = Job.query.filter_by(run=self).filter_by(covered=False).all()
@@ -506,7 +515,7 @@ def prepare_initial_data():
     log.info("Preparing initial DB data")
 
     tool_fields = {
-        'git': {'checkout': 'text', 'branch': 'text'},
+        'git': {'checkout': 'text', 'branch': 'text', 'destination': 'text'},
         'shell': {'cmd': 'text'},
         'pytest': {'params': 'text', 'directory': 'text'},
         'rndtest': {'count': 'text'},

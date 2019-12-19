@@ -136,6 +136,7 @@ def analyze_results_history(self, run_id):
 
 @app.task(base=BaseTask, bind=True)
 def trigger_stages(self, run_id):
+    """Trigger the following stages after just completed run_id stage."""
     try:
         app = _create_app()
 
@@ -154,7 +155,7 @@ def trigger_stages(self, run_id):
                 if not stage.schema['triggers'].get('parent', False):
                     continue
 
-                new_run = Run(stage=stage, flow=run.flow)
+                new_run = Run(stage=stage, flow=run.flow, args=stage.get_default_args())
                 db.session.commit()
                 log.info('triggered run %s for stage %s of branch %s', new_run, stage, branch)
 
@@ -208,7 +209,7 @@ def job_completed(self, job_id):
 
 
 @app.task(base=BaseTask, bind=True)
-def trigger_run(self, stage_id):
+def trigger_run(self, stage_id, trigger_data=None):
     try:
         app = _create_app()
 
@@ -223,6 +224,8 @@ def trigger_run(self, stage_id):
             if stage.schema['parent'] == 'root':
                 flow = Flow(branch=stage.branch)
                 db.session.commit()
+
+                # TODO: other root, sibling stages should be triggered when new flow is started
 
             else:
                 # if this stage has parent then find latest flow with this parent stage run
@@ -254,6 +257,7 @@ def trigger_run(self, stage_id):
                 q = q.filter_by(flow_id=parent_run.flow_id)
                 run = q.first()
                 if run is not None:
+                    # TODO: in such case this trigger should be postponed to new flow
                     log.info('latest flow %s with parent run %s already has run %s for current stage %s',
                              parent_run.flow_id, parent_run, run, stage)
                     return
@@ -261,7 +265,9 @@ def trigger_run(self, stage_id):
                 flow = parent_run.flow
 
             # create run for current stage
-            run = Run(flow=flow, stage=stage)
+            if trigger_data is None:
+                trigger_data = {}
+            run = Run(flow=flow, stage=stage, args=stage.get_default_args(), trigger_data=trigger_data)
             db.session.commit()
 
             # trigger jobs for new run

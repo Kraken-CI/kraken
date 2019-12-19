@@ -153,7 +153,9 @@ def create_flow(branch_id, kind, flow):
         if stage.schema['parent'] != 'root' or stage.schema['triggers'].get('parent', False) is False:
             continue
 
-        run = Run(flow=flow, stage=stage, args=args.get(stage.name, {}))
+        run_args = stage.get_default_args()
+        run_args.update(args.get(stage.name, {}))
+        run = Run(flow=flow, stage=stage, args=run_args)
         db.session.commit()
 
         log.info('triggered run %s for stage %s of branch %s', run, stage, branch)
@@ -214,7 +216,8 @@ def create_run(flow_id, run):
     if stage is None:
         abort(404, "Stage not found")
 
-    args = run.get('args', {})
+    args = stage.get_default_args()
+    args.update(run.get('args', {}))
 
     new_run = Run(stage=stage, flow=flow, args=args)
     db.session.commit()

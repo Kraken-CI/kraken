@@ -4,7 +4,6 @@ certifi==2018.11.29
 chardet==3.0.4
 connexion==2.2.0
 Flask==1.0.2
-Flask-Cors==3.0.8
 Flask-SQLAlchemy==2.3.2
 idna==2.8
 importlib-metadata==0.23

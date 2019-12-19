@@ -24,7 +24,7 @@ export class BranchMgmtComponent implements OnInit {
     newStageName: string
     newStageDescr: string
 
-    stage: any = {name: '', description: ''};
+    stage: any = {id: 0, name: '', description: '', webhooks: {github_enabled: false}};
     saveErrorMsg = "";
 
     codeMirrorOpts = {
@@ -63,7 +63,6 @@ export class BranchMgmtComponent implements OnInit {
         this.managementService.getBranch(this.branchId).subscribe(branch => {
             this.branch = branch;
             this.newBranchName = branch.name
-            this.stage = null
             if (this.stageName != '') {
                 // this is a finish of adding new stage ie. select newly created stage
                 for (let s of this.branch.stages) {
@@ -74,8 +73,8 @@ export class BranchMgmtComponent implements OnInit {
                     }
                 }
             }
-            if (this.stage == null) {
-                this.stage = branch.stages[0];
+            if (this.stage.id === 0) {
+                this.selectStage(branch.stages[0])
             }
 
             let crumbs = [{
@@ -132,7 +131,8 @@ export class BranchMgmtComponent implements OnInit {
         this.saveErrorMsg = ""
         let stage = {
             name: this.stage.name,
-            schema_code: this.stage.schema_code
+            schema_code: this.stage.schema_code,
+            webhooks: this.stage.webhooks,
         }
         this.doSaveStage(stage)
     }
@@ -160,7 +160,7 @@ export class BranchMgmtComponent implements OnInit {
             accept: () => {
                 this.managementService.deleteStage(this.stage.id).subscribe(
                     stage => {
-                        this.stage = this.branch.stages[0]
+                        this.selectStage(this.branch.stages[0])
                         this.msgSrv.add({severity:'success', summary:'Stage deletion succeeded', detail:'Stage deletion operation succeeded.'});
                         this.refresh()
                     },
@@ -190,7 +190,7 @@ export class BranchMgmtComponent implements OnInit {
     doSaveStage(stageData) {
         this.managementService.updateStage(this.stage.id, stageData).subscribe(
             stage => {
-                this.stage = stage
+                this.selectStage(stage)
                 for (let idx in this.branch.stages) {
                     if (this.branch.stages[idx].id == stage.id) {
                         this.branch.stages[idx] = stage
@@ -246,5 +246,16 @@ export class BranchMgmtComponent implements OnInit {
     }
 
     forkBranch() {
+    }
+
+    getBaseUrl() {
+        return window.location.origin
+    }
+
+    getOrGenerateSecret() {
+        if (!this.stage.webhooks['github_secret']) {
+            this.stage.webhooks['github_secret'] = [...Array(20)].map(i=>(~~(Math.random()*36)).toString(36)).join('')
+        }
+        return this.stage.webhooks['github_secret']
     }
 }

@@ -913,6 +913,8 @@ definitions:
         type: object
       schema_code:
         type: string
+      webhooks:
+        type: object
 
   StageSchemaJson:
     type: "object"

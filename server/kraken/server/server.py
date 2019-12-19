@@ -5,7 +5,6 @@ import time
 import logging
 
 from flask import render_template
-from flask_cors import CORS
 import connexion
 from connexion.resolver import Resolver
 
@@ -14,6 +13,7 @@ from . import models
 from . import backend
 from . import consts
 from . import srvcheck
+from . import webhooks
 
 log = logging.getLogger('server')
 
@@ -63,21 +63,12 @@ def create_app():
     # Read the swagger.yml file to configure the endpoints
     connex_app.add_api("swagger.yml", resolver=MyResolver())
 
-    # # Create a URL route in our application for "/"
-    # connex_app.add_url_rule('/', view_func=home)
-    # connex_app.add_url_rule("/people", view_func=people)
-    # connex_app.add_url_rule("/people/<int:person_id>", view_func=people)
-
-    # # Create a URL route to the notes page
-    # connex_app.add_url_rule("/people/<int:person_id>", view_func=notes)
-    # connex_app.add_url_rule("/people/<int:person_id>/notes", view_func=notes)
-    # connex_app.add_url_rule("/people/<int:person_id>/notes/<int:note_id>", view_func=notes)
-
     # backend for serving agents
     connex_app.add_url_rule("/backend", view_func=backend.serve_agent_request, methods=['POST'])
 
-    # add handling CORS
-    CORS(app)
+    # install webhooks
+    webhooks_bp = webhooks.create_blueprint()
+    app.register_blueprint(webhooks_bp, url_prefix='/webhooks')
 
     return connex_app
 

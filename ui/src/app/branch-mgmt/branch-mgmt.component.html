@@ -100,20 +100,45 @@
             </span>
           </p-inplace>
 
-          <div style="padding: 20px 0 0 0;">Stage Schema:</div>
-          <div style="height: calc(100vh - 450px); padding: 5px 0 10px 0;">
-            <ngx-codemirror
-              id="ngx-cm"
-              [(ngModel)]="stage.schema_code"
-              [options]="codeMirrorOpts"></ngx-codemirror>
-          </div>
-          <button type="button" (click)="checkStageSchema()" pButton icon="pi pi-eye" label="Check Schema"></button>
-          <button type="button" (click)="saveStage()" pButton icon="pi pi-check" style="margin-left: 20px;" label="Save Stage"></button>
-          <button type="button" (click)="deleteStage()" pButton icon="pi pi-times" class="ui-button-danger" style="margin-left: 50px;" label="Delete Stage"></button>
-          <span *ngIf="saveErrorMsg.length > 0">
-            <p-message severity="error" [text]="saveErrorMsg" style="margin-left: 40px;"></p-message>
-          </span>
+          <p-tabView>
+            <p-tabPanel header="Stage Schema">
+              <div style="height: calc(100vh - 450px); padding: 5px 0 10px 0;">
+                <ngx-codemirror
+                  id="ngx-cm"
+                  [(ngModel)]="stage.schema_code"
+                  [options]="codeMirrorOpts"></ngx-codemirror>
+              </div>
+              <button type="button" (click)="checkStageSchema()" pButton icon="pi pi-eye" label="Check Schema"></button>
+            </p-tabPanel>
+            <p-tabPanel header="Web Hooks">
+              <div style="font-size: 1.3em; font-weight: bold; margin-bottom: 8px;">GitHub</div>
+              <div style="margin: 0 0 8px 3px;">
+                <p-checkbox [(ngModel)]="stage.webhooks.github_enabled" binary="true" label="Enabled"></p-checkbox>
+              </div>
+              <table *ngIf="stage.webhooks.github_enabled">
+                <tr>
+                  <td style="vertical-align: top; width: 80px;">URL</td>
+                  <td>
+                    <span style="font-size: 1.2em;">{{ getBaseUrl() }}/webhooks/{{ stage.id }}/github</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Secret</td>
+                  <td>{{ getOrGenerateSecret() }}</td>
+                </tr>
+                <tr><td colspan="2">
+                    <div style="color: #777; margin-top: 10px;">use URL and Secret on GitHub WebHooks setup page to trigger this stage</div>
+                </td></tr>
+
+              </table>
+            </p-tabPanel>
+          </p-tabView>
         </div>
+        <button type="button" (click)="saveStage()" pButton icon="pi pi-check" label="Save Stage"></button>
+        <button type="button" (click)="deleteStage()" pButton icon="pi pi-times" class="ui-button-danger" style="margin-left: 50px;" label="Delete Stage"></button>
+        <span *ngIf="saveErrorMsg.length > 0">
+          <p-message severity="error" [text]="saveErrorMsg" style="margin-left: 40px;"></p-message>
+        </span>
       </div>
     </div>
   </p-tabPanel>

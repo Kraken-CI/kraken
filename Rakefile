@@ -106,7 +106,7 @@ task :run_agent => './agent/venv/bin/kkagent' do
   sh 'cp server/kraken/server/consts.py agent/kraken/agent/'
   sh 'cp server/kraken/server/logs.py agent/kraken/agent/'
   sh 'rm -rf /tmp/kk-jobs/'
-  sh './agent/venv/bin/kkagent -d /tmp/kk-jobs -s http://localhost:8080/backend'
+  sh 'bash -c "source ./agent/venv/bin/activate && kkagent -d /tmp/kk-jobs -s http://localhost:8080/backend"'
 end
 
 task :run_celery => './server/venv/bin/kkcelery' do

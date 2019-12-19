@@ -327,10 +327,12 @@ def run(srv, job):
 
     last_status = None
     for idx, step in enumerate(job['steps']):
-        step['job_id'] = job['id']
-        log.set_ctx(step=idx)
         if step['status'] == 2:
             continue
+        log.set_ctx(step=idx)
+        step['job_id'] = job['id']
+        if 'trigger_data' in job:
+            step['trigger_data'] = job['trigger_data']
         try:
             result = _run_step(srv, job_dir, job['id'], idx, step, tools)
             last_status = result['status']

@@ -7,7 +7,7 @@ from flask import request
 from sqlalchemy import or_
 from sqlalchemy.orm import joinedload
 
-from .models import db, Run, Stage, Job, Step, Executor, TestCase, TestCaseResult
+from .models import db, Run, Job, Step, Executor, TestCase, TestCaseResult
 from . import consts
 from .bg import jobs as bg_jobs
 
@@ -40,6 +40,8 @@ def _handle_get_job(executor, req):
             tests.append(tcr.test_case.name)
         if tests:
             job['steps'][-1]['tests'] = tests
+        if executor.job.run.trigger_data:
+            job['trigger_data'] = executor.job.run.trigger_data
 
         if not executor.job.started:
             executor.job.started = datetime.datetime.utcnow()

@@ -3,7 +3,7 @@ import sys
 import datetime
 import logging
 
-import .bg import jobs as bg_jobs
+from .bg import jobs as bg_jobs
 from . import consts
 
 log = logging.getLogger(__name__)

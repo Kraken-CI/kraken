@@ -212,6 +212,9 @@ def update_stage(stage_id, stage):
         flag_modified(stage_rec, 'triggers')
         log.info('new schema: %s', stage_rec.schema)
 
+    if 'webhooks' in stage:
+        stage_rec.webhooks = stage['webhooks']
+
     db.session.commit()
 
     result = stage_rec.get_json()
