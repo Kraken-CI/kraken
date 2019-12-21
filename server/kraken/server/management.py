@@ -201,6 +201,9 @@ def update_stage(stage_id, stage):
     if 'description' in stage:
         stage_rec.description = stage['description']
 
+    if 'enabled' in stage:
+        stage_rec.enabled = stage['enabled']
+
     if 'schema_code' in stage:
         _, schema = _check_and_correct_stage_schema(stage_rec.branch, stage, stage_rec.schema_code)
         stage_rec.schema = schema

@@ -199,7 +199,7 @@ class RequestHandler():
 
             self.proc_coord.result = data
 
-            if self.proc_coord.command == 'run_tests':
+            if self.proc_coord.command in ['run_tests', 'run_analysis']:
                 # report partial results
                 srv = self.proc_coord.kk_srv
                 # TODO: check if result is not send twice: here and at the end of process

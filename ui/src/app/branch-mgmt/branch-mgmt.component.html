@@ -81,24 +81,31 @@
       </div>
       <div class="p-col-9" style="padding-left: 40px;">
         <div *ngIf="branch.stages.length">
-          <p-inplace #stageNameInplace (onActivate)="stageNameInplaceActivated()">
-            <span pInplaceDisplay style="font-size: 1.5rem; font-weight: bold;">
-              {{stage.name}}
-            </span>
-            <span pInplaceContent>
-              <input type="text" pInputText [(ngModel)]="newStageName" (keydown)="stageNameKeyDown($event, stageNameInplace)"/>
-            </span>
-          </p-inplace>
+          <div class="p-grid">
+            <div class="p-col-4">
+              <p-inplace #stageNameInplace (onActivate)="stageNameInplaceActivated()">
+                <span pInplaceDisplay style="font-size: 1.5rem; font-weight: bold;">
+                  {{stage.name}}
+                </span>
+                <span pInplaceContent>
+                  <input type="text" pInputText [(ngModel)]="newStageName" (keydown)="stageNameKeyDown($event, stageNameInplace)"/>
+                </span>
+              </p-inplace>
 
-          Description:
-          <p-inplace #stageDescrInplace (onActivate)="stageDescrInplaceActivated()">
-            <span pInplaceDisplay>
-              {{stage.description || '(empty)'}}
-            </span>
-            <span pInplaceContent>
-              <textarea pInputTextarea [(ngModel)]="newStageDescr" (keydown)="stageDescrKeyDown($event, stageDescrInplace)"  [rows]="5" [cols]="60"></textarea>
-            </span>
-          </p-inplace>
+              Description:
+              <p-inplace #stageDescrInplace (onActivate)="stageDescrInplaceActivated()">
+                <span pInplaceDisplay>
+                  {{stage.description || '(empty)'}}
+                </span>
+                <span pInplaceContent>
+                  <textarea pInputTextarea [(ngModel)]="newStageDescr" (keydown)="stageDescrKeyDown($event, stageDescrInplace)"  [rows]="5" [cols]="60"></textarea>
+                </span>
+              </p-inplace>
+            </div>
+            <div class="p-col-3" style="margin-top: 25px;">
+              <p-checkbox [(ngModel)]="stage.enabled" binary="true" label="Enabled"></p-checkbox>
+            </div>
+          </div>
 
           <p-tabView>
             <p-tabPanel header="Stage Schema">

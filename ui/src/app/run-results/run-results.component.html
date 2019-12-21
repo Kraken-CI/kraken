@@ -1,58 +1,5 @@
 <p-tabMenu [model]="tabs" [activeItem]="activeTab"></p-tabMenu>
 
-<div *ngIf="activeTab.label === 'Results'">
-    <p-table id="results"
-             [value]="results"
-             [lazy]="true"
-             (onLazyLoad)="loadResultsLazy($event)"
-             [paginator]="true"
-             [rows]="30"
-             [totalRecords]="totalRecords"
-             [loading]="loading"
-             [rowsPerPageOptions]="[10,20,30,50,100]"
-             [showCurrentPageReport]="true">
-      <ng-template pTemplate="header">
-        <tr>
-          <th style="width: 150px;">Job Name</th>
-          <th style="width: 60px;">Job ID</th>
-          <th style="width: 100px;">Result</th>
-          <th style="width: 70px;">Change</th>
-          <th style="width: 50%;">Name</th>
-          <th style="width: 40px;">Age</th>
-          <th style="width: 40px;">Instability</th>
-          <th style="width: 150px;">Values</th>
-          <th style="width: 30%;">System</th>
-          <th style="width: 10%;">Config</th>
-          <th style="width: 10%;">Executor Group</th>
-          <th style="width: 10%;">Executor</th>
-          <th style="width: 90px;">Cmd Line</th>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="body" let-res>
-        <tr>
-          <td>{{res.job_name}}</td>
-          <td><a routerLink="/jobs/{{res.job_id}}">{{res.job_id}}</a></td>
-          <td [class]="resultToClass(res.result)">{{resultToTxt(res.result)}}</td>
-          <td>{{res.change}}</td>
-          <td><a routerLink="/test_case_results/{{res.id}}">{{res.test_case_name}}</a></td>
-          <td>{{res.age}}</td>
-          <td>{{res.instability}}</td>
-          <td>
-            <div *ngFor="let v of res.values | keyvalue">
-              {{v.key}}:&nbsp;{{v.value.value}}
-            </div>
-          </td>
-          <td>Ubuntu 18.04</td>
-          <td>default</td>
-          <td>{{res.executor_group_name}}</td>
-          <td>{{res.executor_name}}</td>
-          <td><p-button label="CmdLine" (onClick)="showCmdLine()" styleClass="cmd-line-btn"></p-button></td>
-        </tr>
-      </ng-template>
-    </p-table>
-</div>
-
-
 <div *ngIf="activeTab.label === 'Jobs'">
   <div class="p-grid">
     <div class="p-col-5">
@@ -104,4 +51,101 @@
         <app-log-box [jobId]="selectedJobId"></app-log-box>
       </div>
     </div>
+  </div>
+</div>
+
+
+<div *ngIf="activeTab.label === 'Test Results'">
+    <p-table id="results"
+             [value]="results"
+             [lazy]="true"
+             (onLazyLoad)="loadResultsLazy($event)"
+             [paginator]="true"
+             [rows]="30"
+             [totalRecords]="totalResults"
+             [loading]="loadingResults"
+             [rowsPerPageOptions]="[10,20,30,50,100]"
+             [showCurrentPageReport]="true">
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 150px;">Job Name</th>
+          <th style="width: 60px;">Job ID</th>
+          <th style="width: 100px;">Result</th>
+          <th style="width: 70px;">Change</th>
+          <th style="width: 50%;">Name</th>
+          <th style="width: 40px;">Age</th>
+          <th style="width: 40px;">Instability</th>
+          <th style="width: 150px;">Values</th>
+          <th style="width: 30%;">System</th>
+          <th style="width: 10%;">Config</th>
+          <th style="width: 10%;">Executor Group</th>
+          <th style="width: 10%;">Executor</th>
+          <th style="width: 90px;">Cmd Line</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-res>
+        <tr>
+          <td>{{res.job_name}}</td>
+          <td><a routerLink="/jobs/{{res.job_id}}">{{res.job_id}}</a></td>
+          <td [class]="resultToClass(res.result)">{{resultToTxt(res.result)}}</td>
+          <td>{{res.change}}</td>
+          <td><a routerLink="/test_case_results/{{res.id}}">{{res.test_case_name}}</a></td>
+          <td>{{res.age}}</td>
+          <td>{{res.instability}}</td>
+          <td>
+            <div *ngFor="let v of res.values | keyvalue">
+              {{v.key}}:&nbsp;{{v.value.value}}
+            </div>
+          </td>
+          <td>Ubuntu 18.04</td>
+          <td>default</td>
+          <td>{{res.executor_group_name}}</td>
+          <td>{{res.executor_name}}</td>
+          <td><p-button label="CmdLine" (onClick)="showCmdLine()" styleClass="cmd-line-btn"></p-button></td>
+        </tr>
+      </ng-template>
+    </p-table>
+</div>
+
+
+<div *ngIf="activeTab.label === 'Issues'">
+    <p-table id="issues"
+             [value]="issues"
+             [lazy]="true"
+             (onLazyLoad)="loadIssuesLazy($event)"
+             [paginator]="true"
+             [rows]="30"
+             [totalRecords]="totalIssues"
+             [loading]="loadingIssues"
+             [rowsPerPageOptions]="[10,20,30,50,100]"
+             [showCurrentPageReport]="true">
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 150px;">Job Name</th>
+          <th style="width: 60px;">Job ID</th>
+          <th style="width: 80px;">Type</th>
+          <th style="width: 20%;">Location</th>
+          <th style="width: 20%;">Message</th>
+          <th style="width: 180px;">Symbol</th>
+          <th style="width: 20%;">System</th>
+          <th style="width: 10%;">Config</th>
+          <th style="width: 10%;">Executor Group</th>
+          <th style="width: 10%;">Executor</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-issue>
+        <tr>
+          <td>{{ issue.job_name }}</td>
+          <td><a routerLink="/jobs/{{ issue.job_id }}">{{ issue.job_id }}</a></td>
+          <td [class]="issueTypeToClass(issue.issue_type)">{{issueTypeToTxt(issue.issue_type)}}</td>
+          <td>{{ issue.path }}:{{ issue.line }}:{{ issue.column }}</td>
+          <td>{{ issue.message }}</td>
+          <td>{{ issue.symbol }}</td>
+          <td>Ubuntu 18.04</td>
+          <td>default</td>
+          <td>{{ issue.executor_group_name}}</td>
+          <td>{{ issue.executor_name}}</td>
+        </tr>
+      </ng-template>
+    </p-table>
 </div>

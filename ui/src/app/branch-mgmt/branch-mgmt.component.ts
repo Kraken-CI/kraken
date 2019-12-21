@@ -133,6 +133,7 @@ export class BranchMgmtComponent implements OnInit {
             name: this.stage.name,
             schema_code: this.stage.schema_code,
             webhooks: this.stage.webhooks,
+            enabled: this.stage.enabled,
         }
         this.doSaveStage(stage)
     }

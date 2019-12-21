@@ -7,7 +7,7 @@ from flask import request
 from sqlalchemy import or_
 from sqlalchemy.orm import joinedload
 
-from .models import db, Run, Job, Step, Executor, TestCase, TestCaseResult
+from .models import db, Run, Job, Step, Executor, TestCase, TestCaseResult, Issue
 from . import consts
 from .bg import jobs as bg_jobs
 
@@ -79,6 +79,7 @@ def _handle_step_result(executor, req):
     step.status = consts.STEP_STATUS_TO_INT[status]
     db.session.commit()
 
+    # store test results
     if 'test-results' in result:
         t0 = time.time()
         q = TestCaseResult.query.filter_by(job=job)
@@ -100,6 +101,22 @@ def _handle_step_result(executor, req):
         t1 = time.time()
         log.info('reporting %s test records took %ss', len(result['test-results']), (t1 - t0))
 
+    # store issues
+    if 'issues' in result:
+        t0 = time.time()
+        for issue in result['issues']:
+            issue_type = 0
+            if issue['type'] in consts.ISSUE_TYPES_CODE:
+                issue_type = consts.ISSUE_TYPES_CODE[issue['type']]
+            else:
+                log.warn('unknown issue type: %s', issue['type'])
+            Issue(issue_type=issue_type, line=issue['line'], column=issue['column'], path=issue['path'], symbol=issue['symbol'],
+                  message=issue['message'], job=job)
+        db.session.commit()
+        t1 = time.time()
+        log.info('reporting %s issues took %ss', len(result['issues']), (t1 - t0))
+
+    # check if all steps are done so job is finised
     job_finished = True
     log.info('checking steps')
     for s in job.steps:

@@ -98,6 +98,7 @@ class Stage(db.Model, DatesMixin):
     description = Column(Unicode(1024))
     branch_id = Column(Integer, ForeignKey('branches.id'), nullable=False)
     branch = relationship('Branch', back_populates="stages")
+    enabled = Column(Boolean, default=True)
     schema = Column(JSONB, nullable=False)
     schema_code = Column(UnicodeText)
     triggers = Column(JSONB)
@@ -111,6 +112,7 @@ class Stage(db.Model, DatesMixin):
                     deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,
                     name=self.name,
                     description=self.description,
+                    enabled=self.enabled,
                     schema=self.schema,
                     schema_code=self.schema_code,
                     webhooks=self.webhooks if self.webhooks else {})
@@ -317,6 +319,7 @@ class Job(db.Model, DatesMixin):
     executor_used_id = Column(Integer, ForeignKey('executors.id'))
     executor_used = relationship('Executor', foreign_keys=[executor_used_id], post_update=True)
     results = relationship('TestCaseResult', back_populates="job")
+    issues = relationship('Issue', back_populates="job")
 
     def get_json(self):
         return dict(id=self.id,
@@ -374,14 +377,14 @@ class TestCaseResult(db.Model):
         data = dict(id=self.id,
                     test_case_id=self.test_case_id,
                     test_case_name=self.test_case.name,
-                    job_id=self.job_id,
-                    job_name=self.job.name,
                     result=self.result,
                     values=self.values,
                     cmd_line=self.cmd_line,
                     instability=self.instability,
                     age=self.age,
                     change=self.change,
+                    job_id=self.job_id,
+                    job_name=self.job.name,
                     executor_group_name=self.job.executor_group.name,
                     executor_group_id=self.job.executor_group_id,
                     executor_name=self.job.executor_used.name,
@@ -399,6 +402,34 @@ class TestCaseResult(db.Model):
             data['stage_name'] = self.job.run.stage.name
 
         return data
+
+
+class Issue(db.Model):
+    __tablename__ = "issues"
+    id = Column(Integer, primary_key=True)
+    issue_type = Column(Integer, default=consts.ISSUE_TYPE_ERROR)
+    line = Column(Integer)
+    column = Column(Integer)
+    path = Column(Unicode(512))
+    symbol = Column(Unicode(64))
+    message = Column(Unicode(256))
+    job_id = Column(Integer, ForeignKey('jobs.id'), nullable=False)
+    job = relationship('Job', back_populates="issues")
+
+    def get_json(self, with_extra=False):
+        return dict(id=self.id,
+                    issue_type=self.issue_type,
+                    line=self.line,
+                    column=self.column,
+                    path=self.path,
+                    symbol=self.symbol,
+                    message=self.message,
+                    job_id=self.job_id,
+                    job_name=self.job.name,
+                    executor_group_name=self.job.executor_group.name,
+                    executor_group_id=self.job.executor_group_id,
+                    executor_name=self.job.executor_used.name,
+                    executor_id=self.job.executor_used_id)
 
 # RESOURCES
 
@@ -712,8 +743,9 @@ def prepare_initial_data():
                 "checkout": "git@github.com:godfryd/kraken.git",
                 "branch": "master"
             }, {
-                "tool": "shell",
-                "cmd": "pylint --rcfile=pylint.rc agent/kraken/agent",
+                "tool": "pylint",
+                "rcfile": "pylint.rc",
+                "modules_or_packages": "agent/kraken/agent",
                 "cwd": "kraken"
             }],
             "environments": [{

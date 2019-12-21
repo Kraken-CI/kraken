@@ -18,10 +18,10 @@ export class RunResultsComponent implements OnInit {
     tabs: MenuItem[]
     activeTab: MenuItem
 
-    runId = 0;
-    results: any[];
-    totalRecords = 0;
-    loading = false;
+    runId = 0
+    results: any[]
+    totalResults = 0
+    loadingResults = false
 
     jobs: Job[]
     totalJobs = 0
@@ -29,6 +29,10 @@ export class RunResultsComponent implements OnInit {
 
     job: Job
     selectedJobId = 0
+
+    issues: any[]
+    totalIssues = 0
+    loadingIssues = false
 
     constructor(private route: ActivatedRoute,
                 private router: Router,
@@ -50,11 +54,15 @@ export class RunResultsComponent implements OnInit {
 
         this.tabs = [
             {label: 'Jobs', routerLink: '/runs/' + this.runId + '/jobs'},
-            {label: 'Results', routerLink: '/runs/' + this.runId + '/results'},
+            {label: 'Test Results', routerLink: '/runs/' + this.runId + '/results'},
+            {label: 'Issues', routerLink: '/runs/' + this.runId + '/issues'},
         ]
         this.activeTab = this.tabs[0]
         if (tab === 'results') {
             this.activeTab = this.tabs[1]
+        }
+        if (tab === 'issues') {
+            this.activeTab = this.tabs[2]
         }
 
         this.route.paramMap.subscribe(params => {
@@ -128,7 +136,7 @@ export class RunResultsComponent implements OnInit {
     loadResultsLazy(event) {
         this.executionService.getRunResults(this.runId, event.first, event.rows).subscribe(data => {
             this.results = data.items;
-            this.totalRecords = data.total;
+            this.totalResults = data.total;
         });
     }
 
@@ -147,5 +155,21 @@ export class RunResultsComponent implements OnInit {
 
     jobSelected(event) {
         this.selectedJobId = event.data.id
+    }
+
+    loadIssuesLazy(event) {
+        this.executionService.getRunIssues(this.runId, event.first, event.rows).subscribe(data => {
+            this.issues = data.items
+            this.totalIssues = data.total
+            console.info('this.issues', this.issues)
+        });
+    }
+
+    issueTypeToClass(issue_type) {
+        return ''
+    }
+
+    issueTypeToTxt(issue_type) {
+        return ''
     }
 }

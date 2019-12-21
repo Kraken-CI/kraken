@@ -84,3 +84,15 @@ DEFAULT_ELASTICSEARCH_URL = 'http://elastic:changeme@localhost:9200'
 DEFAULT_LOGSTASH_ADDR = 'localhost:5959'
 DEFAULT_PLANNER_URL = 'http://localhost:7997/'
 DEFAULT_SERVER_ADDR = 'localhost:8080'
+
+ISSUE_TYPE_ERROR = 0
+ISSUE_TYPE_WARNING = 1
+ISSUE_TYPE_CONVENTION = 2
+ISSUE_TYPE_REFACTOR = 3
+ISSUE_TYPES_NAME = {
+    ISSUE_TYPE_ERROR: 'error',
+    ISSUE_TYPE_WARNING: 'warning',
+    ISSUE_TYPE_CONVENTION: 'convention',
+    ISSUE_TYPE_REFACTOR: 'refactor',
+}
+ISSUE_TYPES_CODE = {n: c for c, n in ISSUE_TYPES_NAME.items()}

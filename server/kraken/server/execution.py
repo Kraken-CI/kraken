@@ -9,7 +9,7 @@ from sqlalchemy.orm import joinedload
 from elasticsearch import Elasticsearch
 
 from . import consts
-from .models import db, Branch, Flow, Run, Stage, Job, Step, ExecutorGroup, Tool, TestCaseResult
+from .models import db, Branch, Flow, Run, Stage, Job, Step, ExecutorGroup, Tool, TestCaseResult, Issue
 from .models import Project
 
 log = logging.getLogger(__name__)
@@ -151,6 +151,10 @@ def create_flow(branch_id, kind, flow):
 
     for stage in branch.stages.filter_by(deleted=None):
         if stage.schema['parent'] != 'root' or stage.schema['triggers'].get('parent', False) is False:
+            continue
+
+        if not stage.enabled:
+            log.info('stage %s not started - disabled', stage.id)
             continue
 
         run_args = stage.get_default_args()
@@ -301,6 +305,21 @@ def get_run_jobs(run_id, start=0, limit=10):
     for j in q.all():
         jobs.append(j.get_json())
     return {'items': jobs, 'total': total}, 200
+
+
+def get_run_issues(run_id, start=0, limit=10):
+    q = Issue.query
+    q = q.options(joinedload('job'),
+                  joinedload('job.executor_group'),
+                  joinedload('job.executor_used'))
+    q = q.join('job')
+    q = q.filter(Job.run_id == run_id, Job.covered == False)
+    total = q.count()
+    q = q.offset(start).limit(limit)
+    issues = []
+    for i in q.all():
+        issues.append(i.get_json())
+    return {'items': issues, 'total': total}, 200
 
 
 def get_result_history(test_case_result_id, start=0, limit=10):
