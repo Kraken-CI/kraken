@@ -217,3 +217,8 @@ task :deploy_lab do
   kk_ver = ENV['kk_ver']
   sh "./venv/bin/fab -e -H lab.kraken.ci upgrade --kk-ver #{kk_ver}"
 end
+
+task :release_deploy do
+  Rake::Task["docker_release"].invoke
+  Rake::Task["deploy_lab"].invoke
+end
