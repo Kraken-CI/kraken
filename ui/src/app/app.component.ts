@@ -17,7 +17,7 @@ import { environment } from './../environments/environment'
 export class AppComponent {
     title = 'Kraken';
     logoClass = "logo1";
-    kraken_version = '0.4'
+    krakenVersion = '0.4'
 
     topMenuItems: MenuItem[];
     sItems: MenuItem[];

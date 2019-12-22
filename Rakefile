@@ -221,6 +221,7 @@ task :deploy_lab do
 end
 
 task :release_deploy do
+  Rake::Task["build_all"].invoke
   Rake::Task["docker_release"].invoke
   Rake::Task["deploy_lab"].invoke
 end
