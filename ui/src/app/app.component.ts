@@ -7,6 +7,8 @@ import {SplitButtonModule} from 'primeng/splitbutton';
 import {MultiSelectModule} from 'primeng/multiselect';
 import {ToastModule} from 'primeng/toast';
 
+import { environment } from './../environments/environment'
+
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -15,8 +17,9 @@ import {ToastModule} from 'primeng/toast';
 export class AppComponent {
     title = 'Kraken';
     logoClass = "logo1";
+    kraken_version = '0.4'
 
-    items: MenuItem[];
+    topMenuItems: MenuItem[];
     sItems: MenuItem[];
 
     constructor() {
@@ -24,7 +27,9 @@ export class AppComponent {
     }
 
     ngOnInit() {
-        this.items = [{
+        this.krakenVersion = environment.krakenVersion
+
+        this.topMenuItems = [{
             label: 'Dashboard',
             icon: 'pi pi-pw pi-home',
             items: [{
@@ -45,17 +50,6 @@ export class AppComponent {
                 icon: 'pi pi-fw pi-pencil',
             }]
         }];
-
-        this.sItems = [
-            {label: 'Update', icon: 'pi pi-refresh', command: () => {
-                //this.update();
-            }},
-            {label: 'Delete', icon: 'pi pi-times', command: () => {
-                //this.delete();
-            }},
-            {label: 'Angular.io', icon: 'pi pi-info', url: 'http://angular.io'},
-            {label: 'Setup', icon: 'pi pi-cog', routerLink: ['/setup']}
-        ];
     }
 
     randomLogoFont() {

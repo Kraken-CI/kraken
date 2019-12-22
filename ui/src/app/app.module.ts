@@ -30,6 +30,7 @@ import {InplaceModule} from 'primeng/inplace';
 import {PaginatorModule} from 'primeng/paginator';
 import {TabMenuModule} from 'primeng/tabmenu';
 import {CheckboxModule} from 'primeng/checkbox';
+import {MenubarModule} from 'primeng/menubar';
 
 import { ApiModule, BASE_PATH, Configuration } from './backend';
 import { AppRoutingModule } from './app-routing.module';
@@ -100,6 +101,7 @@ export function cfgFactory() {
         PaginatorModule,
         TabMenuModule,
         CheckboxModule,
+        MenubarModule,
     ],
     providers: [{ provide: BASE_PATH, useValue: '/api' },
                 BreadcrumbsService, MessageService, ConfirmationService],

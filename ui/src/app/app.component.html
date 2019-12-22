@@ -20,10 +20,11 @@
   }
 
   .toolbar {
-    height: 40px;
+    height: 50px;
     padding-left: 10px;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     background-color: #007ad9;
     color: white;
     font-weight: 600;
@@ -46,34 +47,25 @@
 <div class="content" role="main">
 
   <div class="toolbar" role="banner">
-    <a style="font-size: 2rem; cursor: pointer; color: white;" class="logo1" href="/">Kraken</a>
-<!--    <span style="font-size: 2rem; cursor: pointer;" [class]="logoClass" (click)="randomLogoFont()">Kraken</span> -->
+    <a style="font-size: 2rem; cursor: pointer; color: white;" class="logo1" href="/">Kraken<span style="font-size: 0.3em;"> {{ kraken_version }}</span></a>
+    <!--    <span style="font-size: 2rem; cursor: pointer;" [class]="logoClass" (click)="randomLogoFont()">Kraken</span> -->
+
+    <!--
+    <p-menubar [model]="topMenuItems" [style]="{'margin-right': '5px'}">
+      <div>
+        <input type="text" pInputText placeholder="Search">
+        <button pButton label="Logout" icon="fa fa-sign-out" style="margin-left:.25em"></button>
+      </div>
+    </p-menubar>
+    -->
   </div>
 
   <p-toast></p-toast>
   <p-confirmDialog header="Confirmation" icon="pi pi-exclamation-triangle"></p-confirmDialog>
 
-<!--
-  <div>
-    Project
-    <span aria-hidden="true" class="ui-button-icon-left ui-clickable pi pi-chevron-right"></span>
-    <p-splitButton label="Project" styleClass="ui-button-secondary" [model]="sItems"></p-splitButton>
-    <p-splitButton label="Run" styleClass="ui-button-secondary" [model]="sItems"></p-splitButton>
-    <p-splitButton label="Job" styleClass="ui-button-secondary" [model]="sItems"></p-splitButton>
-  </div>
--->
-
   <app-breadcrumbs></app-breadcrumbs>
 
-  <div class="p-grid">
-<!--
-    <div class="p-col-fixed" style="width:130px">
-      <p-menu [model]="items" [style]="{width:'120px'}"></p-menu>
-    </div>
--->
-
-    <div class="p-col" style="margin: 10px;">
-      <router-outlet></router-outlet>
-    </div>
+  <div style="margin: 10px;">
+    <router-outlet></router-outlet>
   </div>
 </div>

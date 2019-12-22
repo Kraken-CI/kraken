@@ -19,3 +19,5 @@ venv
 /server/kkscheduler
 /server/kkserver
 /server/kkgunicorn
+
+/ui/src/environments/environment.prod.ts

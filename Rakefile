@@ -39,7 +39,9 @@ file NG => NPX do
 end
 
 task :build_ui => [NG, :gen_client] do
+  kk_ver = ENV['kk_ver'] || '0.0'
   Dir.chdir('ui') do
+    sh "sed -e 's/0\.0/#{kk_ver}/g' src/environments/environment.prod.ts.in > src/environments/environment.prod.ts"
     sh 'npx ng build --prod'
   end
 end
