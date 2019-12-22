@@ -212,3 +212,8 @@ task :run_portainer do
   sh 'docker volume create portainer_data'
   sh 'docker run -d -p 8000:8000 -p 9000:9000 -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer'
 end
+
+task :deploy_lab do
+  kk_ver = ENV['kk_ver']
+  sh "./venv/bin/fab -e -H lab.kraken.ci upgrade --kk-ver #{kk_ver}"
+end

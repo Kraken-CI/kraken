@@ -172,4 +172,61 @@ export class RunResultsComponent implements OnInit {
     issueTypeToTxt(issue_type) {
         return ''
     }
+
+    getJobState(job) {
+        switch (job.state) {
+        case 1: return 'prequeued'
+        case 2: return 'queued'
+        case 3: return 'assigned'
+        case 4: return 'executing-finished'
+        case 5: return 'completed'
+        }
+    }
+
+    getJobStatus(job) {
+        switch (job.completion_status) {
+        case 0: return 'all ok'
+        case 1: return 'timeout'
+        case 2: return 'error'
+        case 3: return 'exception'
+        case 4: return 'missing tool in db'
+        case 5: return 'missing tool files'
+        case 6: return 'step timeout'
+        default: return ''
+        }
+    }
+
+    getJobStatusClass(job) {
+        switch (job.completion_status) {
+        case 0: return 'pi pi-check-circle step-status-green'
+        case 1: return 'pi pi-exclamation-circle step-status-red'
+        case 2: return 'pi pi-exclamation-circle step-status-red'
+        case 3: return 'pi pi-exclamation-circle step-status-red'
+        case 4: return 'pi pi-exclamation-circle step-status-red'
+        case 5: return 'pi pi-exclamation-circle step-status-red'
+        case 6: return 'pi pi-exclamation-circle step-status-red'
+        default: return ''
+        }
+    }
+
+    getStepStatus(step) {
+        switch (step.status) {
+        case null: return 'not started'
+        case 0: return 'not started'
+        case 1: return 'in progress'
+        case 2: return 'done'
+        case 3: return 'error'
+        default: return 'unknown'
+        }
+    }
+
+    getStepStatusClass(step) {
+        switch (step.status) {
+        case 0: return 'not started'
+        case 1: return 'pi pi-spin pi-spinner'
+        case 2: return 'pi pi-check-circle step-status-green'
+        case 3: return 'pi pi-exclamation-circle step-status-red'
+        default: return ''
+        }
+    }
 }

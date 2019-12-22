@@ -1,7 +1,7 @@
 <p-tabMenu [model]="tabs" [activeItem]="activeTab"></p-tabMenu>
 
 <div *ngIf="activeTab.label === 'Jobs'">
-  <div class="p-grid">
+  <div class="p-grid" style="margin-top: 0;">
     <div class="p-col-5">
 
       <p-table id="jobs"
@@ -20,7 +20,9 @@
         <ng-template pTemplate="header">
           <tr>
             <th style="width: 60px;">Job ID</th>
-            <th style="width: 150px;">Job Name</th>
+            <th style="width: 120px;">Job Name</th>
+            <th style="width: 100px;">State</th>
+            <th style="width: 100px;">Completion Status</th>
             <th style="width: 30%;">System</th>
             <th style="width: 10%;">Config</th>
             <th style="width: 10%;">Executor Group</th>
@@ -31,6 +33,10 @@
           <tr [pSelectableRow]="job">
             <td><a routerLink="/jobs/{{job.job_id}}">{{job.id}}</a></td>
             <td>{{job.name}}</td>
+            <td>{{getJobState(job)}}</td>
+            <td>
+              <i style="vertical-align: bottom; font-size: 1.4em;" [ngClass]="getJobStatusClass(job)"></i>{{getJobStatus(job)}}
+            </td>
             <td>Ubuntu 18.04</td>
             <td>default</td>
             <td>{{job.executor_group_name}}</td>
@@ -48,14 +54,30 @@
           <span>Started: {{ job.started ? (job.started | localtime) : 'not yet' }}</span>
           <span style="margin-left: 30px;">Completed: {{ job.completed ? (job.completed | localtime) : 'not yet' }}</span>
         </div>
-        <app-log-box [jobId]="selectedJobId"></app-log-box>
+
+        <p-tabView>
+          <p-tabPanel header="Logs">
+            <app-log-box [jobId]="selectedJobId"></app-log-box>
+          </p-tabPanel>
+          <p-tabPanel header="Steps">
+            <div *ngFor="let step of job.steps" style="margin-bottom: 10px;">
+              <div style="font-size: 1.5em; font-weight: bold">{{ step.index + 1 }}. {{ step.tool }}</div>
+              Status: <i style="vertical-align: bottom; font-size: 1.4em;" [ngClass]="getStepStatusClass(step)"></i>{{ getStepStatus(step) }}
+              <div *ngIf="step.status === 3">
+                Reason: {{ step.result['reason'] }}
+                <pre>{{ step.result['msg'] }}</pre>
+              </div>
+            </div>
+          </p-tabPanel>
+        </p-tabView>
+
       </div>
     </div>
   </div>
 </div>
 
 
-<div *ngIf="activeTab.label === 'Test Results'">
+<div *ngIf="activeTab.label === 'Test Results'" style="margin-top: 5px;">
     <p-table id="results"
              [value]="results"
              [lazy]="true"
@@ -108,7 +130,7 @@
 </div>
 
 
-<div *ngIf="activeTab.label === 'Issues'">
+<div *ngIf="activeTab.label === 'Issues'" style="margin-top: 5px;">
     <p-table id="issues"
              [value]="issues"
              [lazy]="true"

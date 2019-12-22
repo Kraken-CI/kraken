@@ -43,6 +43,7 @@ services:
       - KRAKEN_ELASTICSEARCH_URL
       - KRAKEN_SERVER_PORT
       - KRAKEN_SERVER_ADDR
+      - KRAKEN_PLANNER_URL
     # networks:
     #   - db_net
     depends_on:

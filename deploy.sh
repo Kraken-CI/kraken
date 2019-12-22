@@ -1,5 +1,8 @@
 #!/bin/bash
 set -e -x
+
+KK_VER=$1
+
 sudo apt-get update
 sudo DEBIAN_FRONTEND=noninteractive apt-get install -y docker.io docker-compose gnupg2 pass
 
@@ -14,4 +17,4 @@ docker swarm init || true
 cat kraken-34dc43122cd9.json | docker login -u _json_key --password-stdin https://eu.gcr.io
 
 # start kraken
-docker stack deploy --with-registry-auth -c kraken-docker-stack-0.4.yaml kraken
+docker stack deploy --with-registry-auth -c kraken-docker-stack-${KK_VER}.yaml kraken
