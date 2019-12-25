@@ -3,6 +3,7 @@ import logging
 
 from . import utils
 from . import tool
+from . import sshkey
 
 log = logging.getLogger(__name__)
 
@@ -13,9 +14,22 @@ def run(step, **kwargs):
     dest = ''
     if 'destination' in step:
         dest = step['destination']
-    ret, out = utils.execute('git clone %s %s' % (url, dest))
-    if ret != 0:
-        return ret, 'git clone exited with non-zero retcode'
+
+    ssh_agent = None
+    if 'ssh-key' in step:
+        username = step['ssh-key']['username']
+        #url = '%s@%s' % (username, url)
+        key = step['ssh-key']['key']
+        ssh_agent = sshkey.SshAgent()
+        ssh_agent.add_key(key)
+
+    try:
+        ret, out = utils.execute('git clone %s %s' % (url, dest))
+        if ret != 0:
+            return ret, 'git clone exited with non-zero retcode'
+    finally:
+        if ssh_agent is not None:
+            ssh_agent.shutdown()
 
     if 'trigger_data' in step:
         if url.endswith('.git'):

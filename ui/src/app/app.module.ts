@@ -2,7 +2,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NgModule } from '@angular/core';
 import { HttpClientModule } from '@angular/common/http';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
 import { CodemirrorModule } from '@ctrl/ngx-codemirror';
 
@@ -48,6 +48,7 @@ import { LocaltimePipe } from './localtime.pipe';
 import { NewFlowComponent } from './new-flow/new-flow.component';
 import { NewRunComponent } from './new-run/new-run.component';
 import { LogBoxComponent } from './log-box/log-box.component';
+import { ProjectSettingsComponent } from './project-settings/project-settings.component';
 
 export function cfgFactory() {
     return new Configuration();
@@ -67,7 +68,8 @@ export function cfgFactory() {
         LocaltimePipe,
         NewFlowComponent,
         NewRunComponent,
-        LogBoxComponent
+        LogBoxComponent,
+        ProjectSettingsComponent
     ],
     imports: [
         BrowserModule,
@@ -76,6 +78,7 @@ export function cfgFactory() {
         ApiModule.forRoot(cfgFactory),
         AppRoutingModule,
         FormsModule,
+        ReactiveFormsModule,
 
         CodemirrorModule,
 

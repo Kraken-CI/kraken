@@ -58,7 +58,7 @@
     <div class="p-grid">
       <div class="p-col-3">
         <button type="button" (click)="newStage()" pButton icon="pi pi-plus" label="New Stage"></button>
-        <div *ngFor="let stage of branch.stages" style="margin: 6px 0 12px 0; cursor: pointer;" class="round-shadow" (click)="selectStage(stage)">
+        <div *ngFor="let stage of branch.stages" style="margin: 6px 0 12px 0; cursor: pointer;" class="round-shadow {{ stage.selectedClass }}" (click)="selectStage(stage)">
           <div style="font-size: 1.1rem; font-weight: bold; margin-bottom: 4px;">{{stage.name}}</div>
           <div style="margin-bottom: 6px;">{{stage.description}}</div>
           <div style="font-size: 1.05rem;">Parent: {{stage.schema.parent}}</div>
@@ -142,7 +142,7 @@
           </p-tabView>
         </div>
         <button type="button" (click)="saveStage()" pButton icon="pi pi-check" label="Save Stage"></button>
-        <button type="button" (click)="deleteStage()" pButton icon="pi pi-times" class="ui-button-danger" style="margin-left: 50px;" label="Delete Stage"></button>
+        <button type="button" (click)="deleteStage()" pButton icon="pi pi-trash" class="ui-button-danger" style="margin-left: 50px;" label="Delete Stage"></button>
         <span *ngIf="saveErrorMsg.length > 0">
           <p-message severity="error" [text]="saveErrorMsg" style="margin-left: 40px;"></p-message>
         </span>

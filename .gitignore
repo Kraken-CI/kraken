@@ -19,5 +19,11 @@ venv
 /server/kkscheduler
 /server/kkserver
 /server/kkgunicorn
+/server/kkdbmigrate
 
 /ui/src/environments/environment.prod.ts
+
+/kraken-docker-stack-*.yaml
+/docker-compose-*.yaml
+
+/.vagrant

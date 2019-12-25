@@ -44,7 +44,7 @@ export class MainPageComponent implements OnInit {
     }
 
     refresh() {
-        this.executionService.getProjects().subscribe(data => {
+        this.managementService.getProjects().subscribe(data => {
             for (let proj of data.items) {
                 let branches = []
                 for (let b of proj.branches) {

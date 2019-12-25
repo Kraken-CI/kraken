@@ -12,7 +12,7 @@ import dateutil.parser
 import xmlrpc.client
 
 from . import consts
-from .models import db, Branch, Flow, Run, Stage, Job, Step, ExecutorGroup, Tool, TestCaseResult
+from .models import db, Branch, Flow, Run, Stage, Job, Step, ExecutorGroup, Tool, TestCaseResult, Secret
 from .models import Project
 from .schema import execute_schema_code
 
@@ -28,6 +28,22 @@ def create_project(project):
     db.session.commit()
 
     return new_project.get_json(), 201
+
+
+def get_project(project_id):
+    project = Project.query.filter_by(id=project_id).one_or_none()
+    if project is None:
+        abort(400, "Project with id %s does not exist" % project_id)
+
+    return project.get_json(), 200
+
+
+def get_projects():
+    q = Project.query
+    projects = []
+    for p in q.all():
+        projects.append(p.get_json())
+    return {'items': projects, 'total': len(projects)}, 200
 
 
 def create_branch(project_id, branch):
@@ -53,6 +69,59 @@ def get_branch(branch_id):
     if branch is None:
         abort(404, "Branch not found")
     return branch.get_json(with_cfg=True), 200
+
+
+def create_secret(project_id, secret):
+    project = Project.query.filter_by(id=project_id).one_or_none()
+    if project is None:
+        abort(400, "Project with id %s does not exist" % project_id)
+
+    if secret['kind'] == 'ssh-key':
+        kind = 0
+        data = dict(username=secret['username'],
+                    key=secret['key'])
+    else:
+        abort(400, "Wrong data")
+
+    s = Secret(project=project, name=secret['name'], kind=kind, data=data)
+    db.session.commit()
+
+    return s.get_json(), 201
+
+
+def update_secret(secret_id, secret):
+    secret_rec = Secret.query.filter_by(id=secret_id).one_or_none()
+    if secret_rec is None:
+        abort(404, "Secret not found")
+
+    log.info('secret %s', secret)
+    if 'name' in secret:
+        old_name = secret_rec.name
+        secret_rec.name = secret['name']
+        log.info('changed name from %s to %s', old_name, secret_rec.name)
+
+    if secret_rec.kind == consts.SECRET_KIND_SSH_KEY:
+        if 'username' in secret:
+            secret_rec.data['username'] = secret['username']
+        if 'key' in secret and secret['key'] != '******':
+            secret_rec.data['key'] = secret['key']
+
+    db.session.commit()
+
+    result = secret_rec.get_json()
+    log.info(result)
+    return result, 200
+
+
+def delete_secret(secret_id):
+    secret_rec = Secret.query.filter_by(id=secret_id).one_or_none()
+    if secret_rec is None:
+        abort(404, "Secret not found")
+
+    secret_rec.deleted = datetime.datetime.utcnow()
+    db.session.commit()
+
+    return {}, 200
 
 
 def _check_and_correct_stage_schema(branch, stage, prev_schema_code):
@@ -105,6 +174,15 @@ def _check_and_correct_stage_schema(branch, stage, prev_schema_code):
                 break
         if not found:
             abort(400, 'Cannot find parent stage %s' % schema['parent'])
+
+    # check secrets
+    for job in schema['jobs']:
+        for step in job['steps']:
+            for field, value in step.items():
+                if field == 'ssh-key':
+                    secret = Secret.query.filter_by(project=branch.project, name=value).one_or_none()
+                    if secret is None:
+                        abort(400, "Secret '%s' does not exists" % value)
 
     return schema_code, schema
 

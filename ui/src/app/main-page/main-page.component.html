@@ -26,6 +26,7 @@
           <span style="font-size:16px; display:inline-block; margin-top: 2px;">Project <b>{{proj.name}}</b></span>
           <div style="display:inline-block; float: right;">
             <p-button label="New Branch" icon="pi pi-plus" (onClick)="newBranch(proj)"></p-button>
+            <p-button label="Settings" icon="pi pi-cog" routerLink="/projects/{{ proj.id }}" [style]="{'margin-left': '10px'}"></p-button>
           </div>
         </div>
       </p-header>

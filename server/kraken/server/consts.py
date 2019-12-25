@@ -96,3 +96,8 @@ ISSUE_TYPES_NAME = {
     ISSUE_TYPE_REFACTOR: 'refactor',
 }
 ISSUE_TYPES_CODE = {n: c for c, n in ISSUE_TYPES_NAME.items()}
+
+SECRET_KIND_SSH_KEY = 0
+SECRET_KINDS_NAME = {
+    SECRET_KIND_SSH_KEY: 'ssh-key'
+}

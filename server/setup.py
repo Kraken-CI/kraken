@@ -7,6 +7,7 @@ setup(
     packages=find_packages(),
     package_data={
         'kraken.server': ['swagger.yml'],
+        'migrations': ['alembic.ini'],
     },
     entry_points={
         'console_scripts': [
@@ -14,6 +15,7 @@ setup(
             'kkscheduler = kraken.server.scheduler:main',
             'kkplanner = kraken.server.planner:main',
             'kkcelery = kraken.server.kkcelery:main',
+            'kkdbmigrate = migrations.apply:main'
         ],
     },
 )

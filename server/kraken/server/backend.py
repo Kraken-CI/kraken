@@ -7,7 +7,7 @@ from flask import request
 from sqlalchemy import or_
 from sqlalchemy.orm import joinedload
 
-from .models import db, Run, Job, Step, Executor, TestCase, TestCaseResult, Issue
+from .models import db, Run, Job, Step, Executor, TestCase, TestCaseResult, Issue, Secret
 from . import consts
 from .bg import jobs as bg_jobs
 
@@ -35,13 +35,28 @@ def _handle_get_job(executor, req):
         job = {}
     else:
         job = executor.job.get_json()
+
+        # prepare test list for execution
         tests = []
         for tcr in executor.job.results:
             tests.append(tcr.test_case.name)
         if tests:
             job['steps'][-1]['tests'] = tests
+
+        # attach trigger data to job
         if executor.job.run.trigger_data:
             job['trigger_data'] = executor.job.run.trigger_data
+
+        # insert secrets
+        project = executor.job.run.flow.branch.project
+        for step in job['steps']:
+            for field, value in step.items():
+                if field == 'ssh-key':
+                    secret = Secret.query.filter_by(project=project, name=value).one_or_none()
+                    if secret is None:
+                        raise Exception("Secret '%s' does not exists in project %s" % (value, project.id))
+                    step['ssh-key'] = dict(username=secret.data['username'],
+                                           key=secret.data['key'])
 
         if not executor.job.started:
             executor.job.started = datetime.datetime.utcnow()

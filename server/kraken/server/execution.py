@@ -359,14 +359,6 @@ def get_run(run_id):
     return run.get_json(), 200
 
 
-def get_projects():
-    q = Project.query
-    projects = []
-    for p in q.all():
-        projects.append(p.get_json())
-    return {'items': projects, 'total': len(projects)}, 200
-
-
 def get_branch(branch_id):
     branch = Branch.query.filter_by(id=branch_id).one_or_none()
     if branch is None:

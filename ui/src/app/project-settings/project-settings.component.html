@@ -1,0 +1,55 @@
+<h2 style="padding-left: 7px;">{{ project.name }}</h2>
+<p-tabView>
+    <p-tabPanel header="Branches">
+      <div *ngFor="let b of project.branches">
+        <a routerLink="/branches/{{ b.id }}">{{ b.name }} ({{ b.branch_name }})</a>
+      </div>
+    </p-tabPanel>
+    <p-tabPanel header="Secrets">
+      <p-button label="New Secret" icon="pi pi-plus" (onClick)="newSecret()"></p-button>
+      <div class="p-grid">
+        <div class="p-col-3">
+          <div *ngFor="let s of project.secrets" style="margin: 6px 0 12px 6px; cursor: pointer;" class="round-shadow {{ s.selectedClass }}" (click)="selectSecret(s)">
+            <div style="font-size: 1.1rem; font-weight: bold; margin-bottom: 4px;">{{s.name}}</div>
+            <div style="font-size: 1.05rem;">Type: {{ s.kind }}</div>
+            <div style="font-size: 1.05rem;">Username: {{ s.username }}</div>
+          </div>
+        </div>
+
+        <div class="p-col-1">
+        </div>
+
+        <div *ngIf="secretMode > 0" class="p-col-5 form-style-2">
+
+          <!-- https://www.sanwebe.com/2014/08/css-html-forms-designs -->
+          <div class="form-style-2-heading">Secret Details</div>
+          <form [formGroup]="secretForm">
+            <label for="name"><span>Name <span class="required">*</span></span>
+              <input type="text" class="input-field" name="name" pInputText formControlName="name"/>
+            </label>
+
+            <label for="kind"><span>Type</span>
+              <select name="kind" class="select-field" formControlName="kind">
+                <option value="ssh-key">SSH Username & Key</option>
+              </select>
+            </label>
+
+            <label for="username"><span>Username <span class="required">*</span></span>
+              <input type="text" class="input-field" name="username" pInputText formControlName="username"/>
+            </label>
+
+            <label for="key"><span>Private Key <span class="required">*</span></span>
+              <textarea name="key" formControlName="key" class="textarea-field"  rows="30" cols="65"></textarea>
+            </label>
+
+            <label><span> </span>
+              <p-button *ngIf="secretMode === 1" label="Add" icon="pi pi-plus" (onClick)="secretAdd()"></p-button>
+              <p-button *ngIf="secretMode === 2" label="Save" icon="pi pi-plus" (onClick)="secretSave()"></p-button>
+              <p-button *ngIf="secretMode === 2" label="Delete" icon="pi pi-trash" [style]="{'margin-left': '20px'}" styleClass="ui-button-danger" (onClick)="secretDelete()"></p-button>
+            </label>
+          </form>
+
+        </div>
+      </div>
+    </p-tabPanel>
+</p-tabView>

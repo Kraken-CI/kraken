@@ -10,6 +10,7 @@ import { TestCaseResultComponent } from './test-case-result/test-case-result.com
 import { FlowResultsComponent } from './flow-results/flow-results.component';
 import { NewFlowComponent } from './new-flow/new-flow.component';
 import { NewRunComponent } from './new-run/new-run.component';
+import { ProjectSettingsComponent } from './project-settings/project-settings.component';
 
 const routes: Routes = [
     {
@@ -54,7 +55,10 @@ const routes: Routes = [
         path: 'test_case_results/:id',
         component: TestCaseResultComponent
     },
-
+    {
+        path: 'projects/:id',
+        component: ProjectSettingsComponent
+    },
 
     // otherwise redirect to home
     {

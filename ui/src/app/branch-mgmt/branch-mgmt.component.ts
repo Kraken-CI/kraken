@@ -91,7 +91,11 @@ export class BranchMgmtComponent implements OnInit {
     }
 
     selectStage(stage) {
-        this.stage = stage;
+        if (this.stage) {
+            this.stage.selectedClass = ''
+        }
+        this.stage = stage
+        this.stage.selectedClass = 'selectedClass'
     }
 
     newStage() {

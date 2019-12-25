@@ -84,7 +84,7 @@ def setup_py_develop
   end
 end
 
-['./server/venv/bin/kkserver', './server/venv/bin/kkscheduler', './server/venv/bin/kkcelery', './server/venv/bin/kkplanner'].each {|f|
+['./server/venv/bin/kkserver', './server/venv/bin/kkscheduler', './server/venv/bin/kkcelery', './server/venv/bin/kkplanner', './server/venv/bin/kkdbmigrate'].each {|f|
   file f => ['./server/venv/bin/python3', './server/requirements.txt'] do
     setup_py_develop
   end
@@ -133,6 +133,7 @@ task :build_server => './venv/bin/shiv' do
     sh "../venv/bin/shiv --site-packages dist --compressed -p '/usr/bin/env python3' -o kkscheduler -c kkscheduler"
     sh "../venv/bin/shiv --site-packages dist --compressed -p '/usr/bin/env python3' -o kkcelery -c kkcelery"
     sh "../venv/bin/shiv --site-packages dist --compressed -p '/usr/bin/env python3' -o kkplanner -c kkplanner"
+    sh "../venv/bin/shiv --site-packages dist --compressed -p '/usr/bin/env python3' -o kkdbmigrate -c kkdbmigrate"
   end
 end
 
@@ -155,8 +156,21 @@ task :clean_backend do
   sh 'rm -rf agent/venv'
 end
 
-
 task :build_all => [:build_py, :build_ui]
+
+
+# DATABASE
+task :db_up do
+  Dir.chdir('server/migrations') do
+    sh 'KRAKEN_DB_URL=postgresql://kraken:kk123@localhost:5433/kraken ../venv/bin/alembic -c alembic.ini upgrade head'
+  end
+end
+
+task :db_down do
+  Dir.chdir('server/migrations') do
+    sh 'KRAKEN_DB_URL=postgresql://kraken:kk123@localhost:5433/kraken ../venv/bin/alembic -c alembic.ini downgrade -1'
+  end
+end
 
 
 # DOCKER

@@ -48,6 +48,7 @@ class Project(db.Model, DatesMixin):
     name = Column(Unicode(50))
     description = Column(Unicode(200))
     branches = relationship("Branch", back_populates="project", order_by="Branch.created")
+    secrets = relationship("Secret", back_populates="project", order_by="Secret.name")
     executor_groups = relationship("ExecutorGroup", back_populates="project")
 
     def get_json(self):
@@ -56,7 +57,8 @@ class Project(db.Model, DatesMixin):
                     deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,
                     name=self.name,
                     description=self.description,
-                    branches=[b.get_json(with_results=True) for b in self.branches])
+                    branches=[b.get_json(with_results=True) for b in self.branches],
+                    secrets=[s.get_json() for s in self.secrets if s.deleted is None])
 
 class Branch(db.Model, DatesMixin):
     __tablename__ = "branches"
@@ -87,6 +89,28 @@ class Branch(db.Model, DatesMixin):
             data['stages'] = [s.get_json() for s in self.stages.filter_by(deleted=None)]
         return data
 
+
+class Secret(db.Model, DatesMixin):
+    __tablename__ = "secrets"
+    id = Column(Integer, primary_key=True)
+    name = Column(Unicode(255))
+    project_id = Column(Integer, ForeignKey('projects.id'), nullable=False)
+    project = relationship('Project', back_populates="secrets")
+    kind = Column(Integer, default=0)
+    data = Column(JSONB)
+
+    def get_json(self):
+        data = dict(id=self.id,
+                    created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,
+                    deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,
+                    name=self.name,
+                    project_id=self.project_id,
+                    project_name=self.project.name,
+                    kind=consts.SECRET_KINDS_NAME[self.kind])
+        data.update(self.data)
+        if 'key' in data:
+            data['key'] = '******'
+        return data
 
 
 # PLANNING

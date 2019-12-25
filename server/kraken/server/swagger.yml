@@ -16,7 +16,7 @@ paths:
     get:
       operationId: get_projects
       tags:
-        - Execution
+        - Management
       summary: Create a job
       description: Create a new job
       responses:
@@ -37,6 +37,90 @@ paths:
       responses:
         201:
           description: Successfully created run
+
+  /projects/{project_id}:
+    get:
+      operationId: get_project
+      tags:
+        - Management
+      summary: Get project
+      description: Get project details
+      parameters:
+        - name: project_id
+          in: path
+          description: ID of project
+          required: true
+          type: integer
+          format: int64
+      responses:
+        200:
+          description: Project details
+          schema:
+            $ref: '#/definitions/Project'
+
+  /projects/{project_id}/secrets:
+    post:
+      operationId: create_secret
+      tags:
+        - Management
+      summary: Create a secret
+      description: Create a new secret
+      parameters:
+        - name: project_id
+          in: path
+          description: ID of project
+          required: true
+          type: integer
+          format: int64
+        - name: secret
+          in: body
+          description: secret
+          schema:
+            $ref: '#/definitions/Secret'
+      responses:
+        201:
+          description: Successfully created run
+          schema:
+            $ref: '#/definitions/Secret'
+
+  /secrets/{secret_id}:
+    put:
+      operationId: update_secret
+      tags:
+        - Management
+      summary: Update a secret
+      description: Update secret settings
+      parameters:
+        - name: secret_id
+          in: path
+          description: ID of secret
+          required: true
+          type: integer
+          format: int64
+        - name: secret
+          in: body
+          description: secret
+          schema:
+            $ref: '#/definitions/Secret'
+      responses:
+        201:
+          description: Successfully
+    delete:
+      operationId: delete_secret
+      tags:
+        - Management
+      summary: Delete a secret
+      description: Delete a secret
+      parameters:
+        - name: secret_id
+          in: path
+          description: ID of secret
+          required: true
+          type: integer
+          format: int64
+      responses:
+        200:
+          description: Successfully deleted secret
 
   /projects/{project_id}/branches:
     post:
@@ -936,6 +1020,27 @@ definitions:
       total:
         type: integer
         format: int64
+
+  Secret:
+    type: "object"
+    properties:
+      id:
+        type: integer
+        format: int64
+      name:
+        type: string
+      project_id:
+        type: integer
+        format: int64
+      project_name:
+        type: string
+      kind:
+        type: string
+      username:
+        type: string
+      key:
+        type: string
+
   Branch:
     type: "object"
     required:
@@ -957,6 +1062,7 @@ definitions:
         type: object
       flows:
         type: object
+
   Stage:
     type: "object"
     required:
