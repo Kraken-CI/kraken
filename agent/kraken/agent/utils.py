@@ -13,10 +13,14 @@ def _get_size(fname):
 
 
 def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=subprocess.STDOUT, tracing=True, raise_on_error=False,
-            callback=None, cb_period=5):
+            callback=None, cb_period=5, mask=None):
     if cwd is None:
         cwd = os.getcwd()
-    log.info("exec: '%s' in '%s'", cmd, cwd)
+    if mask:
+        cmd_trc = cmd.replace(mask, '******')
+    else:
+        cmd_trc = cmd
+    log.info("exec: '%s' in '%s'", cmd_trc, cwd)
 
     with tempfile.NamedTemporaryFile(suffix=".txt", prefix="exec_") as fh:
         fname = fh.name
@@ -50,7 +54,7 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
                 if callback and dt > cb_period:
                     t_cb = t
                     if callback(True):
-                        log.info("callback requested stopping cmd %s", cmd)
+                        log.info("callback requested stopping cmd %s", cmd_trc)
                         break
 
                 # handle output from subprocess
@@ -66,13 +70,15 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
                     else:
                         text.append(out_fragment)
                     if tracing:
-                        log.info("output: " + out_fragment.rstrip())
+                        if mask:
+                            out_fragment = out_fragment.rstrip().replace(mask, '******')
+                        log.info("output: " + out_fragment)
 
                 # one trace for minute
                 dt = t - t_trace
                 if dt > 60:
                     t_trace = t
-                    log.info("%s: %.2fsecs to terminate", cmd, int(t_end - t))
+                    log.info("%s: %.2fsecs to terminate", cmd_trc, int(t_end - t))
 
 
                 completed = p.poll() is not None
@@ -85,24 +91,26 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
                 else:
                     text.append(out_fragment)
                 if tracing:
+                    if mask:
+                        out_fragment = out_fragment.rstrip().replace(mask, '******')
                     log.info("output:\n%s", out_fragment)
 
 
     # check if there was timeout exceeded
     if t > t_end:
-        log.info("cmd %s exceeded timeout (%dsecs)", cmd, timeout)
+        log.info("cmd %s exceeded timeout (%dsecs)", cmd_trc, timeout)
 
     # once again at the end check if it completed, if not terminate or even kill the process
     p.poll()
     if p.returncode is None:
-        log.warn("terminating misbehaving cmd '%s'", cmd)
+        log.warn("terminating misbehaving cmd '%s'", cmd_trc)
         p.terminate()
         for _ in range(10):
             if p.poll():
                 break
             time.sleep(0.1)
         if p.poll() is None:
-            log.warn("killing bad cmd '%s'", cmd)
+            log.warn("killing bad cmd '%s'", cmd_trc)
             p.kill()
             for _ in range(10):
                 if p.poll():
@@ -111,7 +119,7 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
 
     # not good, cannot kill process
     if p.poll() is None:
-        log.error("cannot kill cmd '%s'", cmd)
+        log.error("cannot kill cmd '%s'", cmd_trc)
 
     if callback:
         callback(False)
@@ -120,7 +128,7 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
         out = "".join(text)
 
     if raise_on_error and p.returncode != 0:
-        raise Exception("cmd failed: %s, exitcode: %d, out: %s" % (cmd, p.returncode, out))
+        raise Exception("cmd failed: %s, exitcode: %d, out: %s" % (cmd_trc, p.returncode, out))
 
     # make sure that when there is error 'if retcode' turns True
     if p.returncode is None:

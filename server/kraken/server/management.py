@@ -77,9 +77,12 @@ def create_secret(project_id, secret):
         abort(400, "Project with id %s does not exist" % project_id)
 
     if secret['kind'] == 'ssh-key':
-        kind = 0
+        kind = consts.SECRET_KIND_SSH_KEY
         data = dict(username=secret['username'],
                     key=secret['key'])
+    elif secret['kind'] == 'simple':
+        kind = consts.SECRET_KIND_SIMPLE
+        data = dict(secret=secret['secret'])
     else:
         abort(400, "Wrong data")
 
@@ -100,11 +103,15 @@ def update_secret(secret_id, secret):
         secret_rec.name = secret['name']
         log.info('changed name from %s to %s', old_name, secret_rec.name)
 
-    if secret_rec.kind == consts.SECRET_KIND_SSH_KEY:
+    if secret_rec.kind == consts.SECRET_KIND_SIMPLE:
+        if 'secret' in secret and secret['secret'] != '******':
+            secret_rec.data['secret'] = secret['secret']
+    elif secret_rec.kind == consts.SECRET_KIND_SSH_KEY:
         if 'username' in secret:
             secret_rec.data['username'] = secret['username']
         if 'key' in secret and secret['key'] != '******':
             secret_rec.data['key'] = secret['key']
+    flag_modified(secret_rec, 'data')
 
     db.session.commit()
 
@@ -179,7 +186,7 @@ def _check_and_correct_stage_schema(branch, stage, prev_schema_code):
     for job in schema['jobs']:
         for step in job['steps']:
             for field, value in step.items():
-                if field == 'ssh-key':
+                if field in ['access-token', 'ssh-key']:
                     secret = Secret.query.filter_by(project=branch.project, name=value).one_or_none()
                     if secret is None:
                         abort(400, "Secret '%s' does not exists" % value)

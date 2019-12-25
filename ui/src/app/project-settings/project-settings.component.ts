@@ -3,7 +3,7 @@ import { Router, ActivatedRoute, ParamMap } from '@angular/router';
 import { FormGroup, FormControl } from '@angular/forms';
 
 import { MessageService } from 'primeng/api';
-import {ConfirmationService} from 'primeng/api';
+import { ConfirmationService } from 'primeng/api';
 
 import { BreadcrumbsService } from '../breadcrumbs.service';
 import { ManagementService } from '../backend/api/management.service';
@@ -26,6 +26,7 @@ export class ProjectSettingsComponent implements OnInit {
         kind: new FormControl(''),
         username: new FormControl(''),
         key: new FormControl(''),
+        secret: new FormControl(''),
     });
 
     selectedSecret: any
@@ -61,9 +62,22 @@ export class ProjectSettingsComponent implements OnInit {
         this.secretForm.reset()
     }
 
+    prepareSecret(secret) {
+        let secretVal = {
+            name: secret.name,
+            kind: secret.kind
+        }
+        if (secret.kind === 'simple') {
+            secretVal['secret'] = secret['secret']
+        } else if (secret.kind === 'ssh-key') {
+            secretVal['username'] = secret['username']
+            secretVal['key'] = secret['key']
+        }
+        return secretVal
+    }
+
     secretAdd() {
-        let secretVal = Object.assign({}, this.secretForm.value)
-        delete secretVal['id']
+        let secretVal = this.prepareSecret(this.secretForm.value)
         this.managementService.createSecret(this.projectId, secretVal).subscribe(
             data => {
                 console.info(data);
@@ -81,8 +95,8 @@ export class ProjectSettingsComponent implements OnInit {
     }
 
     secretSave() {
-        let secretVal = this.secretForm.value
-        this.managementService.updateSecret(secretVal.id, secretVal).subscribe(
+        let secretVal = this.prepareSecret(this.secretForm.value)
+        this.managementService.updateSecret(this.secretForm.value.id, secretVal).subscribe(
             secret => {
                 for (let idx in this.project.secrets) {
                     if (this.project.secrets[idx].id == secret.id) {
@@ -134,13 +148,17 @@ export class ProjectSettingsComponent implements OnInit {
         this.selectedSecret = secret
         this.selectedSecret.selectedClass = 'selectedClass'
 
-        var secretVal = Object.assign({}, secret)
-        delete secretVal['created']
-        delete secretVal['deleted']
-        delete secretVal['project_id']
-        delete secretVal['project_name']
-        delete secretVal['selectedClass']
-
+        var secretVal = this.prepareSecret(secret)
+        secretVal['id'] = secret.id
+        if (secretVal['secret'] === undefined) {
+            secretVal['secret'] = ''
+        }
+        if (secretVal['username'] === undefined) {
+            secretVal['username'] = ''
+        }
+        if (secretVal['key'] === undefined) {
+            secretVal['key'] = ''
+        }
         this.secretForm.setValue(secretVal)
 
         this.secretMode = 2

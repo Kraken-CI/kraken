@@ -110,6 +110,8 @@ class Secret(db.Model, DatesMixin):
         data.update(self.data)
         if 'key' in data:
             data['key'] = '******'
+        if 'secret' in data:
+            data['secret'] = '******'
         return data
 
 

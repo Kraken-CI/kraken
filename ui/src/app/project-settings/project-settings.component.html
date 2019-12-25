@@ -30,17 +30,26 @@
 
             <label for="kind"><span>Type</span>
               <select name="kind" class="select-field" formControlName="kind">
+                <option value="simple">Simple Secret</option>
                 <option value="ssh-key">SSH Username & Key</option>
               </select>
             </label>
 
-            <label for="username"><span>Username <span class="required">*</span></span>
-              <input type="text" class="input-field" name="username" pInputText formControlName="username"/>
-            </label>
+            <div *ngIf="secretForm.value.kind === 'simple'">
+              <label for="secret"><span>Secret <span class="required">*</span></span>
+                <input type="text" class="input-field" name="secret" pInputText formControlName="secret"/>
+              </label>
+            </div>
 
-            <label for="key"><span>Private Key <span class="required">*</span></span>
-              <textarea name="key" formControlName="key" class="textarea-field"  rows="30" cols="65"></textarea>
-            </label>
+            <div *ngIf="secretForm.value.kind === 'ssh-key'">
+              <label for="username"><span>Username <span class="required">*</span></span>
+                <input type="text" class="input-field" name="username" pInputText formControlName="username"/>
+              </label>
+
+              <label for="key"><span>Private Key <span class="required">*</span></span>
+                <textarea name="key" formControlName="key" class="textarea-field"  rows="30" cols="65"></textarea>
+              </label>
+            </div>
 
             <label><span> </span>
               <p-button *ngIf="secretMode === 1" label="Add" icon="pi pi-plus" (onClick)="secretAdd()"></p-button>

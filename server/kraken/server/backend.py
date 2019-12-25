@@ -57,6 +57,11 @@ def _handle_get_job(executor, req):
                         raise Exception("Secret '%s' does not exists in project %s" % (value, project.id))
                     step['ssh-key'] = dict(username=secret.data['username'],
                                            key=secret.data['key'])
+                elif field == 'access-token':
+                    secret = Secret.query.filter_by(project=project, name=value).one_or_none()
+                    if secret is None:
+                        raise Exception("Secret '%s' does not exists in project %s" % (value, project.id))
+                    step['access-token'] = secret.data['secret']
 
         if not executor.job.started:
             executor.job.started = datetime.datetime.utcnow()

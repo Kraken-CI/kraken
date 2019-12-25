@@ -22,9 +22,12 @@ def run(step, **kwargs):
         key = step['ssh-key']['key']
         ssh_agent = sshkey.SshAgent()
         ssh_agent.add_key(key)
+    elif 'access-token' in step:
+        access_token = step['access-token']
+        url = 'https://%s@%s' % (access_token, url.replace(':', '/'))
 
     try:
-        ret, out = utils.execute('git clone %s %s' % (url, dest))
+        ret, out = utils.execute('git clone %s %s' % (url, dest), mask=access_token)
         if ret != 0:
             return ret, 'git clone exited with non-zero retcode'
     finally:
