@@ -12,6 +12,7 @@ def _get_git_url(cwd):
     cmd = "git config --get remote.origin.url"
     ret, out = utils.execute(cmd, cwd=cwd, tracing=False)
     if ret == 0:
+        # prepare url for getting file
         git_url = out.strip()
         if '@' in git_url:
             git_url = git_url.split('@')[1]
