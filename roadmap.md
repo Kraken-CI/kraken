@@ -8,8 +8,13 @@
 ** DONE add collecting logs
 ** DONE add presenting logs in UI
 ** DONE fine tune presenting logs in UI (auto scroll, etc)
+* DONE prod deployment preparation
+** DONE ??? combine planner and scheduler in 1 process
+**
+* DONE new project
 * support repos:
 ** trigger on commit
+** DONE trigger on github push event
 ** storing commit used
 ** getting git diff to prev job
 * executors
@@ -26,8 +31,5 @@
 * add support for config in job
 * add support for system in job
 * add handling NOT FOUND when ID in URL is incorrect
-* prod deployment preparation
-** ??? combine planner and scheduler in 1 process
-**
-* DONE new project
+* kraken_shell: clearly report timeout errors
 * fork branch operation with test results history continuity

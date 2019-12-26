@@ -12,7 +12,9 @@
           <div *ngFor="let s of project.secrets" style="margin: 6px 0 12px 6px; cursor: pointer;" class="round-shadow {{ s.selectedClass }}" (click)="selectSecret(s)">
             <div style="font-size: 1.1rem; font-weight: bold; margin-bottom: 4px;">{{s.name}}</div>
             <div style="font-size: 1.05rem;">Type: {{ s.kind }}</div>
-            <div style="font-size: 1.05rem;">Username: {{ s.username }}</div>
+            <div *ngIf="s.kind === 'ssh-key'">
+              <div style="font-size: 1.05rem;">Username: {{ s.username }}</div>
+            </div>
           </div>
         </div>
 

@@ -1,9 +1,9 @@
 FROM nginx
 
+RUN apt-get update && apt-get install -y "wait-for-it"
+
 COPY dist/kraken /usr/share/nginx/html
 COPY nginx.conf /tmp/nginx.conf.tpl
-
-RUN apt-get update && apt-get install -y "wait-for-it"
 
 EXPOSE 80
 

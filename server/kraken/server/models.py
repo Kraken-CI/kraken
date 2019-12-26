@@ -439,11 +439,12 @@ class Issue(db.Model):
     path = Column(Unicode(512))
     symbol = Column(Unicode(64))
     message = Column(Unicode(256))
+    extra = Column(JSONB)
     job_id = Column(Integer, ForeignKey('jobs.id'), nullable=False)
     job = relationship('Job', back_populates="issues")
 
     def get_json(self, with_extra=False):
-        return dict(id=self.id,
+        data = dict(id=self.id,
                     issue_type=self.issue_type,
                     line=self.line,
                     column=self.column,
@@ -456,6 +457,9 @@ class Issue(db.Model):
                     executor_group_id=self.job.executor_group_id,
                     executor_name=self.job.executor_used.name,
                     executor_id=self.job.executor_used_id)
+        if self.extra:
+            data.update(self.extra)
+        return data
 
 # RESOURCES
 

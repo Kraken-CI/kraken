@@ -16,6 +16,7 @@ def run(step, **kwargs):
         dest = step['destination']
 
     ssh_agent = None
+    access_token = None
     if 'ssh-key' in step:
         username = step['ssh-key']['username']
         #url = '%s@%s' % (username, url)

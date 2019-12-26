@@ -130,8 +130,12 @@ def _handle_step_result(executor, req):
                 issue_type = consts.ISSUE_TYPES_CODE[issue['type']]
             else:
                 log.warn('unknown issue type: %s', issue['type'])
+            extra = {}
+            for k, v in issue.items():
+                if k not in ['line', 'column', 'path', 'symbol', 'message']:
+                    extra[k] = v
             Issue(issue_type=issue_type, line=issue['line'], column=issue['column'], path=issue['path'], symbol=issue['symbol'],
-                  message=issue['message'], job=job)
+                  message=issue['message'], extra=extra, job=job)
         db.session.commit()
         t1 = time.time()
         log.info('reporting %s issues took %ss', len(result['issues']), (t1 - t0))

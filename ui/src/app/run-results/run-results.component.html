@@ -160,7 +160,14 @@
           <td>{{ issue.job_name }}</td>
           <td><a routerLink="/jobs/{{ issue.job_id }}">{{ issue.job_id }}</a></td>
           <td [class]="issueTypeToClass(issue.issue_type)">{{issueTypeToTxt(issue.issue_type)}}</td>
-          <td>{{ issue.path }}:{{ issue.line }}:{{ issue.column }}</td>
+          <td>
+            <a *ngIf="issue.url" href="{{ issue.url }}" target="blank">
+              {{ issue.path }}:{{ issue.line }}:{{ issue.column }}
+            </a>
+            <span *ngIf="!issue.url">
+              {{ issue.path }}:{{ issue.line }}:{{ issue.column }}
+            </span>
+          </td>
           <td>{{ issue.message }}</td>
           <td>{{ issue.symbol }}</td>
           <td>Ubuntu 18.04</td>

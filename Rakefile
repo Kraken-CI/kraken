@@ -111,6 +111,14 @@ task :run_agent => './agent/venv/bin/kkagent' do
   sh 'bash -c "source ./agent/venv/bin/activate && kkagent -d /tmp/kk-jobs -s http://localhost:8080/backend"'
 end
 
+task :run_agent_container do
+  Rake::Task["build_agent"].invoke
+  Dir.chdir('agent') do
+    sh 'docker build -f docker-agent.txt -t kkagent .'
+  end
+  sh 'docker run --rm -ti -v `pwd`/agent:/agent -e KRAKEN_SERVER_ADDR=192.168.0.88:8080 kkagent'
+end
+
 task :run_celery => './server/venv/bin/kkcelery' do
   sh './server/venv/bin/kkcelery'
 end
