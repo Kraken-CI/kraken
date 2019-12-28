@@ -240,6 +240,7 @@ class Run(db.Model, DatesMixin):
         jobs_completed = 0
         jobs_error = 0
         jobs_total = len(non_covered_jobs)
+        issues = 0
         last_time = None
         for job in non_covered_jobs:
             if job.state == consts.JOB_STATE_EXECUTING_FINISHED:
@@ -262,6 +263,8 @@ class Run(db.Model, DatesMixin):
                     tests_passed += 1
                 elif tcr.result == consts.TC_RESULT_NOT_RUN:
                     tests_pending += 1
+
+            issues += len(job.issues)
 
         if jobs_total == jobs_completed and last_time:
             duration = last_time - self.created
@@ -292,6 +295,7 @@ class Run(db.Model, DatesMixin):
                     tests_total=tests_total,
                     tests_passed=tests_passed,
                     tests_pending=tests_pending,
+                    issues=issues,
                     duration=duration_to_txt(duration))
 
         return data

@@ -16,7 +16,8 @@
   </div>
   <!--- details -->
   <div *ngIf="run" class="job-detal-items">
-    <div *ngIf="run.jobs_total">
+
+    <div *ngIf="run.jobs_total" routerLink="/runs/{{ run.id }}/jobs" style="cursor: pointer;">
       <b style="font-weight: 500;">Execution</b><br>
       {{run.jobs_total}} jobs
       <span *ngIf="run.jobs_error">
@@ -40,7 +41,8 @@
         {{run.jobs_processing}} processing <i class="pi pi-spin pi-spinner" style="font-size: 16px; vertical-align: bottom;"></i>
       </span>
     </div>
-    <div *ngIf="run.tests_total">
+
+    <div *ngIf="run.tests_total" routerLink="/runs/{{ run.id }}/results" style="cursor: pointer;">
       <b>Tests</b><br>
       {{run.tests_passed * 100 / run.tests_total | number:'1.1-1'}}% passed<br>
       {{run.tests_passed}}/{{run.tests_total}}
@@ -48,10 +50,12 @@
         <br>{{run.tests_pending}} pending
       </span>
     </div>
-    <div *ngIf="run.issues">
+
+    <div *ngIf="run.issues" routerLink="/runs/{{ run.id }}/issues" style="cursor: pointer;">
       <b>Issues</b><br>
-      {{run.issues}} <i class="pi pi-exclamation-triangle" style="color: orange; font-size: 26px; vertical-align: sub;"></i>
+      {{run.issues}} <i class="pi pi-exclamation-triangle" style="color: orange; font-size: 1.3em; vertical-align: bottom;"></i>
     </div>
+
   </div>
 
   <div *ngIf="!run">
