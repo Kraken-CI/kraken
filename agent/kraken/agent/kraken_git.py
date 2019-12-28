@@ -25,6 +25,8 @@ def run(step, **kwargs):
         ssh_agent.add_key(key)
     elif 'access-token' in step:
         access_token = step['access-token']
+        if url.startswith('git@'):
+            url = url[4:]
         url = 'https://%s@%s' % (access_token, url.replace(':', '/'))
 
     try:
@@ -36,10 +38,7 @@ def run(step, **kwargs):
             ssh_agent.shutdown()
 
     if 'trigger_data' in step:
-        if url.endswith('.git'):
-            url = url[:-4]
-        url = url.replace(':', '/')
-        if url.endswith(step['trigger_data']['repo']):
+        if step['trigger_data']['repo'] == step['http_url']:
             commit = step['trigger_data']['after']
             if dest:
                 cwd = dest

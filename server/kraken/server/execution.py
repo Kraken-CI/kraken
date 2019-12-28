@@ -125,7 +125,17 @@ def trigger_jobs(run, replay=False):
             complete_run(run, now)
 
 
-def create_flow(branch_id, kind, flow):
+def start_run(stage, flow, args=None):
+    run_args = stage.get_default_args()
+    if args is not None:
+        run_args.update(args)
+    new_run = Run(stage=stage, flow=flow, args=run_args)
+    db.session.commit()
+    log.info('starting run %s for stage %s of branch %s', new_run, stage, stage.branch)
+    trigger_jobs(new_run)
+
+
+def create_flow(branch_id, kind, flow, trigger_data=None):
     """
     This function creates a new person in the people structure
     based on the passed in person data
@@ -148,7 +158,7 @@ def create_flow(branch_id, kind, flow):
     if 'BRANCH' in flow_args:
         del flow_args['BRANCH']
 
-    flow = Flow(branch=branch, kind=kind, branch_name=branch_name, args=flow_args)
+    flow = Flow(branch=branch, kind=kind, branch_name=branch_name, args=flow_args, trigger_data=trigger_data)
     db.session.commit()
 
     for stage in branch.stages.filter_by(deleted=None):
@@ -159,14 +169,7 @@ def create_flow(branch_id, kind, flow):
             log.info('stage %s not started - disabled', stage.id)
             continue
 
-        run_args = stage.get_default_args()
-        run_args.update(args.get(stage.name, {}))
-        run = Run(flow=flow, stage=stage, args=run_args)
-        db.session.commit()
-
-        log.info('triggered run %s for stage %s of branch %s', run, stage, branch)
-
-        trigger_jobs(run)
+        start_run(stage, flow, args=args.get(stage.name, {}))
 
     data = flow.get_json()
 
@@ -222,13 +225,7 @@ def create_run(flow_id, run):
     if stage is None:
         abort(404, "Stage not found")
 
-    args = stage.get_default_args()
-    args.update(run.get('args', {}))
-
-    new_run = Run(stage=stage, flow=flow, args=args)
-    db.session.commit()
-
-    trigger_jobs(new_run)
+    start_run(stage, flow, args=run.get('args', {}))
 
     # Serialize and return the newly created run in the response
     data = new_run.get_json()

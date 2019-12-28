@@ -35,3 +35,4 @@ elasticsearch==7.0.5
 gunicorn==20.0.4
 RestrictedPython==5.0
 alembic==1.3.2
+giturlparse.py==0.0.5

@@ -6,6 +6,7 @@ import logging
 from celery import Task
 from flask import Flask
 from sqlalchemy.sql.expression import asc, desc
+import giturlparse
 
 from .clry import app
 from ..models import db, Executor, Run, Job, TestCaseResult, Branch, Flow, Stage
@@ -155,11 +156,7 @@ def trigger_stages(self, run_id):
                 if not stage.schema['triggers'].get('parent', False):
                     continue
 
-                new_run = Run(stage=stage, flow=run.flow, args=stage.get_default_args())
-                db.session.commit()
-                log.info('triggered run %s for stage %s of branch %s', new_run, stage, branch)
-
-                execution.trigger_jobs(new_run)
+                execution.start_run(stage, run.flow)
 
     except Exception as exc:
         log.exception('will retry')
@@ -209,7 +206,7 @@ def job_completed(self, job_id):
 
 
 @app.task(base=BaseTask, bind=True)
-def trigger_run(self, stage_id, trigger_data=None):
+def trigger_run(self, stage_id):
     try:
         app = _create_app()
 
@@ -265,13 +262,90 @@ def trigger_run(self, stage_id, trigger_data=None):
                 flow = parent_run.flow
 
             # create run for current stage
-            if trigger_data is None:
-                trigger_data = {}
-            run = Run(flow=flow, stage=stage, args=stage.get_default_args(), trigger_data=trigger_data)
-            db.session.commit()
+            execution.start_run(stage, flow)
 
-            # trigger jobs for new run
-            execution.trigger_jobs(run)
+    except Exception as exc:
+        log.exception('will retry')
+        raise self.retry(exc=exc)
+
+
+@app.task(base=BaseTask, bind=True)
+def trigger_flow(self, project_id, trigger_data=None):
+    try:
+        app = _create_app()
+
+        with app.app_context():
+            log.info('triggering flow for project %s', project_id)
+            project = Project.query.filter_by(id=project_id).one_or_none()
+            if project is None:
+                log.error('got unknown project: %s', project_id)
+                return
+
+
+            if not trigger_data:
+                execution.create_flow(branch.id, 'ci', {})
+                return
+
+            branch_name = trigger_data['ref'].split('/')[-1]
+            branch = Branch.query.filter_by(project=project, branch_name=branch_name).one_or_none()
+            if branch is None:
+                log.error('cannot find branch by branch_name: %s', branch_name)
+                return
+
+            q = Flow.query
+            q = q.filter_by(branch=branch)
+            q = q.order_by(desc(Flow.created))
+            last_flow = q.first()
+
+            if last_flow is None:
+                execution.create_flow(branch.id, 'ci', {})
+                return
+
+            trigger_git_url = giturlparse.parse(trigger_data['repo'])
+            trigger_git_url = trigger_git_url.url2https
+
+            # find stages that use repo from trigger
+            matching_stages = []
+            for stage in branch.stages.filter_by(deleted=None):
+                found = False
+                for job in stage.schema['jobs']:
+                    for step in job['steps']:
+                        if step['tool'] == 'git':
+                            git_url = step['checkout']
+                            git_url = giturlparse.parse(git_url)
+                            git_url = git_url.url2https
+                            if git_url == trigger_git_url:
+                                matching_stages.append(stage)
+                                found = True
+                                break
+                    if found:
+                        break
+
+            # map runs to stages
+            run_stages = {run.stage_id: run for run in last_flow.runs if not run.deleted}
+            name_stages = {stage.name: stage for stage in branch.stages}
+
+            # for stages that were not run while their parent was run, do run them
+            started_something = False
+            for stage in matching_stages:
+                if stage_id in run_stages:
+                    # TODO: trigger new flow
+                    continue
+                parent_name = stage.schema['parent']
+                parent_stage = name_stages[parent_name]
+                if parent_stage.id not in run_stages:
+                    # TODO: we should wait when parent is run and then trigger this stage
+                    continue
+
+                if not last_flow.trigger_data:
+                    last_flow.trigger_data = trigger_data
+                    db.session.commit()
+
+                execution.start_run(stage, last_flow)
+                started_something = True
+
+            if not started_something:
+                execution.create_flow(branch.id, 'ci', {}, trigger_data)
 
     except Exception as exc:
         log.exception('will retry')

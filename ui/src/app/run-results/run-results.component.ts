@@ -39,31 +39,27 @@ export class RunResultsComponent implements OnInit {
                 protected executionService: ExecutionService,
                 protected breadcrumbService: BreadcrumbsService) { }
 
-    switchToTab(tabLabel) {
-        for (let t of this.tabs) {
-            if (t.label.toLowerCase() === tabLabel.toLowerCase() && this.activeTab.label !== t.label) {
-                this.activeTab = t
-                break
-            }
+    switchToTab(tabName) {
+        let idx = 0
+        if (tabName === 'results') {
+            idx = 1
+        } else if (tabName === 'issues') {
+            idx = 2
         }
+        this.activeTab = this.tabs[idx]
     }
 
     ngOnInit() {
         this.runId = parseInt(this.route.snapshot.paramMap.get("id"));
-        let tab = this.route.snapshot.paramMap.get("tab");
 
         this.tabs = [
             {label: 'Jobs', routerLink: '/runs/' + this.runId + '/jobs'},
             {label: 'Test Results', routerLink: '/runs/' + this.runId + '/results'},
             {label: 'Issues', routerLink: '/runs/' + this.runId + '/issues'},
         ]
-        this.activeTab = this.tabs[0]
-        if (tab === 'results') {
-            this.activeTab = this.tabs[1]
-        }
-        if (tab === 'issues') {
-            this.activeTab = this.tabs[2]
-        }
+
+        let tab = this.route.snapshot.paramMap.get("tab");
+        this.switchToTab(tab)
 
         this.route.paramMap.subscribe(params => {
             let newTab = params.get("tab");
@@ -161,7 +157,6 @@ export class RunResultsComponent implements OnInit {
         this.executionService.getRunIssues(this.runId, event.first, event.rows).subscribe(data => {
             this.issues = data.items
             this.totalIssues = data.total
-            console.info('this.issues', this.issues)
         });
     }
 
@@ -170,7 +165,13 @@ export class RunResultsComponent implements OnInit {
     }
 
     issueTypeToTxt(issue_type) {
-        return ''
+        switch (issue_type) {
+        case 0: return 'error'
+        case 1: return 'warning'
+        case 2: return 'convention'
+        case 3: return 'refactor'
+        }
+        return 'unknown'
     }
 
     getJobState(job) {

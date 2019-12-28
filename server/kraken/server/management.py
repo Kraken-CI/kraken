@@ -30,6 +30,21 @@ def create_project(project):
     return new_project.get_json(), 201
 
 
+def update_project(project_id, project):
+    project_rec = Project.query.filter_by(id=project_id).one_or_none()
+    if project_rec is None:
+        abort(404, "Project not found")
+
+    if 'webhooks' in project:
+        project_rec.webhooks = project['webhooks']
+
+    db.session.commit()
+
+    result = project_rec.get_json()
+    log.info('result: %s', result)
+    return result, 200
+
+
 def get_project(project_id):
     project = Project.query.filter_by(id=project_id).one_or_none()
     if project is None:
@@ -191,6 +206,7 @@ def _check_and_correct_stage_schema(branch, stage, prev_schema_code):
                     if secret is None:
                         abort(400, "Secret '%s' does not exists" % value)
 
+    # TODO: check if git url is valid according to giturlparse
     return schema_code, schema
 
 
@@ -300,13 +316,9 @@ def update_stage(stage_id, stage):
         flag_modified(stage_rec, 'triggers')
         log.info('new schema: %s', stage_rec.schema)
 
-    if 'webhooks' in stage:
-        stage_rec.webhooks = stage['webhooks']
-
     db.session.commit()
 
     result = stage_rec.get_json()
-    log.info('result: %s', result)
     return result, 200
 
 

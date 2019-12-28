@@ -117,28 +117,6 @@
               </div>
               <button type="button" (click)="checkStageSchema()" pButton icon="pi pi-eye" label="Check Schema"></button>
             </p-tabPanel>
-            <p-tabPanel header="Web Hooks">
-              <div style="font-size: 1.3em; font-weight: bold; margin-bottom: 8px;">GitHub</div>
-              <div style="margin: 0 0 8px 3px;">
-                <p-checkbox [(ngModel)]="stage.webhooks.github_enabled" binary="true" label="Enabled"></p-checkbox>
-              </div>
-              <table *ngIf="stage.webhooks.github_enabled">
-                <tr>
-                  <td style="vertical-align: top; width: 80px;">URL</td>
-                  <td>
-                    <span style="font-size: 1.2em;">{{ getBaseUrl() }}/webhooks/{{ stage.id }}/github</span>
-                  </td>
-                </tr>
-                <tr>
-                  <td>Secret</td>
-                  <td>{{ getOrGenerateSecret() }}</td>
-                </tr>
-                <tr><td colspan="2">
-                    <div style="color: #777; margin-top: 10px;">use URL and Secret on GitHub WebHooks setup page to trigger this stage</div>
-                </td></tr>
-
-              </table>
-            </p-tabPanel>
           </p-tabView>
         </div>
         <button type="button" (click)="saveStage()" pButton icon="pi pi-check" label="Save Stage"></button>

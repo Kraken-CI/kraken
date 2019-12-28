@@ -50,6 +50,7 @@ class Project(db.Model, DatesMixin):
     branches = relationship("Branch", back_populates="project", order_by="Branch.created")
     secrets = relationship("Secret", back_populates="project", order_by="Secret.name")
     executor_groups = relationship("ExecutorGroup", back_populates="project")
+    webhooks = Column(JSONB)
 
     def get_json(self):
         return dict(id=self.id,
@@ -58,7 +59,8 @@ class Project(db.Model, DatesMixin):
                     name=self.name,
                     description=self.description,
                     branches=[b.get_json(with_results=True) for b in self.branches],
-                    secrets=[s.get_json() for s in self.secrets if s.deleted is None])
+                    secrets=[s.get_json() for s in self.secrets if s.deleted is None],
+                    webhooks=self.webhooks if self.webhooks else {})
 
 class Branch(db.Model, DatesMixin):
     __tablename__ = "branches"
@@ -128,7 +130,6 @@ class Stage(db.Model, DatesMixin):
     schema = Column(JSONB, nullable=False)
     schema_code = Column(UnicodeText)
     triggers = Column(JSONB)
-    webhooks = Column(JSONB)
     runs = relationship('Run', back_populates="stage")
     #services
 
@@ -140,8 +141,7 @@ class Stage(db.Model, DatesMixin):
                     description=self.description,
                     enabled=self.enabled,
                     schema=self.schema,
-                    schema_code=self.schema_code,
-                    webhooks=self.webhooks if self.webhooks else {})
+                    schema_code=self.schema_code)
 
     def __repr__(self):
         return "<Stage %s, '%s'>" % (self.id, self.name)
@@ -185,6 +185,7 @@ class Flow(db.Model, DatesMixin):
     branch = relationship('Branch')
     runs = relationship('Run', back_populates="flow", order_by="Run.created")
     args = Column(JSONB, nullable=False, default={})
+    trigger_data = Column(JSONB)
 
     def get_json(self):
         if self.state == consts.FLOW_STATE_COMPLETED:
@@ -227,7 +228,6 @@ class Run(db.Model, DatesMixin):
     hard_timeout_reached = Column(DateTime)
     soft_timeout_reached = Column(DateTime)
     args = Column(JSONB, nullable=False, default={})
-    trigger_data = Column(JSONB)
 
     def get_json(self):
         non_covered_jobs = Job.query.filter_by(run=self).filter_by(covered=False).all()

@@ -6,6 +6,7 @@ import datetime
 from flask import request
 from sqlalchemy import or_
 from sqlalchemy.orm import joinedload
+import giturlparse
 
 from .models import db, Run, Job, Step, Executor, TestCase, TestCaseResult, Issue, Secret
 from . import consts
@@ -44,24 +45,38 @@ def _handle_get_job(executor, req):
             job['steps'][-1]['tests'] = tests
 
         # attach trigger data to job
-        if executor.job.run.trigger_data:
-            job['trigger_data'] = executor.job.run.trigger_data
+        if executor.job.run.flow.trigger_data:
+            job['trigger_data'] = executor.job.run.flow.trigger_data
 
-        # insert secrets
+        # process steps
         project = executor.job.run.flow.branch.project
         for step in job['steps']:
-            for field, value in step.items():
-                if field == 'ssh-key':
-                    secret = Secret.query.filter_by(project=project, name=value).one_or_none()
-                    if secret is None:
-                        raise Exception("Secret '%s' does not exists in project %s" % (value, project.id))
-                    step['ssh-key'] = dict(username=secret.data['username'],
-                                           key=secret.data['key'])
-                elif field == 'access-token':
-                    secret = Secret.query.filter_by(project=project, name=value).one_or_none()
-                    if secret is None:
-                        raise Exception("Secret '%s' does not exists in project %s" % (value, project.id))
-                    step['access-token'] = secret.data['secret']
+            # insert secret from ssh-key
+            if 'ssh-key' in step:
+                value = step['ssh-key']
+                secret = Secret.query.filter_by(project=project, name=value).one_or_none()
+                if secret is None:
+                    raise Exception("Secret '%s' does not exists in project %s" % (value, project.id))
+                step['ssh-key'] = dict(username=secret.data['username'],
+                                       key=secret.data['key'])
+
+            # insert secret from access-token
+            if 'access-token' in step:
+                value = step['access-token']
+                secret = Secret.query.filter_by(project=project, name=value).one_or_none()
+                if secret is None:
+                    raise Exception("Secret '%s' does not exists in project %s" % (value, project.id))
+                step['access-token'] = secret.data['secret']
+
+            # add http url to git
+            if step['tool'] == 'git':
+                url = step['checkout']
+                url = giturlparse.parse(url)
+                if url.valid:
+                    url = url.url2https
+                    step['http_url'] = url
+                else:
+                    log.info('invalid git url %s', step['checkout'])
 
         if not executor.job.started:
             executor.job.started = datetime.datetime.utcnow()

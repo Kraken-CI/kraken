@@ -57,6 +57,29 @@ paths:
           description: Project details
           schema:
             $ref: '#/definitions/Project'
+    put:
+      operationId: update_project
+      tags:
+        - Management
+      summary: Update a project
+      description: Update project settings
+      parameters:
+        - name: project_id
+          in: path
+          description: ID of project
+          required: true
+          type: integer
+          format: int64
+        - name: project
+          in: body
+          description: project
+          schema:
+            $ref: '#/definitions/Project'
+      responses:
+        200:
+          description: Successfully
+          schema:
+            $ref: '#/definitions/Project'
 
   /projects/{project_id}/secrets:
     post:
@@ -1010,6 +1033,8 @@ definitions:
         format: int64
       name:
         type: string
+      webhooks:
+        type: object
   Projects:
     type: object
     properties:
@@ -1082,8 +1107,6 @@ definitions:
         type: object
       schema_code:
         type: string
-      webhooks:
-        type: object
       enabled:
         type: boolean
 

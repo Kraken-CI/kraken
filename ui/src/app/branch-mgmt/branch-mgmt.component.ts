@@ -24,7 +24,7 @@ export class BranchMgmtComponent implements OnInit {
     newStageName: string
     newStageDescr: string
 
-    stage: any = {id: 0, name: '', description: '', webhooks: {github_enabled: false}};
+    stage: any = {id: 0, name: '', description: ''};
     saveErrorMsg = "";
 
     codeMirrorOpts = {
@@ -136,7 +136,6 @@ export class BranchMgmtComponent implements OnInit {
         let stage = {
             name: this.stage.name,
             schema_code: this.stage.schema_code,
-            webhooks: this.stage.webhooks,
             enabled: this.stage.enabled,
         }
         this.doSaveStage(stage)
@@ -251,16 +250,5 @@ export class BranchMgmtComponent implements OnInit {
     }
 
     forkBranch() {
-    }
-
-    getBaseUrl() {
-        return window.location.origin
-    }
-
-    getOrGenerateSecret() {
-        if (!this.stage.webhooks['github_secret']) {
-            this.stage.webhooks['github_secret'] = [...Array(20)].map(i=>(~~(Math.random()*36)).toString(36)).join('')
-        }
-        return this.stage.webhooks['github_secret']
     }
 }

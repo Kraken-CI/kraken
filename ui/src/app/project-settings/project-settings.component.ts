@@ -16,7 +16,7 @@ import { ManagementService } from '../backend/api/management.service';
 export class ProjectSettingsComponent implements OnInit {
 
     projectId = 0
-    project: any = {name: '', branches: [], secrets: []}
+    project: any = {name: '', branches: [], secrets: [], webhooks: {github_enabled: false}}
 
     // secret form
     secretMode = 0
@@ -162,5 +162,34 @@ export class ProjectSettingsComponent implements OnInit {
         this.secretForm.setValue(secretVal)
 
         this.secretMode = 2
+    }
+
+    getBaseUrl() {
+        return window.location.origin
+    }
+
+    getOrGenerateSecret() {
+        if (!this.project.webhooks['github_secret']) {
+            this.project.webhooks['github_secret'] = [...Array(20)].map(i=>(~~(Math.random()*36)).toString(36)).join('')
+        }
+        return this.project.webhooks['github_secret']
+    }
+
+    saveWebhooks() {
+        let projectVal = {webhooks: this.project.webhooks}
+        this.managementService.updateProject(this.projectId, projectVal).subscribe(
+            project => {
+                this.project = project
+                this.msgSrv.add({severity:'success', summary:'Project update succeeded', detail:'Project update operation succeeded.'});
+            },
+            err => {
+                console.info(err);
+                let msg = err.statusText;
+                if (err.error && err.error.detail) {
+                    msg = err.error.detail;
+                }
+                this.msgSrv.add({severity:'error', summary:'Project update erred', detail:'Project update operation erred: ' + msg, life: 10000});
+            }
+        );
     }
 }
