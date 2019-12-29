@@ -1,4 +1,3 @@
-import subprocess
 import logging
 
 from . import utils
@@ -18,8 +17,8 @@ def run(step, **kwargs):
     ssh_agent = None
     access_token = None
     if 'ssh-key' in step:
-        username = step['ssh-key']['username']
-        #url = '%s@%s' % (username, url)
+        # username = step['ssh-key']['username']
+        # url = '%s@%s' % (username, url)
         key = step['ssh-key']['key']
         ssh_agent = sshkey.SshAgent()
         ssh_agent.add_key(key)
@@ -30,7 +29,7 @@ def run(step, **kwargs):
         url = 'https://%s@%s' % (access_token, url.replace(':', '/'))
 
     try:
-        ret, out = utils.execute('git clone %s %s' % (url, dest), mask=access_token)
+        ret, _ = utils.execute('git clone %s %s' % (url, dest), mask=access_token)
         if ret != 0:
             return ret, 'git clone exited with non-zero retcode'
     finally:
