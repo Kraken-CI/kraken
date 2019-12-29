@@ -57,6 +57,7 @@ def collect_tests(step):
 
 
 def run_tests(step, report_result=None):
+    # pylint: disable=too-many-locals
     tests = step['tests']
 
     for idx1, test in enumerate(tests):
@@ -85,7 +86,7 @@ def run_tests(step, report_result=None):
                     val['median'] = statistics.median_low(population)
                     val['min'] = pmin
                     val['max'] = pmax
-                    val['range'] = pmax - pmin,
+                    val['range'] = pmax - pmin
                     pstdev = statistics.stdev(population)
                     val['stddev'] = pstdev
                     val['variance'] = statistics.variance(population)

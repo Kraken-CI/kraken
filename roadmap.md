@@ -33,3 +33,5 @@
 * add handling NOT FOUND when ID in URL is incorrect
 * kraken_shell: clearly report timeout errors
 * fork branch operation with test results history continuity
+
+czas na branchu jest pokazywany jako AM a jest PM

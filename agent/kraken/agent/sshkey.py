@@ -8,10 +8,10 @@ log = logging.getLogger(__name__)
 
 class SshAgent:
     def __init__(self):
-        self.process = subprocess.run([ 'ssh-agent', '-s'], stdout=subprocess.PIPE, universal_newlines=True)
+        self.process = subprocess.run(['ssh-agent', '-s'], stdout=subprocess.PIPE, universal_newlines=True)
 
-        OUTPUT_PATTERN = re.compile('SSH_AUTH_SOCK=(?P<socket>[^;]+).*SSH_AGENT_PID=(?P<pid>\d+)', re.MULTILINE | re.DOTALL)
-        match = OUTPUT_PATTERN.search(self.process.stdout)
+        pattern = re.compile(r'SSH_AUTH_SOCK=(?P<socket>[^;]+).*SSH_AGENT_PID=(?P<pid>\d+)', re.MULTILINE | re.DOTALL)
+        match = pattern.search(self.process.stdout)
         if match is None:
             raise Exception('Could not parse ssh-agent output. It was: %s' % self.process.stdout)
         data = match.groupdict()
