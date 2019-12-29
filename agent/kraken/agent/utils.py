@@ -72,7 +72,7 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
                     if tracing:
                         if mask:
                             out_fragment = out_fragment.rstrip().replace(mask, '******')
-                        log.info("output: " + out_fragment)
+                        log.info("output: %s", out_fragment)
 
                 # one trace for minute
                 dt = t - t_trace
@@ -103,14 +103,14 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
     # once again at the end check if it completed, if not terminate or even kill the process
     p.poll()
     if p.returncode is None:
-        log.warn("terminating misbehaving cmd '%s'", cmd_trc)
+        log.warning("terminating misbehaving cmd '%s'", cmd_trc)
         p.terminate()
         for _ in range(10):
             if p.poll():
                 break
             time.sleep(0.1)
         if p.poll() is None:
-            log.warn("killing bad cmd '%s'", cmd_trc)
+            log.warning("killing bad cmd '%s'", cmd_trc)
             p.kill()
             for _ in range(10):
                 if p.poll():
@@ -138,5 +138,4 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
 
     if output_handler is None:
         return retcode, out
-    else:
-        return retcode
+    return retcode
