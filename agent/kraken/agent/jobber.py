@@ -131,7 +131,7 @@ async def _async_monitor_proc(proc_coord, proc, timeout):
             await asyncio.sleep(1)
             continue
 
-        log.warn("cmd %s exceeded timeout (%dsecs), terminating", cmd, timeout)
+        log.warning("cmd %s exceeded timeout (%dsecs), terminating", cmd, timeout)
         proc.terminate()
         for _ in range(10):
             if proc.returncode is not None:

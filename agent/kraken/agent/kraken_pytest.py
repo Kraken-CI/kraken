@@ -12,7 +12,7 @@ def collect_tests(step):
     params = step.get('params', '')
     cwd = step.get('cwd', '.')
     cmd = 'pytest-3 --collect-only -q %s  | head -n -2' % params
-    ret, out = utils.execute(cmd, cwd=cwd)
+    _, out = utils.execute(cmd, cwd=cwd)
     tests = out
     tests = tests.splitlines()
     return tests

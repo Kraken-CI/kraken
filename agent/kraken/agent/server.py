@@ -1,7 +1,8 @@
-import logging
-import datetime
+import os
 import json
 import time
+import logging
+import datetime
 import urllib.request
 
 from . import config
@@ -45,7 +46,7 @@ def get_bind_data():
     try:
         data = f.read()
         bind_data = {}
-        for key, value in re.findall("(\w+):(.*)", data):
+        for key, value in re.findall(r"(\w+):(.*)", data):
             bind_data[key.strip()] = value.strip()
     except:
         return {}
@@ -177,7 +178,7 @@ def connect_to_server():
                 t0 += 1
 
         addr = {}
-        for key, value in re.findall("(\w+):(.*)", data):
+        for key, value in re.findall(r"(\w+):(.*)", data):
             addr[key.strip()] = value.strip()
         if 'ip' in addr:
             addr['ip'] = serv_addr[0]
@@ -255,7 +256,7 @@ class Server():
         self.my_addr = "server"
 
 
-    def check_server():
+    def check_server(self):
         current_addr = self.srv_addr
         self.checks_num += 1
         if self.checks_num > 15 or (datetime.datetime.now() - self.last_check > datetime.timedelta(seconds=60 * 5)):
