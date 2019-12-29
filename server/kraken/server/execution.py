@@ -295,9 +295,11 @@ def get_run_results(run_id, start=0, limit=10):
     return {'items': results, 'total': total}, 200
 
 
-def get_run_jobs(run_id, start=0, limit=10):
+def get_run_jobs(run_id, start=0, limit=10, include_covered=False):
     q = Job.query
     q = q.filter_by(run_id=run_id)
+    if not include_covered:
+        q = q.filter_by(covered=False)
     total = q.count()
     q = q.offset(start).limit(limit)
     jobs = []

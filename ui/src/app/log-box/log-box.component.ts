@@ -90,7 +90,7 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
             loading: true,
             logs: [{
                 message: '... loading more ...',
-                cls: {}
+                cls: ''
             }]
         })
     }
@@ -103,7 +103,7 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
                 expanded: true,
                 logs: [{
                     message: '... skipped ' + skippedLogsCount + ' lines ...',
-                    cls: {}
+                    cls: ''
                 }]
             })
         }

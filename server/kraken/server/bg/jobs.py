@@ -9,7 +9,7 @@ from sqlalchemy.sql.expression import asc, desc
 import giturlparse
 
 from .clry import app
-from ..models import db, Executor, Run, Job, TestCaseResult, Branch, Flow, Stage
+from ..models import db, Executor, Run, Job, TestCaseResult, Branch, Flow, Stage, Project
 from .. import execution
 from .. import consts
 
@@ -328,14 +328,18 @@ def trigger_flow(self, project_id, trigger_data=None):
             # for stages that were not run while their parent was run, do run them
             started_something = False
             for stage in matching_stages:
-                if stage_id in run_stages:
-                    # TODO: trigger new flow
+                if stage.id in run_stages:
+                    # TODO: trigger new flow?
+                    continue
+                if not stage.enabled:
+                    log.info('stage %s not started - disabled', stage.id)
                     continue
                 parent_name = stage.schema['parent']
-                parent_stage = name_stages[parent_name]
-                if parent_stage.id not in run_stages:
-                    # TODO: we should wait when parent is run and then trigger this stage
-                    continue
+                if parent_name != 'root':
+                    parent_stage = name_stages[parent_name]
+                    if parent_stage.id not in run_stages:
+                        # TODO: we should wait when parent is run and then trigger this stage
+                        continue
 
                 if not last_flow.trigger_data:
                     last_flow.trigger_data = trigger_data

@@ -127,14 +127,34 @@ def _handle_step_result(executor, req):
             results[tr['test']] = tr
         q = q.filter(or_(*or_list))
 
+        # update status of existing test case results
+        cnt = 0
         for tcr in q.all():
-            tr = results[tcr.test_case.name]
+            tr = results.pop(tcr.test_case.name)
             tcr.cmd_line = tr['cmd']
             tcr.result = tr['status']
             tcr.values = tr['values'] if 'values' in tr else None
+            cnt += 1
         db.session.commit()
         t1 = time.time()
-        log.info('reporting %s test records took %ss', len(result['test-results']), (t1 - t0))
+        log.info('reporting %s existing test records took %ss', cnt, (t1 - t0))
+
+        # create test case results if they didnt exist
+        tool_test_cases = {}
+        q = TestCase.query.filter_by(tool=step.tool)
+        for tc in q.all():
+            tool_test_cases[tc.name] = tc
+        for tc_name, tr in results.items():
+            tc = tool_test_cases.get(tc_name, None)
+            if tc is None:
+                tc = TestCase(name=tc_name, tool=step.tool)
+            tcr = TestCaseResult(test_case=tc, job=step.job,
+                                 cmd_line=tr['cmd'],
+                                 result=tr['status'],
+                                 values=tr['values'] if 'values' in tr else None)
+        db.session.commit()
+        t2 = time.time()
+        log.info('reporting %s new test records took %ss', len(results), (t2 - t1))
 
     # store issues
     if 'issues' in result:

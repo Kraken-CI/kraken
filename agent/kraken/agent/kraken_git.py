@@ -44,6 +44,8 @@ def run(step, **kwargs):
                 cwd = dest
             else:
                 cwd = url.split('/')[-1]
+                if cwd.endswith('.git'):
+                    cwd = cwd[:-4]
             ret, out = utils.execute('git checkout %s' % commit, cwd=cwd)
             if ret != 0:
                 return ret, 'git checkout exited with non-zero retcode'

@@ -358,6 +358,7 @@ class Job(db.Model, DatesMixin):
                     started=self.started.strftime("%Y-%m-%dT%H:%M:%SZ") if self.started else None,
                     finished=self.finished.strftime("%Y-%m-%dT%H:%M:%SZ") if self.finished else None,
                     completed=self.completed.strftime("%Y-%m-%dT%H:%M:%SZ") if self.completed else None,
+                    covered=self.covered,
                     processing_started=self.processing_started.strftime("%Y-%m-%dT%H:%M:%SZ") if self.processing_started else None,
                     name=self.name,
                     state=self.state,
@@ -586,6 +587,7 @@ def prepare_initial_data():
         'rndtest': {'count': 'text'},
         'artifacts': {'type': 'choice:file', 'upload': 'text'},
         'pylint': {'rcfile': 'text', 'modules_or_packages': 'text'},
+        'cloc': {'not-match-f': 'text', 'exclude-dir': 'text'},
     }
     tools = {}
     for name, fields in tool_fields.items():

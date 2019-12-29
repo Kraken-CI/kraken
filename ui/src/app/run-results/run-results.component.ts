@@ -26,6 +26,7 @@ export class RunResultsComponent implements OnInit {
     jobs: Job[]
     totalJobs = 0
     loadingJobs = false
+    includeCovered = false
 
     job: Job
     selectedJobId = 0
@@ -137,13 +138,17 @@ export class RunResultsComponent implements OnInit {
     }
 
     loadJobsLazy(event) {
-        this.executionService.getRunJobs(this.runId, event.first, event.rows).subscribe(data => {
+        this.executionService.getRunJobs(this.runId, event.first, event.rows, this.includeCovered).subscribe(data => {
             this.jobs = data.items
             this.totalJobs = data.total
 
             this.job = this.jobs[0]
             this.selectedJobId = this.job.id
         })
+    }
+
+    refreshJobs(jobsTable) {
+        jobsTable.onLazyLoad.emit(jobsTable.createLazyLoadMetadata())
     }
 
     showCmdLine() {
@@ -229,5 +234,8 @@ export class RunResultsComponent implements OnInit {
         case 3: return 'pi pi-exclamation-circle step-status-red'
         default: return ''
         }
+    }
+
+    coveredChange() {
     }
 }

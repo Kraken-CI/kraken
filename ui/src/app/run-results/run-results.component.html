@@ -4,7 +4,15 @@
   <div class="p-grid" style="margin-top: 0;">
     <div class="p-col-5">
 
-      <p-table id="jobs"
+      <div style="margin: 0 0 10px 0; display: flex; justify-content: space-between;">
+        <p-button label="Refresh" (onClick)="refreshJobs(jobsTable)"></p-button>
+        <div>
+          <p-inputSwitch [(ngModel)]="includeCovered" [style]="{'vertical-align': 'middle'}" (onChange)="coveredChange()"></p-inputSwitch> Covered
+        </div>
+      </div>
+
+      <p-table #jobsTable
+               id="jobs"
                [value]="jobs"
                [lazy]="true"
                selectionMode="single"
@@ -25,12 +33,12 @@
             <th style="width: 100px;">Completion Status</th>
             <th style="width: 30%;">System</th>
             <th style="width: 10%;">Config</th>
-            <th style="width: 10%;">Executor Group</th>
-            <th style="width: 10%;">Executor</th>
+            <th style="width: 10%; overflow-x: hidden;">Executor Group</th>
+            <th style="width: 10%; overflow-x: hidden;">Executor</th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-job>
-          <tr [pSelectableRow]="job">
+          <tr [pSelectableRow]="job" [ngStyle]="{'background-color': job.covered ? '#aa9' : ''}">
             <td><a routerLink="/jobs/{{job.job_id}}">{{job.id}}</a></td>
             <td>{{job.name}}</td>
             <td>{{getJobState(job)}}</td>
@@ -78,7 +86,8 @@
 
 
 <div *ngIf="activeTab.label === 'Test Results'" style="margin-top: 5px;">
-    <p-table id="results"
+      <p-table #resultsTable
+             id="results"
              [value]="results"
              [lazy]="true"
              (onLazyLoad)="loadResultsLazy($event)"
@@ -96,7 +105,7 @@
           <th style="width: 70px;">Change</th>
           <th style="width: 50%;">Name</th>
           <th style="width: 40px;">Age</th>
-          <th style="width: 40px;">Instability</th>
+          <th style="width: 40px; overflow-x: hidden;">Instability</th>
           <th style="width: 150px;">Values</th>
           <th style="width: 30%;">System</th>
           <th style="width: 10%;">Config</th>

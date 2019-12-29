@@ -16,6 +16,7 @@ setup(
             'rndtest = kraken.agent.kraken_rndtest',
             'shell = kraken.agent.kraken_shell',
             'pylint = kraken.agent.kraken_pylint',
+            'cloc = kraken.agent.kraken_cloc',
         ]
     },
 )

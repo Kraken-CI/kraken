@@ -31,6 +31,7 @@ export class TestCaseResultComponent implements OnInit {
     valueData: any
     valueOptions = {};
     chartPlugins: any[];
+    iterations = 1
 
     constructor(private route: ActivatedRoute,
                 private router: Router,
@@ -132,28 +133,40 @@ export class TestCaseResultComponent implements OnInit {
             // no perf data, skip processing
             return
         }
+
+        let lastRes = this.results[0]
+        this.iterations = lastRes.values[this.selectedValue.name].iterations || 1
+
         let flowIds = [];
         let values = [];
         let median = [];
         let errorBars = {};
+        let errorBarsOk = true
         let minVal = 0;
         let maxVal = null;
         for (let res of this.results.slice().reverse()) {
-            flowIds.push(res.flow_id);
             let val = res.values[this.selectedValue.name]
+            if (val.value === undefined) {
+                continue
+            }
+            flowIds.push(res.flow_id);
             values.push(val.value);
             if (val.median) {
                 median.push(val.median);
             }
-            errorBars[res.flow_id] = {plus: val.stddev, minus: -val.stddev};
+            if (val.stddev !== undefined) {
+                errorBars[res.flow_id] = {plus: val.stddev, minus: -val.stddev};
 
-            let v = val.value - val.stddev;
-            if (minVal > v) {
-                minVal = v;
-            }
-            v = val.value + val.stddev;
-            if (maxVal == null || maxVal < v) {
-                maxVal = v;
+                let v = val.value - val.stddev;
+                if (minVal > v) {
+                    minVal = v;
+                }
+                v = val.value + val.stddev;
+                if (maxVal == null || maxVal < v) {
+                    maxVal = v;
+                }
+            } else {
+                errorBarsOk = false
             }
         }
 
@@ -166,10 +179,12 @@ export class TestCaseResultComponent implements OnInit {
 		borderColor: '#f00',
 		backgroundColor: '#f00',
                 lineTension: 0,
-                errorBars: errorBars,
                 borderWidth: 2
             }]
         };
+        if (errorBarsOk) {
+            valueData.datasets[0]['errorBars'] = errorBars
+        }
         if (median.length > 0) {
             valueData.datasets.push({
                 label: 'median',
@@ -178,9 +193,11 @@ export class TestCaseResultComponent implements OnInit {
 		borderColor: '#f88',
 		backgroundColor: '#f88',
                 lineTension: 0,
-                errorBars: {},
                 borderWidth: 1
             });
+        }
+        if (errorBarsOk) {
+            valueData.datasets[1]['errorBars'] = {}
         }
         this.valueData = valueData;
 

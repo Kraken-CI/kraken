@@ -551,6 +551,11 @@ paths:
           required: false
           type: integer
           format: int32
+        - name: include_covered
+          in: query
+          description: Include covered jobs
+          required: false
+          type: boolean
       responses:
         "200":
           description: A paged array of runs

@@ -22,10 +22,16 @@ def _get_git_url(cwd):
 
         # get remote branch
         branch = 'master'
-        cmd = 'git rev-parse --abbrev-ref --symbolic-full-name @{u}'
+        #cmd = 'git rev-parse --abbrev-ref --symbolic-full-name @{u}'
+        cmd = 'git branch -a -r --contains HEAD'
         ret, out = utils.execute(cmd, cwd=cwd)
         if ret == 0:
-            branch = out.split('/')[1]
+            for l in out.splitlines():
+                l = l.strip()
+                if 'HEAD' in l:
+                    continue
+                branch = out.split('/')[1]
+                break
     git_url = 'https://%s/blob/%s' % (git_url, branch)
     return git_url
 
