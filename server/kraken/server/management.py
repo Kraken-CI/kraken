@@ -225,8 +225,8 @@ def _prepare_new_planner_triggers(stage_id, new_triggers, prev_triggers, trigger
             if interval != prev_interval:
                 planner.reschedule_job(new_triggers['interval_planner_job'], 'interval', dict(seconds=int(interval)))
     elif 'interval_planner_job' in triggers:
-            planner.remove_job(triggers['interval_planner_job'])
-            del triggers['interval_planner_job']
+        planner.remove_job(triggers['interval_planner_job'])
+        del triggers['interval_planner_job']
 
     if 'date' in new_triggers:
         run_date = dateutil.parser.parse(new_triggers['date'])
@@ -239,8 +239,8 @@ def _prepare_new_planner_triggers(stage_id, new_triggers, prev_triggers, trigger
             if run_date != prev_run_date:
                 planner.reschedule_job(new_triggers['date_planner_job'], 'date', dict(run_date=str(run_date)))
     elif 'date_planner_job' in triggers:
-            planner.remove_job(triggers['date_planner_job'])
-            del triggers['date_planner_job']
+        planner.remove_job(triggers['date_planner_job'])
+        del triggers['date_planner_job']
 
     if 'cron' in new_triggers:
         cron_rule = new_triggers['cron']
@@ -257,8 +257,8 @@ def _prepare_new_planner_triggers(stage_id, new_triggers, prev_triggers, trigger
                 planner.reschedule_job(new_triggers['cron_planner_job'], 'cron',
                                        dict(minute=minutes, hour=hours, day=days, month=months, day_of_week=dow))
     elif 'cron_planner_job' in triggers:
-            planner.remove_job(triggers['cron_planner_job'])
-            del triggers['cron_planner_job']
+        planner.remove_job(triggers['cron_planner_job'])
+        del triggers['cron_planner_job']
 
     if triggers == {}:
         triggers['parent'] = True
