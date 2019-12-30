@@ -1,11 +1,9 @@
-import json
 import datetime
 import logging
 
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Table, Column, Boolean, DateTime, ForeignKey, Index, Integer, Sequence, String, Text, Unicode, UnicodeText
+from sqlalchemy import Column, Boolean, DateTime, ForeignKey, Integer, String, Text, Unicode, UnicodeText
 from sqlalchemy import event
-from sqlalchemy.types import TypeDecorator
 from sqlalchemy.orm import relationship, mapper
 from sqlalchemy.dialects.postgresql import JSONB
 
@@ -448,7 +446,7 @@ class Issue(db.Model):
     job_id = Column(Integer, ForeignKey('jobs.id'), nullable=False)
     job = relationship('Job', back_populates="issues")
 
-    def get_json(self, with_extra=False):
+    def get_json(self):
         data = dict(id=self.id,
                     issue_type=self.issue_type,
                     line=self.line,
@@ -532,7 +530,7 @@ class Preference(db.Model):
 
     def get_json(self):
         if self.val_type == "integer":
-            val = long(self.value)
+            val = int(self.value)
         elif self.val_type == "boolean":
             val = (self.value == 'True')
         else:
