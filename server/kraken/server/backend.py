@@ -80,6 +80,7 @@ def _handle_get_job(executor, req):
 
         if not executor.job.started:
             executor.job.started = datetime.datetime.utcnow()
+            executor.job.state = consts.JOB_STATE_ASSIGNED
             db.session.commit()
 
     log.info('sending job: %s', str(job)[:200])
