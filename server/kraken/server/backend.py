@@ -1,3 +1,4 @@
+import os
 import json
 import time
 import logging
@@ -83,7 +84,6 @@ def _handle_get_job(executor, req):
             executor.job.state = consts.JOB_STATE_ASSIGNED
             db.session.commit()
 
-    log.info('sending job: %s', str(job)[:200])
     return {'job': job}
 
 
@@ -286,6 +286,9 @@ def serve_agent_request():
     if msg == 'get-job':
         response = _handle_get_job(executor, req)
 
+        logstash_addr = os.environ.get('KRAKEN_LOGSTASH_ADDR', consts.DEFAULT_LOGSTASH_ADDR)
+        response['cfg'] = dict(logstash_addr=logstash_addr)
+
     elif msg == 'in-progres':
         pass
 
@@ -299,4 +302,5 @@ def serve_agent_request():
         log.warn('unknown msg: %s', msg)
         response = {}
 
+    log.info('sending response: %s', str(response)[:200])
     return json.dumps(response)

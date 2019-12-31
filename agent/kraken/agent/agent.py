@@ -36,6 +36,13 @@ def dispatch_job(srv, job):
         srv.report_step_result(job['id'], 0, {'status': 'error', 'reason': 'exception', 'msg': exc})
 
 
+def apply_cfg_changes(changes):
+    if 'logstash_addr' in changes:
+        logstash_addr = changes['logstash_addr']
+        logs.setup_logging('agent', logstash_addr)
+        os.environ['KRAKEN_LOGSTASH_ADDR'] = logstash_addr
+
+
 def main():
     logs.setup_logging('agent')
 
@@ -58,7 +65,11 @@ def main():
 
     while True:
         try:
-            job = srv.get_job()
+            job, cfg_changes = srv.get_job()
+
+            if cfg_changes:
+                apply_cfg_changes(cfg_changes)
+
             if job:
                 log.set_ctx(job=job['id'], run=job['run_id'])
             log.info('received job: %s', str(job)[:200])

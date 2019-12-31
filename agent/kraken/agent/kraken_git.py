@@ -29,7 +29,7 @@ def run(step, **kwargs):
         url = 'https://%s@%s' % (access_token, url.replace(':', '/'))
 
     try:
-        ret, _ = utils.execute('git clone %s %s' % (url, dest), mask=access_token)
+        ret, _ = utils.execute('git clone %s %s' % (url, dest), mask=access_token, out_prefix='')
         if ret != 0:
             return ret, 'git clone exited with non-zero retcode'
     finally:
@@ -45,7 +45,7 @@ def run(step, **kwargs):
                 cwd = url.split('/')[-1]
                 if cwd.endswith('.git'):
                     cwd = cwd[:-4]
-            ret, out = utils.execute('git checkout %s' % commit, cwd=cwd)
+            ret, out = utils.execute('git checkout %s' % commit, cwd=cwd, out_prefix='')
             if ret != 0:
                 return ret, 'git checkout exited with non-zero retcode'
 

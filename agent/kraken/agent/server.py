@@ -292,13 +292,14 @@ class Server():
 
         response = _send_http_request(self.srv_addr, request)
 
+        cfg_changes = {}
         if 'cfg' in response:
-            config.merge(response['cfg'])
+            cfg_changes = config.merge(response['cfg'])
 
         if 'job' in response:
-            return response['job']
+            return response['job'], cfg_changes
 
-        return {}
+        return {}, cfg_changes
 
     def report_step_result(self, job_id, step_idx, result):
         request = {'address': self.my_addr,

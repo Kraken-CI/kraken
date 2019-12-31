@@ -18,6 +18,7 @@ class StructLogger(logging.Logger):
             extra = {}
         extra.update(StructLogger.context)
         extra.update(kwargs)
+        extra = {k: v for k, v in extra.items() if v is not None}
         super()._log(level, msg, args, exc_info, extra, stack_info)
 
     def set_initial_ctx(self, **kwargs):
@@ -38,6 +39,11 @@ logging.root = root_logger
 logging.Logger.root = root_logger
 logging.Logger.manager.root = root_logger
 
+
+log = logging.getLogger(__name__)
+
+g_logstash_handler = None
+g_basic_logger_done = False
 
 class LogstashFormatter(logging.Formatter):
     def __init__(self, message_type='Logstash', tags=None, fqdn=False):
@@ -122,6 +128,7 @@ class LogstashFormatter(logging.Formatter):
             'message': msg,
             'host': self.host,
             'path': record.pathname,
+            'lineno': record.lineno,
             'tags': self.tags,
             'type': self.message_type,
 
@@ -158,12 +165,23 @@ class LogstashHandler(DatagramHandler, SocketHandler):
         return self.formatter.format(record)
 
 
-def setup_logging(service):
-    logging.basicConfig(format=consts.LOG_FMT, level=logging.INFO)
+def setup_logging(service, logstash_addr=None):
+    global g_logstash_handler, g_basic_logger_done
 
-    logstash_addr = os.environ.get('KRAKEN_LOGSTASH_ADDR', consts.DEFAULT_LOGSTASH_ADDR)
+    if not g_basic_logger_done:
+        logging.basicConfig(format=consts.LOG_FMT, level=logging.INFO)
+        g_basic_logger_done = True
+
+    l = logging.getLogger()
+
+    if g_logstash_handler:
+        l.removeHandler(g_logstash_handler)
+        g_logstash_handler = None
+
+    if logstash_addr is None:
+        logstash_addr = os.environ.get('KRAKEN_LOGSTASH_ADDR', consts.DEFAULT_LOGSTASH_ADDR)
     host, port = logstash_addr.split(':')
     g_logstash_handler = LogstashHandler(host, int(port), fqdn=True)
-    l = logging.getLogger()
     l.set_initial_ctx(service=service)
     l.addHandler(g_logstash_handler)
+    log.info('setup logging on %s to logstash: %s', service, logstash_addr)

@@ -24,7 +24,7 @@ def _get_git_url(cwd):
         branch = 'master'
         #cmd = 'git rev-parse --abbrev-ref --symbolic-full-name @{u}'
         cmd = 'git branch -a -r --contains HEAD'
-        ret, out = utils.execute(cmd, cwd=cwd)
+        ret, out = utils.execute(cmd, cwd=cwd, tracing=False)
         if ret == 0:
             for l in out.splitlines():
                 l = l.strip()
@@ -49,7 +49,7 @@ def run_analysis(step, report_issue=None):
     rcfile = step['rcfile']
     modules_or_packages = step['modules_or_packages']
     cmd = 'pylint --exit-zero -f json --rcfile=%s %s' % (rcfile, modules_or_packages)
-    ret, out = utils.execute(cmd, cwd=cwd)
+    ret, out = utils.execute(cmd, cwd=cwd, out_prefix='')
     if ret != 0:
         log.error('pylint exited with non-zero retcode: %s', ret)
         return ret, 'pylint exited with non-zero retcode'

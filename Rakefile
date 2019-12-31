@@ -91,7 +91,7 @@ end
 }
 
 task :run_server => './server/venv/bin/kkserver' do
-  sh './server/venv/bin/kkserver'
+  sh 'KRAKEN_LOGSTASH_ADDR=192.168.0.88:5959 ./server/venv/bin/kkserver'
 end
 
 task :run_scheduler => './server/venv/bin/kkscheduler' do

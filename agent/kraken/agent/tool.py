@@ -71,7 +71,7 @@ def execute(sock, module, command, step_file_path):
         #tool = sys.modules['__main__']
         tool = importlib.import_module(module)
 
-        log.info('run step tool %s, cmd %s', tool_name, command)
+        log.info('run step tool %s, cmd %s', tool_name, command, tool=None)
 
         result = {'status': 'done'}
         ret = 0
@@ -102,14 +102,14 @@ def execute(sock, module, command, step_file_path):
         else:
             raise Exception('unknown command %s' % command)
 
-        log.info('step tool %s, cmd %s done with retcode %s', tool_name, command, ret)
+        log.info('step tool %s, cmd %s done with retcode %s', tool_name, command, ret, tool=None)
 
         if ret != 0:
             result.update({'status': 'error', 'reason': 'retcode', 'retcode': ret, 'msg': msg})
 
         sock.send_json(result)
     except:
-        log.exception('tool interrupted by exception')
+        log.exception('tool interrupted by exception', tool=None)
         exc = traceback.format_exc()
         sock.send_json({'status': 'error', 'reason': 'exception', 'msg': exc})
 
@@ -121,14 +121,14 @@ class JsonSocket(socket.socket):
 
     def send_json(self, data):
         data = json.dumps(data) + '\n'
-        log.info('tool response: %s', data[:200])
+        log.info('tool response: %s', data[:200], tool=None)
         self.sendall(bytes(data, "utf-8"))
 
 
 class StdoutSock:
     def send_json(self, data):
         data = json.dumps(data) + '\n'
-        log.info('tool response: %s', data[:200])
+        log.info('tool response: %s', data[:200], tool=None)
 
 
 def main():

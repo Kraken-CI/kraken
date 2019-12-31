@@ -13,7 +13,7 @@ def _get_size(fname):
 
 
 def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=subprocess.STDOUT, tracing=True, raise_on_error=False,
-            callback=None, cb_period=5, mask=None):
+            callback=None, cb_period=5, mask=None, out_prefix='output: '):
     if cwd is None:
         cwd = os.getcwd()
     if mask:
@@ -72,7 +72,7 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
                     if tracing:
                         if mask:
                             out_fragment = out_fragment.rstrip().replace(mask, '******')
-                        log.info("output: %s", out_fragment)
+                        log.info("%s%s", out_prefix, out_fragment.rstrip())
 
                 # one trace for minute
                 dt = t - t_trace
@@ -93,7 +93,7 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
                 if tracing:
                     if mask:
                         out_fragment = out_fragment.rstrip().replace(mask, '******')
-                    log.info("output:\n%s", out_fragment)
+                    log.info("%s%s", out_prefix, out_fragment,rstrip())
 
 
     # check if there was timeout exceeded
