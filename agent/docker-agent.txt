@@ -4,3 +4,5 @@ RUN apt-get update && apt-get install -y --no-install-recommends python3 python3
 COPY kkagent /agent
 COPY kktool /agent
 CMD ./kkagent -s http://${KRAKEN_SERVER_ADDR}/backend -d /tmp/kk
+ARG kkver=0.0
+LABEL kkver=${kkver} kkname=server

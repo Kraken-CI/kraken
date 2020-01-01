@@ -8,7 +8,6 @@ log = logging.getLogger(__name__)
 
 
 def run(step, **kwargs):
-    log.info('run step')
     url = step['checkout']
     dest = ''
     if 'destination' in step:

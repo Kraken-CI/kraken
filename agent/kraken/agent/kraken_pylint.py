@@ -37,13 +37,11 @@ def _get_git_url(cwd):
 
 
 def run_analysis(step, report_issue=None):
-    log.info('run step')
     cwd = step.get('cwd', '.')
 
     try:
         git_url = _get_git_url(cwd)
     except:
-        log.info('getting git url failed')
         git_url = None
 
     rcfile = step['rcfile']

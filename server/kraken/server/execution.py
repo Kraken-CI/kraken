@@ -376,9 +376,14 @@ def get_job_logs(job_id, start=0, limit=200, order=None, filters=None):
 
     query = {"query": {"bool": {"must": []}}}
 
+    # take only logs from given job
     query["query"]["bool"]["must"].append({"match": {"job": int(job_id)}})
 
-    filters = {'service': ['tool']}
+    # take only logs generated explicitly by tool
+    query["query"]["bool"]["must"].append({"exists": {"field": "tool"}})
+
+    #filters = {'service': ['tool']}
+    filters = {}
 
     if filters:
         if 'origin' in filters:

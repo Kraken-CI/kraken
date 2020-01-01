@@ -4,3 +4,5 @@ RUN apt-get update && apt-get install -y --no-install-recommends python3 libpq5
 COPY kkplanner /server
 COPY kkdbmigrate /server
 CMD ./kkdbmigrate && ./kkplanner
+ARG kkver=0.0
+LABEL kkver=${kkver} kkname=server

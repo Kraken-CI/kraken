@@ -66,7 +66,7 @@ def execute(sock, module, command, step_file_path):
 
         log.set_ctx(job=step['job_id'], step=step['index'], tool=tool_name)
 
-        log.info('started tool for step')
+        log.info('started tool for step', tool=None)
 
         #tool = sys.modules['__main__']
         tool = importlib.import_module(module)

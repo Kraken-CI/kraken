@@ -13,8 +13,8 @@
       <i *ngIf="frag.expanded" class="pi pi-caret-down" style="vertical-align: bottom;"></i>
       {{frag.title}}
     </div>
-    <div *ngIf="frag.expanded">
-      <div *ngFor="let log of frag.logs" [ngClass]="['log-entry-base', log.cls]" [ngStyle]="{'font-size': '' + fontSize + 'em'}" [innerHTML]="log.message"></div>
+    <div *ngIf="frag.expanded" [ngStyle]="{'font-size': '' + fontSize + 'em'}">
+      <div *ngFor="let log of frag.logs" [ngClass]="['log-entry-base', log.cls]" [innerHTML]="log.message"></div>
     </div>
   </div>
 </div>

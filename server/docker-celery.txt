@@ -20,3 +20,5 @@ RUN groupadd user && useradd --create-home --home-dir /home/user -g user user
 COPY kkcelery /server
 USER user
 CMD ./kkcelery
+ARG kkver=0.0
+LABEL kkver=${kkver} kkname=server

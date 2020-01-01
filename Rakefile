@@ -217,7 +217,7 @@ task :docker_release do
   sh "docker-compose -f docker-compose.yaml config > docker-compose-#{kk_ver}.yaml"
   sh "sed -i -e s/kk_ver/#{kk_ver}/g docker-compose-#{kk_ver}.yaml"
   sh "sed -i -e 's#127.0.0.1:5000#eu.gcr.io/kraken-261806#g' docker-compose-#{kk_ver}.yaml"
-  sh "docker-compose -f docker-compose-#{kk_ver}.yaml build"
+  sh "docker-compose -f docker-compose-#{kk_ver}.yaml build --build-arg kkver=#{kk_ver}"
   sh "docker-compose -f docker-compose-#{kk_ver}.yaml push"
 end
 
