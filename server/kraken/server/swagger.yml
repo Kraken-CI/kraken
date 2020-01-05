@@ -648,6 +648,14 @@ paths:
           in: query
           required: false
           type: string
+        - name: min_age
+          in: query
+          required: false
+          type: integer
+        - name: max_age
+          in: query
+          required: false
+          type: integer
         - name: job
           in: query
           required: false

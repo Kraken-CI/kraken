@@ -56,6 +56,8 @@ export class RunResultsComponent implements OnInit {
     filterIssueLocation = ''
     filterIssueMessage = ''
     filterIssueSymbol = ''
+    filterIssueMinAge = 0
+    filterIssueMaxAge = 1000
     filterIssueJob = ''
 
     constructor(private route: ActivatedRoute,
@@ -203,7 +205,6 @@ export class RunResultsComponent implements OnInit {
                 this.results = data.items
                 this.totalResults = data.total
                 this.loadingResults = false
-                //this.run.
             }
         )
     }
@@ -244,7 +245,8 @@ export class RunResultsComponent implements OnInit {
         this.loadingIssues = true
         this.executionService.getRunIssues(
             this.runId, event.first, event.rows,
-            issueTypes, this.filterIssueLocation, this.filterIssueMessage, this.filterIssueSymbol, this.filterIssueJob
+            issueTypes, this.filterIssueLocation, this.filterIssueMessage, this.filterIssueSymbol,
+            this.filterIssueMinAge, this.filterIssueMaxAge,this.filterIssueJob
         ).subscribe(data => {
             this.issues = data.items
             this.totalIssues = data.total
@@ -377,6 +379,8 @@ export class RunResultsComponent implements OnInit {
         this.filterIssueLocation = ''
         this.filterIssueMessage = ''
         this.filterIssueSymbol = ''
+        this.filterIssueMinAge = 0
+        this.filterIssueMaxAge = 1000
         this.filterIssueJob = ''
 
         this.refreshIssues(issuesTable)

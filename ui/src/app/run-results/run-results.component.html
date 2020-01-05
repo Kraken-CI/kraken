@@ -260,6 +260,17 @@
       <input type="text" pInputText [(ngModel)]="filterIssueSymbol" (keydown)="filterIssuesKeyDown($event, issuesTable)"/>
     </div>
 
+    <div style="margin-right: 30px;">
+      Age:
+      <p-spinner [(ngModel)]="filterIssueMinAge" [min]="0" [max]="filterIssueMaxAge" size="2"
+                 (onChange)="refreshIssues(issuesTable)"
+                 [style]="{'vertical-align': 'middle'}"></p-spinner>
+      -
+      <p-spinner [(ngModel)]="filterIssueMaxAge" [min]="filterIssueMinAge" size="2"
+                 (onChange)="refreshIssues(issuesTable)"
+                 [style]="{'vertical-align': 'middle'}"></p-spinner>
+    </div>
+
     <div>
       Job:
       <input type="text" pInputText [(ngModel)]="filterIssueJob" (keydown)="filterIssuesKeyDown($event, issuesTable)"/>

@@ -338,7 +338,7 @@ def get_run_jobs(run_id, start=0, limit=10, include_covered=False):
     return {'items': jobs, 'total': total}, 200
 
 
-def get_run_issues(run_id, start=0, limit=10, issue_types=None, location=None, message=None, symbol=None, job=None):
+def get_run_issues(run_id, start=0, limit=10, issue_types=None, location=None, message=None, symbol=None, min_age=None, max_age=None, job=None):
     q = Issue.query
     q = q.options(joinedload('job'),
                   joinedload('job.executor_group'),
@@ -353,6 +353,10 @@ def get_run_issues(run_id, start=0, limit=10, issue_types=None, location=None, m
         q = q.filter(Issue.message.ilike('%' + message + '%'))
     if symbol is not None:
         q = q.filter(Issue.symbol.ilike('%' + symbol + '%'))
+    if min_age is not None:
+        q = q.filter(Issue.age >= min_age)
+    if max_age is not None:
+        q = q.filter(Issue.age <= max_age)
     if job is not None:
         if job.isdigit():
             job_id = int(job)
