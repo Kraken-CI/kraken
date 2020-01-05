@@ -18,6 +18,7 @@ export class RunResultsComponent implements OnInit {
     tabs: MenuItem[]
     activeTab: MenuItem
     activeTabIdx = 0
+    recordsCount: string[] = ['0', '0', '0']
 
     runId = 0
     run: Run = {tests_passed: 0}
@@ -125,9 +126,9 @@ export class RunResultsComponent implements OnInit {
         this.results = [];
         this.executionService.getRun(this.runId).subscribe(run => {
             this.run = run
-            this.tabs[0].label = "Jobs (" + run.jobs_total + ")"
-            this.tabs[1].label = "Test Results (" + run.tests_total + ")"
-            this.tabs[2].label = "Issues (" + run.issues_total + ")"
+            this.recordsCount[0] = '' + run.jobs_total
+            this.recordsCount[1] = '' + run.tests_passed + ' / ' + run.tests_total
+            this.recordsCount[2] = '' + run.issues_total
             let tab = this.route.snapshot.paramMap.get("tab");
             if (tab === '') {
                 if (run.state === 'completed') {
@@ -202,6 +203,7 @@ export class RunResultsComponent implements OnInit {
                 this.results = data.items
                 this.totalResults = data.total
                 this.loadingResults = false
+                //this.run.
             }
         )
     }

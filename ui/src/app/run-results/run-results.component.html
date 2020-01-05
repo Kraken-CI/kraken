@@ -1,4 +1,9 @@
-<p-tabMenu [model]="tabs" [activeItem]="activeTab"></p-tabMenu>
+<p-tabMenu [model]="tabs" [activeItem]="activeTab">
+  <ng-template pTemplate="item" let-item let-i="index">
+    <span style="font-size: 1.1em; font-weight: bold; margin-right: 5px;">{{item.label}}</span>
+    <span style="background-color: #628ed0; border-radius: 15px; padding: 1px 8px 2px; color: white; font-weight: bold;">{{ recordsCount[i] }}</span>
+  </ng-template>
+</p-tabMenu>
 
 <div *ngIf="activeTabIdx === 0">
   <div class="p-grid" style="margin-top: 0;">
