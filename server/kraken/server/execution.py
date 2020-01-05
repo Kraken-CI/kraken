@@ -133,6 +133,7 @@ def start_run(stage, flow, args=None):
     db.session.commit()
     log.info('starting run %s for stage %s of branch %s', new_run, stage, stage.branch)
     trigger_jobs(new_run)
+    return new_run
 
 
 def create_flow(branch_id, kind, flow, trigger_data=None):
@@ -225,7 +226,7 @@ def create_run(flow_id, run):
     if stage is None:
         abort(404, "Stage not found")
 
-    start_run(stage, flow, args=run.get('args', {}))
+    new_run = start_run(stage, flow, args=run.get('args', {}))
 
     # Serialize and return the newly created run in the response
     data = new_run.get_json()
@@ -337,13 +338,28 @@ def get_run_jobs(run_id, start=0, limit=10, include_covered=False):
     return {'items': jobs, 'total': total}, 200
 
 
-def get_run_issues(run_id, start=0, limit=10):
+def get_run_issues(run_id, start=0, limit=10, issue_types=None, location=None, message=None, symbol=None, job=None):
     q = Issue.query
     q = q.options(joinedload('job'),
                   joinedload('job.executor_group'),
                   joinedload('job.executor_used'))
     q = q.join('job')
     q = q.filter(Job.run_id == run_id, Job.covered == False)
+    if issue_types:
+        q = q.filter(Issue.issue_type.in_(issue_types))
+    if location is not None:
+        q = q.filter(Issue.path.ilike('%' + location + '%'))
+    if message is not None:
+        q = q.filter(Issue.message.ilike('%' + message + '%'))
+    if symbol is not None:
+        q = q.filter(Issue.symbol.ilike('%' + symbol + '%'))
+    if job is not None:
+        if job.isdigit():
+            job_id = int(job)
+            q = q.filter(Job.id == job_id)
+        else:
+            q = q.filter(Job.name.ilike('%' + job + '%'))
+
     total = q.count()
     q = q.order_by(asc('path'), asc('line'))
     q = q.offset(start).limit(limit)

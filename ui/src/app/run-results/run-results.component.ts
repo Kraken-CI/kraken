@@ -17,6 +17,7 @@ import { Job, Run } from '../backend/model/models';
 export class RunResultsComponent implements OnInit {
     tabs: MenuItem[]
     activeTab: MenuItem
+    activeTabIdx = 0
 
     runId = 0
     run: Run = {tests_passed: 0}
@@ -43,12 +44,18 @@ export class RunResultsComponent implements OnInit {
     filterMinInstability = 0
     filterMaxInstability = 10
     filterTestCaseText = ''
-    filterJob = ''
+    filterResultJob = ''
 
     // issues
     issues: any[]
     totalIssues = 0
-    loadingIssues = false
+    loadingIssues = true
+    issueTypes: any[]
+    filterIssueTypes: any[] = []
+    filterIssueLocation = ''
+    filterIssueMessage = ''
+    filterIssueSymbol = ''
+    filterIssueJob = ''
 
     constructor(private route: ActivatedRoute,
                 private router: Router,
@@ -70,6 +77,13 @@ export class RunResultsComponent implements OnInit {
             {name: 'Regressions', code: 2},
             {name: 'New', code: 3},
         ]
+
+        this.issueTypes = [
+            {name: 'error', code: 0},
+            {name: 'warning', code: 1},
+            {name: 'convention', code: 2},
+            {name: 'refactor', code: 3},
+        ]
     }
 
     switchToTab(tabName) {
@@ -80,6 +94,7 @@ export class RunResultsComponent implements OnInit {
             idx = 2
         }
         this.activeTab = this.tabs[idx]
+        this.activeTabIdx = idx
     }
 
     ngOnInit() {
@@ -110,6 +125,9 @@ export class RunResultsComponent implements OnInit {
         this.results = [];
         this.executionService.getRun(this.runId).subscribe(run => {
             this.run = run
+            this.tabs[0].label = "Jobs (" + run.jobs_total + ")"
+            this.tabs[1].label = "Test Results (" + run.tests_total + ")"
+            this.tabs[2].label = "Issues (" + run.issues_total + ")"
             let tab = this.route.snapshot.paramMap.get("tab");
             if (tab === '') {
                 if (run.state === 'completed') {
@@ -130,7 +148,7 @@ export class RunResultsComponent implements OnInit {
             }, {
                 label: 'Results',
                 url: '/branches/' + run.branch_id + '/' + run.flow_kind,
-                id: run.flow_kind,
+                id: run.flow_kind.toUpperCase(),
                 items: [{
                     label: 'CI',
                     routerLink: '/branches/' + run.branch_id + '/ci'
@@ -178,7 +196,7 @@ export class RunResultsComponent implements OnInit {
             this.runId, event.first, event.rows, statuses, changes,
             this.filterMinAge, this.filterMaxAge,
             this.filterMinInstability, this.filterMaxInstability,
-            this.filterTestCaseText, this.filterJob
+            this.filterTestCaseText, this.filterResultJob
         ).subscribe(
             data => {
                 this.results = data.items
@@ -216,10 +234,24 @@ export class RunResultsComponent implements OnInit {
     }
 
     loadIssuesLazy(event) {
-        this.executionService.getRunIssues(this.runId, event.first, event.rows).subscribe(data => {
+        let issueTypes = this.filterIssueTypes.map(e => e.code)
+        if (issueTypes.length === 0) {
+            issueTypes = null
+        }
+
+        this.loadingIssues = true
+        this.executionService.getRunIssues(
+            this.runId, event.first, event.rows,
+            issueTypes, this.filterIssueLocation, this.filterIssueMessage, this.filterIssueSymbol, this.filterIssueJob
+        ).subscribe(data => {
             this.issues = data.items
             this.totalIssues = data.total
+            this.loadingIssues = false
         });
+    }
+
+    refreshIssues(issuesTable) {
+        issuesTable.onLazyLoad.emit(issuesTable.createLazyLoadMetadata())
     }
 
     issueTypeToClass(issue_type) {
@@ -330,5 +362,21 @@ export class RunResultsComponent implements OnInit {
         if (event.key == "Enter") {
             this.refreshResults(resultsTable)
         }
+    }
+
+    filterIssuesKeyDown(event, issuesTable) {
+        if (event.key == "Enter") {
+            this.refreshIssues(issuesTable)
+        }
+    }
+
+    resetIssuesFilter(issuesTable) {
+        this.filterIssueTypes = []
+        this.filterIssueLocation = ''
+        this.filterIssueMessage = ''
+        this.filterIssueSymbol = ''
+        this.filterIssueJob = ''
+
+        this.refreshIssues(issuesTable)
     }
 }

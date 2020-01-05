@@ -61,7 +61,7 @@ export class TestCaseResultComponent implements OnInit {
             }, {
                 label: 'Results',
                 url: '/branches/' + this.result.branch_id + '/' + this.result.flow_kind,
-                id: this.result.flow_kind,
+                id: this.result.flow_kind.toUpperCase(),
                 items: [{
                     label: 'CI',
                     routerLink: '/branches/' + this.result.branch_id + '/ci'

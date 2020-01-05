@@ -72,7 +72,7 @@ export class BranchResultsComponent implements OnInit {
                 jobs_pending: 2,
                 tests_passed: 987,
                 tests_total: 1033,
-                issues: 12,
+                issues_total: 12,
             }, {
                 name: 'Deploy',
                 state: 'not-run',
@@ -189,7 +189,7 @@ export class BranchResultsComponent implements OnInit {
                 color: '#fff9e6',
                 started: '2019-09-13 15:30 UTC',
                 duration: '3h 40m',
-                issues: 78
+                issues_total: 78
             }, {
                 name: 'Deploy',
                 state: 'not-run',
@@ -226,7 +226,7 @@ export class BranchResultsComponent implements OnInit {
         }, {
             label: 'Results',
             url: '/branches/' + this.branch.id + '/' + this.kind,
-            id: this.kind,
+            id: this.kind.toUpperCase(),
             items: [{
                 label: 'CI',
                 routerLink: '/branches/' + this.branch.id + '/ci'

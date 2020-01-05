@@ -1,6 +1,6 @@
 <p-tabMenu [model]="tabs" [activeItem]="activeTab"></p-tabMenu>
 
-<div *ngIf="activeTab.label === 'Jobs'">
+<div *ngIf="activeTabIdx === 0">
   <div class="p-grid" style="margin-top: 0;">
     <div class="p-col-5">
 
@@ -85,7 +85,7 @@
 </div>
 
 
-<div *ngIf="activeTab.label === 'Test Results'" style="margin-top: 5px;">
+<div *ngIf="activeTabIdx === 1" style="margin-top: 5px;">
 
   <div style="display: flex; margin: 15px 5px;">
     <strong style="margin: 2px 30px 0 0; font-size: 1.5em; width: 3em;">Stats</strong>
@@ -97,7 +97,7 @@
       Total: {{ run.tests_total }}
     </div>
     <div style="margin-right: 15px; align-self: center;">
-      Pass Ratio: {{ run.tests_passed * 100 / run.tests_total }} %
+      Pass Ratio: {{ run.tests_total > 0 ? run.tests_passed * 100 / run.tests_total : '-' }} %
     </div>
     <div style="margin-right: 20px; align-self: center;">
       Pending: {{ run.tests_pending }}
@@ -152,7 +152,7 @@
 
     <div>
       Job:
-      <input type="text" pInputText [(ngModel)]="filterJob" (keydown)="filterResultsKeyDown($event, resultsTable)"/>
+      <input type="text" pInputText [(ngModel)]="filterResultJob" (keydown)="filterResultsKeyDown($event, resultsTable)"/>
     </div>
 
     <p-button label="Refresh" icon="pi pi-refresh" (onClick)="refreshResults(resultsTable)" [style]="{'margin': '0 20px 0 60px'}"></p-button>
@@ -216,8 +216,58 @@
 </div>
 
 
-<div *ngIf="activeTab.label === 'Issues'" style="margin-top: 5px;">
-    <p-table id="issues"
+<div *ngIf="activeTabIdx === 2" style="margin-top: 5px;">
+
+  <div style="display: flex; margin: 15px 5px;">
+    <strong style="margin: 2px 30px 0 0; font-size: 1.5em; width: 3em;">Stats</strong>
+
+    <div style="margin-right: 15px; align-self: center;">
+      Total: {{ run.issues_total }}
+    </div>
+    <div style="margin-right: 15px; align-self: center;">
+      New: {{ run.issues_new }}
+    </div>
+  </div>
+
+  <div style="display: flex; margin: 15px 5px;">
+    <strong style="margin: 2px 30px 0 0; font-size: 1.5em; width: 3em;">Filters</strong>
+
+    <div style="margin-right: 30px;">
+      Type:
+      <p-multiSelect
+        [options]="issueTypes" [(ngModel)]="filterIssueTypes" optionLabel="name"
+        [filter]="false" [scrollHeight]="500" (onChange)="refreshIssues(issuesTable)"
+        [style]="{'vertical-align': 'middle'}"></p-multiSelect>
+    </div>
+
+    <div style="margin-right: 30px;">
+      Location:
+      <input type="text" pInputText [(ngModel)]="filterIssueLocation" (keydown)="filterIssuesKeyDown($event, issuesTable)"/>
+    </div>
+
+    <div style="margin-right: 30px;">
+      Message:
+      <input type="text" pInputText [(ngModel)]="filterIssueMessage" (keydown)="filterIssuesKeyDown($event, issuesTable)"/>
+    </div>
+
+    <div style="margin-right: 30px;">
+      Symbol:
+      <input type="text" pInputText [(ngModel)]="filterIssueSymbol" (keydown)="filterIssuesKeyDown($event, issuesTable)"/>
+    </div>
+
+    <div>
+      Job:
+      <input type="text" pInputText [(ngModel)]="filterIssueJob" (keydown)="filterIssuesKeyDown($event, issuesTable)"/>
+    </div>
+
+    <p-button label="Refresh" icon="pi pi-refresh" (onClick)="refreshIssues(issuesTable)" [style]="{'margin': '0 20px 0 60px'}"></p-button>
+    <p-button label="Reset" icon="pi pi-undo" (onClick)="resetIssuesFilter(issuesTable)"></p-button>
+
+  </div>
+
+
+    <p-table #issuesTable
+             id="issues"
              [value]="issues"
              [lazy]="true"
              (onLazyLoad)="loadIssuesLazy($event)"
@@ -235,6 +285,7 @@
           <th style="width: 20%;">Location</th>
           <th style="width: 20%;">Message</th>
           <th style="width: 180px;">Symbol</th>
+          <th style="width: 40px;">Age</th>
           <th style="width: 20%;">System</th>
           <th style="width: 10%;">Config</th>
           <th style="width: 10%;">Executor Group</th>
@@ -256,11 +307,15 @@
           </td>
           <td>{{ issue.message }}</td>
           <td>{{ issue.symbol }}</td>
+          <td>{{ issue.age }}</td>
           <td>Ubuntu 18.04</td>
           <td>default</td>
           <td>{{ issue.executor_group_name}}</td>
           <td>{{ issue.executor_name}}</td>
         </tr>
+      </ng-template>
+      <ng-template pTemplate="paginatorright" let-state>
+           Total Records: {{state.totalRecords}}
       </ng-template>
     </p-table>
 </div>

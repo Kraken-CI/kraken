@@ -9,7 +9,7 @@ from sqlalchemy.sql.expression import asc, desc
 import giturlparse
 
 from .clry import app
-from ..models import db, Executor, Run, Job, TestCaseResult, Branch, Flow, Stage, Project
+from ..models import db, Executor, Run, Job, TestCaseResult, Branch, Flow, Stage, Project, Issue
 from .. import execution
 from .. import consts
 
@@ -47,7 +47,7 @@ class BaseTask(Task):
         log.info('PROBLEMS')
 
 
-def _analyze_job_history(job):
+def _analyze_job_results_history(job):
     # TODO: if branch is forked from another base branch take base branch results into account
 
     new_cnt = 0
@@ -56,7 +56,7 @@ def _analyze_job_history(job):
     fix_cnt = 0
 
     for job_tcr in job.results:
-        log.info('Analyze %s %s', job_tcr, job_tcr.test_case.name)
+        log.info('Analyze result %s %s', job_tcr, job_tcr.test_case.name)
         q = TestCaseResult.query
         q = q.filter(TestCaseResult.id != job_tcr.id)
         q = q.filter_by(test_case_id=job_tcr.test_case_id)
@@ -97,7 +97,40 @@ def _analyze_job_history(job):
 
         db.session.commit()
 
-        return new_cnt, no_change_cnt, regr_cnt, fix_cnt
+    return new_cnt, no_change_cnt, regr_cnt, fix_cnt
+
+
+def _analyze_job_issues_history(job):
+    q = Run.query.filter_by(stage=job.run.stage)
+    q = q.filter(Run.created < job.run.created)
+    q = q.order_by(desc(Run.created))
+    prev_run = q.first()
+    if prev_run is None:
+        return
+
+    for issue in job.issues:
+        log.info('Analyze issue %s', issue)
+        q = Issue.query
+        q = q.filter_by(path=issue.path, issue_type=issue.issue_type, symbol=issue.symbol)
+        q = q.filter(Issue.line > issue.line - 5, Issue.line < issue.line + 5)
+        q = q.join('job')
+        q = q.filter_by(executor_group=issue.job.executor_group)
+        q = q.join('job', 'run')
+        q = q.filter(Run.id == prev_run.id)
+        prev_issues = q.all()
+        prev_issue = None
+        dist = 1000
+        log.info('PREV ISSES %s', len(prev_issues))
+        for i in prev_issues:
+            new_dist = abs(i.line - issue.line)
+            log.info('issue %s - prev issue %s, dist %s', issue, i, new_dist)
+            if new_dist < dist:
+                dist = new_dist
+                prev_issue = i
+
+        if prev_issue is not None:
+            issue.age = prev_issue.age + 1
+    db.session.commit()
 
 
 @app.task(base=BaseTask, bind=True)
@@ -132,12 +165,15 @@ def analyze_results_history(self, run_id):
             for job in run.jobs:
                 if job.covered:
                     continue
-                new_cnt, no_change_cnt, regr_cnt, fix_cnt = _analyze_job_history(job)
+                new_cnt, no_change_cnt, regr_cnt, fix_cnt = _analyze_job_results_history(job)
                 run.new_cnt += new_cnt
                 run.no_change_cnt += no_change_cnt
                 run.regr_cnt += regr_cnt
                 run.fix_cnt += fix_cnt
                 db.session.commit()
+
+                _analyze_job_issues_history(job)
+
             log.info('anlysis of run %s completed', run)
 
             # trigger analysis of the following run

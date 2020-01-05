@@ -51,9 +51,9 @@
       </span>
     </div>
 
-    <div *ngIf="run.issues" routerLink="/runs/{{ run.id }}/issues" style="cursor: pointer;">
+    <div *ngIf="run.issues_total" routerLink="/runs/{{ run.id }}/issues" style="cursor: pointer;">
       <b>Issues</b><br>
-      {{run.issues}} <i class="pi pi-exclamation-triangle" style="color: orange; font-size: 1.3em; vertical-align: bottom;"></i>
+      {{run.issues_total}} <i class="pi pi-exclamation-triangle" style="color: orange; font-size: 1.3em; vertical-align: bottom;"></i>
     </div>
 
   </div>

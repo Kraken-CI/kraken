@@ -48,7 +48,7 @@ export class NewRunComponent implements OnInit {
             }, {
                 label: 'Results',
                 url: '/branches/' + flow.branch_id + '/' + flow.kind,
-                id: flow.kind,
+                id: flow.kind.toUpperCase(),
                 items: [{
                     label: 'CI',
                     routerLink: '/branches/' + flow.branch_id + '/ci'

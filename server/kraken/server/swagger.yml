@@ -630,6 +630,28 @@ paths:
           required: false
           type: integer
           format: int32
+        - name: issue_types
+          in: query
+          required: false
+          type: array
+          items:
+            type: integer
+        - name: location
+          in: query
+          required: false
+          type: string
+        - name: message
+          in: query
+          required: false
+          type: string
+        - name: symbol
+          in: query
+          required: false
+          type: string
+        - name: job
+          in: query
+          required: false
+          type: string
       responses:
         "200":
           description: A paged array of runs
