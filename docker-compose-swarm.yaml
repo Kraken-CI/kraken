@@ -102,8 +102,8 @@ services:
     #   - lab_net
     depends_on:
       - server
-    deploy:
-      replicas: 3
+#    deploy:
+#      replicas: 3
 
   ui:
     image: eu.gcr.io/kraken-261806/kkui:kk_ver

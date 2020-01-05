@@ -58,7 +58,7 @@
     <div class="p-grid">
       <div class="p-col-3">
         <button type="button" (click)="newStage()" pButton icon="pi pi-plus" label="New Stage"></button>
-        <div *ngFor="let stage of branch.stages" style="margin: 6px 0 12px 0; cursor: pointer;" class="round-shadow {{ stage.selectedClass }}" (click)="selectStage(stage)">
+        <div *ngFor="let stage of branch.stages" style="margin: 6px 0 12px 0; cursor: pointer;" class="round-shadow {{ stage.selectedClass }} {{ stage.enabled ? '' : 'disabled-stage' }}" (click)="selectStage(stage)">
           <div style="font-size: 1.1rem; font-weight: bold; margin-bottom: 4px;">{{stage.name}}</div>
           <div style="margin-bottom: 6px;">{{stage.description}}</div>
           <div style="font-size: 1.05rem;">Parent: {{stage.schema.parent}}</div>

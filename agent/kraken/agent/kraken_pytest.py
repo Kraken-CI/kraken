@@ -11,7 +11,9 @@ log = logging.getLogger(__name__)
 def collect_tests(step):
     params = step.get('params', '')
     cwd = step.get('cwd', '.')
-    cmd = 'pytest-3 --collect-only -q %s  | head -n -2' % params
+    params = params.replace('-vv', '')
+    params = params.replace('-v', '')
+    cmd = 'PYTHONPATH=`pwd` pytest-3 --collect-only -q %s  | head -n -2' % params
     _, out = utils.execute(cmd, cwd=cwd, out_prefix='')
     tests = out
     tests = tests.splitlines()
@@ -26,7 +28,7 @@ def run_tests(step, report_result=None):
         cwd = step.get('cwd', '.')
         params = [p for p in params.split() if p.startswith('-')]
         params = " ".join(params)
-        cmd = 'pytest-3 -vv -r ap --junit-xml=result.xml %s %s' % (params, test)
+        cmd = 'PYTHONPATH=`pwd` pytest-3 -vv -r ap --junit-xml=result.xml %s %s' % (params, test)
         ret, out = utils.execute(cmd, cwd=cwd, out_prefix='') # TODO: check ret
 
         result = dict(cmd=cmd, test=test)

@@ -5,7 +5,7 @@
     <div class="p-col-5">
 
       <div style="margin: 0 0 10px 0; display: flex; justify-content: space-between;">
-        <p-button label="Refresh" (onClick)="refreshJobs(jobsTable)"></p-button>
+        <p-button label="Refresh" icon="pi pi-refresh" (onClick)="refreshJobs(jobsTable)"></p-button>
         <div>
           <p-inputSwitch [(ngModel)]="includeCovered" [style]="{'vertical-align': 'middle'}" (onChange)="coveredChange()"></p-inputSwitch> Covered
         </div>
@@ -86,6 +86,80 @@
 
 
 <div *ngIf="activeTab.label === 'Test Results'" style="margin-top: 5px;">
+
+  <div style="display: flex; margin: 15px 5px;">
+    <strong style="margin: 2px 30px 0 0; font-size: 1.5em; width: 3em;">Stats</strong>
+
+    <div style="margin-right: 15px; align-self: center;">
+      Passed: {{ run.tests_passed }}
+    </div>
+    <div style="margin-right: 15px; align-self: center;">
+      Total: {{ run.tests_total }}
+    </div>
+    <div style="margin-right: 15px; align-self: center;">
+      Pass Ratio: {{ run.tests_passed * 100 / run.tests_total }} %
+    </div>
+    <div style="margin-right: 20px; align-self: center;">
+      Pending: {{ run.tests_pending }}
+    </div>
+  </div>
+
+  <div style="display: flex; margin: 15px 5px;">
+    <strong style="margin: 2px 30px 0 0; font-size: 1.5em; width: 3em;">Filters</strong>
+
+    <div style="margin-right: 30px;">
+      Result Status:
+      <p-multiSelect
+        [options]="resultStatuses" [(ngModel)]="filterStatuses" optionLabel="name"
+        [filter]="false" [scrollHeight]="500" (onChange)="refreshResults(resultsTable)"
+        [style]="{'vertical-align': 'middle'}"></p-multiSelect>
+    </div>
+
+    <div style="margin-right: 30px;">
+      Result Change:
+      <p-multiSelect
+        [options]="resultChanges" [(ngModel)]="filterChanges" optionLabel="name"
+        [filter]="false" [scrollHeight]="500" (onChange)="refreshResults(resultsTable)"
+        [style]="{'vertical-align': 'middle'}"></p-multiSelect>
+    </div>
+
+    <div style="margin-right: 30px;">
+      Age:
+      <p-spinner [(ngModel)]="filterMinAge" [min]="0" [max]="filterMaxAge" size="2"
+                 (onChange)="refreshResults(resultsTable)"
+                 [style]="{'vertical-align': 'middle'}"></p-spinner>
+      -
+      <p-spinner [(ngModel)]="filterMaxAge" [min]="filterMinAge" size="2"
+                 (onChange)="refreshResults(resultsTable)"
+                 [style]="{'vertical-align': 'middle'}"></p-spinner>
+    </div>
+
+    <div style="margin-right: 30px;">
+      Instability:
+      <p-spinner [(ngModel)]="filterMinInstability" [min]="0" [max]="filterMaxInstability" size="2"
+                 (onChange)="refreshResults(resultsTable)"
+                 [style]="{'vertical-align': 'middle'}"></p-spinner>
+      -
+      <p-spinner [(ngModel)]="filterMaxInstability" [min]="filterMinInstability" [max]="10" size="2"
+                 (onChange)="refreshResults(resultsTable)"
+                 [style]="{'vertical-align': 'middle'}"></p-spinner>
+    </div>
+
+    <div style="margin-right: 30px;">
+      Test Case:
+      <input type="text" pInputText [(ngModel)]="filterTestCaseText" (keydown)="filterResultsKeyDown($event, resultsTable)"/>
+    </div>
+
+    <div>
+      Job:
+      <input type="text" pInputText [(ngModel)]="filterJob" (keydown)="filterResultsKeyDown($event, resultsTable)"/>
+    </div>
+
+    <p-button label="Refresh" icon="pi pi-refresh" (onClick)="refreshResults(resultsTable)" [style]="{'margin': '0 20px 0 60px'}"></p-button>
+    <p-button label="Reset" icon="pi pi-undo" (onClick)="resetResultsFilter(resultsTable)"></p-button>
+
+  </div>
+
       <p-table #resultsTable
              id="results"
              [value]="results"
@@ -119,7 +193,7 @@
           <td>{{res.job_name}}</td>
           <td><a routerLink="/jobs/{{res.job_id}}">{{res.job_id}}</a></td>
           <td [class]="resultToClass(res.result)">{{resultToTxt(res.result)}}</td>
-          <td>{{res.change}}</td>
+          <td [class]="getResultChangeCls(res.change)">{{getResultChangeTxt(res.change)}}</td>
           <td><a routerLink="/test_case_results/{{res.id}}">{{res.test_case_name}}</a></td>
           <td>{{res.age}}</td>
           <td>{{res.instability}}</td>
@@ -135,7 +209,10 @@
           <td><p-button label="CmdLine" (onClick)="showCmdLine()" styleClass="cmd-line-btn"></p-button></td>
         </tr>
       </ng-template>
-    </p-table>
+      <ng-template pTemplate="paginatorright" let-state>
+           Total Records: {{state.totalRecords}}
+      </ng-template>
+      </p-table>
 </div>
 
 

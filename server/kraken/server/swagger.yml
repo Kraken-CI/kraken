@@ -513,6 +513,42 @@ paths:
           required: false
           type: integer
           format: int32
+        - name: statuses
+          in: query
+          required: false
+          type: array
+          items:
+            type: integer
+        - name: changes
+          in: query
+          required: false
+          type: array
+          items:
+            type: integer
+        - name: min_age
+          in: query
+          required: false
+          type: integer
+        - name: max_age
+          in: query
+          required: false
+          type: integer
+        - name: min_instability
+          in: query
+          required: false
+          type: integer
+        - name: max_instability
+          in: query
+          required: false
+          type: integer
+        - name: test_case_text
+          in: query
+          required: false
+          type: string
+        - name: job
+          in: query
+          required: false
+          type: string
       responses:
         "200":
           description: A paged array of runs
@@ -1019,6 +1055,7 @@ definitions:
         type: integer
       executor_name:
         type: string
+
   Jobs:
     type: object
     properties:

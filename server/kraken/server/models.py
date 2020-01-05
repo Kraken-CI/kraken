@@ -226,6 +226,11 @@ class Run(db.Model, DatesMixin):
     hard_timeout_reached = Column(DateTime)
     soft_timeout_reached = Column(DateTime)
     args = Column(JSONB, nullable=False, default={})
+    # stats - result changes
+    new_cnt = Column(Integer, default=0)
+    no_change_cnt = Column(Integer, default=0)
+    regr_cnt = Column(Integer, default=0)
+    fix_cnt = Column(Integer, default=0)
 
     def get_json(self):
         non_covered_jobs = Job.query.filter_by(run=self).filter_by(covered=False).all()
@@ -294,6 +299,10 @@ class Run(db.Model, DatesMixin):
                     tests_passed=tests_passed,
                     tests_pending=tests_pending,
                     issues=issues,
+                    new_cnt=self.new_cnt,
+                    no_change_cnt=self.no_change_cnt,
+                    regr_cnt=self.regr_cnt,
+                    fix_cnt=self.fix_cnt,
                     duration=duration_to_txt(duration))
 
         return data
@@ -416,8 +425,8 @@ class TestCaseResult(db.Model):
                     job_name=self.job.name,
                     executor_group_name=self.job.executor_group.name,
                     executor_group_id=self.job.executor_group_id,
-                    executor_name=self.job.executor_used.name,
-                    executor_id=self.job.executor_used_id)
+                    executor_name=self.job.executor_used.name if self.job.executor_used else '',
+                    executor_id=self.job.executor_used_id if self.job.executor_used else 0)
 
         if with_extra:
             data['project_id'] = self.job.run.flow.branch.project_id

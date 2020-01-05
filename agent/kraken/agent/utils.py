@@ -93,7 +93,7 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
                 if tracing:
                     if mask:
                         out_fragment = out_fragment.rstrip().replace(mask, '******')
-                    log.info("%s%s", out_prefix, out_fragment,rstrip())
+                    log.info("%s%s", out_prefix, out_fragment.rstrip())
 
 
     # check if there was timeout exceeded

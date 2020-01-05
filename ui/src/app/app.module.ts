@@ -32,6 +32,7 @@ import {TabMenuModule} from 'primeng/tabmenu';
 import {CheckboxModule} from 'primeng/checkbox';
 import {MenubarModule} from 'primeng/menubar';
 import {InputSwitchModule} from 'primeng/inputswitch';
+import {SpinnerModule} from 'primeng/spinner';
 
 import { ApiModule, BASE_PATH, Configuration } from './backend';
 import { AppRoutingModule } from './app-routing.module';
@@ -107,6 +108,7 @@ export function cfgFactory() {
         CheckboxModule,
         MenubarModule,
         InputSwitchModule,
+        SpinnerModule,
     ],
     providers: [{ provide: BASE_PATH, useValue: '/api' },
                 BreadcrumbsService, MessageService, ConfirmationService],

@@ -47,7 +47,14 @@ class BaseTask(Task):
         log.info('PROBLEMS')
 
 
-def analyze_job_history(job):
+def _analyze_job_history(job):
+    # TODO: if branch is forked from another base branch take base branch results into account
+
+    new_cnt = 0
+    no_change_cnt = 0
+    regr_cnt = 0
+    fix_cnt = 0
+
     for job_tcr in job.results:
         log.info('Analyze %s %s', job_tcr, job_tcr.test_case.name)
         q = TestCaseResult.query
@@ -74,15 +81,23 @@ def analyze_job_history(job):
         if len(tcrs) > 0:
             if tcrs[-1].result == job_tcr.result:
                 job_tcr.age = tcrs[-1].age + 1
+                no_change_cnt += 1
             else:
                 job_tcr.instability += 1
                 job_tcr.age = 0
                 if job_tcr.result == consts.TC_RESULT_PASSED and tcrs[-1].result != consts.TC_RESULT_PASSED:
                     job_tcr.change = consts.TC_RESULT_CHANGE_FIX
+                    fix_cnt += 1
                 elif job_tcr.result != consts.TC_RESULT_PASSED and tcrs[-1].result == consts.TC_RESULT_PASSED:
                     job_tcr.change = consts.TC_RESULT_CHANGE_REGR
+                    regr_cnt += 1
+        else:
+            job_tcr.change = consts.TC_RESULT_CHANGE_NEW
+            new_cnt += 1
 
         db.session.commit()
+
+        return new_cnt, no_change_cnt, regr_cnt, fix_cnt
 
 
 @app.task(base=BaseTask, bind=True)
@@ -113,10 +128,16 @@ def analyze_results_history(self, run_id):
                 return
 
             # analyze jobs of this run
+            run.new_cnt = run.no_change_cnt = run.regr_cnt = run.fix_cnt = 0
             for job in run.jobs:
                 if job.covered:
                     continue
-                analyze_job_history(job)
+                new_cnt, no_change_cnt, regr_cnt, fix_cnt = _analyze_job_history(job)
+                run.new_cnt += new_cnt
+                run.no_change_cnt += no_change_cnt
+                run.regr_cnt += regr_cnt
+                run.fix_cnt += fix_cnt
+                db.session.commit()
             log.info('anlysis of run %s completed', run)
 
             # trigger analysis of the following run
@@ -150,7 +171,7 @@ def trigger_stages(self, run_id):
 
             curr_stage_name = run.stage.name
             branch = run.stage.branch
-            for stage in branch.stages.filter_by(deleted=None):
+            for stage in branch.stages.filter_by(deleted=None, enabled=True):
                 if stage.schema['parent'] != curr_stage_name:
                     continue
                 if not stage.schema['triggers'].get('parent', False):

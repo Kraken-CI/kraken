@@ -6,7 +6,7 @@ import {MenuItem} from 'primeng/api';
 import { ExecutionService } from '../backend/api/execution.service';
 import { BreadcrumbsService } from '../breadcrumbs.service';
 import { TestCaseResults } from '../test-case-results';
-import { Job } from '../backend/model/models';
+import { Job, Run } from '../backend/model/models';
 
 
 @Component({
@@ -19,18 +19,33 @@ export class RunResultsComponent implements OnInit {
     activeTab: MenuItem
 
     runId = 0
-    results: any[]
-    totalResults = 0
-    loadingResults = false
+    run: Run = {tests_passed: 0}
 
+    // jobs
     jobs: Job[]
     totalJobs = 0
-    loadingJobs = false
+    loadingJobs = true
     includeCovered = false
 
     job: Job
     selectedJobId = 0
 
+    // results
+    results: any[]
+    totalResults = 0
+    loadingResults = true
+    resultStatuses: any[]
+    filterStatuses: any[] = []
+    resultChanges: any[]
+    filterChanges: any[] = []
+    filterMinAge = 0
+    filterMaxAge = 1000
+    filterMinInstability = 0
+    filterMaxInstability = 10
+    filterTestCaseText = ''
+    filterJob = ''
+
+    // issues
     issues: any[]
     totalIssues = 0
     loadingIssues = false
@@ -38,7 +53,24 @@ export class RunResultsComponent implements OnInit {
     constructor(private route: ActivatedRoute,
                 private router: Router,
                 protected executionService: ExecutionService,
-                protected breadcrumbService: BreadcrumbsService) { }
+                protected breadcrumbService: BreadcrumbsService) {
+
+        this.resultStatuses = [
+            {name: 'Not Run', code: 0},
+            {name: 'Passed', code: 1},
+            {name: 'Failed', code: 2},
+            {name: 'Error', code: 3},
+            {name: 'Disabled', code: 4},
+            {name: 'Unsupported', code: 5},
+        ]
+
+        this.resultChanges = [
+            {name: 'No changes', code: 0},
+            {name: 'Fixes', code: 1},
+            {name: 'Regressions', code: 2},
+            {name: 'New', code: 3},
+        ]
+    }
 
     switchToTab(tabName) {
         let idx = 0
@@ -77,6 +109,7 @@ export class RunResultsComponent implements OnInit {
 
         this.results = [];
         this.executionService.getRun(this.runId).subscribe(run => {
+            this.run = run
             let tab = this.route.snapshot.paramMap.get("tab");
             if (tab === '') {
                 if (run.state === 'completed') {
@@ -131,19 +164,43 @@ export class RunResultsComponent implements OnInit {
     }
 
     loadResultsLazy(event) {
-        this.executionService.getRunResults(this.runId, event.first, event.rows).subscribe(data => {
-            this.results = data.items;
-            this.totalResults = data.total;
-        });
+        let statuses = this.filterStatuses.map(e => e.code)
+        if (statuses.length === 0) {
+            statuses = null
+        }
+        let changes = this.filterChanges.map(e => e.code)
+        if (changes.length === 0) {
+            changes = null
+        }
+
+        this.loadingResults = true
+        this.executionService.getRunResults(
+            this.runId, event.first, event.rows, statuses, changes,
+            this.filterMinAge, this.filterMaxAge,
+            this.filterMinInstability, this.filterMaxInstability,
+            this.filterTestCaseText, this.filterJob
+        ).subscribe(
+            data => {
+                this.results = data.items
+                this.totalResults = data.total
+                this.loadingResults = false
+            }
+        )
+    }
+
+    refreshResults(resultsTable) {
+        resultsTable.onLazyLoad.emit(resultsTable.createLazyLoadMetadata())
     }
 
     loadJobsLazy(event) {
+        this.loadingJobs = true
         this.executionService.getRunJobs(this.runId, event.first, event.rows, this.includeCovered).subscribe(data => {
             this.jobs = data.items
             this.totalJobs = data.total
 
             this.job = this.jobs[0]
             this.selectedJobId = this.job.id
+            this.loadingJobs = false
         })
     }
 
@@ -237,5 +294,41 @@ export class RunResultsComponent implements OnInit {
     }
 
     coveredChange() {
+    }
+
+    getResultChangeTxt(change) {
+        switch (change) {
+        case 0: return ''
+        case 1: return 'FIX'
+        case 2: return 'REGR'
+        case 3: return 'NEW'
+        default: return 'UNKN'
+        }
+    }
+
+    getResultChangeCls(change) {
+        switch (change) {
+        case 1: return 'result-fix'
+        case 2: return 'result-regr'
+        case 3: return 'result-new'
+        default: return ''
+        }
+    }
+
+    resetResultsFilter(resultsTable) {
+        this.filterStatuses = []
+        this.filterChanges = []
+        this.filterMinAge = 0
+        this.filterMaxAge = 1000
+        this.filterMinInstability = 0
+        this.filterMaxInstability = 10
+
+        this.refreshResults(resultsTable)
+    }
+
+    filterResultsKeyDown(event, resultsTable) {
+        if (event.key == "Enter") {
+            this.refreshResults(resultsTable)
+        }
     }
 }

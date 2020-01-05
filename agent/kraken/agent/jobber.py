@@ -33,7 +33,6 @@ def _load_tools_list():
         spec = finder.find_spec(name)
         tools[n] = spec.origin
 
-    log.info("TOOLS")
     for entry_point in pkg_resources.iter_entry_points('kraken.tools'):
         t = entry_point.load()
         log.info("TOOL %s: %s", entry_point.name, entry_point.module_name)

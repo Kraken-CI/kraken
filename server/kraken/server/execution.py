@@ -9,7 +9,7 @@ from sqlalchemy.orm import joinedload
 from elasticsearch import Elasticsearch
 
 from . import consts
-from .models import db, Branch, Flow, Run, Stage, Job, Step, ExecutorGroup, Tool, TestCaseResult, Issue
+from .models import db, Branch, Flow, Run, Stage, Job, Step, ExecutorGroup, Tool, TestCaseResult, TestCase, Issue
 from .models import Project
 
 log = logging.getLogger(__name__)
@@ -40,7 +40,7 @@ def complete_run(run, now):
         flow.finished = now
         db.session.commit()
 
-    # trigger history of results analysis
+    # trigger results history analysis
     t = bg_jobs.analyze_results_history.delay(run.id)
     log.info('run %s completed, process results: %s', run, t)
 
@@ -279,7 +279,12 @@ def get_runs(stage_id):
     return runs, 200
 
 
-def get_run_results(run_id, start=0, limit=10):
+def get_run_results(run_id, start=0, limit=10,
+                    statuses=None, changes=None,
+                    min_age=None, max_age=None,
+                    min_instability=None, max_instability=None,
+                    test_case_text=None, job=None):
+    log.info('filters %s %s %s %s %s %s', statuses, changes, min_age, max_age, min_instability, max_instability)
     q = TestCaseResult.query
     q = q.options(joinedload('test_case'),
                   joinedload('job'),
@@ -287,7 +292,30 @@ def get_run_results(run_id, start=0, limit=10):
                   joinedload('job.executor_used'))
     q = q.join('job')
     q = q.filter(Job.run_id == run_id, Job.covered == False)
+    if statuses:
+        q = q.filter(TestCaseResult.result.in_(statuses))
+    if changes:
+        q = q.filter(TestCaseResult.change.in_(changes))
+    if min_age is not None:
+        q = q.filter(TestCaseResult.age >= min_age)
+    if max_age is not None:
+        q = q.filter(TestCaseResult.age <= max_age)
+    if min_instability is not None:
+        q = q.filter(TestCaseResult.instability >= min_instability)
+    if max_instability is not None:
+        q = q.filter(TestCaseResult.instability <= max_instability)
+    if test_case_text is not None:
+        q = q.join('test_case').filter(TestCase.name.ilike('%' + test_case_text + '%'))
+    if job is not None:
+        if job.isdigit():
+            job_id = int(job)
+            q = q.filter(Job.id == job_id)
+        else:
+            q = q.filter(Job.name.ilike('%' + job + '%'))
+
     total = q.count()
+
+    q = q.join('test_case').order_by(asc('name'))
     q = q.offset(start).limit(limit)
     results = []
     for tcr in q.all():
@@ -301,6 +329,7 @@ def get_run_jobs(run_id, start=0, limit=10, include_covered=False):
     if not include_covered:
         q = q.filter_by(covered=False)
     total = q.count()
+    q = q.order_by(asc('id'))
     q = q.offset(start).limit(limit)
     jobs = []
     for j in q.all():
@@ -316,6 +345,7 @@ def get_run_issues(run_id, start=0, limit=10):
     q = q.join('job')
     q = q.filter(Job.run_id == run_id, Job.covered == False)
     total = q.count()
+    q = q.order_by(asc('path'), asc('line'))
     q = q.offset(start).limit(limit)
     issues = []
     for i in q.all():
