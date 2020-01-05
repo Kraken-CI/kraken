@@ -42,18 +42,29 @@
       </span>
     </div>
 
-    <div *ngIf="run.tests_total" routerLink="/runs/{{ run.id }}/results" style="cursor: pointer;">
-      <b>Tests</b><br>
-      {{run.tests_passed * 100 / run.tests_total | number:'1.1-1'}}% passed<br>
-      {{run.tests_passed}}/{{run.tests_total}}
-      <span *ngIf="run.tests_pending">
-        <br>{{run.tests_pending}} pending
-      </span>
+    <div *ngIf="run.tests_total" routerLink="/runs/{{ run.id }}/results" style="cursor: pointer; display: flex;">
+      <div>
+        <b>Tests</b><br>
+        {{run.tests_passed * 100 / run.tests_total | number:'1.1-1'}}% passed
+        <i *ngIf="run.tests_passed !== run.tests_total" class="pi pi-exclamation-triangle" style="color: orange; font-size: 1.3em; vertical-align: bottom;"></i>
+        <i *ngIf="run.tests_passed === run.tests_total" class="pi pi-thumbs-up" style="color: green; font-size: 1.3em; vertical-align: bottom;"></i>
+        <br>
+        {{run.tests_passed}}/{{run.tests_total}}
+        <span *ngIf="run.tests_pending">
+          <br>{{run.tests_pending}} pending
+        </span>
+      </div>
+      <div style="margin-left: 15px;" *ngIf="run.regr_cnt > 0 || run.fix_cnt > 0">
+        <br>
+        <span *ngIf="run.regr_cnt > 0">{{ run.regr_cnt }} regressions <i class="pi pi-exclamation-triangle" style="color: red; font-size: 1.3em; vertical-align: bottom;"></i><br></span>
+        <span *ngIf="run.fix_cnt > 0">{{ run.fix_cnt }} fixes <i class="pi pi-thumbs-up" style="color: green; font-size: 1.3em; vertical-align: bottom;"></i></span>
+      </div>
     </div>
 
     <div *ngIf="run.issues_total" routerLink="/runs/{{ run.id }}/issues" style="cursor: pointer;">
       <b>Issues</b><br>
-      {{run.issues_total}} <i class="pi pi-exclamation-triangle" style="color: orange; font-size: 1.3em; vertical-align: bottom;"></i>
+      {{run.issues_total}} total <i class="pi pi-exclamation-triangle" style="color: orange; font-size: 1.3em; vertical-align: bottom;"></i><br>
+      <span *ngIf="run.issues_new > 0">{{run.issues_new}} new <i class="pi pi-exclamation-triangle" style="color: red; font-size: 1.3em; vertical-align: bottom;"></i></span>
     </div>
 
   </div>

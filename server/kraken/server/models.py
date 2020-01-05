@@ -439,7 +439,7 @@ class TestCaseResult(db.Model):
             data['branch_id'] = self.job.run.flow.branch_id
             data['branch_name'] = self.job.run.flow.branch.name
             data['flow_id'] = self.job.run.flow_id
-            data['flow_kind'] = 'ci' if self.job.run.flow.kind == 0 else 'dev',
+            data['flow_kind'] = 'ci' if self.job.run.flow.kind == 0 else 'dev'
             data['run_id'] = self.job.run_id
             data['stage_id'] = self.job.run.stage_id
             data['stage_name'] = self.job.run.stage.name

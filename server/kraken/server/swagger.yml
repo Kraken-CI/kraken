@@ -945,7 +945,9 @@ definitions:
         type: integer
       tests_total:
         type: integer
-      issues:
+      issues_total:
+        type: integer
+      issues_new:
         type: integer
   Runs:
     type: object

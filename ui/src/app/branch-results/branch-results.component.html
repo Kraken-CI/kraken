@@ -29,7 +29,7 @@
         </div>
       </a>
     </div>
-    <div class="p-col" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 6px;">
+    <div class="p-col" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr)); gap: 6px;">
       <ng-container *ngFor="let run of flow.runs">
         <app-run-box *ngIf="filterStageName=='All' || run.name==filterStageName"
                      [run]="run" [flowId]="flow.id" (onStageRun)="onStageRun($event)">
