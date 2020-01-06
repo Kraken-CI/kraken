@@ -101,75 +101,69 @@ export class RunResultsComponent implements OnInit {
     }
 
     ngOnInit() {
-        this.runId = parseInt(this.route.snapshot.paramMap.get("id"));
-
-        this.tabs = [
-            {label: 'Jobs', routerLink: '/runs/' + this.runId + '/jobs'},
-            {label: 'Test Results', routerLink: '/runs/' + this.runId + '/results'},
-            {label: 'Issues', routerLink: '/runs/' + this.runId + '/issues'},
-        ]
-
-        let tab = this.route.snapshot.paramMap.get("tab");
-        this.switchToTab(tab)
-
         this.route.paramMap.subscribe(params => {
-            let newTab = params.get("tab");
-            if (newTab) {
-                this.switchToTab(newTab)
-            }
-        })
+            let runId = parseInt(params.get("id"))
 
-        this.breadcrumbService.setCrumbs([{
-            label: 'Stages',
-            url: '/runs/' + this.runId,
-            id: this.runId
-        }]);
-
-        this.results = [];
-        this.executionService.getRun(this.runId).subscribe(run => {
-            this.run = run
-            this.recordsCount[0] = '' + run.jobs_total
-            this.recordsCount[1] = '' + run.tests_passed + ' / ' + run.tests_total
-            this.recordsCount[2] = '' + run.issues_total
-            let tab = this.route.snapshot.paramMap.get("tab");
+            let tab = params.get("tab");
             if (tab === '') {
-                if (run.state === 'completed') {
-                    this.router.navigate([this.tabs[1].routerLink]);
-                } else {
-                    this.router.navigate([this.tabs[0].routerLink]);
-                }
+                this.router.navigate(['/runs/' + runId + '/jobs'])
+                return
             }
 
-            let crumbs = [{
-                label: 'Projects',
-                url: '/projects/' + run.project_id,
-                id: run.project_name
-            }, {
-                label: 'Branches',
-                url: '/branches/' + run.branch_id,
-                id: run.branch_name
-            }, {
-                label: 'Results',
-                url: '/branches/' + run.branch_id + '/' + run.flow_kind,
-                id: run.flow_kind.toUpperCase(),
-                items: [{
-                    label: 'CI',
-                    routerLink: '/branches/' + run.branch_id + '/ci'
-                }, {
-                    label: 'dev',
-                    routerLink: '/branches/' + run.branch_id + '/dev'
-                }]
-            }, {
-                label: 'Flows',
-                url: '/flows/' + run.flow_id,
-                id: run.flow_id
-            }, {
-                label: 'Stages',
-                url: '/runs/' + run.id,
-                id: run.name
-            }];
-            this.breadcrumbService.setCrumbs(crumbs);
-        });
+            if (runId !== this.runId) {
+                this.runId = runId
+
+                this.tabs = [
+                    {label: 'Jobs', routerLink: '/runs/' + this.runId + '/jobs'},
+                    {label: 'Test Results', routerLink: '/runs/' + this.runId + '/results'},
+                    {label: 'Issues', routerLink: '/runs/' + this.runId + '/issues'},
+                ]
+
+                this.jobs = []
+                this.results = []
+                this.resetResultsFilter(null)
+                this.issues = []
+                this.resetIssuesFilter(null)
+                if (tab === 'jobs') {
+                    this.loadJobsLazy({first: 0, rows: 30})
+                } else if (tab === 'results') {
+                    this.loadResultsLazy({first: 0, rows: 30})
+                } else if (tab === 'issues') {
+                    this.loadIssuesLazy({first: 0, rows: 30})
+                }
+
+                this.executionService.getRun(this.runId).subscribe(run => {
+                    this.run = run
+                    this.recordsCount[0] = '' + run.jobs_total
+                    this.recordsCount[1] = '' + run.tests_passed + ' / ' + run.tests_total
+                    this.recordsCount[2] = '' + run.issues_total
+
+                    let crumbs = [{
+                        label: 'Projects',
+                        project_id: run.project_id,
+                        project_name: run.project_name
+                    }, {
+                        label: 'Branches',
+                        branch_id: run.branch_id,
+                        branch_name: run.branch_name
+                    }, {
+                        label: 'Results',
+                        branch_id: run.branch_id,
+                        flow_kind: run.flow_kind
+                    }, {
+                        label: 'Flows',
+                        flow_id: run.flow_id
+                    }, {
+                        label: 'Stages',
+                        run_id: run.id,
+                        run_name: run.name
+                    }];
+                    this.breadcrumbService.setCrumbs(crumbs);
+                });
+            }
+
+            this.switchToTab(tab)
+        })
     }
 
     formatResult(result) {
@@ -219,8 +213,11 @@ export class RunResultsComponent implements OnInit {
             this.jobs = data.items
             this.totalJobs = data.total
 
-            this.job = this.jobs[0]
-            this.selectedJobId = this.job.id
+            if (this.jobs.length > 0) {
+                this.job = this.jobs[0]
+                this.selectedJobId = this.job.id
+            }
+
             this.loadingJobs = false
         })
     }
@@ -359,7 +356,9 @@ export class RunResultsComponent implements OnInit {
         this.filterMinInstability = 0
         this.filterMaxInstability = 10
 
-        this.refreshResults(resultsTable)
+        if (resultsTable) {
+            this.refreshResults(resultsTable)
+        }
     }
 
     filterResultsKeyDown(event, resultsTable) {
@@ -383,6 +382,8 @@ export class RunResultsComponent implements OnInit {
         this.filterIssueMaxAge = 1000
         this.filterIssueJob = ''
 
-        this.refreshIssues(issuesTable)
+        if (issuesTable) {
+            this.refreshIssues(issuesTable)
+        }
     }
 }

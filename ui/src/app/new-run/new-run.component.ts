@@ -39,27 +39,19 @@ export class NewRunComponent implements OnInit {
             // prepare breadcrumb
             let crumbs = [{
                 label: 'Projects',
-                url: '/projects/' + flow.project_id,
-                id: flow.project_name
+                project_id: flow.project_id,
+                project_name: flow.project_name
             }, {
                 label: 'Branches',
-                url: '/branches/' + flow.branch_id,
-                id: flow.base_branch_name
+                branch_id: flow.branch_id,
+                branch_name: flow.base_branch_name
             }, {
                 label: 'Results',
-                url: '/branches/' + flow.branch_id + '/' + flow.kind,
-                id: flow.kind.toUpperCase(),
-                items: [{
-                    label: 'CI',
-                    routerLink: '/branches/' + flow.branch_id + '/ci'
-                }, {
-                    label: 'dev',
-                    routerLink: '/branches/' + flow.branch_id + '/dev'
-                }]
+                branch_id: flow.branch_id,
+                flow_kind: flow.kind
             }, {
                 label: 'Flows',
-                url: '/flows/' + flow.id,
-                id: flow.id
+                flow_id: flow.id
             }];
             this.breadcrumbService.setCrumbs(crumbs);
 

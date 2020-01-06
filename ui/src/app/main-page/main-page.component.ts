@@ -34,12 +34,6 @@ export class MainPageComponent implements OnInit {
                 private msgSrv: MessageService) { }
 
     ngOnInit() {
-        this.breadcrumbService.setCrumbs([{
-            label: 'Projects',
-            url: '/',
-            id: 0
-        }]);
-
         this.refresh();
     }
 

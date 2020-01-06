@@ -275,6 +275,12 @@ paths:
           required: false
           type: integer
           format: int32
+        - name: middle
+          in: query
+          description: Middle
+          required: false
+          type: integer
+          format: int32
       responses:
         "200":
           description: A paged array of runs
@@ -957,6 +963,10 @@ definitions:
         type: integer
       issues_new:
         type: integer
+      fix_cnt:
+        type: integer
+      regr_cnt:
+        type: integer
   Runs:
     type: object
     properties:
@@ -1109,6 +1119,10 @@ definitions:
         type: string
       webhooks:
         type: object
+      branches:
+        type: array
+        items:
+          type: object
   Projects:
     type: object
     properties:

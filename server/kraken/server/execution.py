@@ -177,18 +177,36 @@ def create_flow(branch_id, kind, flow, trigger_data=None):
     return data, 201
 
 
-def get_flows(branch_id, kind, start=0, limit=10):
+def get_flows(branch_id, kind, start=0, limit=10, middle=None):
     flows = []
     if kind == 'dev':
         kind = 1
     else:
         kind = 0
     q = Flow.query.filter_by(branch_id=branch_id, kind=kind)
-    q = q.order_by(desc(Flow.created))
-    total = q.count()
-    q = q.offset(start).limit(limit)
-    for flow in q.all():
-        flows.append(flow.get_json())
+    if middle is None:
+        q = q.order_by(desc(Flow.created))
+        total = q.count()
+        q = q.offset(start).limit(limit)
+        for flow in q.all():
+            flows.append(flow.get_json())
+    else:
+        q1 = q.filter(Flow.id >= middle)
+        q1 = q1.order_by(asc(Flow.created))
+        q1 = q1.offset(0).limit(limit)
+        for flow in reversed(q1.all()):
+            flows.append(flow.get_json())
+            log.info('FL A %s', flow.id)
+
+        q2 = q.filter(Flow.id < middle)
+        q2 = q2.order_by(desc(Flow.created))
+        q2 = q2.offset(0).limit(limit)
+        for flow in q2.all():
+            flows.append(flow.get_json())
+            log.info('FL B %s', flow.id)
+
+        total = 0
+
     return {'items': flows, 'total': total}, 200
 
 
@@ -493,12 +511,12 @@ def get_job_logs(job_id, start=0, limit=200, order=None, filters=None):
     else:
         query["sort"] = order
 
+    log.info(query)
     try:
         res = es.search(index="logstash*", body=query)
     except:
         # try one more time
         res = es.search(index="logstash*", body=query)
-    log.info(query)
 
     logs = []
     for hit in res['hits']['hits']:

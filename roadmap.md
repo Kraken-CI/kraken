@@ -12,6 +12,9 @@
 ** DONE ??? combine planner and scheduler in 1 process
 **
 * DONE new project
+* DONE filtrowanie po age na stronie issues
+* DONE zrobić dynamiczne menu w breadcrumbie (kliknięcie powoduje dynamiczne załadowanie pozycji do menu)
+* DONE dodać statsy o zmianach do run-box'a
 * support repos:
 ** trigger on commit
 ** DONE trigger on github push event
@@ -33,9 +36,5 @@
 * add handling NOT FOUND when ID in URL is incorrect
 * kraken_shell: clearly report timeout errors
 * fork branch operation with test results history continuity
-
-
 * czas na branchu jest pokazywany jako AM a jest PM
-* filtrowanie po age na stronie issues
-* zrobić dynamiczne menu w breadcrumbie (kliknięcie powoduje dynamiczne załadowanie pozycji do menu)
-* DONE dodać statsy o zmianach do run-box'a
+* przerobić stronę główną na bardziej statyczną bez rozwijanego drzewa

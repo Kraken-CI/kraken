@@ -44,43 +44,35 @@ export class TestCaseResultComponent implements OnInit {
         this.tcrId = parseInt(this.route.snapshot.paramMap.get("id"));
         this.breadcrumbService.setCrumbs([{
             label: 'Result',
-            url: '/test_case_result/' + this.tcrId,
-            id: this.tcrId
+            tcr_id: this.tcrId,
+            tc_name: this.tcrId
         }]);
 
         this.executionService.getResult(this.tcrId).subscribe(result => {
             this.result = result;
             let crumbs = [{
                 label: 'Projects',
-                url: '/projects/' + this.result.project_id,
-                id: this.result.project_name
+                project_id: this.result.project_id,
+                project_name: this.result.project_name
             }, {
                 label: 'Branches',
-                url: '/branches/' + this.result.branch_id,
-                id: this.result.branch_name
+                branch_id: this.result.branch_id,
+                branch_name: this.result.branch_name
             }, {
                 label: 'Results',
-                url: '/branches/' + this.result.branch_id + '/' + this.result.flow_kind,
-                id: this.result.flow_kind.toUpperCase(),
-                items: [{
-                    label: 'CI',
-                    routerLink: '/branches/' + this.result.branch_id + '/ci'
-                }, {
-                    label: 'dev',
-                    routerLink: '/branches/' + this.result.branch_id + '/dev'
-                }]
+                branch_id: this.result.branch_id,
+                flow_kind: this.result.flow_kind
             }, {
                 label: 'Flows',
-                url: '/flows/' + this.result.flow_id,
-                id: this.result.flow_id
+                flow_id: this.result.flow_id
             }, {
                 label: 'Stages',
-                url: '/runs/' + this.result.run_id,
-                id: this.result.stage_name
+                run_id: this.result.run_id,
+                run_name: this.result.stage_name
             }, {
-                label: 'Results',
-                url: '/test_case_result/' + this.result.id,
-                id: this.result.test_case_name
+                label: 'Result',
+                tcr_id: this.result.id,
+                tc_name: this.result.test_case_name
             }];
             this.breadcrumbService.setCrumbs(crumbs);
 

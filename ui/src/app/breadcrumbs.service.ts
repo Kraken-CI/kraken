@@ -6,11 +6,7 @@ import { BehaviorSubject } from 'rxjs';
 })
 export class BreadcrumbsService {
 
-    private crumbs = new BehaviorSubject([{
-            label: 'Home',
-            url: '/',
-            id: 0
-        }]);
+    private crumbs = new BehaviorSubject([])
 
     constructor() { }
 

@@ -39,12 +39,12 @@ export class NewFlowComponent implements OnInit {
             // prepare breadcrumb
             let crumbs = [{
                 label: 'Projects',
-                url: '/projects/' + branch.project_id,
-                id: branch.project_name
+                project_id: branch.project_id,
+                project_name: branch.project_name
             }, {
                 label: 'Branches',
-                url: '/branches/' + branch.id,
-                id: branch.branch_name
+                branch_id: branch.id,
+                branch_name: branch.branch_name
             }];
             this.breadcrumbService.setCrumbs(crumbs);
 

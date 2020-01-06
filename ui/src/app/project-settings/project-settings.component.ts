@@ -38,22 +38,24 @@ export class ProjectSettingsComponent implements OnInit {
                 protected managementService: ManagementService) { }
 
     ngOnInit() {
-        this.projectId = parseInt(this.route.snapshot.paramMap.get("id"));
+        this.route.paramMap.subscribe(params => {
+            this.projectId = parseInt(params.get("id"))
 
-        this.managementService.getProject(this.projectId).subscribe(project => {
-            this.project = project
+            this.managementService.getProject(this.projectId).subscribe(project => {
+                this.project = project
 
-            this.breadcrumbService.setCrumbs([{
-                label: 'Projects',
-                url: '/projects/' + this.projectId,
-                id: this.project.name
-            }]);
+                this.breadcrumbService.setCrumbs([{
+                    label: 'Projects',
+                    project_id: this.projectId,
+                    project_name: this.project.name
+                }]);
 
-            if (this.project.secrets.length === 0) {
-                this.secretMode = 1
-            } else {
-                this.selectSecret(this.project.secrets[0])
-            }
+                if (this.project.secrets.length === 0) {
+                    this.secretMode = 1
+                } else {
+                    this.selectSecret(this.project.secrets[0])
+                }
+            })
         })
     }
 

@@ -217,23 +217,16 @@ export class BranchResultsComponent implements OnInit {
         }
         let crumbs = [{
             label: 'Projects',
-            url: '/projects/' + this.branch.project_id,
-            id: this.branch.project_name
+            project_id: this.branch.project_id,
+            project_name: this.branch.project_name
         }, {
             label: 'Branches',
-            url: '/branches/' + this.branch.id,
-            id: this.branch.name
+            branch_id: this.branch.id,
+            branch_name: this.branch.name
         }, {
             label: 'Results',
-            url: '/branches/' + this.branch.id + '/' + this.kind,
-            id: this.kind.toUpperCase(),
-            items: [{
-                label: 'CI',
-                routerLink: '/branches/' + this.branch.id + '/ci'
-            }, {
-                label: 'dev',
-                routerLink: '/branches/' + this.branch.id + '/dev'
-            }]
+            branch_id: this.branch.id,
+            flow_kind: this.kind
         }];
         this.breadcrumbService.setCrumbs(crumbs);
     }
