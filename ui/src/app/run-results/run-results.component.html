@@ -312,7 +312,7 @@
         <tr>
           <td>{{ issue.job_name }}</td>
           <td><a routerLink="/jobs/{{ issue.job_id }}">{{ issue.job_id }}</a></td>
-          <td [class]="issueTypeToClass(issue.issue_type)">{{issueTypeToTxt(issue.issue_type)}}</td>
+          <td  style="cursor: pointer;" (dblclick)="filterIssuesByType(issue.issue_type, issuesTable)" [class]="issueTypeToClass(issue.issue_type)">{{issueTypeToTxt(issue.issue_type)}}</td>
           <td>
             <a *ngIf="issue.url" href="{{ issue.url }}" target="blank">
               {{ issue.path }}:{{ issue.line }}:{{ issue.column }}
@@ -322,8 +322,8 @@
             </span>
           </td>
           <td>{{ issue.message }}</td>
-          <td>{{ issue.symbol }}</td>
-          <td>{{ issue.age }}</td>
+          <td style="cursor: pointer;" (dblclick)="filterIssuesBySymbol(issue.symbol, issuesTable)">{{ issue.symbol }}</td>
+          <td style="cursor: pointer;" (dblclick)="filterIssuesByAge(issue.age, issuesTable)">{{ issue.age }}</td>
           <td>Ubuntu 18.04</td>
           <td>default</td>
           <td>{{ issue.executor_group_name}}</td>

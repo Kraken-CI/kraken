@@ -386,4 +386,20 @@ export class RunResultsComponent implements OnInit {
             this.refreshIssues(issuesTable)
         }
     }
+
+    filterIssuesBySymbol(symbol, issuesTable) {
+        this.filterIssueSymbol = symbol
+        this.refreshIssues(issuesTable)
+    }
+
+    filterIssuesByAge(age, issuesTable) {
+        this.filterIssueMinAge = age
+        this.filterIssueMaxAge = age
+        this.refreshIssues(issuesTable)
+    }
+
+    filterIssuesByType(issue_type, issuesTable) {
+        this.filterIssueTypes = [{code: issue_type, name: this.issueTypeToTxt(issue_type)}]
+        this.refreshIssues(issuesTable)
+    }
 }
