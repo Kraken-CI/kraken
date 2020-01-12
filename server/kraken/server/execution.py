@@ -94,8 +94,10 @@ def trigger_jobs(run, replay=False):
         for env in envs:
             executor_group = ExecutorGroup.query.filter_by(project=run.stage.branch.project, name=env['executor_group']).one_or_none()
             if executor_group is None:
-                log.warn("cannot find executor group '%s'", env['executor_group'])
-                continue
+                executor_group = ExecutorGroup.query.filter_by(name=env['executor_group']).one_or_none()
+                if executor_group is None:
+                    log.warn("cannot find executor group '%s'", env['executor_group'])
+                    continue
             job = Job(run=run, name=j['name'], executor_group=executor_group)
             if tool_not_found:
                 job.state = consts.JOB_STATE_COMPLETED
@@ -196,14 +198,12 @@ def get_flows(branch_id, kind, start=0, limit=10, middle=None):
         q1 = q1.offset(0).limit(limit)
         for flow in reversed(q1.all()):
             flows.append(flow.get_json())
-            log.info('FL A %s', flow.id)
 
         q2 = q.filter(Flow.id < middle)
         q2 = q2.order_by(desc(Flow.created))
         q2 = q2.offset(0).limit(limit)
         for flow in q2.all():
             flows.append(flow.get_json())
-            log.info('FL B %s', flow.id)
 
         total = 0
 

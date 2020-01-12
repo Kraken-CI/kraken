@@ -116,7 +116,7 @@ task :run_agent_container do
   Dir.chdir('agent') do
     sh 'docker build -f docker-agent.txt -t kkagent .'
   end
-  sh 'docker run --rm -ti -v `pwd`/agent:/agent -e KRAKEN_SERVER_ADDR=192.168.0.89:8080 kkagent'
+  sh 'docker run --rm -ti -v `pwd`/agent:/agent -e KRAKEN_AGENT_SLOT=7 -e KRAKEN_SERVER_ADDR=192.168.0.89:8080 kkagent'
 end
 
 task :run_celery => './server/venv/bin/kkcelery' do

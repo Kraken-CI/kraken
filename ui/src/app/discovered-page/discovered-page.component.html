@@ -1,0 +1,50 @@
+<div style="display: flex; margin: 15px 5px;">
+
+    <p-button label="Refresh" icon="pi pi-refresh" (onClick)="refreshExecutors(executorsTable)" [style]="{'margin-right': '10px'}"></p-button>
+    <p-button label="Authorize" icon="pi pi-check" (onClick)="authorize(executorsTable)"></p-button>
+
+</div>
+
+<p-table #executorsTable
+         id="executors"
+         [value]="executors"
+         [lazy]="true"
+         selectionMode="multiple"
+         [(selection)]="selectedExecutors"
+         (onLazyLoad)="loadExecutorsLazy($event)"
+         [paginator]="true"
+         [rows]="30"
+         [totalRecords]="totalExecutors"
+         [loading]="loadingExecutors"
+         (onRowSelect)="executorSelected($event)"
+         [rowsPerPageOptions]="[10,20,30,50,100]"
+         [showCurrentPageReport]="true">
+  <ng-template pTemplate="header">
+    <tr>
+      <th style="width: 2em">
+        <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+      </th>
+      <th style="width: 60px;">ID</th>
+      <th style="width: 100px;">Address</th>
+      <th style="width: 120px;">Name</th>
+      <th style="width: 120px;">IP Address</th>
+      <th style="width: 120px;">State</th>
+      <th style="width: 120px;">Disabled</th>
+      <th style="width: 10%;">Groups</th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-executor>
+    <tr [pSelectableRow]="executor">
+      <td>
+        <p-tableCheckbox [value]="executor"></p-tableCheckbox>
+      </td>
+      <td>{{executor.id}}</td>
+      <td>{{executor.address}}</td>
+      <td><a routerLink="/executors/{{executor.id}}">{{executor.name}}</a></td>
+      <td>{{executor.ip_address}}</td>
+      <td>{{executor.state}}</td>
+      <td>{{executor.disabled}}</td>
+      <td>{{executor.groups}}</td>
+    </tr>
+  </ng-template>
+</p-table>

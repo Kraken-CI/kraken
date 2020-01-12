@@ -1,0 +1,144 @@
+<p-tabMenu [model]="tabs">
+    <ng-template pTemplate="item" let-item let-i="index">
+        <div style="display: flex; justify-content: space-between;">
+            <div class="ui-menuitem-icon" [ngClass]="item.icon" *ngIf="item.icon" style="font-size: 2em"></div>
+            <div class="ui-menuitem-text">
+                <b>{{ item.label }}</b>
+            </div>
+            <div
+                class="ui-menuitem-icon pi pi-times"
+                style="font-size: 1.3rem"
+                (click)="closeTab($event, i)"
+                *ngIf="i !== 0"
+            ></div>
+        </div>
+    </ng-template>
+</p-tabMenu>
+
+
+<!-- Executors tab -->
+<div *ngIf="activeTabIdx == 0">
+  <div style="display: flex; margin: 15px 5px;">
+
+    <p-button label="Refresh" icon="pi pi-refresh" (onClick)="refreshExecutors(executorsTable)" [style]="{'margin': '0 20px 0 60px'}"></p-button>
+
+  </div>
+
+  <p-menu #executorMenu [popup]="true" [model]="executorMenuItems"></p-menu>
+  <p-table #executorsTable
+           id="executors"
+           [value]="executors"
+           [lazy]="true"
+           selectionMode="single"
+           [(selection)]="executor"
+           (onLazyLoad)="loadExecutorsLazy($event)"
+           [paginator]="true"
+           [rows]="30"
+           [totalRecords]="totalExecutors"
+           [loading]="loadingExecutors"
+           [rowsPerPageOptions]="[10,20,30,50,100]"
+           [showCurrentPageReport]="true">
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="width: 60px;">ID</th>
+        <th style="width: 100px;">Address</th>
+        <th style="width: 120px;">Name</th>
+        <th style="width: 120px;">IP Address</th>
+        <th style="width: 120px;">State</th>
+        <th style="width: 120px;">Disabled</th>
+        <th style="width: 10%;">Groups</th>
+        <th style="width: 10%;">Job</th>
+        <th style="width: 4rem;">Action</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-executor>
+      <tr [pSelectableRow]="executor">
+        <td>{{executor.id}}</td>
+        <td>{{executor.address}}</td>
+        <td><a routerLink="/executors/{{executor.id}}">{{executor.name}}</a></td>
+        <td>{{executor.ip_address}}</td>
+        <td>{{executor.state}}</td>
+        <td>{{executor.disabled}}</td>
+        <td>
+          <span *ngFor="let g of executor.groups" style="padding-right: 5px;">
+            <a routerLink="/executor-groups/{{ g.id }}">{{ g.name }}</a>
+          </span>
+        </td>
+        <td>{{ executor.job ? executor.job.id : '' }}</td>
+        <td>
+          <button
+            type="button"
+            pButton
+            icon="pi pi-bars"
+            (click)="showExecutorMenu($event, executorMenu, executor)"
+            ></button>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<!-- Single executor tab -->
+<div *ngIf="activeTabIdx != 0" class="ui-widget">
+  <table style="margin-top: 10px;">
+    <tr>
+      <th style="width: 8rem;"></th>
+      <th style="width: 12rem;"></th>
+    </tr>
+
+    <tr>
+      <td style="text-align: right; padding-right: 10px;">
+        Executor Name
+      </td>
+      <td>
+        {{ executorTab.executor.name }}
+      </td>
+    </tr>
+
+    <tr>
+      <td style="text-align: right; padding-right: 10px;">
+        Address
+      </td>
+      <td>
+        {{ executorTab.executor.address }}
+      </td>
+    </tr>
+
+    <tr>
+      <td style="text-align: right; padding-right: 10px;">
+        IP Address
+      </td>
+      <td>
+        {{ executorTab.executor.ip_address }}
+      </td>
+    </tr>
+
+    <tr>
+      <td style="text-align: right; padding-right: 10px;">
+        State
+      </td>
+      <td>
+        {{ executorTab.executor.state }}
+      </td>
+    </tr>
+
+    <tr>
+      <td style="text-align: right; padding-right: 10px;">
+        Disabled
+      </td>
+      <td>
+        {{ executorTab.executor.disabled }}
+      </td>
+    </tr>
+
+    <tr>
+      <td style="text-align: right; padding-right: 10px;">
+        Groups
+      </td>
+      <td>
+        <p-multiSelect [options]="executorGroups" optionLabel="name" [(ngModel)]="executorTab.executor.groups" [panelStyle]="{minWidth:'12em'}"></p-multiSelect>
+      </td>
+    </tr>
+  </table>
+  <p-button label="Save" icon="pi pi-check" (onClick)="saveExecutor(executorsTable)"></p-button>
+</div>

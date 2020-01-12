@@ -253,7 +253,11 @@ class Server():
         self.srv_addr = config.get('server')
         self.checks_num = 0
         self.last_check = datetime.datetime.now()
-        self.my_addr = "server"
+        slot = os.environ.get('KRAKEN_AGENT_SLOT', None)
+        if slot is not None:
+            self.my_addr = 'agent.%s' % slot
+        else:
+            self.my_addr = 'server'
 
 
     def check_server(self):
@@ -284,6 +288,17 @@ class Server():
 
     def _establish_connection(self):
         raise NotImplementedError
+
+    def report_sys_info(self, sys_info):
+        self._ensure_srv_address()
+
+        request = {'address': self.my_addr,
+                   'msg': 'sys-info',
+                   'info': sys_info}
+
+        response = _send_http_request(self.srv_addr, request)
+
+        return response
 
     def get_job(self):
         self._ensure_srv_address()

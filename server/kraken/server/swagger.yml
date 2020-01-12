@@ -382,7 +382,7 @@ paths:
           required: true
           type: integer
           format: int64
-        - name: stage
+        - name: data
           in: body
           description: stage
           schema:
@@ -859,6 +859,220 @@ paths:
           schema:
             $ref: '#/definitions/ApiError'
 
+  /executors:
+    get:
+      operationId: get_executors
+      tags:
+        - Management
+      summary: Get executors
+      description: Get executors
+      parameters:
+        - name: unauthorized
+          in: query
+          description: ID of pet to return
+          required: false
+          type: boolean
+        - name: start
+          in: query
+          description: How many items to return at one time (max 100)
+          required: false
+          type: integer
+          format: int32
+        - name: limit
+          in: query
+          description: How many items to return at one time (max 100)
+          required: false
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: A paged array of logs
+          schema:
+            $ref: '#/definitions/Executors'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/ApiError'
+    patch:
+      operationId: update_executors
+      tags:
+        - Management
+      summary: Update executors
+      description: Update executors
+      parameters:
+        - name: executors
+          in: body
+          description: List of modified executors
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Executor'
+      responses:
+        "200":
+          description: A paged array of logs
+          schema:
+            $ref: '#/definitions/Executors'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/ApiError'
+  /executors/{executor_id}:
+    get:
+      operationId: get_executor
+      tags:
+        - Management
+      summary: Get executor
+      description: Get executor details
+      parameters:
+        - name: executor_id
+          in: path
+          description: ID of executor
+          required: true
+          type: integer
+          format: int64
+      responses:
+        200:
+          description: Executor details
+          schema:
+            $ref: '#/definitions/Executor'
+    put:
+      operationId: update_executor
+      tags:
+        - Management
+      summary: Update a executor
+      description: Update executor settings
+      parameters:
+        - name: executor_id
+          in: path
+          description: ID of executor
+          required: true
+          type: integer
+          format: int64
+        - name: data
+          in: body
+          description: executor
+          schema:
+            $ref: '#/definitions/Executor'
+      responses:
+        200:
+          description: Successfully
+          schema:
+            $ref: '#/definitions/Executor'
+    delete:
+      operationId: delete_executor
+      tags:
+        - Management
+      summary: Delete a executor
+      description: Delete a executor
+      parameters:
+        - name: executor_id
+          in: path
+          description: ID of executor
+          required: true
+          type: integer
+          format: int64
+      responses:
+        200:
+          description: Successfully deleted executor
+
+  /groups:
+    get:
+      operationId: get_groups
+      tags:
+        - Management
+      summary: Get groups
+      description: Get groups
+      parameters:
+        - name: start
+          in: query
+          description: How many items to return at one time (max 100)
+          required: false
+          type: integer
+          format: int32
+        - name: limit
+          in: query
+          description: How many items to return at one time (max 100)
+          required: false
+          type: integer
+          format: int32
+      responses:
+        200:
+          description: Successfully
+    post:
+      operationId: create_group
+      tags:
+        - Management
+      summary: Create a group
+      description: Create a new group
+      parameters:
+        - name: group
+          in: body
+          description: group
+          schema:
+            $ref: '#/definitions/Group'
+      responses:
+        201:
+          description: Successfully created group
+
+  /groups/{group_id}:
+    get:
+      operationId: get_group
+      tags:
+        - Management
+      summary: Get group
+      description: Get group details
+      parameters:
+        - name: group_id
+          in: path
+          description: ID of group
+          required: true
+          type: integer
+          format: int64
+      responses:
+        200:
+          description: Group details
+          schema:
+            $ref: '#/definitions/Group'
+    put:
+      operationId: update_group
+      tags:
+        - Management
+      summary: Update a group
+      description: Update group settings
+      parameters:
+        - name: group_id
+          in: path
+          description: ID of group
+          required: true
+          type: integer
+          format: int64
+        - name: group
+          in: body
+          description: group
+          schema:
+            $ref: '#/definitions/Group'
+      responses:
+        200:
+          description: Successfully
+          schema:
+            $ref: '#/definitions/Group'
+    delete:
+      operationId: delete_group
+      tags:
+        - Management
+      summary: Delete a group
+      description: Gelete group settings
+      parameters:
+        - name: group_id
+          in: path
+          description: ID of group
+          required: true
+          type: integer
+          format: int64
+      responses:
+        200:
+          description: Successfully
+
 
 definitions:
   Flow:
@@ -1218,6 +1432,66 @@ definitions:
     properties:
       schema_code:
         type: string
+
+  Executor:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      name:
+        type: string
+      address:
+        type: string
+      authorized:
+        type: boolean
+      ip_address:
+        type: string
+      state:
+        type: integer
+      disabled:
+        type: boolean
+      groups:
+        type: array
+        items:
+          type: object
+      job:
+        type: object
+  Executors:
+    type: object
+    properties:
+      items:
+        type: array
+        items:
+          $ref: '#/definitions/Executor'
+      total:
+        type: integer
+        format: int64
+
+  Group:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      name:
+        type: string
+      project_name:
+        type: string
+      project_id:
+        type: integer
+      executors_count:
+        type: integer
+  Groups:
+    type: object
+    properties:
+      items:
+        type: array
+        items:
+          $ref: '#/definitions/Group'
+      total:
+        type: integer
+        format: int64
 
   ApiError:
     type: "object"

@@ -1,0 +1,134 @@
+<p-dialog header="New Group" [(visible)]="newGroupDlgVisible">
+    <div>
+        Name:
+        <input
+            type="text"
+            style="width: 100%;"
+            pInputText
+            [(ngModel)]="groupName"
+            (keydown)="keyDownNewGroup($event)"
+        />
+    </div>
+    <p-footer>
+        <button type="button" (click)="cancelNewGroup()" pButton icon="pi pi-times" label="Cancel"></button>
+        <button type="button" (click)="addNewGroup()" pButton icon="pi pi-check" label="Add"></button>
+    </p-footer>
+</p-dialog>
+
+
+<p-tabMenu [model]="tabs">
+    <ng-template pTemplate="item" let-item let-i="index">
+        <div style="display: flex; justify-content: space-between;">
+            <div class="ui-menuitem-icon" [ngClass]="item.icon" *ngIf="item.icon" style="font-size: 2em"></div>
+            <div class="ui-menuitem-text">
+                <b>{{ item.label }}</b>
+            </div>
+            <div
+                class="ui-menuitem-icon pi pi-times"
+                style="font-size: 1.3rem"
+                (click)="closeTab($event, i)"
+                *ngIf="i !== 0"
+            ></div>
+        </div>
+    </ng-template>
+</p-tabMenu>
+
+
+<!-- Groups tab -->
+<div *ngIf="activeTabIdx == 0">
+    <div style="display: flex; justify-content: space-between; margin: 10px;">
+        <div style="display: flex;">
+            <button
+                type="button"
+                pButton
+                label="Add New Group"
+                icon="pi pi-plus"
+                style="margin-right: 20px;"
+                (click)="showNewGroupDlg()"
+            ></button>
+            <button
+                type="button"
+                pButton
+                label="Refresh"
+                icon="pi pi-refresh"
+                (click)="refreshGroupsList(groupsTable)"
+            ></button>
+        </div>
+    </div>
+
+    <p-menu #groupMenu [popup]="true" [model]="groupMenuItems"></p-menu>
+    <p-table
+        #groupsTable
+        [value]="groups"
+        [paginator]="true"
+        paginatorPosition="top"
+        [rows]="10"
+        [lazy]="true"
+        (onLazyLoad)="loadGroupsLazy($event)"
+        [totalRecords]="totalGroups"
+        [rowsPerPageOptions]="[10, 30, 100]"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="{currentPage} of {totalPages} pages"
+    >
+        <ng-template pTemplate="header">
+            <tr>
+                <th style="width: 1rem;">ID</th>
+                <th style="width: 10rem;">Name</th>
+                <th style="width: 10rem;">Project</th>
+                <th style="width: 7rem;">Executors Count</th>
+                <th style="width: 4rem;">Action</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-g>
+            <tr>
+                <td>
+                    <a routerLink="/executor-groups/{{ g.id }}">{{ g.id }}</a>
+                </td>
+                <td>
+                    <a routerLink="/executor-groups/{{ g.id }}">{{ g.name }}</a>
+                </td>
+                <td>
+                  <span *ngIf="g.project_id === null" style="color: #aaa;">(shared)</span>
+                  <a *ngIf="g.project_id !== null" routerLink="/projects/{{ g.project_id }}">{{ g.project_name }}</a>
+                </td>
+                <td>{{ g.executors_count }}</td>
+                <td>
+                    <button
+                        type="button"
+                        pButton
+                        icon="pi pi-bars"
+                        (click)="showGroupMenu($event, groupMenu, g)"
+                    ></button>
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>
+
+<!-- Single group tab -->
+<div *ngIf="activeTabIdx != 0" class="ui-widget">
+  <table style="margin-top: 10px;">
+    <tr>
+      <th style="width: 8rem;"></th>
+      <th style="width: 8rem;"></th>
+    </tr>
+
+    <tr>
+      <td style="text-align: right; padding-right: 10px;">
+        Group Name
+      </td>
+      <td>
+        {{ groupTab.group.name }}
+      </td>
+    </tr>
+
+    <tr>
+      <td style="text-align: right; padding-right: 10px;">
+        Project
+      </td>
+      <td>
+        {{ groupTab.group.project_name }}
+      </td>
+    </tr>
+  </table>
+</div>

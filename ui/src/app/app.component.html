@@ -47,7 +47,7 @@
 <div class="content" role="main">
 
   <div class="toolbar" role="banner">
-    <a style="font-size: 2rem; cursor: pointer; color: white;" class="logo1" href="/">Kraken<span style="font-size: 0.3em;"> {{ krakenVersion }}</span></a>
+    <a style="font-size: 2rem; cursor: pointer; color: white;" class="logo1" href="/">Kraken<span style="font-size: 0.5em;"> {{ krakenVersion }}</span></a>
     <!--    <span style="font-size: 2rem; cursor: pointer;" [class]="logoClass" (click)="randomLogoFont()">Kraken</span> -->
 
     <!--
@@ -58,12 +58,40 @@
       </div>
     </p-menubar>
     -->
+
+        <p-menubar [model]="topMenuItems" styleClass="menubar">
+            <!-- <p-progressSpinner -->
+            <!--     *ngIf="(loadingInProgress | async)['state']" -->
+            <!--     [pTooltip]="(loadingInProgress | async)['text']" -->
+            <!--     [style]="{ width: '30px', height: '30px', 'vertical-align': 'top', 'margin-right': '20px' }" -->
+            <!--     strokeWidth="6" -->
+            <!--     fill="#005B9F" -->
+            <!--     animationDuration=".5s" -->
+            <!-- ></p-progressSpinner> -->
+            <!-- <input type="text" pInputText placeholder="Search" /> -->
+            <!-- <button -->
+            <!--     pButton -->
+            <!--     label="Logout ({{ this.currentUser.username || this.currentUser.email }})" -->
+            <!--     (click)="signOut()" -->
+            <!--     icon="pi pi-sign-out" -->
+            <!--     style="margin-left:.25em" -->
+            <!-- ></button> -->
+        </p-menubar>
+
   </div>
 
   <p-toast></p-toast>
   <p-confirmDialog header="Confirmation" icon="pi pi-exclamation-triangle"></p-confirmDialog>
 
-  <app-breadcrumbs></app-breadcrumbs>
+  <div style="display: flex; justify-content: space-between; background-color: #eee; align-items: center;">
+    <app-breadcrumbs></app-breadcrumbs>
+<!--
+    <div style="margin-right: 16px;">
+      <a routerLink="/executors" style="margin-left: 20px;"><i class="fa fa-server" style="vertical-align: text-bottom;"></i> Executors</a>
+      <a routerLink="/discovered-executors" style="margin-left: 20px;"><i class="fa fa-server" style="vertical-align: text-bottom;"></i> Discovered Executors</a>
+    </div>
+-->
+  </div>
 
   <div style="margin: 10px;">
     <router-outlet></router-outlet>

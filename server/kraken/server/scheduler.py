@@ -18,7 +18,7 @@ log = logging.getLogger('scheduler')
 def assign_jobs_to_executors():
     counter = 0
 
-    all_idle_executors = Executor.query.filter_by(job=None).all()
+    all_idle_executors = Executor.query.filter_by(job=None, authorized=True).all()
     executors_count = len(all_idle_executors)
     if executors_count == 0:
         return 0
@@ -34,7 +34,7 @@ def assign_jobs_to_executors():
     q = q.join('run')
     waiting_jobs = q.order_by(asc(Run.created), asc(Job.created)).all()  # FIFO
     if waiting_jobs:
-        log.info('waiting jobs %s', waiting_jobs)
+        log.info('idle executors: %s, waiting jobs %s', executors_count, waiting_jobs)
 
     for j in waiting_jobs:
         # find idle executor from given executors group

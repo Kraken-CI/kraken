@@ -12,7 +12,7 @@ import dateutil.parser
 import xmlrpc.client
 
 from . import consts
-from .models import db, Branch, Flow, Run, Stage, Job, Step, ExecutorGroup, Tool, TestCaseResult, Secret
+from .models import db, Branch, Flow, Run, Stage, Job, Step, Executor, ExecutorGroup, Tool, TestCaseResult, Secret, ExecutorAssignment
 from .models import Project
 from .schema import execute_schema_code
 
@@ -291,34 +291,34 @@ def create_stage(branch_id, stage):
     return new_stage.get_json(), 201
 
 
-def update_stage(stage_id, stage):
-    stage_rec = Stage.query.filter_by(id=stage_id).one_or_none()
-    if stage_rec is None:
+def update_stage(stage_id, data):
+    stage = Stage.query.filter_by(id=stage_id).one_or_none()
+    if stage is None:
         abort(404, "Stage not found")
 
-    if 'name' in stage:
-        stage_rec.name = stage['name']
+    if 'name' in data:
+        stage.name = data['name']
 
-    if 'description' in stage:
-        stage_rec.description = stage['description']
+    if 'description' in data:
+        stage.description = data['description']
 
-    if 'enabled' in stage:
-        stage_rec.enabled = stage['enabled']
+    if 'enabled' in data:
+        stage.enabled = data['enabled']
 
-    if 'schema_code' in stage:
-        _, schema = _check_and_correct_stage_schema(stage_rec.branch, stage, stage_rec.schema_code)
-        stage_rec.schema = schema
-        stage_rec.schema_code = stage['schema_code']
-        flag_modified(stage_rec, 'schema')
-        if stage_rec.triggers is None:
-            stage_rec.triggers = {}
-        _prepare_new_planner_triggers(stage_rec.id, schema['triggers'], stage_rec.schema['triggers'], stage_rec.triggers)
-        flag_modified(stage_rec, 'triggers')
-        log.info('new schema: %s', stage_rec.schema)
+    if 'schema_code' in data:
+        _, schema = _check_and_correct_stage_schema(stage.branch, data, stage.schema_code)
+        stage.schema = schema
+        stage.schema_code = data['schema_code']
+        flag_modified(stage, 'schema')
+        if stage.triggers is None:
+            stage.triggers = {}
+        _prepare_new_planner_triggers(stage.id, schema['triggers'], stage.schema['triggers'], stage.triggers)
+        flag_modified(stage, 'triggers')
+        log.info('new schema: %s', stage.schema)
 
     db.session.commit()
 
-    result = stage_rec.get_json()
+    result = stage.get_json()
     return result, 200
 
 
@@ -346,3 +346,139 @@ def get_stage_schema_as_json(stage_id, schema_code):
     schema = json.dumps(schema, indent=4, separators=(',', ': '))
 
     return dict(stage_id=stage_id, schema=schema), 200
+
+
+def get_executor(executor_id):
+    ex = Executor.query.filter_by(id=executor_id).one_or_none()
+    if ex is None:
+        abort(400, "Cannot find executor with id %s" % executor_id)
+
+    return ex.get_json(), 200
+
+
+def get_executors(unauthorized=None, start=0, limit=10):
+    q = Executor.query
+    q = q.filter_by(deleted=None)
+    if unauthorized:
+        q = q.filter_by(authorized=False)
+    else:
+        q = q.filter_by(authorized=True)
+    q = q.order_by(Executor.name)
+    total = q.count()
+    q = q.offset(start).limit(limit)
+    executors = []
+    for e in q.all():
+        executors.append(e.get_json())
+    return {'items': executors, 'total': total}, 200
+
+
+def update_executors(executors):
+    log.info('executors %s', executors)
+
+    execs = []
+    for e in executors:
+        executor = Executor.query.filter_by(id=e['id']).one_or_none()
+        if executor is None:
+            abort(400, 'Cannot find executor %s' % e['id'])
+        execs.append(executor)
+
+    for data, executor in zip(executors, execs):
+        if 'authorized' in data:
+            executor.authorized = data['authorized']
+    db.session.commit()
+
+    return {}, 200
+
+
+def update_executor(executor_id, data):
+    executor = Executor.query.filter_by(id=executor_id).one_or_none()
+    if executor is None:
+        abort(404, "Executor not found")
+
+    if 'groups' in data:
+        # check new groups
+        new_groups = set()
+        if data['groups']:
+            for g_id in data['groups']:
+                g = ExecutorGroup.query.filter_by(id=g_id['id']).one_or_none()
+                if g is None:
+                    abort(404, "Executor Group with id %s not found" % g_id)
+                new_groups.add(g)
+
+        # get old groups
+        current_groups = set()
+        assignments_map = {}
+        for ea in executor.executor_groups:
+            current_groups.add(ea.executor_group)
+            assignments_map[ea.executor_group.id] = ea
+
+        # remove groups
+        removed = current_groups - new_groups
+        for r in removed:
+            ea = assignments_map[r.id]
+            db.session.delete(ea)
+
+        # add groups
+        added = new_groups - current_groups
+        for a in added:
+            ExecutorAssignment(executor=executor, executor_group=a)
+
+    db.session.commit()
+
+    return executor.get_json(), 200
+
+
+def delete_executor(executor_id):
+    executor = Executor.query.filter_by(id=executor_id).one_or_none()
+    if executor is None:
+        abort(404, "Executor not found")
+
+    executor.deleted = datetime.datetime.utcnow()
+    db.session.commit()
+
+    return {}, 200
+
+
+def get_group(group_id):
+    eg = ExecutorGroup.query.filter_by(id=group_id).one_or_none()
+    if eg is None:
+        abort(400, "Cannot find executor group with id %s" % group_id)
+
+    return eg.get_json(), 200
+
+
+def get_groups(start=0, limit=10):
+    q = ExecutorGroup.query
+    q = q.filter_by(deleted=None)
+    q = q.order_by(ExecutorGroup.name)
+    total = q.count()
+    q = q.offset(start).limit(limit)
+    groups = []
+    for eg in q.all():
+        groups.append(eg.get_json())
+    return {'items': groups, 'total': total}, 200
+
+
+def create_group(group):
+    group_rec = ExecutorGroup.query.filter_by(name=group['name']).one_or_none()
+    if group_rec is not None:
+        abort(400, "Group with name %s already exists" % group['name'])
+
+    project = None
+    if 'project_id' in group:
+        project = Project.query.filter_by(id=group['project_id']).one_or_none()
+        if project is None:
+            abort(400, "Cannot find project with id %s" % group['project_id'])
+
+    new_group = ExecutorGroup(name=group['name'], project=project)
+    db.session.commit()
+
+    return new_group.get_json(), 201
+
+
+def update_group():
+    pass
+
+
+def delete_group():
+    pass

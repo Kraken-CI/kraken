@@ -511,11 +511,20 @@ class ExecutorGroup(db.Model, DatesMixin):
     __tablename__ = "executor_groups"
     id = Column(Integer, primary_key=True)
     name = Column(Unicode(50))
-    project_id = Column(Integer, ForeignKey('projects.id'), nullable=False)
+    project_id = Column(Integer, ForeignKey('projects.id'), nullable=True)
     project = relationship('Project', back_populates="executor_groups")
     #executors = relationship("Executor", back_populates="executor_group")  # static assignments
     executors = relationship('ExecutorAssignment', back_populates="executor_group")
     jobs = relationship("Job", back_populates="executor_group")
+
+    def get_json(self):
+        return dict(id=self.id,
+                    created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,
+                    deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,
+                    name=self.name,
+                    project_id=self.project_id,
+                    project_name=self.project.name if self.project else None,
+                    executors_count=len(self.executors))
 
 
 class Executor(db.Model, DatesMixin):
@@ -523,6 +532,7 @@ class Executor(db.Model, DatesMixin):
     id = Column(Integer, primary_key=True)
     name = Column(Unicode(50), nullable=False)
     address = Column(Unicode(25), index=True, nullable=False)
+    authorized = Column(Boolean, default=False)
     ip_address = Column(Unicode(50))
     state = Column(Integer, default=0)
     disabled = Column(Boolean, default=False)
@@ -535,6 +545,19 @@ class Executor(db.Model, DatesMixin):
 
     def __repr__(self):
         return "<Executor %s, job:%s>" % (self.id, self.job_id)
+
+    def get_json(self):
+        return dict(id=self.id,
+                    created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,
+                    deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,
+                    name=self.name,
+                    address=self.address,
+                    authorized=self.authorized,
+                    ip_address=self.ip_address,
+                    state=self.state,
+                    disabled=self.disabled,
+                    groups=[dict(id=a.executor_group.id, name=a.executor_group.name) for a in self.executor_groups],
+                    job=self.job.get_json() if self.job else None)
 
 
 class Preference(db.Model):
@@ -612,11 +635,21 @@ def prepare_initial_data():
             log.info("   created Tool record '%s'", name)
         tools[name] = tool
 
-    executor = Executor.query.filter_by(name="server").one_or_none()
+    executor = Executor.query.filter_by(name="agent.7").one_or_none()
     if executor is None:
-        executor = Executor(name='server', address="server")
+        executor = Executor(name='agent.7', address="agent.7", authorized=True)
         db.session.commit()
-        log.info("   created Executor record 'server'")
+        log.info("   created Executor record 'agent.7'")
+
+    executor_group = ExecutorGroup.query.filter_by(name="all").one_or_none()
+    if executor_group is None:
+        executor_group = ExecutorGroup(name='all')
+        db.session.commit()
+        log.info("   created ExecutorGroup record 'all'")
+
+        ExecutorAssignment(executor=executor, executor_group=executor_group)
+        db.session.commit()
+        log.info("   created ExecutorAssignment for record 'all'")
 
     # Project DEMO
     project = Project.query.filter_by(name="Demo").one_or_none()
@@ -705,7 +738,7 @@ def prepare_initial_data():
             }],
             "environments": [{
                 "system": "ubuntu-18.04",
-                "executor_group": "server",
+                "executor_group": "all",
                 "config": "c1"
             }]
         }]
@@ -737,7 +770,7 @@ def prepare_initial_data():
             }],
             "environments": [{
                 "system": "centos-7",
-                "executor_group": "server",
+                "executor_group": "all",
                 "config": "default"
             }]
         }]
@@ -746,16 +779,6 @@ def prepare_initial_data():
                       schema_code=schema_code, schema=execute_schema_code(branch, schema_code))
         db.session.commit()
         log.info("   created Stage record 'Unit Tests'")
-
-    executor_group = ExecutorGroup.query.filter_by(name="server", project=project).one_or_none()
-    if executor_group is None:
-        executor_group = ExecutorGroup(name='server', project=project)
-        db.session.commit()
-        log.info("   created ExecutorGroup record 'server'")
-
-        ExecutorAssignment(executor=executor, executor_group=executor_group)
-        db.session.commit()
-        log.info("   created ExecutorAssignment for record 'server'")
 
     # Project KRAKEN
     project = Project.query.filter_by(name="Kraken").one_or_none()
@@ -800,7 +823,7 @@ def prepare_initial_data():
             }],
             "environments": [{
                 "system": "ubuntu-18.04",
-                "executor_group": "server",
+                "executor_group": "all",
                 "config": "c1"
             }]
         }]
@@ -833,7 +856,7 @@ def prepare_initial_data():
             }],
             "environments": [{
                 "system": "centos-7",
-                "executor_group": "server",
+                "executor_group": "all",
                 "config": "default"
             }]
         }]
@@ -842,15 +865,5 @@ def prepare_initial_data():
                       schema_code=schema_code, schema=execute_schema_code(branch, schema_code))
         db.session.commit()
         log.info("   created Stage record 'Unit Tests'")
-
-    executor_group = ExecutorGroup.query.filter_by(name="server", project=project).one_or_none()
-    if executor_group is None:
-        executor_group = ExecutorGroup(name='server', project=project)
-        db.session.commit()
-        log.info("   created ExecutorGroup record 'server'")
-
-        ExecutorAssignment(executor=executor, executor_group=executor_group)
-        db.session.commit()
-        log.info("   created ExecutorAssignment for record 'server'")
 
     _prepare_initial_preferences()

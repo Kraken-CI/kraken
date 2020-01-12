@@ -51,6 +51,9 @@ import { NewFlowComponent } from './new-flow/new-flow.component';
 import { NewRunComponent } from './new-run/new-run.component';
 import { LogBoxComponent } from './log-box/log-box.component';
 import { ProjectSettingsComponent } from './project-settings/project-settings.component';
+import { ExecutorsPageComponent } from './executors-page/executors-page.component';
+import { DiscoveredPageComponent } from './discovered-page/discovered-page.component';
+import { GroupsPageComponent } from './groups-page/groups-page.component';
 
 export function cfgFactory() {
     return new Configuration();
@@ -71,7 +74,10 @@ export function cfgFactory() {
         NewFlowComponent,
         NewRunComponent,
         LogBoxComponent,
-        ProjectSettingsComponent
+        ProjectSettingsComponent,
+        ExecutorsPageComponent,
+        DiscoveredPageComponent,
+        GroupsPageComponent
     ],
     imports: [
         BrowserModule,

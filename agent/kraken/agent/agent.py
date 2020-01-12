@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
 import os
-import time
-import argparse
-import logging
-import traceback
 import sys
+import time
+import logging
+import argparse
+import platform
+import traceback
 
 from . import config
 from . import server
@@ -43,6 +44,18 @@ def apply_cfg_changes(changes):
         os.environ['KRAKEN_LOGSTASH_ADDR'] = logstash_addr
 
 
+def collect_sys_info():
+    sys_info = {}
+    s = platform.system().lower()
+    sys_info['system'] = s
+    if s == 'linux':
+        distr = platform.linux_distribution(full_distribution_name=False)
+        sys_info['distro_name'] = distr[0].lower()
+        sys_info['distro_version'] = distr[1]
+
+    return sys_info
+
+
 def main():
     logs.setup_logging('agent')
 
@@ -62,6 +75,9 @@ def main():
         os.makedirs(jobs_dir)
 
     srv = server.Server()
+
+    sys_info = collect_sys_info()
+    srv.report_sys_info(sys_info)
 
     while True:
         try:

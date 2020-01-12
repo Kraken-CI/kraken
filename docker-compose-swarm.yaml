@@ -98,6 +98,7 @@ services:
       - KRAKEN_ELASTICSEARCH_URL
       - KRAKEN_SERVER_PORT
       - KRAKEN_SERVER_ADDR
+      - KRAKEN_AGENT_SLOT={{.Task.Slot}}
     # networks:
     #   - lab_net
     depends_on:

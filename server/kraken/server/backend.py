@@ -267,9 +267,20 @@ def _handle_dispatch_tests(executor, req):
 
         return {'tests': part1}
 
+
+def _handle_sys_info(executor, req):
+    pass
+
+
+def _handle_unknown_executor(address, ip_address):
+    Executor(name=address, address=address, authorized=False, ip_address=ip_address)
+    db.session.commit()
+
+
 def serve_agent_request():
     req = request.get_json()
     # log.info('request headers: %s', request.headers)
+    # log.info('request remote_addr: %s', request.remote_addr)
     # log.info('request args: %s', request.args)
     log.info('request data: %s', str(req)[:200])
 
@@ -279,6 +290,10 @@ def serve_agent_request():
     executor = Executor.query.filter_by(address=address).one_or_none()
     if executor is None:
         log.warn('unknown executor %s', address)
+        _handle_unknown_executor(address, request.remote_addr)
+        return json.dumps({})
+    elif not executor.authorized:
+        log.warn('unauthorized executor %s from %s', address, request.remote_addr)
         return json.dumps({})
 
     response = {}
@@ -297,6 +312,10 @@ def serve_agent_request():
 
     elif msg == 'dispatch-tests':
         response = _handle_dispatch_tests(executor, req)
+
+    elif msg == 'sys-info':
+        _handle_sys_info(executor, req)
+        response = {}
 
     else:
         log.warn('unknown msg: %s', msg)

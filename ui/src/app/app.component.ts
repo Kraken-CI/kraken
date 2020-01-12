@@ -20,7 +20,6 @@ export class AppComponent {
     krakenVersion = '0.4'
 
     topMenuItems: MenuItem[];
-    sItems: MenuItem[];
 
     constructor() {
         this.logoClass = 'logo' + (Math.floor(Math.random() * 9) + 1);
@@ -30,24 +29,17 @@ export class AppComponent {
         this.krakenVersion = environment.krakenVersion
 
         this.topMenuItems = [{
-            label: 'Dashboard',
-            icon: 'pi pi-pw pi-home',
+            label: 'Executors',
+            icon: 'fa fa-server',
             items: [{
-                label: 'New',
-                icon: 'pi pi-fw pi-plus',
-                items: [
-                    {label: 'User', icon: 'pi pi-fw pi-user-plus'},
-                    {label: 'Filter', icon: 'pi pi-fw pi-filter'}
-                ]
+                label: 'Executors',
+                routerLink: '/executors'
             }, {
-                label: 'Open', icon: 'pi pi-fw pi-external-link'
+                label: 'Groups',
+                routerLink: '/executor-groups'
             }, {
-                separator: true
-            }, {
-                label: 'Quit', icon: 'pi pi-fw pi-times'
-            }, {
-                label: 'Edit',
-                icon: 'pi pi-fw pi-pencil',
+                label: 'Discovered',
+                routerLink: '/discovered-executors'
             }]
         }];
     }
