@@ -19,6 +19,12 @@ export class DiscoveredPageComponent implements OnInit {
                 protected breadcrumbService: BreadcrumbsService) { }
 
     ngOnInit() {
+        let crumbs = [{
+            label: 'Home'
+        }, {
+            label: 'Discovered Executors'
+        }];
+        this.breadcrumbService.setCrumbs(crumbs);
     }
 
     loadExecutorsLazy(event) {

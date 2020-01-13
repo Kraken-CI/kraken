@@ -63,6 +63,13 @@ export class GroupsPageComponent implements OnInit {
     }
 
     ngOnInit() {
+        let crumbs = [{
+            label: 'Home'
+        }, {
+            label: 'Executor Groups'
+        }]
+        this.breadcrumbService.setCrumbs(crumbs)
+
         this.tabs = [{ label: 'Groups', routerLink: '/executor-groups/all' }]
 
         this.groups = []

@@ -65,6 +65,13 @@ export class ExecutorsPageComponent implements OnInit {
     }
 
     ngOnInit() {
+        let crumbs = [{
+            label: 'Home'
+        }, {
+            label: 'Executors'
+        }]
+        this.breadcrumbService.setCrumbs(crumbs)
+
         this.tabs = [{ label: 'Executors', routerLink: '/executors/all' }]
 
         this.executors = []
