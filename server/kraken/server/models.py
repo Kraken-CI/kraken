@@ -538,6 +538,7 @@ class Executor(db.Model, DatesMixin):
     disabled = Column(Boolean, default=False)
     comment = Column(Text)
     status_line = Column(Text)
+    last_seen = Column(DateTime)
     #executor_group_id = Column(Integer, ForeignKey('executor_groups.id'))  # static assignment to exactly one machines group, if NULL then not authorized
     executor_groups = relationship('ExecutorAssignment', back_populates="executor")
     job_id = Column(Integer, ForeignKey('jobs.id'))
@@ -550,6 +551,7 @@ class Executor(db.Model, DatesMixin):
         return dict(id=self.id,
                     created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,
                     deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,
+                    last_seen=self.last_seen.strftime("%Y-%m-%dT%H:%M:%SZ") if self.last_seen else None,
                     name=self.name,
                     address=self.address,
                     authorized=self.authorized,

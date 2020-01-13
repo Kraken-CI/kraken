@@ -46,6 +46,7 @@
         <th style="width: 120px;">IP Address</th>
         <th style="width: 120px;">State</th>
         <th style="width: 120px;">Disabled</th>
+        <th style="width: 120px;">Last Seen</th>
         <th style="width: 10%;">Groups</th>
         <th style="width: 10%;">Job</th>
         <th style="width: 4rem;">Action</th>
@@ -59,6 +60,7 @@
         <td>{{executor.ip_address}}</td>
         <td>{{executor.state}}</td>
         <td>{{executor.disabled}}</td>
+        <td>{{ executor.last_seen ? (executor.last_seen | localtime) : '' }}</td>
         <td>
           <span *ngFor="let g of executor.groups" style="padding-right: 5px;">
             <a routerLink="/executor-groups/{{ g.id }}">{{ g.name }}</a>

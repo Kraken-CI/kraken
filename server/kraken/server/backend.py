@@ -296,6 +296,9 @@ def serve_agent_request():
         log.warn('unauthorized executor %s from %s', address, request.remote_addr)
         return json.dumps({})
 
+    executor.last_seen = datetime.datetime.utcnow()
+    db.session.commit()
+
     response = {}
 
     if msg == 'get-job':

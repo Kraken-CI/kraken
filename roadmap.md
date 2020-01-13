@@ -20,7 +20,8 @@
 ** DONE trigger on github push event
 ** storing commit used
 ** getting git diff to prev job
-* executors
+* TODO executors
+** DONE add groups, discovered
 ** support for docker executor
 ** support for lxc executor
 ** support for vagrant executor
@@ -38,3 +39,4 @@
 * fork branch operation with test results history continuity
 * czas na branchu jest pokazywany jako AM a jest PM
 * przerobić stronę główną na bardziej statyczną bez rozwijanego drzewa
+* dodać automatyczne wyznaczanie timeout'u

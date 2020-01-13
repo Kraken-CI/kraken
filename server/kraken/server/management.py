@@ -440,6 +440,7 @@ def delete_executor(executor_id):
         executor.job = None
 
     executor.deleted = datetime.datetime.utcnow()
+    executor.authorized = False
     db.session.commit()
 
     return {}, 200

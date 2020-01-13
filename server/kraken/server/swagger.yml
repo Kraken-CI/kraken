@@ -1457,6 +1457,9 @@ definitions:
           type: object
       job:
         type: object
+      last_seen:
+        type: string
+        format: date-time
   Executors:
     type: object
     properties:

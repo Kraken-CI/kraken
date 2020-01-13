@@ -114,6 +114,7 @@ def trigger_jobs(run, replay=False):
                 if key in covered_jobs:
                     for cj in covered_jobs[key]:
                         cj.covered = True
+                        # TODO: we should cancel these jobs if they are still running
 
             db.session.commit()
             log.info('created job %s', job.get_json())
