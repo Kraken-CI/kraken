@@ -434,9 +434,10 @@ def delete_executor(executor_id):
         abort(404, "Executor not found")
 
     if executor.job is not None:
-       executor.job.executor = None
-       executor.job.state = consts.JOB_STATE_QUEUED
-       executor.job = None
+        job = executor.job
+        job.executor = None
+        job.state = consts.JOB_STATE_QUEUED
+        executor.job = None
 
     executor.deleted = datetime.datetime.utcnow()
     db.session.commit()
