@@ -433,6 +433,11 @@ def delete_executor(executor_id):
     if executor is None:
         abort(404, "Executor not found")
 
+    if executor.job is not None:
+       executor.job = None
+       job.executor = None
+       job.state = consts.JOB_STATE_QUEUED
+
     executor.deleted = datetime.datetime.utcnow()
     db.session.commit()
 
@@ -480,5 +485,12 @@ def update_group():
     pass
 
 
-def delete_group():
-    pass
+def delete_group(group_id):
+    group = ExecutorGroup.query.filter_by(id=group_id).one_or_none()
+    if group is None:
+        abort(404, "Executor group with id %s not found" % group_id)
+
+    group.deleted = datetime.datetime.utcnow()
+    db.session.commit()
+
+    return {}, 200
