@@ -66,6 +66,9 @@
           <span style="font-size: 1.2rem; font-weight: bold; margin-right: 20px;">{{job.id}}. {{ job.name }}</span>
           <span>Started: {{ job.started ? (job.started | localtime) : 'not yet' }}</span>
           <span style="margin-left: 30px;">Completed: {{ job.completed ? (job.completed | localtime) : 'not yet' }}</span>
+          <span *ngIf="job.notes" style="margin-left: 30px;">
+            <p-message severity="warn" text="Notes: {{ job.notes }}"></p-message>
+          </span>
         </div>
 
         <p-tabView>

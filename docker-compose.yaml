@@ -32,32 +32,54 @@ services:
       - celery
       - elasticsearch
 
-  scheduler:
-    restart: always
-    image: 127.0.0.1:5000/kkscheduler:kk_ver
-    build:
-      context: server
-      dockerfile: docker-scheduler.txt
-    environment:
-      - KRAKEN_REDIS_ADDR
-      - KRAKEN_DB_URL
-      - KRAKEN_LOGSTASH_PORT
-      - KRAKEN_LOGSTASH_ADDR
-      - KRAKEN_ELASTICSEARCH_PORT
-      - KRAKEN_ELASTICSEARCH_URL
-      - KRAKEN_SERVER_PORT
-      - KRAKEN_SERVER_ADDR
-    networks:
-      - db_net
-    depends_on:
-      - postgres
+  # scheduler:
+  #   restart: always
+  #   image: 127.0.0.1:5000/kkscheduler:kk_ver
+  #   build:
+  #     context: server
+  #     dockerfile: docker-scheduler.txt
+  #   environment:
+  #     - KRAKEN_REDIS_ADDR
+  #     - KRAKEN_DB_URL
+  #     - KRAKEN_LOGSTASH_PORT
+  #     - KRAKEN_LOGSTASH_ADDR
+  #     - KRAKEN_ELASTICSEARCH_PORT
+  #     - KRAKEN_ELASTICSEARCH_URL
+  #     - KRAKEN_SERVER_PORT
+  #     - KRAKEN_SERVER_ADDR
+  #   networks:
+  #     - db_net
+  #   depends_on:
+  #     - postgres
 
-  planner:
+  # planner:
+  #   restart: always
+  #   image: 127.0.0.1:5000/kkplanner:kk_ver
+  #   build:
+  #     context: server
+  #     dockerfile: docker-planner.txt
+  #   environment:
+  #     - KRAKEN_REDIS_ADDR
+  #     - KRAKEN_DB_URL
+  #     - KRAKEN_LOGSTASH_PORT
+  #     - KRAKEN_LOGSTASH_ADDR
+  #     - KRAKEN_ELASTICSEARCH_PORT
+  #     - KRAKEN_ELASTICSEARCH_URL
+  #     - KRAKEN_SERVER_PORT
+  #     - KRAKEN_SERVER_ADDR
+  #     - KRAKEN_PLANNER_URL
+  #   networks:
+  #     - db_net
+  #   depends_on:
+  #     - celery
+  #     - postgres
+
+  controller:
     restart: always
-    image: 127.0.0.1:5000/kkplanner:kk_ver
+    image: 127.0.0.1:5000/kkcontroller:kk_ver
     build:
       context: server
-      dockerfile: docker-planner.txt
+      dockerfile: docker-controller.txt
     environment:
       - KRAKEN_REDIS_ADDR
       - KRAKEN_DB_URL
@@ -72,6 +94,7 @@ services:
       - db_net
     depends_on:
       - celery
+      - postgres
 
   celery:
     restart: always

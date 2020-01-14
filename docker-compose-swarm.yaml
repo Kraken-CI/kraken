@@ -18,40 +18,40 @@ services:
       - $KRAKEN_SERVER_PORT
     ports:
       - $KRAKEN_SERVER_PORT:$KRAKEN_SERVER_PORT
-    # networks:
-    #   - db_net
-    #   - web_net
-    #   - lab_net
-    depends_on:
-      - postgres
-      - planner
-      - scheduler
-      - celery
-      - elasticsearch
     deploy:
       replicas: 2
 
-  scheduler:
-    restart: always
-    image: eu.gcr.io/kraken-261806/kkscheduler:kk_ver
-    environment:
-      - KRAKEN_REDIS_ADDR
-      - KRAKEN_DB_URL
-      - KRAKEN_LOGSTASH_PORT
-      - KRAKEN_LOGSTASH_ADDR
-      - KRAKEN_ELASTICSEARCH_PORT
-      - KRAKEN_ELASTICSEARCH_URL
-      - KRAKEN_SERVER_PORT
-      - KRAKEN_SERVER_ADDR
-      - KRAKEN_PLANNER_URL
-    # networks:
-    #   - db_net
-    depends_on:
-      - postgres
+  # scheduler:
+  #   restart: always
+  #   image: eu.gcr.io/kraken-261806/kkscheduler:kk_ver
+  #   environment:
+  #     - KRAKEN_REDIS_ADDR
+  #     - KRAKEN_DB_URL
+  #     - KRAKEN_LOGSTASH_PORT
+  #     - KRAKEN_LOGSTASH_ADDR
+  #     - KRAKEN_ELASTICSEARCH_PORT
+  #     - KRAKEN_ELASTICSEARCH_URL
+  #     - KRAKEN_SERVER_PORT
+  #     - KRAKEN_SERVER_ADDR
+  #     - KRAKEN_PLANNER_URL
 
-  planner:
+  # planner:
+  #   restart: always
+  #   image: eu.gcr.io/kraken-261806/kkplanner:kk_ver
+  #   environment:
+  #     - KRAKEN_REDIS_ADDR
+  #     - KRAKEN_DB_URL
+  #     - KRAKEN_LOGSTASH_PORT
+  #     - KRAKEN_LOGSTASH_ADDR
+  #     - KRAKEN_ELASTICSEARCH_PORT
+  #     - KRAKEN_ELASTICSEARCH_URL
+  #     - KRAKEN_SERVER_PORT
+  #     - KRAKEN_SERVER_ADDR
+  #     - KRAKEN_PLANNER_URL
+
+  controller:
     restart: always
-    image: eu.gcr.io/kraken-261806/kkplanner:kk_ver
+    image: eu.gcr.io/kraken-261806/kkcontroller:kk_ver
     environment:
       - KRAKEN_REDIS_ADDR
       - KRAKEN_DB_URL
@@ -62,10 +62,6 @@ services:
       - KRAKEN_SERVER_PORT
       - KRAKEN_SERVER_ADDR
       - KRAKEN_PLANNER_URL
-    # networks:
-    #   - db_net
-    depends_on:
-      - celery
 
   celery:
     restart: always
@@ -80,11 +76,6 @@ services:
       - KRAKEN_SERVER_PORT
       - KRAKEN_SERVER_ADDR
       - KRAKEN_PLANNER_URL
-    # networks:
-    #   - db_net
-    depends_on:
-      - postgres
-      - redis
 
   agent:
     restart: always
@@ -99,10 +90,6 @@ services:
       - KRAKEN_SERVER_PORT
       - KRAKEN_SERVER_ADDR
       - KRAKEN_AGENT_SLOT={{.Task.Slot}}
-    # networks:
-    #   - lab_net
-    depends_on:
-      - server
     deploy:
       replicas: 3
 
@@ -119,10 +106,6 @@ services:
       - KRAKEN_SERVER_ADDR
     ports:
       - "8080:80"
-    # networks:
-    #   - web_net
-    depends_on:
-      - server
 
   postgres:
     image: postgres:11
@@ -132,13 +115,9 @@ services:
       - POSTGRES_DB
     volumes:
       - db-data:/var/lib/postgresql/data
-    # networks:
-    #   - db_net
 
   redis:
     image: redis:alpine
-    # networks:
-    #   - db_net
 
 # ELK
   elasticsearch:
@@ -166,8 +145,6 @@ services:
 #    ports:
 #      - "9200:9200"
 #      - "9300:9300"
-    # networks:
-    #   - db_net
 
   logstash:
     image: logstash:7.5.0
@@ -177,11 +154,6 @@ services:
       - 9600:9600
     environment:
       LS_JAVA_OPTS: "-Xmx256m -Xms256m"
-    # networks:
-    #   - db_net
-    #   - lab_net
-    depends_on:
-      - elasticsearch
 
   kibana:
     image: kibana:7.5.0
@@ -190,21 +162,9 @@ services:
       ELASTICSEARCH_URL: $KRAKEN_ELASTICSEARCH_URL
     ports:
       - "5601:5601"
-    # networks:
-    #   - db_net
-    depends_on:
-      - elasticsearch
 
 
 
 volumes:
   db-data:
   elasticsearch:
-
-# networks:
-#   db_net:
-#     driver: bridge
-#   web_net:
-#     driver: bridge
-#   lab_net:
-#     driver: bridge

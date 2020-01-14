@@ -1297,6 +1297,8 @@ definitions:
         type: integer
       completion_status:
         type: integer
+      notes:
+        type: string
       run_id:
         type: integer
       steps:

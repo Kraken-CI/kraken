@@ -197,8 +197,16 @@ def _check_and_correct_stage_schema(branch, stage, prev_schema_code):
         if not found:
             abort(400, 'Cannot find parent stage %s' % schema['parent'])
 
-    # check secrets
+    # check job_names and secrets
+    job_names = set()
     for job in schema['jobs']:
+        # check names
+        if job['name'] in job_names:
+            abort(400, "Two jobs with the same name '%s'" % job['name'])
+        else:
+            job_names.add(job['name'])
+
+        # check secrets
         for step in job['steps']:
             for field, value in step.items():
                 if field in ['access-token', 'ssh-key']:

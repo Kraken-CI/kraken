@@ -92,23 +92,37 @@ def trigger_jobs(run, replay=False):
 
         envs = j['environments']
         for env in envs:
+            # get executor group
             executor_group = ExecutorGroup.query.filter_by(project=run.stage.branch.project, name=env['executor_group']).one_or_none()
             if executor_group is None:
                 executor_group = ExecutorGroup.query.filter_by(name=env['executor_group']).one_or_none()
                 if executor_group is None:
                     log.warn("cannot find executor group '%s'", env['executor_group'])
                     continue
-            job = Job(run=run, name=j['name'], executor_group=executor_group)
+
+            # get timeout
+            if run.stage.timeouts and j['name'] in run.stage.timeouts:
+                # take estimated timeout if present
+                timeout = run.stage.timeouts[j['name']]
+            else:
+                # take initial timeout from schema, or default one
+                timeout = j.get('timeout', 5 * 60)  # default job timeout is 5mins
+
+            # create job
+            job = Job(run=run, name=j['name'], executor_group=executor_group, timeout=timeout)
+
             if tool_not_found:
                 job.state = consts.JOB_STATE_COMPLETED
                 job.completion_status = consts.JOB_CMPLT_MISSING_TOOL_IN_DB
                 job.notes = "cannot find tool '%s' in database" % s['tool']
             else:
+                # substitute vars in steps
                 for idx, s in enumerate(j['steps']):
                     fields = _substitute_vars(s, run.args)
                     del fields['tool']
                     Step(job=job, index=idx, tool=tools[idx], fields=fields)
 
+            # if this is rerun/replay then mark prev jobs as covered
             if replay:
                 key = '%s-%s' % (j['name'], executor_group.id)
                 if key in covered_jobs:

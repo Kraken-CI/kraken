@@ -128,6 +128,7 @@ class Stage(db.Model, DatesMixin):
     schema = Column(JSONB, nullable=False)
     schema_code = Column(UnicodeText)
     triggers = Column(JSONB)
+    timeouts = Column(JSONB)
     runs = relationship('Run', back_populates="stage")
     #services
 
@@ -353,6 +354,7 @@ class Job(db.Model, DatesMixin):
     steps = relationship("Step", back_populates="job", order_by="Step.index")
     state = Column(Integer, default=consts.JOB_STATE_QUEUED)
     completion_status = Column(Integer)
+    timeout = Column(Integer)
     covered = Column(Boolean, default=False)
     notes = Column(Unicode(2048))
     executor = relationship('Executor', uselist=False, back_populates="job", foreign_keys="Executor.job_id", post_update=True)
@@ -370,11 +372,12 @@ class Job(db.Model, DatesMixin):
                     started=self.started.strftime("%Y-%m-%dT%H:%M:%SZ") if self.started else None,
                     finished=self.finished.strftime("%Y-%m-%dT%H:%M:%SZ") if self.finished else None,
                     completed=self.completed.strftime("%Y-%m-%dT%H:%M:%SZ") if self.completed else None,
-                    covered=self.covered,
                     processing_started=self.processing_started.strftime("%Y-%m-%dT%H:%M:%SZ") if self.processing_started else None,
                     name=self.name,
                     state=self.state,
                     completion_status=self.completion_status,
+                    covered=self.covered,
+                    notes=self.notes,
                     run_id=self.run_id,
                     executor_group_id=self.executor_group_id,
                     executor_group_name=self.executor_group.name,

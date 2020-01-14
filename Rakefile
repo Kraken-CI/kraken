@@ -84,7 +84,7 @@ def setup_py_develop
   end
 end
 
-['./server/venv/bin/kkserver', './server/venv/bin/kkscheduler', './server/venv/bin/kkcelery', './server/venv/bin/kkplanner', './server/venv/bin/kkdbmigrate'].each {|f|
+['./server/venv/bin/kkserver', './server/venv/bin/kkscheduler', './server/venv/bin/kkcelery', './server/venv/bin/kkplanner', './server/venv/bin/kkdbmigrate', './server/venv/bin/kkwatchdog'].each {|f|
   file f => ['./server/venv/bin/python3', './server/requirements.txt'] do
     setup_py_develop
   end
@@ -127,6 +127,10 @@ task :run_planner => './server/venv/bin/kkplanner' do
   sh './server/venv/bin/kkplanner'
 end
 
+task :run_watchdog => './server/venv/bin/kkwatchdog' do
+  sh './server/venv/bin/kkwatchdog'
+end
+
 file './venv/bin/shiv' => ['./venv/bin/python3', 'requirements.txt'] do
     sh './venv/bin/pip install -r requirements.txt'
 end
@@ -141,6 +145,7 @@ task :build_server => './venv/bin/shiv' do
     sh "../venv/bin/shiv --site-packages dist --compressed -p '/usr/bin/env python3' -o kkscheduler -c kkscheduler"
     sh "../venv/bin/shiv --site-packages dist --compressed -p '/usr/bin/env python3' -o kkcelery -c kkcelery"
     sh "../venv/bin/shiv --site-packages dist --compressed -p '/usr/bin/env python3' -o kkplanner -c kkplanner"
+    sh "../venv/bin/shiv --site-packages dist --compressed -p '/usr/bin/env python3' -o kkwatchdog -c kkwatchdog"
     sh "../venv/bin/shiv --site-packages dist --compressed -p '/usr/bin/env python3' -o kkdbmigrate -c kkdbmigrate"
   end
 end

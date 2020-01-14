@@ -235,16 +235,17 @@ def job_completed(self, job_id):
                 log.error('got unknown job: %s', job_id)
                 return
 
-            job.completed = now
-            job.state = consts.JOB_STATE_COMPLETED
-            job.completion_status = consts.JOB_CMPLT_ALL_OK
-            log.info('checking steps')
-            for step in job.steps:
-                log.info('%s: %s', step.index, consts.STEP_STATUS_NAME[step.status] if step.status in consts.STEP_STATUS_NAME else step.status)
-                if step.status == consts.STEP_STATUS_ERROR:
-                    job.completion_status = consts.JOB_CMPLT_AGENT_ERROR_RETURNED
-                    break
-            db.session.commit()
+            if job.state != consts.JOB_STATE_COMPLETED:
+                job.completed = now
+                job.state = consts.JOB_STATE_COMPLETED
+                job.completion_status = consts.JOB_CMPLT_ALL_OK
+                log.info('checking steps')
+                for step in job.steps:
+                    log.info('%s: %s', step.index, consts.STEP_STATUS_NAME[step.status] if step.status in consts.STEP_STATUS_NAME else step.status)
+                    if step.status == consts.STEP_STATUS_ERROR:
+                        job.completion_status = consts.JOB_CMPLT_AGENT_ERROR_RETURNED
+                        break
+                db.session.commit()
 
             # establish new run state
             run = job.run

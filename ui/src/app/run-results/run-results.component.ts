@@ -288,6 +288,7 @@ export class RunResultsComponent implements OnInit {
         case 4: return 'missing tool in db'
         case 5: return 'missing tool files'
         case 6: return 'step timeout'
+        case 7: return 'timeout'
         default: return ''
         }
     }
