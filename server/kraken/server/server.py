@@ -42,7 +42,7 @@ def create_app():
     srvcheck.check_url('planner', planner_url, 7997)
 
     logs.setup_logging('server')
-    log.info('server initiated', version='0.1')
+    log.info('Kraken Server started')
 
     # Create the connexion application instance
     basedir = os.path.abspath(os.path.dirname(__file__))

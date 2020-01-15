@@ -109,7 +109,7 @@ class Planner:
 
 def _db_migration(db_url):
     # Create  Flask app instance
-    app = Flask('Kraken Scheduler')
+    app = Flask('Kraken Planner')
 
     # Configure the SqlAlchemy part of the app instance
     app.config["SQLALCHEMY_ECHO"] = False
@@ -130,6 +130,7 @@ def main():
     srvcheck.check_postgresql(db_url)
 
     logs.setup_logging('planner')
+    log.info('Kraken Planner started')
 
     # db migration
     _db_migration(db_url)

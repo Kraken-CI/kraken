@@ -256,7 +256,7 @@ class Run(db.Model, DatesMixin):
                 jobs_waiting += 1
             elif job.state == consts.JOB_STATE_COMPLETED:
                 jobs_completed += 1
-                if last_time is None or job.completed > last_time:
+                if last_time is None or (job.completed and job.completed > last_time):
                     last_time = job.completed
 
             if job.completion_status not in [consts.JOB_CMPLT_ALL_OK, None]:
@@ -376,6 +376,7 @@ class Job(db.Model, DatesMixin):
                     name=self.name,
                     state=self.state,
                     completion_status=self.completion_status,
+                    timeout=self.timeout,
                     covered=self.covered,
                     notes=self.notes,
                     run_id=self.run_id,

@@ -6,6 +6,7 @@ import logging
 from celery import Task
 from flask import Flask
 from sqlalchemy.sql.expression import asc, desc
+from sqlalchemy.orm.attributes import flag_modified
 import giturlparse
 
 from .clry import app
@@ -220,6 +221,64 @@ def trigger_stages(self, run_id):
         raise self.retry(exc=exc)
 
 
+def _estimate_timeout(job):
+    if not job.assigned or not job.finished:
+        log.warn('job %s has None dates: %s %s', job, job.assigned, job.finished)
+        return
+    if job.assigned > job.finished:
+        log.warn('job %s has wrong dates: %s %s', job, job.assigned, job.finished)
+        return
+
+    q = Job.query
+    q = q.filter_by(name=job.name)
+    q = q.filter_by(state=consts.JOB_STATE_COMPLETED)
+    q = q.filter_by(completion_status=consts.JOB_CMPLT_ALL_OK)
+    q = q.filter_by(covered=False)
+    q = q.filter_by(executor_group=job.executor_group)
+    q = q.join('run')
+    q = q.filter(Run.stage_id == job.run.stage_id)
+    q = q.join('run', 'flow')
+    q = q.filter(Flow.created <= job.run.flow.created)
+    q = q.order_by(desc(Flow.created))
+    q = q.limit(10)
+
+    jobs = q.all()
+    if len(jobs) < 4:
+        log.info('not enough jobs to estimate timeout')
+        return
+
+    max_duration = duration = job.finished - job.assigned
+    prev_job_id = job.id
+    for j in jobs:
+        if not job.assigned or not job.finished:
+            log.warn('job %s has None dates: %s %s', job, job.assigned, job.finished)
+            continue
+        if job.assigned > job.finished:
+            log.warn('job %s has wrong dates: %s %s', job, job.assigned, job.finished)
+            continue
+
+        if j.id == prev_job_id:
+            duration += j.finished - j.assigned
+        else:
+            duration = j.finished - j.assigned
+            prev_job_id = j.id
+
+        if duration > max_duration:
+            max_duration = duration
+
+    timeout = int(max_duration.total_seconds() * 1.7)
+    if timeout < 60:
+        timeout = 60
+    stage = job.run.stage
+    log.info("new timeout for job '%s' in stage '%s': %ssecs", job.name, stage.name, timeout)
+    if stage.timeouts is None:
+        stage.timeouts = {}
+    stage.timeouts[job.name] = timeout
+    flag_modified(stage, 'timeouts')
+    db.session.commit()
+
+
+
 @app.task(base=BaseTask, bind=True)
 def job_completed(self, job_id):
     try:
@@ -246,6 +305,8 @@ def job_completed(self, job_id):
                         job.completion_status = consts.JOB_CMPLT_AGENT_ERROR_RETURNED
                         break
                 db.session.commit()
+
+                _estimate_timeout(job)
 
             # establish new run state
             run = job.run

@@ -74,6 +74,7 @@ def create_app():
     srvcheck.check_url('planner', planner_url, 7997)
 
     logs.setup_logging('scheduler')
+    log.info('Kraken Scheduler started')
 
     # Create  Flask app instance
     app = Flask('Kraken Scheduler')

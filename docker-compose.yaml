@@ -27,8 +27,9 @@ services:
       - lab_net
     depends_on:
       - postgres
-      - planner
-      - scheduler
+#      - planner
+#      - scheduler
+      - controller
       - celery
       - elasticsearch
 

@@ -107,6 +107,8 @@ def trigger_jobs(run, replay=False):
             else:
                 # take initial timeout from schema, or default one
                 timeout = j.get('timeout', 5 * 60)  # default job timeout is 5mins
+                if timeout < 60:
+                    timeout = 60
 
             # create job
             job = Job(run=run, name=j['name'], executor_group=executor_group, timeout=timeout)

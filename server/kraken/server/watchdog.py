@@ -25,6 +25,7 @@ def create_app():
     srvcheck.check_url('planner', planner_url, 7997)
 
     logs.setup_logging('watchdog')
+    log.info('Kraken Watchdog started')
 
     # Create  Flask app instance
     app = Flask('Kraken Watchdog')

@@ -34,55 +34,58 @@ JOB = {
 
 def _handle_get_job(executor, req):
     if executor.job is None:
-        job = {}
-    else:
-        job = executor.job.get_json()
+        return {'job': {}}
 
-        # prepare test list for execution
-        tests = []
-        for tcr in executor.job.results:
-            tests.append(tcr.test_case.name)
-        if tests:
-            job['steps'][-1]['tests'] = tests
+    job = executor.job.get_json()
 
-        # attach trigger data to job
-        if executor.job.run.flow.trigger_data:
-            job['trigger_data'] = executor.job.run.flow.trigger_data
+    # reduce slightly timeout
+    job['timeout'] = int(job['timeout'] * 0.9)
 
-        # process steps
-        project = executor.job.run.flow.branch.project
-        for step in job['steps']:
-            # insert secret from ssh-key
-            if 'ssh-key' in step:
-                value = step['ssh-key']
-                secret = Secret.query.filter_by(project=project, name=value).one_or_none()
-                if secret is None:
-                    raise Exception("Secret '%s' does not exists in project %s" % (value, project.id))
-                step['ssh-key'] = dict(username=secret.data['username'],
-                                       key=secret.data['key'])
+    # prepare test list for execution
+    tests = []
+    for tcr in executor.job.results:
+        tests.append(tcr.test_case.name)
+    if tests:
+        job['steps'][-1]['tests'] = tests
 
-            # insert secret from access-token
-            if 'access-token' in step:
-                value = step['access-token']
-                secret = Secret.query.filter_by(project=project, name=value).one_or_none()
-                if secret is None:
-                    raise Exception("Secret '%s' does not exists in project %s" % (value, project.id))
-                step['access-token'] = secret.data['secret']
+    # attach trigger data to job
+    if executor.job.run.flow.trigger_data:
+        job['trigger_data'] = executor.job.run.flow.trigger_data
 
-            # add http url to git
-            if step['tool'] == 'git':
-                url = step['checkout']
-                url = giturlparse.parse(url)
-                if url.valid:
-                    url = url.url2https
-                    step['http_url'] = url
-                else:
-                    log.info('invalid git url %s', step['checkout'])
+    # process steps
+    project = executor.job.run.flow.branch.project
+    for step in job['steps']:
+        # insert secret from ssh-key
+        if 'ssh-key' in step:
+            value = step['ssh-key']
+            secret = Secret.query.filter_by(project=project, name=value).one_or_none()
+            if secret is None:
+                raise Exception("Secret '%s' does not exists in project %s" % (value, project.id))
+            step['ssh-key'] = dict(username=secret.data['username'],
+                                   key=secret.data['key'])
 
-        if not executor.job.started:
-            executor.job.started = datetime.datetime.utcnow()
-            executor.job.state = consts.JOB_STATE_ASSIGNED
-            db.session.commit()
+        # insert secret from access-token
+        if 'access-token' in step:
+            value = step['access-token']
+            secret = Secret.query.filter_by(project=project, name=value).one_or_none()
+            if secret is None:
+                raise Exception("Secret '%s' does not exists in project %s" % (value, project.id))
+            step['access-token'] = secret.data['secret']
+
+        # add http url to git
+        if step['tool'] == 'git':
+            url = step['checkout']
+            url = giturlparse.parse(url)
+            if url.valid:
+                url = url.url2https
+                step['http_url'] = url
+            else:
+                log.info('invalid git url %s', step['checkout'])
+
+    if not executor.job.started:
+        executor.job.started = datetime.datetime.utcnow()
+        executor.job.state = consts.JOB_STATE_ASSIGNED
+        db.session.commit()
 
     return {'job': job}
 
@@ -258,7 +261,13 @@ def _handle_dispatch_tests(executor, req):
         _create_test_records(step, part1)
         db.session.commit()
 
-        job2 = Job(run=job.run, name=job.name, executor_group=job.executor_group)
+        # new timeout reduced by nearly a half
+        timeout = int(job.timeout * 0.6)
+        if timeout < 60:
+            timeout = 60
+
+        # create new job and its steps
+        job2 = Job(run=job.run, name=job.name, executor_group=job.executor_group, timeout=timeout)
         for s in job.steps:
             s2 = Step(job=job2, index=s.index, tool=s.tool, fields=s.fields.copy())
             if s.index == step_idx:

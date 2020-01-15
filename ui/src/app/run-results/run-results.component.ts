@@ -302,6 +302,7 @@ export class RunResultsComponent implements OnInit {
         case 4: return 'pi pi-exclamation-circle step-status-red'
         case 5: return 'pi pi-exclamation-circle step-status-red'
         case 6: return 'pi pi-exclamation-circle step-status-red'
+        case 7: return 'pi pi-exclamation-circle step-status-red'
         default: return ''
         }
     }
