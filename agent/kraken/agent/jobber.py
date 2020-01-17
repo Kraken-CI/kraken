@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import time
 import logging
 import pkgutil
 import asyncio
@@ -143,8 +144,11 @@ async def _async_monitor_proc(proc_coord, proc, timeout):
                 if proc.returncode is not None:
                     break
                 await asyncio.sleep(0.1)
-        break
 
+        # TODO: it should be better handled but needs testing
+        if proc_coord.result == {}:
+            proc_coord.result = {'status': 'error', 'reason': 'timeout'}
+        break
 
 
 async def _async_subprocess(proc_coord, cmd, cwd, timeout):
@@ -166,8 +170,8 @@ async def _async_subprocess(proc_coord, cmd, cwd, timeout):
 
     await _async_pump_output(proc_coord, proc.stdout)
 
-    done, pending = await asyncio.wait([proc.wait(), _async_monitor_proc(proc_coord, proc, timeout)],
-                                       timeout=timeout * 1.1)
+    done, pending = await asyncio.wait([proc.wait(), _async_monitor_proc(proc_coord, proc, timeout * 0.95)],
+                                       timeout=timeout)
     #log.info('done %s', done)
     #log.info('pending %s', pending)
     proc_coord.end_time = datetime.datetime.now()
@@ -249,7 +253,7 @@ def _write_step_file(job_dir, step, idx):
     return step_file_path
 
 
-def _run_step(srv, job_dir, job_id, idx, step, tools):
+def _run_step(srv, job_dir, job_id, idx, step, tools, deadline):
     tool_name = step['tool']
     log.info('step %s', str(step)[:200])
     if tool_name not in tools:
@@ -297,17 +301,26 @@ def _run_step(srv, job_dir, job_id, idx, step, tools):
         _write_step_file(job_dir, step, idx)
 
     if 'run_tests' in available_commands:
-        result = _exec_tool(srv, tool_path, 'run_tests', job_dir, 60, step_file_path, job_id, idx)
+        timeout = deadline - time.time()
+        if timeout <= 0:
+            return {'status': 'error', 'reason': 'timeout'}
+        result = _exec_tool(srv, tool_path, 'run_tests', job_dir, timeout, step_file_path, job_id, idx)
         log.info('result for run_tests: %s', str(result)[:200])
         srv.report_step_result(job_id, idx, result)
 
     if 'run_analysis' in available_commands:
-        result = _exec_tool(srv, tool_path, 'run_analysis', job_dir, 60, step_file_path, job_id, idx)
+        timeout = deadline - time.time()
+        if timeout <= 0:
+            return {'status': 'error', 'reason': 'timeout'}
+        result = _exec_tool(srv, tool_path, 'run_analysis', job_dir, timeout, step_file_path, job_id, idx)
         log.info('result for run_analysis: %s', str(result)[:200])
         srv.report_step_result(job_id, idx, result)
 
     if 'run' in available_commands:
-        result = _exec_tool(srv, tool_path, 'run', job_dir, 60, step_file_path, job_id, idx)
+        timeout = deadline - time.time()
+        if timeout <= 0:
+            return {'status': 'error', 'reason': 'timeout'}
+        result = _exec_tool(srv, tool_path, 'run', job_dir, timeout, step_file_path, job_id, idx)
         log.info('result for run: %s', result)
         srv.report_step_result(job_id, idx, result)
 
@@ -333,7 +346,7 @@ def run(srv, job):
         if 'trigger_data' in job:
             step['trigger_data'] = job['trigger_data']
         try:
-            result = _run_step(srv, job_dir, job['id'], idx, step, tools)
+            result = _run_step(srv, job_dir, job['id'], idx, step, tools, job['deadline'])
             last_status = result['status']
         except KeyboardInterrupt:
             raise

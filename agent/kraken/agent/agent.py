@@ -28,6 +28,10 @@ def parse_args():
 
 def dispatch_job(srv, job):
     try:
+        now = time.time()
+        deadline = now + job['timeout']
+        job['deadline'] = deadline
+        log.info('job deadline: %s', deadline)
         jobber.run(srv, job)
     except KeyboardInterrupt:
         raise

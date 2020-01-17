@@ -32,14 +32,23 @@ JOB = {
     }]
 }
 
+def _left_time(job):
+    now = datetime.datetime.utcnow()
+    slip = now - job.assigned
+    timeout = job.timeout
+    timeout -= slip.total_seconds()
+    # reduce slightly timeout
+    timeout = timeout * 0.9
+    return int(timeout)
+
+
 def _handle_get_job(executor, req):
     if executor.job is None:
         return {'job': {}}
 
     job = executor.job.get_json()
 
-    # reduce slightly timeout
-    job['timeout'] = int(job['timeout'] * 0.9)
+    job['timeout'] = _left_time(executor.job)
 
     # prepare test list for execution
     tests = []
@@ -91,15 +100,16 @@ def _handle_get_job(executor, req):
 
 
 def _handle_step_result(executor, req):
+    response = {}
     if executor.job is None:
         log.error('job in executor %s is missing, reporting some old job %s, step %s',
                   executor, req['job_id'], req['step_idx'])
-        return {}
+        return response
 
     if executor.job_id != req['job_id']:
         log.error('executor %s is reporting some other job %s',
                   executor, req['job_id'])
-        return {}
+        return response
 
     try:
         result = req['result']
@@ -110,7 +120,7 @@ def _handle_step_result(executor, req):
             raise ValueError("unknown status: %s" % status)
     except:
         log.exception('problems with parsing request')
-        return {}
+        return response
 
     job = executor.job
     step = job.steps[step_idx]
@@ -199,8 +209,10 @@ def _handle_step_result(executor, req):
         db.session.commit()
         t = bg_jobs.job_completed.delay(job.id)
         log.info('job %s finished by %s, bg processing: %s', job, executor, t)
+    else:
+        response['timeout'] =  _left_time(job)
 
-    return {}
+    return response
 
 
 def _create_test_records(step, tests):
