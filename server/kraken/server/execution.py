@@ -111,7 +111,7 @@ def trigger_jobs(run, replay=False):
                     timeout = 60
 
             # create job
-            job = Job(run=run, name=j['name'], executor_group=executor_group, timeout=timeout)
+            job = Job(run=run, name=j['name'], executor_group=executor_group, system=env['system'], timeout=timeout)
 
             if tool_not_found:
                 job.state = consts.JOB_STATE_COMPLETED

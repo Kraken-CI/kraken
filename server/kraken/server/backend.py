@@ -279,7 +279,7 @@ def _handle_dispatch_tests(executor, req):
             timeout = 60
 
         # create new job and its steps
-        job2 = Job(run=job.run, name=job.name, executor_group=job.executor_group, timeout=timeout)
+        job2 = Job(run=job.run, name=job.name, executor_group=job.executor_group, system=job.system, timeout=timeout)
         for s in job.steps:
             s2 = Step(job=job2, index=s.index, tool=s.tool, fields=s.fields.copy())
             if s.index == step_idx:

@@ -40,3 +40,5 @@
 * czas na branchu jest pokazywany jako AM a jest PM
 * przerobić stronę główną na bardziej statyczną bez rozwijanego drzewa
 * dodać automatyczne wyznaczanie timeout'u
+
+* jak sie wywali poprzedni stage to nie startować następnego

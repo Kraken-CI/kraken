@@ -357,6 +357,7 @@ class Job(db.Model, DatesMixin):
     timeout = Column(Integer)
     covered = Column(Boolean, default=False)
     notes = Column(Unicode(2048))
+    system = Column(Unicode(200))
     executor = relationship('Executor', uselist=False, back_populates="job", foreign_keys="Executor.job_id", post_update=True)
     executor_group_id = Column(Integer, ForeignKey('executor_groups.id'), nullable=False)
     executor_group = relationship('ExecutorGroup', back_populates="jobs")
@@ -379,6 +380,7 @@ class Job(db.Model, DatesMixin):
                     timeout=self.timeout,
                     covered=self.covered,
                     notes=self.notes,
+                    system=self.system,
                     run_id=self.run_id,
                     executor_group_id=self.executor_group_id,
                     executor_group_name=self.executor_group.name,

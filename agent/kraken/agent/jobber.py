@@ -11,9 +11,13 @@ import socketserver
 import pkg_resources
 import multiprocessing
 
+import netifaces
+
 from . import config
 from . import tool
 from . import utils
+from . import local_run
+from . import docker_run
 
 
 log = logging.getLogger(__name__)
@@ -102,83 +106,6 @@ class ProcCoord():
         self.idx = idx
 
         self.result = {}
-        self.start_time = None
-        self.end_time = None
-
-
-async def _async_pump_output(proc_coord, stream):
-    while True:
-        try:
-            line = await stream.readline()
-        except ValueError:
-            log.exception('IGNORED')
-            continue
-        if line:
-            line = line.decode().rstrip()
-            log.info(line)
-        else:
-            break
-
-
-async def _async_monitor_proc(proc_coord, proc, timeout):
-    end_time = proc_coord.start_time + datetime.timedelta(seconds=timeout)
-    while True:
-        if proc.returncode is not None:
-            break
-
-        now = datetime.datetime.now()
-        if now < end_time:
-            await asyncio.sleep(1)
-            continue
-
-        log.warning("cmd %s exceeded timeout (%dsecs), terminating", cmd, timeout)
-        proc.terminate()
-        for _ in range(10):
-            if proc.returncode is not None:
-                break
-            await asyncio.sleep(0.1)
-        if proc.returncode is None:
-            log.warn("killing bad cmd '%s'", cmd)
-            proc.kill()
-            for _ in range(10):
-                if proc.returncode is not None:
-                    break
-                await asyncio.sleep(0.1)
-
-        # TODO: it should be better handled but needs testing
-        if proc_coord.result == {}:
-            proc_coord.result = {'status': 'error', 'reason': 'timeout'}
-        break
-
-
-async def _async_subprocess(proc_coord, cmd, cwd, timeout):
-    log.info("exec: '%s' in '%s'", cmd, cwd)
-
-#    with tempfile.NamedTemporaryFile(suffix=".txt", prefix="exec_") as fh:
-#        fname = fh.name
-#        proc_coord.output_file = fname
-#        pump = asyncio.create_task(_async_pump_output(proc_coord, fname))
-
-    proc_coord.start_time = datetime.datetime.now()
-
-    proc = await asyncio.create_subprocess_shell(
-        cmd,
-        cwd=cwd,
-        limit=1024 * 128,  # 128 KiB
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.STDOUT)
-
-    await _async_pump_output(proc_coord, proc.stdout)
-
-    done, pending = await asyncio.wait([proc.wait(), _async_monitor_proc(proc_coord, proc, timeout * 0.95)],
-                                       timeout=timeout)
-    #log.info('done %s', done)
-    #log.info('pending %s', pending)
-    proc_coord.end_time = datetime.datetime.now()
-    proc_coord.proc_retcode = proc.returncode
-
-#        proc_coord.output_file = None
-
 
 
 class RequestHandler():
@@ -217,15 +144,28 @@ async def _async_tcp_server(proc_coord, server):
         await server.serve_forever()
 
 
-async def _async_exec_tool(proc_coord, tool_path, command, cwd, timeout, step_file_path):
+def _get_addr_for_listen():
+    for iface in netifaces.interfaces():
+        if iface == 'lo':
+            continue
+        addrs = netifaces.ifaddresses(iface)
+        if netifaces.AF_INET not in addrs:
+            continue
+        addrs = addrs[netifaces.AF_INET]
+        if len(addrs) == 0:
+            continue
+        return addrs[0]['addr']
+    return '0.0.0.0'
+
+
+async def _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeout, step_file_path):
+    addr = _get_addr_for_listen()
     handler = RequestHandler(proc_coord)
-    server = await asyncio.start_server(handler._async_handle_request, '0.0.0.0', 0, limit=1024 * 1280)
+    server = await asyncio.start_server(handler._async_handle_request, addr, 0, limit=1024 * 1280)
     addr = server.sockets[0].getsockname()
     return_addr = "%s:%s" % addr
 
-    cmd = "%s -r %s -s %s %s" % (tool_path, return_addr, step_file_path, command)
-
-    subprocess_task = asyncio.create_task(_async_subprocess(proc_coord, cmd, cwd, timeout))
+    subprocess_task = asyncio.create_task(exec_ctx.async_run(proc_coord, tool_path, return_addr, step_file_path, command, cwd, timeout))
     tcp_server_task = asyncio.create_task(_async_tcp_server(proc_coord, server))
     done, pending = await asyncio.wait([subprocess_task, tcp_server_task],
                                        return_when=asyncio.FIRST_COMPLETED)
@@ -236,12 +176,12 @@ async def _async_exec_tool(proc_coord, tool_path, command, cwd, timeout, step_fi
         except asyncio.CancelledError:
             pass
 
-def _exec_tool(kk_srv, tool_path, command, cwd, timeout, step_file_path, job_id, idx):
+def _exec_tool(kk_srv, exec_ctx, tool_path, command, cwd, timeout, step_file_path, job_id, idx):
     if tool_path.endswith('.py'):
         tool_path = "%s %s" % (sys.executable, tool_path)
 
     proc_coord = ProcCoord(kk_srv, command, job_id, idx)
-    asyncio.run(_async_exec_tool(proc_coord, tool_path, command, cwd, timeout, step_file_path))
+    asyncio.run(_async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeout, step_file_path))
     return proc_coord.result
 
 
@@ -253,7 +193,7 @@ def _write_step_file(job_dir, step, idx):
     return step_file_path
 
 
-def _run_step(srv, job_dir, job_id, idx, step, tools, deadline):
+def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
     tool_name = step['tool']
     log.info('step %s', str(step)[:200])
     if tool_name not in tools:
@@ -262,7 +202,7 @@ def _run_step(srv, job_dir, job_id, idx, step, tools, deadline):
 
     step_file_path = _write_step_file(job_dir, step, idx)
 
-    result = _exec_tool(srv, tool_path, 'get_commands', job_dir, 10, step_file_path, job_id, idx)
+    result = _exec_tool(srv, exec_ctx, tool_path, 'get_commands', job_dir, 10, step_file_path, job_id, idx)
     log.info('result for get_commands: %s', result)
     if not isinstance(result, dict) or 'commands' not in result:
         raise Exception('bad result received from tool: %s' % result)
@@ -273,7 +213,7 @@ def _run_step(srv, job_dir, job_id, idx, step, tools, deadline):
 
     if 'collect_tests' in available_commands and ('tests' not in step or step['tests'] is None or len(step['tests']) == 0):
         # collect tests from tool to execute
-        result = _exec_tool(srv, tool_path, 'collect_tests', job_dir, 10, step_file_path, job_id, idx)
+        result = _exec_tool(srv, exec_ctx, tool_path, 'collect_tests', job_dir, 10, step_file_path, job_id, idx)
         log.info('result for collect_tests: %s', str(result)[:200])
 
         # check result
@@ -304,7 +244,7 @@ def _run_step(srv, job_dir, job_id, idx, step, tools, deadline):
         timeout = deadline - time.time()
         if timeout <= 0:
             return {'status': 'error', 'reason': 'timeout'}
-        result = _exec_tool(srv, tool_path, 'run_tests', job_dir, timeout, step_file_path, job_id, idx)
+        result = _exec_tool(srv, exec_ctx, tool_path, 'run_tests', job_dir, timeout, step_file_path, job_id, idx)
         log.info('result for run_tests: %s', str(result)[:200])
         srv.report_step_result(job_id, idx, result)
 
@@ -312,7 +252,7 @@ def _run_step(srv, job_dir, job_id, idx, step, tools, deadline):
         timeout = deadline - time.time()
         if timeout <= 0:
             return {'status': 'error', 'reason': 'timeout'}
-        result = _exec_tool(srv, tool_path, 'run_analysis', job_dir, timeout, step_file_path, job_id, idx)
+        result = _exec_tool(srv, exec_ctx, tool_path, 'run_analysis', job_dir, timeout, step_file_path, job_id, idx)
         log.info('result for run_analysis: %s', str(result)[:200])
         srv.report_step_result(job_id, idx, result)
 
@@ -320,11 +260,20 @@ def _run_step(srv, job_dir, job_id, idx, step, tools, deadline):
         timeout = deadline - time.time()
         if timeout <= 0:
             return {'status': 'error', 'reason': 'timeout'}
-        result = _exec_tool(srv, tool_path, 'run', job_dir, timeout, step_file_path, job_id, idx)
+        result = _exec_tool(srv, exec_ctx, tool_path, 'run', job_dir, timeout, step_file_path, job_id, idx)
         log.info('result for run: %s', result)
         srv.report_step_result(job_id, idx, result)
 
     return result
+
+
+
+def _create_exec_context(job):
+    if job['executor_group_name'] == 'docker':
+        ctx = docker_run.DockerExecContext(job)
+    else:
+        ctx = local_run.LocalExecContext(job)
+    return ctx
 
 
 def run(srv, job):
@@ -337,27 +286,36 @@ def run(srv, job):
 
     log.info('started job in %s', job_dir)
 
-    last_status = None
-    for idx, step in enumerate(job['steps']):
-        if step['status'] == 2:
-            continue
-        log.set_ctx(step=idx)
-        step['job_id'] = job['id']
-        if 'trigger_data' in job:
-            step['trigger_data'] = job['trigger_data']
-        try:
-            result = _run_step(srv, job_dir, job['id'], idx, step, tools, job['deadline'])
-            last_status = result['status']
-        except KeyboardInterrupt:
-            raise
-        except:
-            log.exception('step interrupted by exception')
-            exc = traceback.format_exc()
-            srv.report_step_result(job['id'], idx, {'status': 'error', 'reason': 'exception', 'msg': exc})
-            last_status = 'error'
+    exec_ctx = _create_exec_context(job)
+    timeout = job['deadline'] - time.time()
+    exec_ctx.start(timeout)
 
-        if last_status == 'error':
-            break
+    try:
+
+        last_status = None
+        for idx, step in enumerate(job['steps']):
+            if step['status'] == 2:
+                continue
+            log.set_ctx(step=idx)
+            step['job_id'] = job['id']
+            if 'trigger_data' in job:
+                step['trigger_data'] = job['trigger_data']
+            try:
+                result = _run_step(srv, exec_ctx, job_dir, job['id'], idx, step, tools, job['deadline'])
+                last_status = result['status']
+            except KeyboardInterrupt:
+                raise
+            except:
+                log.exception('step interrupted by exception')
+                exc = traceback.format_exc()
+                srv.report_step_result(job['id'], idx, {'status': 'error', 'reason': 'exception', 'msg': exc})
+                last_status = 'error'
+
+            if last_status == 'error':
+                break
+
+    finally:
+        exec_ctx.stop()
 
     log.info('completed job %s with status %s', job['id'], last_status)
 

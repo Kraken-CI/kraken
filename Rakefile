@@ -116,7 +116,7 @@ task :run_agent_container do
   Dir.chdir('agent') do
     sh 'docker build -f docker-agent.txt -t kkagent .'
   end
-  sh 'docker run --rm -ti -v `pwd`/agent:/agent -e KRAKEN_AGENT_SLOT=7 -e KRAKEN_SERVER_ADDR=192.168.0.89:8080 kkagent'
+  sh 'docker run --rm -ti  -v /var/run/docker.sock:/var/run/docker.sock -v `pwd`/agent:/agent -e KRAKEN_AGENT_SLOT=7 -e KRAKEN_SERVER_ADDR=192.168.0.89:8080  kkagent'
 end
 
 task :run_celery => './server/venv/bin/kkcelery' do
@@ -154,10 +154,13 @@ task :build_agent => './venv/bin/shiv' do
   sh 'cp server/kraken/server/consts.py agent/kraken/agent/'
   sh 'cp server/kraken/server/logs.py agent/kraken/agent/'
   Dir.chdir('agent') do
-    sh 'rm -rf dist'
-    sh '../venv/bin/pip install --target dist --upgrade .'
-    sh "../venv/bin/shiv --site-packages dist --compressed -p '/usr/bin/env python3' -o kkagent -c kkagent"
-    sh "../venv/bin/shiv --site-packages dist --compressed -p '/usr/bin/env python3' -o kktool -c kktool"
+    sh 'rm -rf dist-agent'
+    sh '../venv/bin/pip install --target dist-agent -r requirements.txt'
+    sh '../venv/bin/pip install --target dist-agent --upgrade .'
+    sh "../venv/bin/shiv --site-packages dist-agent --compressed -p '/usr/bin/env python3' -o kkagent -c kkagent"
+    sh 'rm -rf dist-tool'
+    sh '../venv/bin/pip install --target dist-tool --upgrade .'
+    sh "../venv/bin/shiv --site-packages dist-tool --compressed -p '/usr/bin/env python3' -o kktool -c kktool"
   end
 end
 

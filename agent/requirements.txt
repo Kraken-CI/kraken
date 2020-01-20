@@ -1,0 +1,2 @@
+docker==4.1.0
+netifaces==0.10.9

@@ -214,7 +214,10 @@ def trigger_stages(self, run_id):
                 if not stage.schema['triggers'].get('parent', False):
                     continue
 
-                execution.start_run(stage, run.flow)
+                if stage.enabled:
+                    execution.start_run(stage, run.flow)
+                else:
+                    log.info('stage %s not started because it is disabled'. stage.name)
 
     except Exception as exc:
         log.exception('will retry')
