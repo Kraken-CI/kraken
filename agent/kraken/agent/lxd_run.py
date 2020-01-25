@@ -28,12 +28,11 @@ def detect_capabilities():
 class Timeout(Exception): pass
 
 
-class DockerExecContext:
+class LxdExecContext:
     def __init__(self, job):
         self.job = job
 
     def start(self, timeout):
-        import docker
         self.client = pylxd.Client()
 
         image = self.job['system']  # 'bionic/amd64'
@@ -42,25 +41,36 @@ class DockerExecContext:
                                                "server": "https://cloud-images.ubuntu.com/daily",
                                                "protocol": "simplestreams",
                                                'alias': image}}
+        log.info('lxd container config: %s', config)
         self.cntr = self.client.containers.create(config, wait=True)
         self.cntr.start()
-        log.info('docker container %s', self.cntr.id)
+        log.info('lxd container %s', self.cntr.name)
+        for _ in range(100):
+            if self.cntr.status != 'Running':
+                time.sleep(0.1)
+                self.cntr.sync()
+                log.info('container status %s', self.cntr.status)
+        if self.cntr.status != 'Running':
+            self.stop()
+            raise Exception('cannot start container')
 
-        archive = _create_archive('kktool')
-        self.cntr.put_archive('/root', archive)
+        with open('kktool', 'rb') as f:
+            filedata = f.read()
+        self.cntr.files.put('/root/kktool', filedata)
 
         deadline = time.time() + timeout
-        asyncio.run(self._dkr_run('apt-get update', '/', deadline))
-        asyncio.run(self._dkr_run('apt-get install -y python3', '/', deadline))
+        asyncio.run(self._lxd_run('chmod a+x kktool', '.', deadline))
+        asyncio.run(self._lxd_run('apt-get update', '/', deadline))
+        asyncio.run(self._lxd_run('apt-get install -y python3', '/', deadline))
 
     def stop(self):
         try:
-            self.cntr.kill()
+            self.cntr.stop()
         except:
             # TODO: add some ignore trace here
             pass
         try:
-            self.cntr.remove()
+            self.cntr.delete()
         except:
             # TODO: add some ignore trace here
             pass
@@ -78,30 +88,27 @@ class DockerExecContext:
             return addrs[0]['addr']
         return '0.0.0.0'
 
-    async def _dkr_run(self, cmd, cwd, deadline, env=None):
+    def _stdout_handler(self, chunk):
+        log.info(chunk.decode().rstrip())
+
+    async def _lxd_run(self, cmd, cwd, deadline, env=None):
         log.info('cmd %s', cmd)
         cmd = shlex.split(cmd)
-        self.cntr.execute(cmd)
-        for chunk in stream:
-            log.info(chunk.decode().rstrip())
-            await asyncio.sleep(0)
-            if time.time() > deadline:
-                raise Timeout
-        exit_code = self.cntr.client.api.exec_inspect(exe['Id'])['ExitCode']
-        while exit_code is None:
-            await asyncio.sleep(0)
-            exit_code = self.cntr.client.api.exec_inspect(exe['Id'])['ExitCode']
-        log.info('EXIT: %s', exit_code)
+        result = self.cntr.execute(cmd, environment=env, stdout_handler=self._stdout_handler, stderr_handler=self._stdout_handler)
+        log.info('EXIT: %s', result.exit_code)
 
     async def async_run(self, proc_coord, tool_path, return_addr, step_file_path, command, cwd, timeout):
-        docker_cwd = '/root'
-        archive = _create_archive(step_file_path, os.path.basename(step_file_path))
-        self.cntr.put_archive(docker_cwd, archive)
+        lxd_cwd = '/root'
+
+        # upload steop file
+        dest_step_file_path = os.path.join(lxd_cwd, os.path.basename(step_file_path))
+        with open(step_file_path, 'rb') as f:
+            filedata = f.read()
+        self.cntr.files.put(dest_step_file_path, filedata)
 
         mod = tool_path.split()[-1]
-        step_file_path = os.path.join(docker_cwd, os.path.basename(step_file_path))
-        cmd = "%s/kktool -m %s -r %s -s %s %s" % (docker_cwd, mod, return_addr, step_file_path, command)
-        log.info("exec: '%s' in '%s', timeout %ss", cmd, docker_cwd, timeout)
+        cmd = "%s/kktool -m %s -r %s -s %s %s" % (lxd_cwd, mod, return_addr, dest_step_file_path, command)
+        log.info("exec: '%s' in '%s', timeout %ss", cmd, lxd_cwd, timeout)
 
         deadline = time.time() + timeout
         if 'KRAKEN_LOGSTASH_ADDR' in os.environ:
@@ -109,7 +116,7 @@ class DockerExecContext:
         else:
             env = None
         try:
-            await self._dkr_run(cmd, docker_cwd, deadline, env)
+            await self._lxd_run(cmd, lxd_cwd, deadline, env)
         except Timeout:
             # TODO: it should be better handled but needs testing
             if self.proc_coord.result == {}:

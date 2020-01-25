@@ -18,6 +18,7 @@ from . import tool
 from . import utils
 from . import local_run
 from . import docker_run
+from . import lxd_run
 
 
 log = logging.getLogger(__name__)
@@ -258,6 +259,8 @@ def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
 def _create_exec_context(job):
     if job['executor_group_name'] == 'docker':
         ctx = docker_run.DockerExecContext(job)
+    elif job['executor_group_name'] == 'lxd':
+        ctx = lxd_run.LxdExecContext(job)
     else:
         ctx = local_run.LocalExecContext(job)
     return ctx
