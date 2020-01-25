@@ -66,7 +66,7 @@
             <a routerLink="/executor-groups/{{ g.id }}">{{ g.name }}</a>
           </span>
         </td>
-        <td>{{ executor.job ? executor.job.id : '' }}</td>
+        <td><a *ngIf="executor.job" routerLink="/runs/{{ executor.job.run_id }}/jobs">{{ executor.job.id }}</a></td>
         <td>
           <button
             type="button"

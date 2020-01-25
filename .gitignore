@@ -21,6 +21,7 @@ venv
 /server/kkserver
 /server/kkgunicorn
 /server/kkdbmigrate
+/server/kkwatchdog
 
 /ui/src/environments/environment.prod.ts
 

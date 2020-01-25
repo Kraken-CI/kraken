@@ -15,6 +15,7 @@
 * DONE filtrowanie po age na stronie issues
 * DONE zrobić dynamiczne menu w breadcrumbie (kliknięcie powoduje dynamiczne załadowanie pozycji do menu)
 * DONE dodać statsy o zmianach do run-box'a
+* DONE dodać automatyczne wyznaczanie timeout'u
 * support repos:
 ** trigger on commit
 ** DONE trigger on github push event
@@ -22,8 +23,8 @@
 ** getting git diff to prev job
 * TODO executors
 ** DONE add groups, discovered
-** support for docker executor
-** support for lxc executor
+** TODO support for docker executor
+** support for lxd executor
 ** support for vagrant executor
 ** support for bare metal executor
 * canceling job or run
@@ -39,6 +40,7 @@
 * fork branch operation with test results history continuity
 * czas na branchu jest pokazywany jako AM a jest PM
 * przerobić stronę główną na bardziej statyczną bez rozwijanego drzewa
-* dodać automatyczne wyznaczanie timeout'u
-
 * jak sie wywali poprzedni stage to nie startować następnego
+* add monitoring executors in watchdog with timeout 10mins
+* timeout for whole run
+* .dockerignore dla build ui

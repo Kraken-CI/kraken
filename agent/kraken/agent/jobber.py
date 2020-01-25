@@ -144,26 +144,13 @@ async def _async_tcp_server(proc_coord, server):
         await server.serve_forever()
 
 
-def _get_addr_for_listen():
-    for iface in netifaces.interfaces():
-        if iface == 'lo':
-            continue
-        addrs = netifaces.ifaddresses(iface)
-        if netifaces.AF_INET not in addrs:
-            continue
-        addrs = addrs[netifaces.AF_INET]
-        if len(addrs) == 0:
-            continue
-        return addrs[0]['addr']
-    return '0.0.0.0'
-
-
 async def _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeout, step_file_path):
-    addr = _get_addr_for_listen()
+    addr = exec_ctx.get_return_ip_addr()
     handler = RequestHandler(proc_coord)
     server = await asyncio.start_server(handler._async_handle_request, addr, 0, limit=1024 * 1280)
     addr = server.sockets[0].getsockname()
     return_addr = "%s:%s" % addr
+    log.info('return_addr %s', return_addr)
 
     subprocess_task = asyncio.create_task(exec_ctx.async_run(proc_coord, tool_path, return_addr, step_file_path, command, cwd, timeout))
     tcp_server_task = asyncio.create_task(_async_tcp_server(proc_coord, server))

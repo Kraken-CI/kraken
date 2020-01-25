@@ -24,8 +24,10 @@ def assign_jobs_to_executors():
         return 0
     idle_executors_by_group = {}
     for e in all_idle_executors:
+        # log.info('idle executor: %s', e)
         for asm in e.executor_groups:
             grp_id = asm.executor_group_id
+            # log.info('  grp: %s', grp_id)
             if grp_id not in idle_executors_by_group:
                 idle_executors_by_group[grp_id] = []
             idle_executors_by_group[grp_id].append(e)
@@ -42,13 +44,16 @@ def assign_jobs_to_executors():
         idle_executors = idle_executors_by_group.get(j.executor_group_id, [])
         while best_executor is None:
             if len(idle_executors) == 0:
+                # log.info('no avail executors for job %s', j)
                 break
             best_executor = idle_executors.pop()
             if best_executor.job:
+                # log.info('executor busy %s', best_executor)
                 best_executor = None
 
         if best_executor is None:
-            break
+            # log.info('no executors for job %s', j)
+            continue
 
         # assign job to found executor
         best_executor.job = j

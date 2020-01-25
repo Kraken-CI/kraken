@@ -390,6 +390,7 @@ class Job(db.Model, DatesMixin):
 
     def __repr__(self):
         txt = 'Job %s, state:%s' % (self.id, consts.JOB_STATES_NAME[self.state])
+        txt += ', g:%s' % self.executor_group_id
         if self.executor_used_id:
             txt += ', ex:%s' % self.executor_used_id
         return "<%s>" % txt
