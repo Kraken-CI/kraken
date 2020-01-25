@@ -16,17 +16,19 @@
 * DONE zrobić dynamiczne menu w breadcrumbie (kliknięcie powoduje dynamiczne załadowanie pozycji do menu)
 * DONE dodać statsy o zmianach do run-box'a
 * DONE dodać automatyczne wyznaczanie timeout'u
+* DONE .dockerignore dla build ui
+* DONE executors
+** DONE add groups, discovered
+** DONE support for docker executor
+** DONE support for bare metal executor
+* DONE add monitoring executors in watchdog with timeout 10mins
+* DONE timeout for whole run
 * support repos:
 ** trigger on commit
 ** DONE trigger on github push event
 ** storing commit used
 ** getting git diff to prev job
-* TODO executors
-** DONE add groups, discovered
-** TODO support for docker executor
-** support for lxd executor
-** support for vagrant executor
-** support for bare metal executor
+* TODO support for lxd executor
 * canceling job or run
 * nie pozwalać na run stage gdy parent stage nie był jeszcze puszczony
 * stage definition files from repo
@@ -41,6 +43,3 @@
 * czas na branchu jest pokazywany jako AM a jest PM
 * przerobić stronę główną na bardziej statyczną bez rozwijanego drzewa
 * jak sie wywali poprzedni stage to nie startować następnego
-* add monitoring executors in watchdog with timeout 10mins
-* timeout for whole run
-* .dockerignore dla build ui

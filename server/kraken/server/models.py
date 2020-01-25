@@ -565,6 +565,8 @@ class Executor(db.Model, DatesMixin):
                     ip_address=self.ip_address,
                     state=self.state,
                     disabled=self.disabled,
+                    comment=self.comment,
+                    status_line=self.status_line,
                     groups=[dict(id=a.executor_group.id, name=a.executor_group.name) for a in self.executor_groups],
                     job=self.job.get_json() if self.job else None)
 

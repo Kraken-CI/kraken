@@ -106,3 +106,8 @@ SECRET_KINDS_NAME = {
     SECRET_KIND_SSH_KEY: 'ssh-key',
     SECRET_KIND_SIMPLE: 'simple',
 }
+
+
+DEFAULT_RUN_TIMEOUT = 3 * 60 * 60  # 3 hours (in seconds)
+DEFAULT_JOB_TIMEOUT = 5 * 60  # 5 minutes (in seconds)
+EXECUTOR_TIMEOUT = 5 * 60  # 5 minutes (in seconds)

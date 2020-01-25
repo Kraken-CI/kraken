@@ -551,3 +551,17 @@ def get_job_logs(job_id, start=0, limit=200, order=None, filters=None):
 
     total = res['hits']['total']['value']
     return {'items': logs, 'total': total, 'job': job_json}, 200
+
+
+def cancel_job(job, note=None):
+    if job.state == consts.JOB_STATE_COMPLETED:
+        return
+    job.state = consts.JOB_STATE_COMPLETED
+    job.completion_status = consts.JOB_CMPLT_SERVER_TIMEOUT
+    if note:
+        job.notes = note
+    job.executor = None
+    # TODO: add canceling the job on executor side
+    db.session.commit()
+    t = bg_jobs.job_completed.delay(job.id)
+    log.info('job %s timed out, bg processing: %s', job, t)
