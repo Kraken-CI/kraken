@@ -143,7 +143,8 @@ disable=print-statement,
         missing-function-docstring,
         missing-class-docstring,
         fixme,
-        too-few-public-methods
+        too-few-public-methods,
+        bare-except
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
@@ -304,6 +305,11 @@ good-names=i,
            db,
            dt,
            ex,
+           t0,
+           t1,
+           t2,
+           tc,
+           tr,
            Run,
            _,
            log

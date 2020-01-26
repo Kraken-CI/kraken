@@ -9,7 +9,7 @@ from sqlalchemy import or_
 from sqlalchemy.orm import joinedload
 import giturlparse
 
-from .models import db, Run, Job, Step, Executor, TestCase, TestCaseResult, Issue, Secret
+from .models import db, Job, Step, Executor, TestCase, TestCaseResult, Issue, Secret
 from . import consts
 from .bg import jobs as bg_jobs
 
@@ -42,7 +42,7 @@ def _left_time(job):
     return int(timeout)
 
 
-def _handle_get_job(executor, req):
+def _handle_get_job(executor):
     if executor.job is None:
         return {'job': {}}
 
@@ -195,7 +195,7 @@ def _handle_step_result(executor, req):
     for s in job.steps:
         log.info('%s: %s', s.index, consts.STEP_STATUS_NAME[s.status] if s.status in consts.STEP_STATUS_NAME else s.status)
         if s.status == consts.STEP_STATUS_DONE:
-            continue
+            continue  # pylint: disable=no-else-continue
         elif s.status == consts.STEP_STATUS_ERROR:
             job_finished = True
             break
@@ -210,7 +210,7 @@ def _handle_step_result(executor, req):
         t = bg_jobs.job_completed.delay(job.id)
         log.info('job %s finished by %s, bg processing: %s', job, executor, t)
     else:
-        response['timeout'] =  _left_time(job)
+        response['timeout'] = _left_time(job)
 
     return response
 
@@ -323,7 +323,7 @@ def serve_agent_request():
     response = {}
 
     if msg == 'get-job':
-        response = _handle_get_job(executor, req)
+        response = _handle_get_job(executor)
 
         logstash_addr = os.environ.get('KRAKEN_LOGSTASH_ADDR', consts.DEFAULT_LOGSTASH_ADDR)
         response['cfg'] = dict(logstash_addr=logstash_addr)
