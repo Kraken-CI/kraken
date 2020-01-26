@@ -462,7 +462,7 @@ class Issue(db.Model):
     column = Column(Integer)
     path = Column(Unicode(512))
     symbol = Column(Unicode(64))
-    message = Column(Unicode(256))
+    message = Column(Unicode(512))
     extra = Column(JSONB)
     age = Column(Integer, default=0)
     job_id = Column(Integer, ForeignKey('jobs.id'), nullable=False)
