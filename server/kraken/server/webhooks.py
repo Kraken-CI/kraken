@@ -15,14 +15,14 @@ def handle_github_webhook(project_id):
     log.info('GITHUB for project_id:%s, payload: %s', project_id, payload)
     event = request.headers.get('X-GitHub-Event')
     if event is None:
-        log.warn('missing github event type in request header')
+        log.warning('missing github event type in request header')
         abort(400, "missing github event type in request header")
     log.info('EVENT %s', event)
 
     # check project
     project = Project.query.filter_by(id=project_id).one_or_none()
     if project is None:
-        log.warn('cannot find project %s', project_id)
+        log.warning('cannot find project %s', project_id)
         abort(400, "Invalid project id")
 
     if not project.webhooks.get('github_enabled', False):
@@ -38,13 +38,13 @@ def handle_github_webhook(project_id):
     if my_secret is not None:
         github_sig = request.headers.get("X-Hub-Signature")
         if github_sig is None:
-            log.warn('missing signature in request header')
+            log.warning('missing signature in request header')
             abort(400, "missing signature in request header")
         github_digest_parts = github_sig.split("=", 1)
         my_digest = hmac.new(my_secret, payload, hashlib.sha1).hexdigest()
 
         if len(github_digest_parts) < 2 or github_digest_parts[0] != "sha1" or not hmac.compare_digest(github_digest_parts[1], my_digest):
-            log.warn('bad signature %s vs %s, secret %s', github_sig, my_digest, my_secret)
+            log.warning('bad signature %s vs %s, secret %s', github_sig, my_digest, my_secret)
             abort(400, "Invalid signature")
 
     req = request.get_json()

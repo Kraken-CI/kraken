@@ -232,12 +232,12 @@ def _send_http_request(url, data):
         #         # TODO: just warn and sleep for a moment
         except urllib.error.URLError as e:
             if e.__context__ and e.__context__.errno in CONNECTION_ERRORS:
-                log.warn('connection problem to %s: %s, trying one more time in 5s', url, str(e))
+                log.warning('connection problem to %s: %s, trying one more time in 5s', url, str(e))
                 time.sleep(5)
             else:
                 raise
         except ConnectionError as e:
-            log.warn('connection problem to %s: %s, trying one more time in 5s', url, str(e))
+            log.warning('connection problem to %s: %s, trying one more time in 5s', url, str(e))
             time.sleep(5)
         except:
             log.exception('some problem with connecting to server to %s', url)

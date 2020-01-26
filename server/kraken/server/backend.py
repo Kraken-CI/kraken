@@ -179,7 +179,7 @@ def _handle_step_result(executor, req):
             if issue['type'] in consts.ISSUE_TYPES_CODE:
                 issue_type = consts.ISSUE_TYPES_CODE[issue['type']]
             else:
-                log.warn('unknown issue type: %s', issue['type'])
+                log.warning('unknown issue type: %s', issue['type'])
             extra = {}
             for k, v in issue.items():
                 if k not in ['line', 'column', 'path', 'symbol', 'message']:
@@ -257,7 +257,7 @@ def _handle_dispatch_tests(executor, req):
 
     tests_cnt = len(tests)
     if len(set(tests)) != tests_cnt:
-        log.warn('there are tests duplicates')
+        log.warning('there are tests duplicates')
         return {}
     if tests_cnt == 0:
         # TODO
@@ -312,11 +312,11 @@ def serve_agent_request():
 
     executor = Executor.query.filter_by(address=address).one_or_none()
     if executor is None:
-        log.warn('unknown executor %s', address)
+        log.warning('unknown executor %s', address)
         _handle_unknown_executor(address, request.remote_addr)
         return json.dumps({})
     elif not executor.authorized:
-        log.warn('unauthorized executor %s from %s', address, request.remote_addr)
+        log.warning('unauthorized executor %s from %s', address, request.remote_addr)
         return json.dumps({})
 
     executor.last_seen = datetime.datetime.utcnow()
@@ -344,7 +344,7 @@ def serve_agent_request():
         response = {}
 
     else:
-        log.warn('unknown msg: %s', msg)
+        log.warning('unknown msg: %s', msg)
         response = {}
 
     log.info('sending response: %s', str(response)[:200])

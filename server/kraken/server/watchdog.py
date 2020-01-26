@@ -49,13 +49,13 @@ def _check_jobs():
 
     for job in q.all():
         if not job.assigned:
-            log.warn('job %s assigned but no assign time', job)
+            log.warning('job %s assigned but no assign time', job)
             continue
 
         timeout = job.timeout if job.timeout else consts.DEFAULT_JOB_TIMEOUT
         duration = now - job.assigned
         if duration > datetime.timedelta(seconds=timeout):
-            log.warn('time %ss for job %s expired, canceling', timeout, job)
+            log.warning('time %ss for job %s expired, canceling', timeout, job)
             note = 'time %ss for job expired' % timeout
             execution.cancel_job(job, note=note)
 

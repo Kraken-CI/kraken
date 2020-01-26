@@ -88,7 +88,7 @@ def trigger_jobs(run, replay=False):
                 break
             tools.append(tool)
         if tool_not_found is not None:
-            log.warn('cannot find tool %s', tool_not_found)
+            log.warning('cannot find tool %s', tool_not_found)
 
         envs = j['environments']
         for env in envs:
@@ -100,7 +100,7 @@ def trigger_jobs(run, replay=False):
             if executor_group is None:
                 executor_group = ExecutorGroup.query.filter_by(name=env['executor_group']).one_or_none()
                 if executor_group is None:
-                    log.warn("cannot find executor group '%s'", env['executor_group'])
+                    log.warning("cannot find executor group '%s'", env['executor_group'])
                     continue
 
             # get timeout

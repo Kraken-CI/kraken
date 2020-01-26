@@ -85,7 +85,7 @@ class LocalExecContext:
                     break
                 await asyncio.sleep(0.1)
             if proc.returncode is None:
-                log.warn("killing bad cmd '%s'", self.cmd)
+                log.warning("killing bad cmd '%s'", self.cmd)
                 proc.kill()
                 for _ in range(10):
                     if proc.returncode is not None:

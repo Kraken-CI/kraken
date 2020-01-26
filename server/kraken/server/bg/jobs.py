@@ -226,10 +226,10 @@ def trigger_stages(self, run_id):
 
 def _estimate_timeout(job):
     if not job.assigned or not job.finished:
-        log.warn('job %s has None dates: %s %s', job, job.assigned, job.finished)
+        log.warning('job %s has None dates: %s %s', job, job.assigned, job.finished)
         return
     if job.assigned > job.finished:
-        log.warn('job %s has wrong dates: %s %s', job, job.assigned, job.finished)
+        log.warning('job %s has wrong dates: %s %s', job, job.assigned, job.finished)
         return
 
     q = Job.query
@@ -254,10 +254,10 @@ def _estimate_timeout(job):
     prev_job_id = job.id
     for j in jobs:
         if not job.assigned or not job.finished:
-            log.warn('job %s has None dates: %s %s', job, job.assigned, job.finished)
+            log.warning('job %s has None dates: %s %s', job, job.assigned, job.finished)
             continue
         if job.assigned > job.finished:
-            log.warn('job %s has wrong dates: %s %s', job, job.assigned, job.finished)
+            log.warning('job %s has wrong dates: %s %s', job, job.assigned, job.finished)
             continue
 
         if j.id == prev_job_id:
