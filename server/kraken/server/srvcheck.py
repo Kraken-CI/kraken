@@ -4,16 +4,16 @@ from urllib.parse import urlparse
 
 
 def _is_service_open(addr, port, sock_type):
-   s = socket.socket(socket.AF_INET, sock_type)
-   s.settimeout(1)
-   try:
-       s.connect((addr, int(port)))
-       s.shutdown(socket.SHUT_RDWR)
-       return True
-   except:
-       return False
-   finally:
-       s.close()
+    s = socket.socket(socket.AF_INET, sock_type)
+    s.settimeout(1)
+    try:
+        s.connect((addr, int(port)))
+        s.shutdown(socket.SHUT_RDWR)
+        return True
+    except:
+        return False
+    finally:
+        s.close()
 
 
 def check_tcp_service(name, addr, port):

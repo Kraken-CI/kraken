@@ -104,7 +104,7 @@ class Planner:
             log.info('remove_job done')
         except:
             log.exception('some problem')
-            #raise
+            # raise
 
 
 def _db_migration(db_url):

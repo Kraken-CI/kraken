@@ -45,6 +45,7 @@ log = logging.getLogger(__name__)
 g_logstash_handler = None
 g_basic_logger_done = False
 
+
 class LogstashFormatter(logging.Formatter):
     def __init__(self, message_type='Logstash', tags=None, fqdn=False):
         self.message_type = message_type
@@ -120,7 +121,6 @@ class LogstashFormatter(logging.Formatter):
             for l in self.format_exception(record.exc_info).splitlines():
                 msg += '\n' + l.rstrip()
 
-
         # Create message dict
         message = {
             '@timestamp': self.format_timestamp(record.created),
@@ -145,7 +145,6 @@ class LogstashFormatter(logging.Formatter):
             message.update(self.get_debug_fields(record))
 
         return self.serialize(message)
-
 
 
 class LogstashHandler(DatagramHandler, SocketHandler):

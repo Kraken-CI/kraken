@@ -32,6 +32,7 @@ JOB = {
     }]
 }
 
+
 def _left_time(job):
     now = datetime.datetime.utcnow()
     slip = now - job.assigned
@@ -193,7 +194,8 @@ def _handle_step_result(executor, req):
     job_finished = True
     log.info('checking steps')
     for s in job.steps:
-        log.info('%s: %s', s.index, consts.STEP_STATUS_NAME[s.status] if s.status in consts.STEP_STATUS_NAME else s.status)
+        log.info('%s: %s', s.index, consts.STEP_STATUS_NAME[s.status]
+                 if s.status in consts.STEP_STATUS_NAME else s.status)
         if s.status == consts.STEP_STATUS_DONE:
             continue  # pylint: disable=no-else-continue
         elif s.status == consts.STEP_STATUS_ERROR:

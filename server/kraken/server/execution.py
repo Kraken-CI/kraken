@@ -93,7 +93,10 @@ def trigger_jobs(run, replay=False):
         envs = j['environments']
         for env in envs:
             # get executor group
-            executor_group = ExecutorGroup.query.filter_by(project=run.stage.branch.project, name=env['executor_group']).one_or_none()
+             q = ExecutorGroup.query
+             q = q.filter_by(project=run.stage.branch.project, name=env['executor_group'])
+             executor_group = q.one_or_none()
+
             if executor_group is None:
                 executor_group = ExecutorGroup.query.filter_by(name=env['executor_group']).one_or_none()
                 if executor_group is None:
@@ -515,7 +518,8 @@ def get_job_logs(job_id, start=0, limit=200, order=None, filters=None):
             del filters['recent']
             if recent.lower() == 'true':
                 start_date = datetime.datetime.now() - datetime.timedelta(days=7)
-                query["query"]["bool"]["must"].append({"range": {"@timestamp": {"gt": start_date.strftime("%Y-%m-%d")}}})
+                query["query"]["bool"]["must"].append(
+                    {"range": {"@timestamp": {"gt": start_date.strftime("%Y-%m-%d")}}})
 
         query["query"]["bool"]["must"].extend([{"match": {k: v}} for k, v in filters.items()])
 

@@ -48,7 +48,7 @@ def handle_github_webhook(project_id):
             abort(400, "Invalid signature")
 
     req = request.get_json()
-    #if event == 'push':
+    # if event == 'push':
 
     # trigger running the project flow via celery
     trigger_data = dict(trigger='github-' + event,

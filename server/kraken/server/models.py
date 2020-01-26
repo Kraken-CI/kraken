@@ -60,6 +60,7 @@ class Project(db.Model, DatesMixin):
                     secrets=[s.get_json() for s in self.secrets if s.deleted is None],
                     webhooks=self.webhooks if self.webhooks else {})
 
+
 class Branch(db.Model, DatesMixin):
     __tablename__ = "branches"
     id = Column(Integer, primary_key=True)
@@ -67,8 +68,10 @@ class Branch(db.Model, DatesMixin):
     project_id = Column(Integer, ForeignKey('projects.id'), nullable=False)
     project = relationship('Project', back_populates="branches")
     branch_name = Column(Unicode(255))
-    ci_flows = relationship("Flow", order_by="desc(Flow.created)", primaryjoin="and_(Branch.id==Flow.branch_id, Flow.kind==0)", viewonly=True)
-    dev_flows = relationship("Flow", order_by="desc(Flow.created)", primaryjoin="and_(Branch.id==Flow.branch_id, Flow.kind==1)", viewonly=True)
+    ci_flows = relationship("Flow", order_by="desc(Flow.created)",
+                            primaryjoin="and_(Branch.id==Flow.branch_id, Flow.kind==0)", viewonly=True)
+    dev_flows = relationship("Flow", order_by="desc(Flow.created)",
+                             primaryjoin="and_(Branch.id==Flow.branch_id, Flow.kind==1)", viewonly=True)
     stages = relationship("Stage", back_populates="branch", lazy="dynamic", order_by="Stage.name")
 
     #base_branch = relationship('BaseBranch', uselist=False, primaryjoin="or_(Branch.id==BaseBranch.ci_branch_id, Branch.id==BaseBranch.dev_branch_id)")
@@ -130,7 +133,7 @@ class Stage(db.Model, DatesMixin):
     triggers = Column(JSONB)
     timeouts = Column(JSONB)
     runs = relationship('Run', back_populates="stage")
-    #services
+    # services
 
     def get_json(self):
         return dict(id=self.id,
@@ -325,7 +328,7 @@ class Step(db.Model, DatesMixin):
     fields = Column(JSONB, nullable=False)
     result = Column(JSONB)
     status = Column(Integer)
-    #services
+    # services
 
     def get_json(self):
         data = dict(id=self.id,
@@ -358,7 +361,8 @@ class Job(db.Model, DatesMixin):
     covered = Column(Boolean, default=False)
     notes = Column(Unicode(2048))
     system = Column(Unicode(200))
-    executor = relationship('Executor', uselist=False, back_populates="job", foreign_keys="Executor.job_id", post_update=True)
+    executor = relationship('Executor', uselist=False, back_populates="job",
+                            foreign_keys="Executor.job_id", post_update=True)
     executor_group_id = Column(Integer, ForeignKey('executor_groups.id'), nullable=False)
     executor_group = relationship('ExecutorGroup', back_populates="jobs")
     executor_used_id = Column(Integer, ForeignKey('executors.id'))
@@ -373,7 +377,8 @@ class Job(db.Model, DatesMixin):
                     started=self.started.strftime("%Y-%m-%dT%H:%M:%SZ") if self.started else None,
                     finished=self.finished.strftime("%Y-%m-%dT%H:%M:%SZ") if self.finished else None,
                     completed=self.completed.strftime("%Y-%m-%dT%H:%M:%SZ") if self.completed else None,
-                    processing_started=self.processing_started.strftime("%Y-%m-%dT%H:%M:%SZ") if self.processing_started else None,
+                    processing_started=self.processing_started.strftime(
+                        "%Y-%m-%dT%H:%M:%SZ") if self.processing_started else None,
                     name=self.name,
                     state=self.state,
                     completion_status=self.completion_status,
@@ -494,6 +499,7 @@ class Issue(db.Model):
 #     id = Column(Integer, primary_key=True)
 #     name = Column(Unicode(150))
 
+
 class Tool(db.Model, DatesMixin):
     __tablename__ = "tools"
     id = Column(Integer, primary_key=True)
@@ -520,7 +526,7 @@ class ExecutorGroup(db.Model, DatesMixin):
     name = Column(Unicode(50))
     project_id = Column(Integer, ForeignKey('projects.id'), nullable=True)
     project = relationship('Project', back_populates="executor_groups")
-    #executors = relationship("Executor", back_populates="executor_group")  # static assignments
+    # executors = relationship("Executor", back_populates="executor_group")  # static assignments
     executors = relationship('ExecutorAssignment', back_populates="executor_group")
     jobs = relationship("Job", back_populates="executor_group")
 
@@ -546,7 +552,7 @@ class Executor(db.Model, DatesMixin):
     comment = Column(Text)
     status_line = Column(Text)
     last_seen = Column(DateTime)
-    #executor_group_id = Column(Integer, ForeignKey('executor_groups.id'))  # static assignment to exactly one machines group, if NULL then not authorized
+    # executor_group_id = Column(Integer, ForeignKey('executor_groups.id'))  # static assignment to exactly one machines group, if NULL then not authorized
     executor_groups = relationship('ExecutorAssignment', back_populates="executor")
     job_id = Column(Integer, ForeignKey('jobs.id'))
     job = relationship('Job', back_populates="executor", foreign_keys=[job_id])
@@ -604,6 +610,7 @@ class Preference(db.Model):
 INITIAL_PREFERENCES = {
     "smtp_server": ""
 }
+
 
 def _prepare_initial_preferences():
     for name, val in INITIAL_PREFERENCES.items():
@@ -806,12 +813,12 @@ def prepare_initial_data():
 
     stage = Stage.query.filter_by(name="Static Analysis", branch=branch).one_or_none()
     if stage is None:
-            # TODO: pylint
-            # }, {
-            #     "tool": "pylint",
-            #     "rcfile": "../pylint.rc",
-            #     "modules_or_packages": "kraken.agent",
-            #     "cwd": "kraken/agent"
+        # TODO: pylint
+        # }, {
+        #     "tool": "pylint",
+        #     "rcfile": "../pylint.rc",
+        #     "modules_or_packages": "kraken.agent",
+        #     "cwd": "kraken/agent"
         schema_code = '''def stage(ctx):
     return {
         "parent": "root",
