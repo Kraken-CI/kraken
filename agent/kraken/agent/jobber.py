@@ -116,7 +116,7 @@ class RequestHandler():
     async def _async_handle_request(self, reader, writer):
         addr = writer.get_extra_info('peername')
         while True:
-            #data = await reader.read(8192)
+            # data = await reader.read(8192)
             data = await reader.readline()
             if not data:
                 break
@@ -153,7 +153,8 @@ async def _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeou
     return_addr = "%s:%s" % addr
     log.info('return_addr %s', return_addr)
 
-    subprocess_task = asyncio.create_task(exec_ctx.async_run(proc_coord, tool_path, return_addr, step_file_path, command, cwd, timeout))
+    subprocess_task = asyncio.create_task(exec_ctx.async_run(
+        proc_coord, tool_path, return_addr, step_file_path, command, cwd, timeout))
     tcp_server_task = asyncio.create_task(_async_tcp_server(proc_coord, server))
     done, pending = await asyncio.wait([subprocess_task, tcp_server_task],
                                        return_when=asyncio.FIRST_COMPLETED)
@@ -163,6 +164,7 @@ async def _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeou
             await tcp_server_task
         except asyncio.CancelledError:
             pass
+
 
 def _exec_tool(kk_srv, exec_ctx, tool_path, command, cwd, timeout, step_file_path, job_id, idx):
     if tool_path.endswith('.py'):
@@ -253,7 +255,6 @@ def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
         srv.report_step_result(job_id, idx, result)
 
     return result
-
 
 
 def _create_exec_context(job):

@@ -77,7 +77,8 @@ def execute(sock, module, command, step_file_path):
         ret = 0
 
         if command == 'get_commands':
-            func_list = [o[0] for o in inspect.getmembers(tool) if inspect.isfunction(o[1]) and not o[0].startswith('_')]
+            func_list = [o[0] for o in inspect.getmembers(
+                tool) if inspect.isfunction(o[1]) and not o[0].startswith('_')]
             result['commands'] = func_list
 
         elif command == 'collect_tests':

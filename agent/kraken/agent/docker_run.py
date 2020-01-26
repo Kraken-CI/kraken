@@ -38,7 +38,8 @@ def _create_archive(filepath, arcname=None):
     return data
 
 
-class Timeout(Exception): pass
+class Timeout(Exception):
+    pass
 
 
 class DockerExecContext:
@@ -92,7 +93,6 @@ class DockerExecContext:
                 c.reload()
                 self.logstash_ip = c.attrs['NetworkSettings']['Networks']['kknet']['IPAddress']
 
-
     def get_return_ip_addr(self):
         if self.curr_cntr:
             return self.curr_cntr.attrs['NetworkSettings']['Networks']['kknet']['IPAddress']
@@ -138,7 +138,8 @@ class DockerExecContext:
 
         # pass address to logstash via env
         if self.logstash_ip:
-            logstash_addr = '%s:%s' % (self.logstash_ip, os.environ.get('KRAKEN_LOGSTASH_PORT', consts.DEFAULT_LOGSTASH_PORT))
+            logstash_addr = '%s:%s' % (self.logstash_ip, os.environ.get(
+                'KRAKEN_LOGSTASH_PORT', consts.DEFAULT_LOGSTASH_PORT))
             env = {'KRAKEN_LOGSTASH_ADDR': logstash_addr}
         elif 'KRAKEN_LOGSTASH_ADDR' in os.environ:
             env = {'KRAKEN_LOGSTASH_ADDR': os.environ['KRAKEN_LOGSTASH_ADDR']}

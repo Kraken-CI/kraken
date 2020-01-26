@@ -1,5 +1,6 @@
 _CFG = {}
 
+
 def set_config(config):
     global _CFG
     _CFG = config

@@ -259,7 +259,6 @@ class Server():
         else:
             self.my_addr = 'server'
 
-
     def check_server(self):
         current_addr = self.srv_addr
         self.checks_num += 1

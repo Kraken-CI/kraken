@@ -6,6 +6,7 @@ import tempfile
 
 log = logging.getLogger(__name__)
 
+
 def _get_size(fname):
     with open(fname, "rb") as f:
         f.seek(0, 2)
@@ -80,7 +81,6 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
                     t_trace = t
                     log.info("%s: %.2fsecs to terminate", cmd_trc, int(t_end - t))
 
-
                 completed = p.poll() is not None
 
             # read the rest of output
@@ -94,7 +94,6 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
                     if mask:
                         out_fragment = out_fragment.rstrip().replace(mask, '******')
                     log.info("%s%s", out_prefix, out_fragment.rstrip())
-
 
     # check if there was timeout exceeded
     if t > t_end:

@@ -25,7 +25,8 @@ def detect_capabilities():
         return {}
 
 
-class Timeout(Exception): pass
+class Timeout(Exception):
+    pass
 
 
 class LxdExecContext:
@@ -94,7 +95,8 @@ class LxdExecContext:
     async def _lxd_run(self, cmd, cwd, deadline, env=None):
         log.info('cmd %s', cmd)
         cmd = shlex.split(cmd)
-        result = self.cntr.execute(cmd, environment=env, stdout_handler=self._stdout_handler, stderr_handler=self._stdout_handler)
+        result = self.cntr.execute(cmd, environment=env, stdout_handler=self._stdout_handler,
+                                   stderr_handler=self._stdout_handler)
         log.info('EXIT: %s', result.exit_code)
 
     async def async_run(self, proc_coord, tool_path, return_addr, step_file_path, command, cwd, timeout):

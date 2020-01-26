@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import os
-import sys
 import time
 import logging
 import argparse
@@ -20,7 +19,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Kraken Agent')
     parser.add_argument('-s', '--server', help='Server URL', required=True)
     parser.add_argument('-d', '--data-dir', help='Directory for presistent data', required=True)
-    parser.add_argument('-t', '--tools-dirs', help='List of tools directories'  )
+    parser.add_argument('-t', '--tools-dirs', help='List of tools directories')
 
     args = parser.parse_args()
     return args
@@ -105,7 +104,6 @@ def main():
             log.exception('ignored exception in agent main loop')
             time.sleep(5)
         log.reset_ctx()
-
 
 
 if __name__ == '__main__':
