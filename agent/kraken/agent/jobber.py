@@ -9,8 +9,6 @@ import traceback
 # import socketserver
 import pkg_resources
 
-import netifaces
-
 from . import config
 from . import local_run
 from . import docker_run

@@ -97,7 +97,7 @@ class Planner:
         return self._job_to_dict(job)
 
     def remove_job(self, job_id=None):
-        log.info('remove_job arg: %s %s %s', job_id)
+        log.info('remove_job arg: %s', job_id)
 
         try:
             self.scheduler.remove_job(job_id)

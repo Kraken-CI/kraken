@@ -4,8 +4,6 @@ import time
 import asyncio
 import tarfile
 import logging
-import ipaddress
-import netifaces
 
 from . import consts
 
@@ -157,11 +155,3 @@ class DockerExecContext:
             # TODO: it should be better handled but needs testing
             if proc_coord.result == {}:
                 proc_coord.result = {'status': 'error', 'reason': 'timeout'}
-
-
-def main():
-    asyncio.run(run("ubuntu:19.04", "-h"))
-
-
-if __name__ == '__main__':
-    main()

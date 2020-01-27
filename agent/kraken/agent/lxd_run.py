@@ -77,16 +77,6 @@ class LxdExecContext:
             pass
 
     def get_return_ip_addr(self):
-        for iface in netifaces.interfaces():
-            if iface == 'lo':
-                continue
-            addrs = netifaces.ifaddresses(iface)
-            if netifaces.AF_INET not in addrs:
-                continue
-            addrs = addrs[netifaces.AF_INET]
-            if len(addrs) == 0:
-                continue
-            return addrs[0]['addr']
         return '0.0.0.0'
 
     def _stdout_handler(self, chunk):
@@ -123,11 +113,3 @@ class LxdExecContext:
             # TODO: it should be better handled but needs testing
             if self.proc_coord.result == {}:
                 self.proc_coord.result = {'status': 'error', 'reason': 'timeout'}
-
-
-def main():
-    asyncio.run(run("ubuntu:19.04", "-h"))
-
-
-if __name__ == '__main__':
-    main()
