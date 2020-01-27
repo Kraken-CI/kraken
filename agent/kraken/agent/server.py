@@ -78,18 +78,17 @@ class Server():
             self.checks_num = 0
 
         if self.srv_addr is None:
-            srv_addr = self._get_srv_data()
+            srv_addr = self._get_srv_addr()
         else:
             srv_addr = None
 
         if srv_addr is not None and srv_addr != current_addr:
             self.srv_addr = srv_addr
 
-        return self.srv_addr, upgrade_required
-
-        config.merge(new_cfg)
+        return self.srv_addr
 
     def _get_srv_addr(self):
+        # TODO
         pass
 
     def _ensure_srv_address(self):

@@ -29,9 +29,14 @@ def run_tests(step, report_result=None):
         params = [p for p in params.split() if p.startswith('-')]
         params = " ".join(params)
         cmd = 'PYTHONPATH=`pwd` pytest-3 -vv -r ap --junit-xml=result.xml %s %s' % (params, test)
-        ret, out = utils.execute(cmd, cwd=cwd, out_prefix='')  # TODO: check ret
+        ret, _ = utils.execute(cmd, cwd=cwd, out_prefix='')
 
         result = dict(cmd=cmd, test=test)
+
+        if ret != 0:
+            result['status'] = 3  # error
+            report_result(result)
+            continue
 
         tree = ET.parse(os.path.join(cwd, 'result.xml'))
         root = tree.getroot()

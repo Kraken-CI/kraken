@@ -150,8 +150,8 @@ async def _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeou
     subprocess_task = asyncio.create_task(exec_ctx.async_run(
         proc_coord, tool_path, return_addr, step_file_path, command, cwd, timeout))
     tcp_server_task = asyncio.create_task(_async_tcp_server(proc_coord, server))
-    done, pending = await asyncio.wait([subprocess_task, tcp_server_task],
-                                       return_when=asyncio.FIRST_COMPLETED)
+    done, _ = await asyncio.wait([subprocess_task, tcp_server_task],
+                                 return_when=asyncio.FIRST_COMPLETED)
     if tcp_server_task not in done:
         tcp_server_task.cancel()
         try:

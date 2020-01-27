@@ -17,7 +17,7 @@ class LocalExecContext:
     def stop(self):
         pass
 
-    def get_return_ip_addr(self):
+    def get_return_ip_addr(self):  # pylint: disable=no-self-use
         for iface in netifaces.interfaces():
             if iface == 'lo':
                 continue
