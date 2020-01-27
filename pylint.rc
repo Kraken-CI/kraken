@@ -289,11 +289,13 @@ function-naming-style=snake_case
 #function-rgx=
 
 # Good variable names which should always be accepted, separated by a comma.
-good-names=i,
+good-names=c,
+           i,
            j,
            k,
            f,
            fh,
+           n,
            t,
            v,
            p,
@@ -302,6 +304,7 @@ good-names=i,
            q2,
            rx,
            s,
+           s2,
            db,
            dt,
            ex,
@@ -505,7 +508,7 @@ min-similarity-lines=4
 [DESIGN]
 
 # Maximum number of arguments for function / method.
-max-args=5
+max-args=8
 
 # Maximum number of attributes for a class (see R0902).
 max-attributes=7

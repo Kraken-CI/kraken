@@ -1,5 +1,4 @@
 import os
-import sys
 import datetime
 import logging
 
@@ -9,8 +8,8 @@ from sqlalchemy.sql.expression import asc, desc
 from sqlalchemy.orm.attributes import flag_modified
 import giturlparse
 
-from .clry import app
-from ..models import db, Executor, Run, Job, TestCaseResult, Branch, Flow, Stage, Project, Issue
+from .clry import app as clry_app
+from ..models import db, Run, Job, TestCaseResult, Branch, Flow, Stage, Project, Issue
 from .. import execution
 from .. import consts
 
@@ -134,7 +133,7 @@ def _analyze_job_issues_history(job):
     db.session.commit()
 
 
-@app.task(base=BaseTask, bind=True)
+@clry_app.task(base=BaseTask, bind=True)
 def analyze_results_history(self, run_id):
     try:
         app = _create_app()
@@ -193,7 +192,7 @@ def analyze_results_history(self, run_id):
         raise self.retry(exc=exc)
 
 
-@app.task(base=BaseTask, bind=True)
+@clry_app.task(base=BaseTask, bind=True)
 def trigger_stages(self, run_id):
     """Trigger the following stages after just completed run_id stage."""
     try:
@@ -217,7 +216,7 @@ def trigger_stages(self, run_id):
                 if stage.enabled:
                     execution.start_run(stage, run.flow)
                 else:
-                    log.info('stage %s not started because it is disabled'. stage.name)
+                    log.info('stage %s not started because it is disabled', stage.name)
 
     except Exception as exc:
         log.exception('will retry')
@@ -282,7 +281,7 @@ def _estimate_timeout(job):
 
 
 
-@app.task(base=BaseTask, bind=True)
+@clry_app.task(base=BaseTask, bind=True)
 def job_completed(self, job_id):
     try:
         app = _create_app()
@@ -327,7 +326,7 @@ def job_completed(self, job_id):
         raise self.retry(exc=exc)
 
 
-@app.task(base=BaseTask, bind=True)
+@clry_app.task(base=BaseTask, bind=True)
 def trigger_run(self, stage_id):
     try:
         app = _create_app()
@@ -391,7 +390,7 @@ def trigger_run(self, stage_id):
         raise self.retry(exc=exc)
 
 
-@app.task(base=BaseTask, bind=True)
+@clry_app.task(base=BaseTask, bind=True)
 def trigger_flow(self, project_id, trigger_data=None):
     try:
         app = _create_app()
@@ -403,15 +402,14 @@ def trigger_flow(self, project_id, trigger_data=None):
                 log.error('got unknown project: %s', project_id)
                 return
 
-
-            if not trigger_data:
-                execution.create_flow(branch.id, 'ci', {})
-                return
-
             branch_name = trigger_data['ref'].split('/')[-1]
             branch = Branch.query.filter_by(project=project, branch_name=branch_name).one_or_none()
             if branch is None:
                 log.error('cannot find branch by branch_name: %s', branch_name)
+                return
+
+            if not trigger_data:
+                execution.create_flow(branch.id, 'ci', {})
                 return
 
             q = Flow.query

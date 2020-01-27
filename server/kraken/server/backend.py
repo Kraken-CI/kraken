@@ -228,7 +228,7 @@ def _create_test_records(step, tests):
         tc = tool_test_cases.get(t, None)
         if tc is None:
             tc = TestCase(name=t, tool=step.tool)
-        tcr = TestCaseResult(test_case=tc, job=step.job)
+        TestCaseResult(test_case=tc, job=step.job)
     db.session.commit()
     t1 = time.time()
     log.info('creating %s test records took %ss', len(tests), (t1 - t0))
@@ -291,7 +291,7 @@ def _handle_dispatch_tests(executor, req):
         return {'tests': part1}
 
 
-def _handle_sys_info(executor, req):
+def _handle_sys_info(executor, req):  # pylint: disable=unused-argument
     pass
 
 

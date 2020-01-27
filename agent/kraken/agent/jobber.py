@@ -5,17 +5,13 @@ import time
 import logging
 import pkgutil
 import asyncio
-import datetime
 import traceback
-import socketserver
+# import socketserver
 import pkg_resources
-import multiprocessing
 
 import netifaces
 
 from . import config
-from . import tool
-from . import utils
 from . import local_run
 from . import docker_run
 from . import lxd_run
@@ -40,7 +36,7 @@ def _load_tools_list():
         tools[n] = spec.origin
 
     for entry_point in pkg_resources.iter_entry_points('kraken.tools'):
-        t = entry_point.load()
+        entry_point.load()
         log.info("TOOL %s: %s", entry_point.name, entry_point.module_name)
         tools[entry_point.name] = 'kktool -m %s' % entry_point.module_name
 

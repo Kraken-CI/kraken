@@ -655,9 +655,13 @@ def prepare_initial_data():
 
     executor = Executor.query.filter_by(name="agent.7").one_or_none()
     if executor is None:
-        executor = Executor(name='agent.7', address="agent.7", authorized=True)
+        executor = Executor(name='agent.7', address="agent.7", authorized=False)
         db.session.commit()
         log.info("   created Executor record 'agent.7'")
+    else:
+        executor.authorized = False
+        db.session.commit()
+        log.info("   Executor 'agent.7' unauthorized")
 
     executor_group = ExecutorGroup.query.filter_by(name="all").one_or_none()
     if executor_group is None:
@@ -665,9 +669,9 @@ def prepare_initial_data():
         db.session.commit()
         log.info("   created ExecutorGroup record 'all'")
 
-        ExecutorAssignment(executor=executor, executor_group=executor_group)
-        db.session.commit()
-        log.info("   created ExecutorAssignment for record 'all'")
+        # ExecutorAssignment(executor=executor, executor_group=executor_group)
+        # db.session.commit()
+        # log.info("   created ExecutorAssignment for record 'all'")
 
     # Project DEMO
     project = Project.query.filter_by(name="Demo").one_or_none()

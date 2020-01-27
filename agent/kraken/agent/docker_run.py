@@ -46,6 +46,12 @@ class DockerExecContext:
     def __init__(self, job):
         self.job = job
 
+        self.client = None
+        self.cntr = None
+        self.kknet = None
+        self.curr_cntr = None
+        self.logstash_ip = None
+
     def start(self, timeout):
         self.client = docker.from_env()
 
@@ -74,7 +80,6 @@ class DockerExecContext:
             raise
 
         # connect current container to kknet
-        self.curr_cntr = None
         try:
             curr_cntr_id = os.environ['HOSTNAME']
             self.curr_cntr = self.client.containers.get(curr_cntr_id)
@@ -85,7 +90,6 @@ class DockerExecContext:
             log.exception('IGNORED EXCEPTION')
 
         # connect logstash to kknet
-        self.logstash_ip = None
         for c in self.client.containers.list():
             if 'logstash' in c.name:
                 if 'kknet' not in c.attrs['NetworkSettings']['Networks']:
@@ -126,7 +130,7 @@ class DockerExecContext:
             exit_code = self.cntr.client.api.exec_inspect(exe['Id'])['ExitCode']
         log.info('EXIT: %s', exit_code)
 
-    async def async_run(self, proc_coord, tool_path, return_addr, step_file_path, command, cwd, timeout):
+    async def async_run(self, proc_coord, tool_path, return_addr, step_file_path, command, cwd, timeout):  # pylint: disable=unused-argument
         docker_cwd = '/root'
         archive = _create_archive(step_file_path, os.path.basename(step_file_path))
         self.cntr.put_archive(docker_cwd, archive)
