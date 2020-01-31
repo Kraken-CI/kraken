@@ -37,7 +37,7 @@ def _create_app():
     return app
 
 
-class BaseTask(Task):
+class BaseTask(Task):  # pylint: disable=abstract-method
     def on_success(self, retval, task_id, args, kwargs):
         #  Notify user with email
         log.info('ALL OK %s', self.name)
@@ -155,7 +155,7 @@ def analyze_results_history(self, run_id):
             if prev_run is None:
                 log.info('skip anlysis of run %s as there is no prev run', run)
                 return
-            elif prev_run.state != consts.RUN_STATE_COMPLETED:
+            if prev_run.state != consts.RUN_STATE_COMPLETED:
                 # prev run is not completed yet
                 log.info('postpone anlysis of run %s as prev run %s is not completed yet', run, prev_run)
                 return

@@ -42,8 +42,8 @@ logging.Logger.manager.root = root_logger
 
 log = logging.getLogger(__name__)
 
-g_logstash_handler = None  # pylint: disable=invalid-name
-g_basic_logger_done = False  # pylint: disable=invalid-name
+g_logstash_handler = None
+g_basic_logger_done = False
 
 
 class LogstashFormatter(logging.Formatter):

@@ -41,7 +41,7 @@ class Planner:
 
     def add_job(self, func=None, trigger=None, args=None, kwargs=None, job_id=None, name=None, misfire_grace_time=None,
                 coalesce=None, max_instances=None, next_run_time=None, replace_existing=False, trigger_args=None):
-        if trigger_args == None:
+        if trigger_args is None:
             trigger_args = {}
 
         all_kw_args = dict(args=args, kwargs=kwargs, id=job_id, name=name, replace_existing=replace_existing)
@@ -89,7 +89,7 @@ class Planner:
         return jobs
 
     def reschedule_job(self, job_id=None, trigger=None, trigger_args=None):
-        if trigger_args == None:
+        if trigger_args is None:
             trigger_args = {}
 
         log.info('reschedule_job args: %s %s %s', job_id, trigger, trigger_args)

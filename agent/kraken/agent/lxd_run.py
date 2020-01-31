@@ -31,6 +31,9 @@ class LxdExecContext:
     def __init__(self, job):
         self.job = job
 
+        self.client = None
+        self.cntr = None
+
     def start(self, timeout):
         self.client = pylxd.Client()
 
@@ -80,7 +83,7 @@ class LxdExecContext:
     def _stdout_handler(self, chunk):
         log.info(chunk.decode().rstrip())
 
-    async def _lxd_run(self, cmd, cwd, deadline, env=None):
+    async def _lxd_run(self, cmd, cwd, deadline, env=None):  # pylint: disable=unused-argument
         log.info('cmd %s', cmd)
         cmd = shlex.split(cmd)
         result = self.cntr.execute(cmd, environment=env, stdout_handler=self._stdout_handler,

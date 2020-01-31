@@ -329,7 +329,7 @@ def get_run_results(run_id, start=0, limit=10,
                   joinedload('job.executor_group'),
                   joinedload('job.executor_used'))
     q = q.join('job')
-    q = q.filter(Job.run_id == run_id, Job.covered == False)
+    q = q.filter(Job.run_id == run_id, Job.covered.is_(False))
     if statuses:
         q = q.filter(TestCaseResult.result.in_(statuses))
     if changes:
@@ -381,7 +381,7 @@ def get_run_issues(run_id, start=0, limit=10, issue_types=None, location=None, m
                   joinedload('job.executor_group'),
                   joinedload('job.executor_used'))
     q = q.join('job')
-    q = q.filter(Job.run_id == run_id, Job.covered == False)
+    q = q.filter(Job.run_id == run_id, Job.covered.is_(False))
     if issue_types:
         q = q.filter(Issue.issue_type.in_(issue_types))
     if location is not None:

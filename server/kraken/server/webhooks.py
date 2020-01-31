@@ -4,7 +4,7 @@ import logging
 
 from flask import Blueprint, request, abort
 
-from .models import db, Project
+from .models import Project
 from .bg import jobs as bg_jobs
 
 log = logging.getLogger(__name__)

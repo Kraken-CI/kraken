@@ -7,7 +7,7 @@ import datetime
 from flask import Flask
 
 from . import logs
-from .models import Executor, Run, Job
+from .models import db, Executor, Run, Job
 from . import consts
 from . import srvcheck
 from . import execution
