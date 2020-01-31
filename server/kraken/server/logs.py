@@ -13,7 +13,7 @@ class StructLogger(logging.Logger):
     initial_context = {}
     context = {}
 
-    def _log(self, level, msg, args, exc_info=None, extra=None, stack_info=False, **kwargs):
+    def _log(self, level, msg, args, exc_info=None, extra=None, stack_info=False, **kwargs):  # pylint: disable=arguments-differ
         if not extra:
             extra = {}
         extra.update(StructLogger.context)
@@ -34,7 +34,7 @@ class StructLogger(logging.Logger):
 
 
 logging.setLoggerClass(StructLogger)
-root_logger = StructLogger('root', logging.WARNING)
+root_logger = StructLogger('root', logging.WARNING)  # pylint: disable=invalid-name
 logging.root = root_logger
 logging.Logger.root = root_logger
 logging.Logger.manager.root = root_logger
@@ -42,12 +42,13 @@ logging.Logger.manager.root = root_logger
 
 log = logging.getLogger(__name__)
 
-g_logstash_handler = None
-g_basic_logger_done = False
+g_logstash_handler = None  # pylint: disable=invalid-name
+g_basic_logger_done = False  # pylint: disable=invalid-name
 
 
 class LogstashFormatter(logging.Formatter):
     def __init__(self, message_type='Logstash', tags=None, fqdn=False):
+        super().__init__()
         self.message_type = message_type
         self.tags = tags if tags is not None else []
 
@@ -165,7 +166,7 @@ class LogstashHandler(DatagramHandler, SocketHandler):
 
 
 def setup_logging(service, logstash_addr=None):
-    global g_logstash_handler, g_basic_logger_done
+    global g_logstash_handler, g_basic_logger_done  # pylint: disable=global-statement
 
     if not g_basic_logger_done:
         logging.basicConfig(format=consts.LOG_FMT, level=logging.INFO)
