@@ -77,7 +77,8 @@ class Server():
             self.checks_num = 0
 
         if self.srv_addr is None:
-            srv_addr = self._get_srv_addr()
+            # srv_addr = self._get_srv_addr()  # TODO
+            pass
         else:
             srv_addr = None
 

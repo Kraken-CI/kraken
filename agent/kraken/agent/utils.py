@@ -15,6 +15,7 @@ def _get_size(fname):
 
 def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=subprocess.STDOUT, tracing=True, raise_on_error=False,
             callback=None, cb_period=5, mask=None, out_prefix='output: '):
+    # pylint: disable=too-many-statements,too-many-branches,too-many-locals
     if cwd is None:
         cwd = os.getcwd()
     if mask:

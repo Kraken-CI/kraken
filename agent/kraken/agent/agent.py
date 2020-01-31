@@ -52,7 +52,7 @@ def collect_sys_info():
     s = platform.system().lower()
     sys_info['system'] = s
     if s == 'linux':
-        distr = platform.linux_distribution(full_distribution_name=False)
+        distr = platform.linux_distribution(full_distribution_name=False)  # pylint: disable=deprecated-method
         sys_info['distro_name'] = distr[0].lower()
         sys_info['distro_version'] = distr[1]
 

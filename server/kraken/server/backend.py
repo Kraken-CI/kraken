@@ -100,6 +100,67 @@ def _handle_get_job(executor):
     return {'job': job}
 
 
+def _store_results(job, step, result):
+    t0 = time.time()
+    q = TestCaseResult.query.filter_by(job=job)
+    q = q.options(joinedload('test_case'))
+    q = q.join('test_case')
+    or_list = []
+    results = {}
+    for tr in result['test-results']:
+        or_list.append(TestCase.name == tr['test'])
+        results[tr['test']] = tr
+    q = q.filter(or_(*or_list))
+
+    # update status of existing test case results
+    cnt = 0
+    for tcr in q.all():
+        tr = results.pop(tcr.test_case.name)
+        tcr.cmd_line = tr['cmd']
+        tcr.result = tr['status']
+        tcr.values = tr['values'] if 'values' in tr else None
+        cnt += 1
+    db.session.commit()
+    t1 = time.time()
+    log.info('reporting %s existing test records took %ss', cnt, (t1 - t0))
+
+    # create test case results if they didnt exist
+    tool_test_cases = {}
+    q = TestCase.query.filter_by(tool=step.tool)
+    for tc in q.all():
+        tool_test_cases[tc.name] = tc
+    for tc_name, tr in results.items():
+        tc = tool_test_cases.get(tc_name, None)
+        if tc is None:
+            tc = TestCase(name=tc_name, tool=step.tool)
+        tcr = TestCaseResult(test_case=tc, job=step.job,
+                             cmd_line=tr['cmd'],
+                             result=tr['status'],
+                             values=tr['values'] if 'values' in tr else None)
+    db.session.commit()
+    t2 = time.time()
+    log.info('reporting %s new test records took %ss', len(results), (t2 - t1))
+
+
+def _store_issues(job, results):
+    t0 = time.time()
+    for issue in result['issues']:
+        issue_type = 0
+        if issue['type'] in consts.ISSUE_TYPES_CODE:
+            issue_type = consts.ISSUE_TYPES_CODE[issue['type']]
+        else:
+            log.warning('unknown issue type: %s', issue['type'])
+        extra = {}
+        for k, v in issue.items():
+            if k not in ['line', 'column', 'path', 'symbol', 'message']:
+                extra[k] = v
+        Issue(issue_type=issue_type, line=issue['line'], column=issue['column'], path=issue['path'], symbol=issue['symbol'],
+              message=issue['message'][:511], extra=extra, job=job)
+    db.session.commit()
+    t1 = time.time()
+    log.info('reporting %s issues took %ss', len(result['issues']), (t1 - t0))
+
+
 def _handle_step_result(executor, req):
     response = {}
     if executor.job is None:
@@ -131,64 +192,11 @@ def _handle_step_result(executor, req):
 
     # store test results
     if 'test-results' in result:
-        t0 = time.time()
-        q = TestCaseResult.query.filter_by(job=job)
-        q = q.options(joinedload('test_case'))
-        q = q.join('test_case')
-        or_list = []
-        results = {}
-        for tr in result['test-results']:
-            or_list.append(TestCase.name == tr['test'])
-            results[tr['test']] = tr
-        q = q.filter(or_(*or_list))
-
-        # update status of existing test case results
-        cnt = 0
-        for tcr in q.all():
-            tr = results.pop(tcr.test_case.name)
-            tcr.cmd_line = tr['cmd']
-            tcr.result = tr['status']
-            tcr.values = tr['values'] if 'values' in tr else None
-            cnt += 1
-        db.session.commit()
-        t1 = time.time()
-        log.info('reporting %s existing test records took %ss', cnt, (t1 - t0))
-
-        # create test case results if they didnt exist
-        tool_test_cases = {}
-        q = TestCase.query.filter_by(tool=step.tool)
-        for tc in q.all():
-            tool_test_cases[tc.name] = tc
-        for tc_name, tr in results.items():
-            tc = tool_test_cases.get(tc_name, None)
-            if tc is None:
-                tc = TestCase(name=tc_name, tool=step.tool)
-            tcr = TestCaseResult(test_case=tc, job=step.job,
-                                 cmd_line=tr['cmd'],
-                                 result=tr['status'],
-                                 values=tr['values'] if 'values' in tr else None)
-        db.session.commit()
-        t2 = time.time()
-        log.info('reporting %s new test records took %ss', len(results), (t2 - t1))
+        _store_results(job, step, result)
 
     # store issues
     if 'issues' in result:
-        t0 = time.time()
-        for issue in result['issues']:
-            issue_type = 0
-            if issue['type'] in consts.ISSUE_TYPES_CODE:
-                issue_type = consts.ISSUE_TYPES_CODE[issue['type']]
-            else:
-                log.warning('unknown issue type: %s', issue['type'])
-            extra = {}
-            for k, v in issue.items():
-                if k not in ['line', 'column', 'path', 'symbol', 'message']:
-                    extra[k] = v
-            Issue(issue_type=issue_type, line=issue['line'], column=issue['column'], path=issue['path'], symbol=issue['symbol'],
-                  message=issue['message'][:511], extra=extra, job=job)
-        db.session.commit()
-        t1 = time.time()
-        log.info('reporting %s issues took %ss', len(result['issues']), (t1 - t0))
+        _store_issues(job, results)
 
     # check if all steps are done so job is finised
     job_finished = True
