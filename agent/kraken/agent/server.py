@@ -29,7 +29,7 @@ def _send_http_request(url, data):
     #     10054 - An existing connection was forcibly closed by the remote host
     #     10060 - 'Connection timed out'
     #     10061 - 'No connection could be made because the target machine actively refused it'
-    CONNECTION_ERRORS = [-2, 32, 100, 101, 110, 111, 112, 113, 10053, 10054, 10060, 10061]
+    connection_errors = [-2, 32, 100, 101, 110, 111, 112, 113, 10053, 10054, 10060, 10061]
 
     while resp is None:
         try:
@@ -38,10 +38,10 @@ def _send_http_request(url, data):
         except KeyboardInterrupt:
             raise
         # except socket.error as e:
-        #     if e.errno in CONNECTION_ERRORS:
+        #     if e.errno in connection_errors:
         #         # TODO: just warn and sleep for a moment
         except urllib.error.URLError as e:
-            if e.__context__ and e.__context__.errno in CONNECTION_ERRORS:
+            if e.__context__ and e.__context__.errno in connection_errors:
                 log.warning('connection problem to %s: %s, trying one more time in 5s', url, str(e))
                 time.sleep(5)
             else:

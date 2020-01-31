@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 import os
-import re
-import time
 import logging
 
-from flask import render_template
 import connexion
 from connexion.resolver import Resolver
 
@@ -21,7 +18,7 @@ log = logging.getLogger('server')
 class MyResolver(Resolver):
     def resolve_operation_id(self, operation):
         operation_id = operation.operation_id
-        tags = operation._operation['tags']
+        tags = operation._operation['tags']  # pylint: disable=protected-access
         name = 'kraken.server.{}.{}'.format(tags[0].lower(), operation_id)
         return name
 
@@ -31,7 +28,6 @@ def create_app():
     db_url = os.environ.get('KRAKEN_DB_URL', consts.DEFAULT_DB_URL)
     redis_addr = os.environ.get('KRAKEN_REDIS_ADDR', consts.DEFAULT_REDIS_ADDR)
     elasticsearch_url = os.environ.get('KRAKEN_ELASTICSEARCH_URL', consts.DEFAULT_ELASTICSEARCH_URL)
-    logstash_addr = os.environ.get('KRAKEN_LOGSTASH_ADDR', consts.DEFAULT_LOGSTASH_ADDR)
     planner_url = os.environ.get('KRAKEN_PLANNER_URL', consts.DEFAULT_PLANNER_URL)
     server_addr = os.environ.get('KRAKEN_SERVER_ADDR', consts.DEFAULT_SERVER_ADDR)
 

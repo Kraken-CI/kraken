@@ -197,13 +197,12 @@ def _handle_step_result(executor, req):
         log.info('%s: %s', s.index, consts.STEP_STATUS_NAME[s.status]
                  if s.status in consts.STEP_STATUS_NAME else s.status)
         if s.status == consts.STEP_STATUS_DONE:
-            continue  # pylint: disable=no-else-continue
-        elif s.status == consts.STEP_STATUS_ERROR:
+            continue
+        if s.status == consts.STEP_STATUS_ERROR:
             job_finished = True
             break
-        else:
-            job_finished = False
-            break
+        job_finished = False
+        break
     if job_finished:
         job.state = consts.JOB_STATE_EXECUTING_FINISHED
         job.finished = datetime.datetime.utcnow()
@@ -256,39 +255,42 @@ def _handle_dispatch_tests(executor, req):
         return {}
 
     tests_cnt = len(tests)
+
     if len(set(tests)) != tests_cnt:
         log.warning('there are tests duplicates')
         return {}
+
     if tests_cnt == 0:
         # TODO
         raise NotImplementedError
-    elif tests_cnt == 1:
+
+    if tests_cnt == 1:
         _create_test_records(step, tests)
         db.session.commit()
         return {'tests': tests}
-    else:
-        # simple dispatching: divide to 2 jobs, current and new one
-        part = tests_cnt // 2
-        part1 = tests[:part]
-        part2 = tests[part:]
 
-        _create_test_records(step, part1)
-        db.session.commit()
+    # simple dispatching: divide to 2 jobs, current and new one
+    part = tests_cnt // 2
+    part1 = tests[:part]
+    part2 = tests[part:]
 
-        # new timeout reduced by nearly a half
-        timeout = int(job.timeout * 0.6)
-        if timeout < 60:
-            timeout = 60
+    _create_test_records(step, part1)
+    db.session.commit()
 
-        # create new job and its steps
-        job2 = Job(run=job.run, name=job.name, executor_group=job.executor_group, system=job.system, timeout=timeout)
-        for s in job.steps:
-            s2 = Step(job=job2, index=s.index, tool=s.tool, fields=s.fields.copy())
-            if s.index == step_idx:
-                _create_test_records(s2, part2)
-        db.session.commit()
+    # new timeout reduced by nearly a half
+    timeout = int(job.timeout * 0.6)
+    if timeout < 60:
+        timeout = 60
 
-        return {'tests': part1}
+    # create new job and its steps
+    job2 = Job(run=job.run, name=job.name, executor_group=job.executor_group, system=job.system, timeout=timeout)
+    for s in job.steps:
+        s2 = Step(job=job2, index=s.index, tool=s.tool, fields=s.fields.copy())
+        if s.index == step_idx:
+            _create_test_records(s2, part2)
+    db.session.commit()
+
+    return {'tests': part1}
 
 
 def _handle_sys_info(executor, req):  # pylint: disable=unused-argument
@@ -315,7 +317,7 @@ def serve_agent_request():
         log.warning('unknown executor %s', address)
         _handle_unknown_executor(address, request.remote_addr)
         return json.dumps({})
-    elif not executor.authorized:
+    if not executor.authorized:
         log.warning('unauthorized executor %s from %s', address, request.remote_addr)
         return json.dumps({})
 

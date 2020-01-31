@@ -5,7 +5,7 @@ import logging
 import datetime
 
 from flask import Flask
-from sqlalchemy.sql.expression import asc, desc, func, cast
+from sqlalchemy.sql.expression import asc
 
 from . import logs
 from .models import db, Executor, Run, Job

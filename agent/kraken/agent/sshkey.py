@@ -8,7 +8,7 @@ log = logging.getLogger(__name__)
 
 class SshAgent:
     def __init__(self):
-        self.process = subprocess.run(['ssh-agent', '-s'], stdout=subprocess.PIPE, universal_newlines=True)
+        self.process = subprocess.run(['ssh-agent', '-s'], stdout=subprocess.PIPE, universal_newlines=True, check=True)
 
         pattern = re.compile(r'SSH_AUTH_SOCK=(?P<socket>[^;]+).*SSH_AGENT_PID=(?P<pid>\d+)', re.MULTILINE | re.DOTALL)
         match = pattern.search(self.process.stdout)
@@ -19,13 +19,13 @@ class SshAgent:
         self.pid = data['pid']
 
     def shutdown(self):
-        subprocess.run(['kill', self.pid])
+        subprocess.run(['kill', self.pid], check=True)
 
     def add_key(self, key):
         env = os.environ.copy()
         env['SSH_AUTH_SOCK'] = self.sock
         env['SSH_AGENT_PID'] = self.pid
-        process = subprocess.run('ssh-add -', shell=True, input=bytes(key, 'ascii'), env=env)
+        process = subprocess.run('ssh-add -', shell=True, input=bytes(key, 'ascii'), env=env)  # pylint: disable=subprocess-run-check
         if process.returncode != 0:
             raise Exception('failed to add the key')
 

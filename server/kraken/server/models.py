@@ -16,7 +16,7 @@ db = SQLAlchemy()
 
 
 @event.listens_for(mapper, 'init')
-def auto_add(target, args, kwargs):
+def auto_add(target, args, kwargs):  # pylint: disable=unused-argument
     db.session.add(target)
 
 

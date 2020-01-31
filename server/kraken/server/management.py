@@ -2,17 +2,15 @@ import os
 import json
 import logging
 import datetime
+import xmlrpc.client
 
-from flask import make_response, abort
-from sqlalchemy.sql.expression import asc, desc
-from sqlalchemy.orm import joinedload
+from flask import abort
 from sqlalchemy.orm.attributes import flag_modified
 import pytimeparse
 import dateutil.parser
-import xmlrpc.client
 
 from . import consts
-from .models import db, Branch, Flow, Run, Stage, Job, Step, Executor, ExecutorGroup, Tool, TestCaseResult, Secret, ExecutorAssignment
+from .models import db, Branch, Stage, Executor, ExecutorGroup, Secret, ExecutorAssignment
 from .models import Project
 from .schema import execute_schema_code
 

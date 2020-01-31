@@ -3,20 +3,19 @@ import re
 import logging
 import datetime
 
-from flask import make_response, abort
+from flask import abort
 from sqlalchemy.sql.expression import asc, desc
 from sqlalchemy.orm import joinedload
 from elasticsearch import Elasticsearch
 
 from . import consts
 from .models import db, Branch, Flow, Run, Stage, Job, Step, ExecutorGroup, Tool, TestCaseResult, TestCase, Issue
-from .models import Project
 
 log = logging.getLogger(__name__)
 
 
 def complete_run(run, now):
-    from .bg import jobs as bg_jobs
+    from .bg import jobs as bg_jobs  # pylint: disable=import-outside-toplevel
     log.info('completed run %s', run)
     run.state = consts.RUN_STATE_COMPLETED
     run.finished = now
@@ -119,7 +118,7 @@ def trigger_jobs(run, replay=False):
             if tool_not_found:
                 job.state = consts.JOB_STATE_COMPLETED
                 job.completion_status = consts.JOB_CMPLT_MISSING_TOOL_IN_DB
-                job.notes = "cannot find tool '%s' in database" % s['tool']
+                job.notes = "cannot find tool '%s' in database" % tool_not_found
             else:
                 # substitute vars in steps
                 for idx, s in enumerate(j['steps']):
@@ -244,7 +243,7 @@ def get_flow_runs(flow_id):
 
     runs = []
     for run in flow.runs:
-        runs.append(runs.get_json())
+        runs.append(run.get_json())
     return runs, 200
 
 
@@ -475,12 +474,12 @@ def get_job_logs(job_id, start=0, limit=200, order=None, filters=None):
 
     if filters:
         if 'origin' in filters:
-            processName = filters['origin']
+            process_name = filters['origin']
             del filters['origin']
-            if "^" in processName or "*" in processName:
-                rx = processName
+            if "^" in process_name or "*" in process_name:
+                rx = process_name
             else:
-                rx = ".*%s.*" % processName.lower()
+                rx = ".*%s.*" % process_name.lower()
             query["query"]["bool"]["must"].append({"regexp": {"processName": rx}})
 
         if "level" in filters:
@@ -558,6 +557,7 @@ def get_job_logs(job_id, start=0, limit=200, order=None, filters=None):
 
 
 def cancel_job(job, note=None):
+    from .bg import jobs as bg_jobs  # pylint: disable=import-outside-toplevel
     if job.state == consts.JOB_STATE_COMPLETED:
         return
     job.state = consts.JOB_STATE_COMPLETED
