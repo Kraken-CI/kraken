@@ -1,9 +1,7 @@
 import os
-import io
 import time
 import shlex
 import asyncio
-import tarfile
 import logging
 try:
     import pylxd
@@ -111,5 +109,5 @@ class LxdExecContext:
             await self._lxd_run(cmd, lxd_cwd, deadline, env)
         except Timeout:
             # TODO: it should be better handled but needs testing
-            if self.proc_coord.result == {}:
-                self.proc_coord.result = {'status': 'error', 'reason': 'timeout'}
+            if proc_coord.result == {}:
+                proc_coord.result = {'status': 'error', 'reason': 'timeout'}

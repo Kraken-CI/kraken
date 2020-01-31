@@ -93,15 +93,15 @@ def trigger_jobs(run, replay=False):
         envs = j['environments']
         for env in envs:
             # get executor group
-             q = ExecutorGroup.query
-             q = q.filter_by(project=run.stage.branch.project, name=env['executor_group'])
-             executor_group = q.one_or_none()
+            q = ExecutorGroup.query
+            q = q.filter_by(project=run.stage.branch.project, name=env['executor_group'])
+            executor_group = q.one_or_none()
 
-             if executor_group is None:
-                 executor_group = ExecutorGroup.query.filter_by(name=env['executor_group']).one_or_none()
-                 if executor_group is None:
-                     log.warning("cannot find executor group '%s'", env['executor_group'])
-                     continue
+            if executor_group is None:
+                executor_group = ExecutorGroup.query.filter_by(name=env['executor_group']).one_or_none()
+                if executor_group is None:
+                    log.warning("cannot find executor group '%s'", env['executor_group'])
+                    continue
 
             # get timeout
             if run.stage.timeouts and j['name'] in run.stage.timeouts:

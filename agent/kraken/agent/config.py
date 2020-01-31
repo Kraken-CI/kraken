@@ -2,7 +2,7 @@ _CFG = {}
 
 
 def set_config(config):
-    global _CFG
+    global _CFG  # pylint: disable=global-statement
     _CFG = config
 
 
@@ -11,7 +11,7 @@ def get_config():
 
 
 def merge(config):
-    global _CFG
+    global _CFG  # pylint: disable=global-statement
 
     changes = {}
     for k, v in config.items():

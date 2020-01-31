@@ -7,7 +7,7 @@ from . import sshkey
 log = logging.getLogger(__name__)
 
 
-def run(step, **kwargs):
+def run(step, **kwargs):  # pylint: disable=unused-argument
     url = step['checkout']
     dest = ''
     if 'destination' in step:

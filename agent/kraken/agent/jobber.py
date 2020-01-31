@@ -107,7 +107,7 @@ class RequestHandler():
     def __init__(self, proc_coord):
         self.proc_coord = proc_coord
 
-    async def _async_handle_request(self, reader, writer):
+    async def async_handle_request(self, reader, writer):
         addr = writer.get_extra_info('peername')
         while True:
             # data = await reader.read(8192)
@@ -134,7 +134,7 @@ class RequestHandler():
                 self.proc_coord.result = {'status': 'in-progress'}
 
 
-async def _async_tcp_server(proc_coord, server):
+async def _async_tcp_server(server):
     async with server:
         await server.serve_forever()
 
@@ -142,14 +142,14 @@ async def _async_tcp_server(proc_coord, server):
 async def _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeout, step_file_path):
     addr = exec_ctx.get_return_ip_addr()
     handler = RequestHandler(proc_coord)
-    server = await asyncio.start_server(handler._async_handle_request, addr, 0, limit=1024 * 1280)
+    server = await asyncio.start_server(handler.async_handle_request, addr, 0, limit=1024 * 1280)
     addr = server.sockets[0].getsockname()
     return_addr = "%s:%s" % addr
     log.info('return_addr %s', return_addr)
 
     subprocess_task = asyncio.create_task(exec_ctx.async_run(
         proc_coord, tool_path, return_addr, step_file_path, command, cwd, timeout))
-    tcp_server_task = asyncio.create_task(_async_tcp_server(proc_coord, server))
+    tcp_server_task = asyncio.create_task(_async_tcp_server(server))
     done, _ = await asyncio.wait([subprocess_task, tcp_server_task],
                                  return_when=asyncio.FIRST_COMPLETED)
     if tcp_server_task not in done:

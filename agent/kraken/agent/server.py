@@ -6,7 +6,6 @@ import datetime
 import urllib.request
 
 from . import config
-from . import consts
 
 log = logging.getLogger(__name__)
 
@@ -89,7 +88,7 @@ class Server():
 
     def _get_srv_addr(self):
         # TODO
-        pass
+        return None
 
     def _ensure_srv_address(self):
         if self.srv_addr is None:

@@ -11,6 +11,10 @@ class LocalExecContext:
     def __init__(self, job):
         self.job = job
 
+        self.proc_coord = None
+        self.cmd = None
+        self.start_time = None
+
     def start(self, timeout):
         pass
 
@@ -48,8 +52,8 @@ class LocalExecContext:
 
         await self._async_pump_output(proc.stdout)
 
-        done, pending = await asyncio.wait([proc.wait(), self._async_monitor_proc(proc, timeout * 0.95)],
-                                           timeout=timeout)
+        await asyncio.wait([proc.wait(), self._async_monitor_proc(proc, timeout * 0.95)],
+                           timeout=timeout)
         #log.info('done %s', done)
         #log.info('pending %s', pending)
         #proc_coord.proc_retcode = proc.returncode

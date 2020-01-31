@@ -27,8 +27,8 @@ def run_tests(step, report_result=None):
     for f, v in data.items():
         if f == 'header':
             continue
-        else:
-            test = f
+
+        test = f
         values = dict(blank=dict(value=v['blank'], iterations=1),
                       comment=dict(value=v['comment'], iterations=1),
                       code=dict(value=v['code'], iterations=1),
