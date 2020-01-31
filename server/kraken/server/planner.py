@@ -39,7 +39,7 @@ class Planner:
             trigger = 'unknown'
         return dict(id=job.id, name=job.name, func=job.func_ref, args=job.args, kwargs=job.kwargs, trigger=trigger)
 
-    def add_job(self, func=None, trigger=None, args=None, kwargs=None, job_id=None, name=None, misfire_grace_time=None,
+    def add_job(self, func=None, trigger=None, args=None, kwargs=None, job_id=None, name=None, misfire_grace_time=None,  # pylint: disable=too-many-arguments
                 coalesce=None, max_instances=None, next_run_time=None, replace_existing=False, trigger_args=None):
         if trigger_args is None:
             trigger_args = {}

@@ -142,7 +142,7 @@ def _store_results(job, step, result):
     log.info('reporting %s new test records took %ss', len(results), (t2 - t1))
 
 
-def _store_issues(job, results):
+def _store_issues(job, result):
     t0 = time.time()
     for issue in result['issues']:
         issue_type = 0
@@ -196,7 +196,7 @@ def _handle_step_result(executor, req):
 
     # store issues
     if 'issues' in result:
-        _store_issues(job, results)
+        _store_issues(job, result)
 
     # check if all steps are done so job is finised
     job_finished = True

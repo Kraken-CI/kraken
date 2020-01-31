@@ -298,13 +298,14 @@ def create_job(job):
 
     log.info("job input: %s", job)
 
-    # Create a person instance using the schema and the passed in person
-    schema = JobSchema()
-    new_job = schema.load(job, session=db.session).data
-    db.session.commit()
+    # TODO
+    # schema = JobSchema()
+    # new_job = schema.load(job, session=db.session).data
+    # db.session.commit()
 
-    # Serialize and return the newly created person in the response
-    data = schema.dump(new_job).data
+    # # Serialize and return the newly created person in the response
+    # data = schema.dump(new_job).data
+    data = {}
 
     return data, 201
 
