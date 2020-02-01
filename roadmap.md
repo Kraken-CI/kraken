@@ -23,6 +23,7 @@
 ** DONE support for bare metal executor
 * DONE add monitoring executors in watchdog with timeout 10mins
 * DONE timeout for whole run
+* DONE przerobić stronę główną na bardziej statyczną bez rozwijanego drzewa
 * support repos:
 ** trigger on commit
 ** DONE trigger on github push event
@@ -41,5 +42,4 @@
 * kraken_shell: clearly report timeout errors
 * fork branch operation with test results history continuity
 * czas na branchu jest pokazywany jako AM a jest PM
-* przerobić stronę główną na bardziej statyczną bez rozwijanego drzewa
 * jak sie wywali poprzedni stage to nie startować następnego

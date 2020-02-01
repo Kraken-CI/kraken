@@ -37,58 +37,53 @@ export class MainPageComponent implements OnInit {
         this.refresh();
     }
 
+    calculateFlowStats(flow) {
+        flow.tests_total = 0
+        flow.tests_passed = 0
+        flow.fix_cnt = 0
+        flow.regr_cnt = 0
+        flow.issues_new = 0
+        for (let run of flow.runs) {
+            flow.tests_total += run.tests_total
+            flow.tests_passed += run.tests_passed
+            flow.fix_cnt += run.fix_cnt
+            flow.regr_cnt += run.regr_cnt
+            flow.issues_new += run.issues_new
+        }
+        if (flow.tests_total > 0) {
+            flow.tests_pass_ratio = 100 * flow.tests_passed / flow.tests_total
+            flow.tests_pass_ratio = flow.tests_pass_ratio.toFixed(1)
+            if (flow.tests_total == flow.tests_passed) {
+                flow.tests_color = '#beffbe'
+            } else if (flow.tests_pass_ratio > 50) {
+                flow.tests_color = '#fff089'
+            } else {
+                flow.tests_color = '#ffc8c8'
+            }
+        } else {
+            flow.tests_color = 'white'
+        }
+    }
+
     refresh() {
         this.managementService.getProjects().subscribe(data => {
-            for (let proj of data.items) {
-                let branches = []
-                for (let b of proj.branches) {
-                    let ciExtraText = 'no flows yet';
-                    if (b.ci_flows.length > 0) {
-                        ciExtraText = 'last flow: ' + datetimeToLocal(b.ci_flows[0].created);
-                    }
-                    let devExtraText = 'no flows yet';
-                    if (b.dev_flows.length > 0) {
-                        devExtraText = 'last flow: ' + datetimeToLocal(b.dev_flows[0].created);
-                    }
-                    let br = {
-                        label: b.name,
-                        branchId: b.id,
-                        'type': 'branch',
-                        icon: "fa fa-code-fork",
-                        children: [{
-                            label: 'CI',
-                            'type': 'ci_dev',
-                            extraText: ciExtraText,
-                            url: '/branches/' + b.id + '/ci',
-                            children: []
-                        }, {
-                            label: 'dev',
-                            'type': 'ci_dev',
-                            extraText: devExtraText,
-                            url: '/branches/' + b.id + '/dev',
-                            children: []
-                        }]
-                    };
-                    for (let f of b.ci_flows) {
-                        br.children[0].children.push({
-                            label: datetimeToLocal(f.created) + ', stages:' + f.runs.length,
-                            icon: 'fa fa-th-list',
-                            id: f.id
-                        });
-                    }
-                    for (let f of b.dev_flows) {
-                        br.children[1].children.push({
-                            label: datetimeToLocal(f.created) + ', stages:' + f.runs.length,
-                            icon: 'fa fa-th-list',
-                            id: f.id
-                        });
-                    }
-                    branches.push(br);
-                }
-                proj.branches = branches;
-            }
             this.projects = data.items;
+            for (let proj of this.projects) {
+                for (let branch of proj.branches) {
+                    for (let flow of branch.ci_flows) {
+                        this.calculateFlowStats(flow)
+                    }
+                    for (let flow of branch.dev_flows) {
+                        this.calculateFlowStats(flow)
+                    }
+                }
+            }
         });
+    }
+
+    getFlows(branch) {
+        return [{name: 'CI', flows: branch.ci_flows},
+                {name: 'Dev', flows: branch.dev_flows}]
     }
 
     newProject() {

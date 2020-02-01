@@ -1,7 +1,7 @@
 //import moment from 'moment';
 import moment from "moment-timezone";
 
-export function datetimeToLocal(d) {
+export function datetimeToLocal(d, fmt) {
     try {
         var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
         if (!tz) {
@@ -15,7 +15,11 @@ export function datetimeToLocal(d) {
             tz = ' UTC'
         }
 
-        return d.format('YYYY-MM-DD hh:mm:ss') + tz;
+        if (!fmt) {
+            fmt = 'YYYY-MM-DD hh:mm:ss'
+        }
+
+        return d.format(fmt) + tz;
     } catch(e) {
         return d;
     }

@@ -23,7 +23,7 @@
     <p-panel>
       <p-header>
         <div class="ui-helper-clearfix">
-          <span style="font-size:16px; display:inline-block; margin-top: 2px;">Project <b>{{proj.name}}</b></span>
+          <span style="font-size: 1.7em; display:inline-block; margin-top: 2px;">Project <b>{{proj.name}}</b></span>
           <div style="display:inline-block; float: right;">
             <p-button label="New Branch" icon="pi pi-plus" (onClick)="newBranch(proj)"></p-button>
             <p-button label="Settings" icon="pi pi-cog" routerLink="/projects/{{ proj.id }}" [style]="{'margin-left': '10px'}"></p-button>
@@ -31,31 +31,33 @@
         </div>
       </p-header>
 
-      <p-tree [value]="proj.branches"
-              selectionMode="single"
-              emptyMessage="No branches yet."
-              [style]="{width: '100%', 'border-width': 0}">
+      <div *ngFor="let branch of proj.branches" style="margin: 15px;">
+        <div style="font-weight: bold; font-size: 1.5em; margin: 0 0 10px 0;">
+          <i class="fa fa-code-fork" style="vertical-align: bottom; font-size: 1.7em; margin-right: 10px;"></i>
+          <a routerLink="/branches/{{ branch.id }}">
+            {{ branch.name }}
+          </a>
+        </div>
 
-        <ng-template let-node  pTemplate="branch">
-          <div style="width: 600px;">
-            <b style="width: 100px; display: inline-block;">
-              <a routerLink="/branches/{{node.branchId}}" routerLinkActive="active">
-                {{node.label}} <i class="pi pi-cog" style="vertical-align: bottom;"></i>
-              </a>
-            </b>
+        <div class="p-grid">
+          <div class="p-col-6" *ngFor="let flows of getFlows(branch)">
+            <b style="width: 100px; display: inline-block;"><a routerLink="/branches/{{ branch.id }}/{{ flows.name.toLowerCase() }}">{{ flows.name }} flows</a></b>
+            {{ flows.flows.length === 0 ? 'no flows yet' : '' }}
+            <table *ngIf="flows.flows.length > 0">
+              <tr *ngFor="let flow of flows.flows" style="padding: 3px 6px;">
+                <td><b><a routerLink="/flows/{{ flow.id }}">{{ flow.id }}</a>.</b><td>
+                <td><a routerLink="/flows/{{ flow.id }}" style="color: black;">{{ flow.created | localtime:'YYYY-MM-DD hh:mm' }}</a><td>
+                <td>
+                  <span *ngIf="flow.tests_total > 0" [ngStyle]="{'border-radius': '4px', 'background-color': flow.tests_color, 'padding': '1px 3px', 'margin-right': '2px'}">{{ flow.tests_pass_ratio }}% pass</span>
+                  <span *ngIf="flow.fix_cnt > 0" style="border-radius: 4px; background-color: #beffbe; padding: 1px 3px; margin-right: 2px;">{{ flow.fix_cnt }} fixes</span>
+                  <span *ngIf="flow.regr_cnt > 0" style="border-radius: 4px; background-color: #ffc8c8; padding: 1px 3px; margin-right: 2px;">{{ flow.regr_cnt }} regrs</span>
+                  <span *ngIf="flow.issues_new > 0" style="border-radius: 4px; background-color: #ffc8c8; padding: 1px 3px; margin-right: 2px;">{{ flow.issues_new }} new issues</span>
+                <td>
+              </tr>
+            </table>
           </div>
-        </ng-template>
-
-        <ng-template let-node  pTemplate="ci_dev">
-          <b style="width: 100px; display: inline-block;"><a routerLink="{{node.url}}" routerLinkActive="active">{{node.label}}</a></b>
-          {{node.extraText}}
-        </ng-template>
-
-        <ng-template let-node  pTemplate="default">
-          <a routerLink="/flows/{{node.id}}">{{node.id}}.</a> {{node.label}}
-        </ng-template>
-
-      </p-tree>
+        </div>
+      </div>
 
     </p-panel>
   </div>

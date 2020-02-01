@@ -64,6 +64,8 @@ def _check_runs():
     q = Run.query.filter_by(state=consts.RUN_STATE_IN_PROGRESS)
 
     for run in q.all():
+        if run.started is None:
+            continue
         timeout = run.stage.schema.get('timeout', consts.DEFAULT_RUN_TIMEOUT)
         end_time = run.started + datetime.timedelta(seconds=timeout)
         if end_time > now:
