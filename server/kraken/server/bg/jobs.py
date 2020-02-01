@@ -10,7 +10,7 @@ import giturlparse
 
 from .clry import app as clry_app
 from ..models import db, Run, Job, TestCaseResult, Branch, Flow, Stage, Project, Issue
-from .. import execution
+from .. import execution  # pylint: disable=cyclic-import
 from .. import consts
 
 log = logging.getLogger(__name__)
