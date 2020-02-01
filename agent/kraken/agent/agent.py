@@ -7,10 +7,10 @@ import argparse
 import platform
 import traceback
 
+from . import logs
 from . import config
 from . import server
 from . import jobber
-from . import logs
 
 log = logging.getLogger('agent')
 
