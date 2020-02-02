@@ -25,6 +25,7 @@
 * DONE timeout for whole run
 * DONE przerobić stronę główną na bardziej statyczną bez rozwijanego drzewa
 * DONE czas na branchu jest pokazywany jako AM a jest PM
+* DONE local_run nie zapisuje do logstash'a
 * support repos:
 ** trigger on commit
 ** DONE trigger on github push event

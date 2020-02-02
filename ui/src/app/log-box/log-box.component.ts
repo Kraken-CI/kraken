@@ -1,6 +1,7 @@
 import {
     Component,
     OnInit,
+    OnDestroy,
     Input,
     AfterViewInit,
     ElementRef,
@@ -16,7 +17,7 @@ import { ExecutionService } from '../backend/api/execution.service'
     templateUrl: './log-box.component.html',
     styleUrls: ['./log-box.component.sass'],
 })
-export class LogBoxComponent implements OnInit, AfterViewInit {
+export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
     @ViewChild('logBox', { static: false }) logBox: ElementRef
     @ViewChildren('logFrag') logFrags: QueryList<any>
     logBoxEl: any
@@ -31,17 +32,17 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
     timer2 = null
     timer3 = null
 
-    _jobId: number
+    prvJobId: number
     @Input()
     set jobId(id) {
-        this._jobId = id
+        this.prvJobId = id
 
-        if (id != 0) {
+        if (id !== 0) {
             this.loadJobLogs(id)
         }
     }
     get jobId() {
-        return this._jobId
+        return this.prvJobId
     }
 
     constructor(protected executionService: ExecutionService) {}
@@ -176,14 +177,14 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
         }
         this._prepareLogs(data.items.reverse(), data.job)
 
-        if (data.job.state != 5 && this.lastAttempts < 4) {
+        if (data.job.state !== 5 && this.lastAttempts < 4) {
             // completed
             this._addLoadingMoreEntryToLogs()
         }
     }
 
     _processNextLogs(jobId, data) {
-        if (jobId !== this._jobId) {
+        if (jobId !== this.prvJobId) {
             // console.info('!!!! job switch - stop processing in processNextLogs', jobId)
             return
         }
@@ -206,7 +207,7 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
                 this.timer2 = setTimeout(() => {
                     // console.info('timer2 fired ', jobId, this.timer2)
                     this.timer2 = null
-                    if (jobId !== this._jobId) {
+                    if (jobId !== this.prvJobId) {
                         // console.info('!!!! job switch - stop processing in timer2 ', jobId, this.timer2)
                         return
                     }
@@ -239,7 +240,7 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
                 .subscribe(data2 => {
                     this._processNextLogs(jobId, data2)
                 })
-        } else if (data.job.state != 5 || this.lastAttempts < 4) {
+        } else if (data.job.state !== 5 || this.lastAttempts < 4) {
             if (data.job.state === 5) {
                 this.lastAttempts += 1
             }
@@ -249,7 +250,7 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
             this.timer3 = setTimeout(() => {
                 // console.info('timer3 fired ', jobId, this.timer3)
                 this.timer3 = null
-                if (jobId !== this._jobId) {
+                if (jobId !== this.prvJobId) {
                     // console.info('!!!! job switch - stop processing in timer3 ', jobId, this.timer3)
                     return
                 }
@@ -289,7 +290,7 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
         this.executionService
             .getJobLogs(jobId, 0, 200, 'desc')
             .subscribe(data => {
-                if (jobId !== this._jobId) {
+                if (jobId !== this.prvJobId) {
                     // console.info('!!!! job switch - stop processing getJobLogs', jobId)
                     return
                 }
@@ -298,7 +299,7 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
 
                 this._processNewLogs(data, data.total - 200)
 
-                if (data.job.state != 5 || this.lastAttempts < 4) {
+                if (data.job.state !== 5 || this.lastAttempts < 4) {
                     // completed
                     if (data.job.state === 5) {
                         this.lastAttempts += 1
@@ -308,7 +309,7 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
                     this.timer1 = setTimeout(() => {
                         // console.info('timer1 fired ', jobId, this.timer1)
                         this.timer1 = null
-                        if (jobId !== this._jobId) {
+                        if (jobId !== this.prvJobId) {
                             // console.info('!!!! job switch - stop processing in timer1 ', jobId, this.timer1)
                             return
                         }

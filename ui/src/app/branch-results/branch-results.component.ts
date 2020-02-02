@@ -40,7 +40,7 @@ export class BranchResultsComponent implements OnInit {
 
     ngOnInit() {
         this.branch = null
-        this.branchId = parseInt(this.route.snapshot.paramMap.get('id'))
+        this.branchId = parseInt(this.route.snapshot.paramMap.get('id'), 10)
         this.kind = this.route.snapshot.paramMap.get('kind')
         this.selectedStage = null
         this.stagesAvailable = [{ name: 'All' }]
@@ -233,7 +233,7 @@ export class BranchResultsComponent implements OnInit {
         })
 
         this.route.paramMap.subscribe(params => {
-            this.branchId = parseInt(params.get('id'))
+            this.branchId = parseInt(params.get('id'), 10)
             this.kind = params.get('kind')
             this.updateBreadcrumb()
             this.refresh(0, 10)
@@ -275,7 +275,7 @@ export class BranchResultsComponent implements OnInit {
             .pipe(
                 switchMap((params: ParamMap) =>
                     this.executionService.getFlows(
-                        parseInt(params.get('id')),
+                        parseInt(params.get('id'), 10),
                         this.kind,
                         start,
                         limit

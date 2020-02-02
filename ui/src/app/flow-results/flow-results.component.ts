@@ -36,7 +36,7 @@ export class FlowResultsComponent implements OnInit {
 
     ngOnInit() {
         this.route.paramMap.subscribe(params => {
-            this.flowId = parseInt(params.get('id'))
+            this.flowId = parseInt(params.get('id'), 10)
 
             this.runsTree = [
                 {
@@ -54,7 +54,7 @@ export class FlowResultsComponent implements OnInit {
 
     _getRunForStage(stageName) {
         for (const run of this.flow.runs) {
-            if (run.name == stageName) {
+            if (run.name === stageName) {
                 return run
             }
         }
@@ -63,9 +63,9 @@ export class FlowResultsComponent implements OnInit {
 
     _getParamFromStage(stageName, paramName) {
         for (const stage of this.flow.stages) {
-            if (stage.name == stageName) {
+            if (stage.name === stageName) {
                 for (const param of stage.schema.parameters) {
-                    if (param.name == paramName) {
+                    if (param.name === paramName) {
                         return param
                     }
                 }
@@ -84,10 +84,10 @@ export class FlowResultsComponent implements OnInit {
                     run: this._getRunForStage(c.name),
                 },
             }
-            if (allParents[c.name] != undefined) {
+            if (allParents[c.name] !== undefined) {
                 this._buildSubtree(subtree, allParents, allParents[c.name])
             }
-            if (node.children == undefined) {
+            if (node.children === undefined) {
                 node.children = []
             }
             node.children.push(subtree)
@@ -138,7 +138,7 @@ export class FlowResultsComponent implements OnInit {
             // collect args from flow
             const args = []
             let sectionArgs = []
-            if (this.flow.kind == 'dev') {
+            if (this.flow.kind === 'dev') {
                 sectionArgs.push({
                     name: 'BRANCH',
                     value: this.flow.branch_name,
@@ -151,7 +151,7 @@ export class FlowResultsComponent implements OnInit {
             // collect args from runs
             for (const run of this.flow.runs) {
                 sectionArgs = []
-                for (const a in run.args) {
+                for (const a of Object.keys(run.args)) {
                     const param = this._getParamFromStage(run.name, a)
                     let description = ''
                     let defaultValue
@@ -181,7 +181,7 @@ export class FlowResultsComponent implements OnInit {
                 root: [],
             }
             for (const stage of flow.stages) {
-                if (allParents[stage.schema.parent] == undefined) {
+                if (allParents[stage.schema.parent] === undefined) {
                     allParents[stage.schema.parent] = []
                 }
                 allParents[stage.schema.parent].push(stage)
@@ -227,7 +227,7 @@ export class FlowResultsComponent implements OnInit {
                     command: () => {
                         const stage = node.data.stage
                         console.info(stage.schema.parameters)
-                        if (stage.schema.parameters.length == 0) {
+                        if (stage.schema.parameters.length === 0) {
                             this.executionService
                                 .createRun(this.flowId, stage.id)
                                 .subscribe(

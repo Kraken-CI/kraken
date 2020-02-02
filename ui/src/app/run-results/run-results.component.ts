@@ -102,7 +102,7 @@ export class RunResultsComponent implements OnInit {
 
     ngOnInit() {
         this.route.paramMap.subscribe(params => {
-            const runId = parseInt(params.get('id'))
+            const runId = parseInt(params.get('id'), 10)
 
             const tab = params.get('tab')
             if (tab === '') {
@@ -293,12 +293,12 @@ export class RunResultsComponent implements OnInit {
         issuesTable.onLazyLoad.emit(issuesTable.createLazyLoadMetadata())
     }
 
-    issueTypeToClass(issue_type) {
+    issueTypeToClass(issueType) {
         return ''
     }
 
-    issueTypeToTxt(issue_type) {
-        switch (issue_type) {
+    issueTypeToTxt(issueType) {
+        switch (issueType) {
             case 0:
                 return 'error'
             case 1:
@@ -448,13 +448,13 @@ export class RunResultsComponent implements OnInit {
     }
 
     filterResultsKeyDown(event, resultsTable) {
-        if (event.key == 'Enter') {
+        if (event.key === 'Enter') {
             this.refreshResults(resultsTable)
         }
     }
 
     filterIssuesKeyDown(event, issuesTable) {
-        if (event.key == 'Enter') {
+        if (event.key === 'Enter') {
             this.refreshIssues(issuesTable)
         }
     }
@@ -484,9 +484,9 @@ export class RunResultsComponent implements OnInit {
         this.refreshIssues(issuesTable)
     }
 
-    filterIssuesByType(issue_type, issuesTable) {
+    filterIssuesByType(issueType, issuesTable) {
         this.filterIssueTypes = [
-            { code: issue_type, name: this.issueTypeToTxt(issue_type) },
+            { code: issueType, name: this.issueTypeToTxt(issueType) },
         ]
         this.refreshIssues(issuesTable)
     }

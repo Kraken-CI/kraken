@@ -33,7 +33,7 @@ export class NewFlowComponent implements OnInit {
     ngOnInit() {
         this.kind = this.route.snapshot.paramMap.get('kind')
 
-        this.branchId = parseInt(this.route.snapshot.paramMap.get('id'))
+        this.branchId = parseInt(this.route.snapshot.paramMap.get('id'), 10)
         this.managementService.getBranch(this.branchId).subscribe(branch => {
             this.branch = branch
 
@@ -56,7 +56,7 @@ export class NewFlowComponent implements OnInit {
             const args = { Common: { BRANCH: branch.branch_name } }
             const params = []
 
-            if (this.kind == 'dev') {
+            if (this.kind === 'dev') {
                 params.push({
                     name: 'Common',
                     params: [
@@ -70,7 +70,7 @@ export class NewFlowComponent implements OnInit {
 
             for (const s of branch.stages) {
                 if (
-                    s.schema.parent != 'root' ||
+                    s.schema.parent !== 'root' ||
                     s.schema.triggers.parent === false
                 ) {
                     continue
@@ -95,9 +95,9 @@ export class NewFlowComponent implements OnInit {
         }
         this.executionService
             .createFlow(this.branchId, this.kind, flow)
-            .subscribe(flow => {
-                // console.info(flow)
-                this.router.navigate(['/flows/' + flow.id])
+            .subscribe(flow2 => {
+                // console.info(flow2)
+                this.router.navigate(['/flows/' + flow2.id])
             })
     }
 }

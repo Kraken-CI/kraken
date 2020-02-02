@@ -45,7 +45,7 @@ export class ProjectSettingsComponent implements OnInit {
 
     ngOnInit() {
         this.route.paramMap.subscribe(params => {
-            this.projectId = parseInt(params.get('id'))
+            this.projectId = parseInt(params.get('id'), 10)
 
             this.managementService
                 .getProject(this.projectId)
@@ -129,7 +129,7 @@ export class ProjectSettingsComponent implements OnInit {
             .subscribe(
                 secret => {
                     for (const idx in this.project.secrets) {
-                        if (this.project.secrets[idx].id == secret.id) {
+                        if (this.project.secrets[idx].id === secret.id) {
                             this.project.secrets[idx] = secret
                             break
                         }

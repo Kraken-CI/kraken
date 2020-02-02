@@ -30,7 +30,7 @@ def _get_git_url(cwd):
                 l = l.strip()
                 if 'HEAD' in l:
                     continue
-                branch = out.split('/')[1]
+                branch = l.split('/')[1]
                 break
     git_url = 'https://%s/blob/%s' % (git_url, branch)
     return git_url
@@ -48,7 +48,9 @@ def run_analysis(step, report_issue=None):
     cmd = 'git rev-parse --show-toplevel'
     ret, out = utils.execute(cmd, cwd=cwd, tracing=False)
     if ret == 0:
-        repo_parent = out.strip()
+        repo_parent = out.strip() + os.path.sep
+    if not repo_parent:
+        repo_parent = os.path.abspath(cwd) + os.path.sep
 
     cmd = 'npx ng lint --format json --force'
     ret, out = utils.execute(cmd, cwd=cwd, out_prefix='', timeout=180)
@@ -65,14 +67,14 @@ def run_analysis(step, report_issue=None):
             filepath = issue['name']
 
         log.info('%s:%s  %s', filepath, issue['startPosition']['line'], issue['failure'])
-        if git_url:
-            issue['url'] = '%s/%s#L%s' % (git_url, filepath, issue['startPosition']['line'])
         issue2 = dict(path=filepath,
                       line=issue['startPosition']['line'],
                       column=issue['startPosition']['character'],
                       message=issue['failure'],
                       symbol=issue['ruleName'],
                       type=issue['ruleSeverity'].lower())
+        if git_url:
+            issue2['url'] = '%s/%s#L%s' % (git_url, filepath, issue['startPosition']['line'])
         report_issue(issue2)
 
     return 0, ''

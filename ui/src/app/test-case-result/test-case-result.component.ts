@@ -41,7 +41,7 @@ export class TestCaseResultComponent implements OnInit {
     ngOnInit() {
         this.valueData = {}
 
-        this.tcrId = parseInt(this.route.snapshot.paramMap.get('id'))
+        this.tcrId = parseInt(this.route.snapshot.paramMap.get('id'), 10)
         this.breadcrumbService.setCrumbs([
             {
                 label: 'Result',
@@ -86,7 +86,7 @@ export class TestCaseResultComponent implements OnInit {
             this.breadcrumbService.setCrumbs(crumbs)
 
             const valueNames = []
-            for (const name in result.values) {
+            for (const name of Object.keys(result.values)) {
                 valueNames.push({ name })
             }
             this.valueNames = valueNames
@@ -138,7 +138,7 @@ export class TestCaseResultComponent implements OnInit {
 
         const lastRes = this.results[0]
         this.iterations = 1
-        for (let res of this.results) {
+        for (const res of this.results) {
             if (res.values) {
                 this.iterations = res.values[this.selectedValue.name].iterations
                 break
@@ -279,9 +279,9 @@ export class TestCaseResultComponent implements OnInit {
     }
 
     changeToTxt(change) {
-        if (change == 0) {
+        if (change === 0) {
             return ''
-        } else if (change == 1) {
+        } else if (change === 1) {
             return 'fix'
         } else {
             return 'regression'

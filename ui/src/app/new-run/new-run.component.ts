@@ -25,13 +25,13 @@ export class NewRunComponent implements OnInit {
     ) {}
 
     ngOnInit() {
-        this.flowId = parseInt(this.route.snapshot.paramMap.get('flow_id'))
-        this.stageId = parseInt(this.route.snapshot.paramMap.get('stage_id'))
+        this.flowId = parseInt(this.route.snapshot.paramMap.get('flow_id'), 10)
+        this.stageId = parseInt(this.route.snapshot.paramMap.get('stage_id'), 10)
         this.executionService.getFlow(this.flowId).subscribe(flow => {
             this.flow = flow
 
             for (const s of flow.stages) {
-                if (s.id == this.stageId) {
+                if (s.id === this.stageId) {
                     this.stage = s
                     break
                 }
@@ -76,7 +76,7 @@ export class NewRunComponent implements OnInit {
             stage_id: this.stageId,
             args: this.args,
         }
-        this.executionService.createRun(this.flowId, run).subscribe(run => {
+        this.executionService.createRun(this.flowId, run).subscribe(run2 => {
             this.router.navigate(['/flows/' + this.flowId])
         })
     }

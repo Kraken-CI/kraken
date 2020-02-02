@@ -27,6 +27,7 @@
                 ]
             }
         ],
+        "no-bitwise": false,
         "no-consecutive-blank-lines": false,
         "no-console": [false],
         "no-empty": false,

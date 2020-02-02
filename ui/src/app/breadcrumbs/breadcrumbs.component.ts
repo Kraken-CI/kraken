@@ -110,15 +110,14 @@ export class BreadcrumbsComponent implements OnInit {
                 data2.push(it2)
             }
 
-            if (
-                getBranches &&
+            if (getBranches &&
                 this.currProjectId &&
                 (this.branches[this.currProjectId] === undefined ||
                     this.branches[this.currProjectId].length === 0)
             ) {
                 const projId = this.currProjectId
-                this.managementService.getProject(projId).subscribe(data => {
-                    this.branches[projId] = data.branches
+                this.managementService.getProject(projId).subscribe(proj => {
+                    this.branches[projId] = proj.branches
                 })
             }
 
@@ -136,21 +135,20 @@ export class BreadcrumbsComponent implements OnInit {
                             10,
                             this.currFlowId
                         )
-                        .subscribe(data => {
-                            this.flows[flowsKey] = data.items
+                        .subscribe(flows => {
+                            this.flows[flowsKey] = flows.items
                         })
                 }
             }
 
-            if (
-                getRuns &&
+            if (getRuns &&
                 this.currFlowId &&
                 (this.runs[this.currFlowId] === undefined ||
                     this.runs[this.currFlowId].length === 0)
             ) {
                 const flowId = this.currFlowId
-                this.executionService.getFlow(flowId).subscribe(data => {
-                    this.runs[flowId] = data.runs
+                this.executionService.getFlow(flowId).subscribe(flow => {
+                    this.runs[flowId] = flow.runs
                 })
             }
 

@@ -280,7 +280,7 @@ export class BranchMgmtComponent implements OnInit {
     }
 
     stageDescrKeyDown(event, stageDescrInplace) {
-        if (event.key == 'Enter') {
+        if (event.key === 'Enter') {
             stageDescrInplace.deactivate()
             const stage = {
                 name: this.stage.name,
@@ -288,7 +288,7 @@ export class BranchMgmtComponent implements OnInit {
             }
             this.doSaveStage(stage)
         }
-        if (event.key == 'Escape') {
+        if (event.key === 'Escape') {
             stageDescrInplace.deactivate()
         }
     }

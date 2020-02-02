@@ -29,7 +29,7 @@ def _get_git_url(cwd):
                 l = l.strip()
                 if 'HEAD' in l:
                     continue
-                branch = out.split('/')[1]
+                branch = l.split('/')[1]
                 break
     git_url = 'https://%s/blob/%s' % (git_url, branch)
     return git_url

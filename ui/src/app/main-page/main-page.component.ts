@@ -55,7 +55,7 @@ export class MainPageComponent implements OnInit {
         if (flow.tests_total > 0) {
             flow.tests_pass_ratio = (100 * flow.tests_passed) / flow.tests_total
             flow.tests_pass_ratio = flow.tests_pass_ratio.toFixed(1)
-            if (flow.tests_total == flow.tests_passed) {
+            if (flow.tests_total === flow.tests_passed) {
                 flow.tests_color = '#beffbe'
             } else if (flow.tests_pass_ratio > 50) {
                 flow.tests_color = '#fff089'
@@ -99,7 +99,7 @@ export class MainPageComponent implements OnInit {
     }
 
     newProjectKeyDown(event) {
-        if (event.key == 'Enter') {
+        if (event.key === 'Enter') {
             this.addNewProject()
         }
     }
@@ -146,7 +146,7 @@ export class MainPageComponent implements OnInit {
     }
 
     newBranchKeyDown(event) {
-        if (event.key == 'Enter') {
+        if (event.key === 'Enter') {
             this.addNewBranch()
         }
     }

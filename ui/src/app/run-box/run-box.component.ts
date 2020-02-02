@@ -16,7 +16,7 @@ export class RunBoxComponent implements OnInit {
     @Input() run: Run
     @Input() stage: Stage
     @Input() flowId: number
-    @Output() onStageRun = new EventEmitter<any>()
+    @Output() stageRun = new EventEmitter<any>()
 
     runBoxMenuItems: MenuItem[]
 
@@ -67,7 +67,7 @@ export class RunBoxComponent implements OnInit {
             // calculate bg color for box
             if (this.run.jobs_error && this.run.jobs_error > 0) {
                 this.bgColor = '#ffe6e6'
-            } else if (this.run.state == 'completed') {
+            } else if (this.run.state === 'completed') {
                 if (
                     this.run.tests_passed &&
                     this.run.tests_total &&
@@ -85,7 +85,7 @@ export class RunBoxComponent implements OnInit {
                     label: 'Run this stage',
                     icon: 'pi pi-caret-right',
                     command: () => {
-                        if (this.stage.schema.parameters.length == 0) {
+                        if (this.stage.schema.parameters.length === 0) {
                             this.executionService
                                 .createRun(this.flowId, {
                                     stage_id: this.stage.id,
@@ -97,7 +97,7 @@ export class RunBoxComponent implements OnInit {
                                             summary: 'Run succeeded',
                                             detail: 'Run operation succeeded.',
                                         })
-                                        this.onStageRun.emit(data)
+                                        this.stageRun.emit(data)
                                     },
                                     err => {
                                         this.msgSrv.add({

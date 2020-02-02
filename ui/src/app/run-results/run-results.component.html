@@ -46,7 +46,7 @@
           <tr [pSelectableRow]="job" [ngStyle]="{'background-color': job.covered ? '#aa9' : ''}">
             <td><a routerLink="/jobs/{{job.job_id}}">{{job.id}}</a></td>
             <td>{{job.name}}</td>
-            <td>{{getJobState(job)}}</td>
+            <td>{{getJobState(job)}}<i *ngIf="job.state !== 5" class="pi pi-spin pi-spinner" style="font-size: 16px; vertical-align: text-top;"></i></td>
             <td>
               <i style="vertical-align: bottom; font-size: 1.4em;" [ngClass]="getJobStatusClass(job)"></i>{{getJobStatus(job)}}
             </td>
@@ -298,17 +298,17 @@
              [showCurrentPageReport]="true">
       <ng-template pTemplate="header">
         <tr>
-          <th style="width: 150px;">Job Name</th>
+          <th style="width: 100px;">Job Name</th>
           <th style="width: 60px;">Job ID</th>
-          <th style="width: 100px;">Type</th>
+          <th style="width: 80px;">Type</th>
           <th style="width: 20%;">Location</th>
           <th style="width: 20%;">Message</th>
           <th style="width: 180px;">Symbol</th>
           <th style="width: 40px;">Age</th>
-          <th style="width: 20%;">System</th>
-          <th style="width: 10%;">Config</th>
-          <th style="width: 10%;">Executor Group</th>
-          <th style="width: 10%;">Executor</th>
+          <th style="width: 6%;">System</th>
+          <th style="width: 5%;">Config</th>
+          <th style="width: 5%;">Executor Group</th>
+          <th style="width: 5%;">Executor</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-issue>
@@ -316,7 +316,7 @@
           <td>{{ issue.job_name }}</td>
           <td><a routerLink="/jobs/{{ issue.job_id }}">{{ issue.job_id }}</a></td>
           <td  style="cursor: pointer;" (dblclick)="filterIssuesByType(issue.issue_type, issuesTable)" [class]="issueTypeToClass(issue.issue_type)">{{issueTypeToTxt(issue.issue_type)}}</td>
-          <td>
+          <td class="location">
             <a *ngIf="issue.url" href="{{ issue.url }}" target="blank">
               {{ issue.path }}:{{ issue.line }}:{{ issue.column }}
             </a>
