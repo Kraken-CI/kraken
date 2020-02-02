@@ -1,25 +1,24 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { async, ComponentFixture, TestBed } from '@angular/core/testing'
 
-import { RunBoxComponent } from './run-box.component';
+import { RunBoxComponent } from './run-box.component'
 
 describe('RunBoxComponent', () => {
-  let component: RunBoxComponent;
-  let fixture: ComponentFixture<RunBoxComponent>;
+    let component: RunBoxComponent
+    let fixture: ComponentFixture<RunBoxComponent>
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      declarations: [ RunBoxComponent ]
+    beforeEach(async(() => {
+        TestBed.configureTestingModule({
+            declarations: [RunBoxComponent],
+        }).compileComponents()
+    }))
+
+    beforeEach(() => {
+        fixture = TestBed.createComponent(RunBoxComponent)
+        component = fixture.componentInstance
+        fixture.detectChanges()
     })
-    .compileComponents();
-  }));
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(RunBoxComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
-
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-});
+    it('should create', () => {
+        expect(component).toBeTruthy()
+    })
+})

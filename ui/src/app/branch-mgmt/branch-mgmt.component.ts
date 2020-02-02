@@ -1,67 +1,67 @@
-import { Component, OnInit } from '@angular/core';
-import { Router, ActivatedRoute, ParamMap } from '@angular/router';
+import { Component, OnInit } from '@angular/core'
+import { Router, ActivatedRoute, ParamMap } from '@angular/router'
 
-import {MessageService} from 'primeng/api';
-import {ConfirmationService} from 'primeng/api';
+import { MessageService } from 'primeng/api'
+import { ConfirmationService } from 'primeng/api'
 
-import { ManagementService } from '../backend/api/management.service';
-import { BreadcrumbsService } from '../breadcrumbs.service';
-import { Branch } from '../backend/model/models';
+import { ManagementService } from '../backend/api/management.service'
+import { BreadcrumbsService } from '../breadcrumbs.service'
+import { Branch } from '../backend/model/models'
 
 @Component({
-  selector: 'app-branch-mgmt',
-  templateUrl: './branch-mgmt.component.html',
-  styleUrls: ['./branch-mgmt.component.sass']
+    selector: 'app-branch-mgmt',
+    templateUrl: './branch-mgmt.component.html',
+    styleUrls: ['./branch-mgmt.component.sass'],
 })
 export class BranchMgmtComponent implements OnInit {
-
-    branchId: number;
-    branch: Branch = {id: 0, name: 'noname', stages: []};
+    branchId: number
+    branch: Branch = { id: 0, name: 'noname', stages: [] }
     newBranchName: string
 
     newStageDlgVisible = false
-    stageName = ""
+    stageName = ''
     newStageName: string
     newStageDescr: string
 
-    stage: any = {id: 0, name: '', description: ''};
-    saveErrorMsg = "";
+    stage: any = { id: 0, name: '', description: '' }
+    saveErrorMsg = ''
 
     codeMirrorOpts = {
         lineNumbers: true,
         theme: 'material',
-        mode: "text/x-python",
+        mode: 'text/x-python',
         indentUnit: 4,
-        gutters: ["CodeMirror-lint-markers"],
-        lint: true
-    };
+        gutters: ['CodeMirror-lint-markers'],
+        lint: true,
+    }
 
     codeMirrorJsonOpts = {
         lineNumbers: true,
         theme: 'material',
-        mode: "application/json"
-    };
+        mode: 'application/json',
+    }
 
     schemaCheckDisplay = false
     schemaCheckContent: any
 
-    constructor(private route: ActivatedRoute,
-                private router: Router,
-                protected managementService: ManagementService,
-                protected breadcrumbService: BreadcrumbsService,
-                private msgSrv: MessageService,
-                private confirmationService: ConfirmationService) {
-    }
+    constructor(
+        private route: ActivatedRoute,
+        private router: Router,
+        protected managementService: ManagementService,
+        protected breadcrumbService: BreadcrumbsService,
+        private msgSrv: MessageService,
+        private confirmationService: ConfirmationService
+    ) {}
 
     ngOnInit() {
-        this.schemaCheckContent = {schema: '', error: ''}
-        this.branchId = parseInt(this.route.snapshot.paramMap.get("id"));
+        this.schemaCheckContent = { schema: '', error: '' }
+        this.branchId = parseInt(this.route.snapshot.paramMap.get('id'))
         this.refresh()
     }
 
     refresh() {
         this.managementService.getBranch(this.branchId).subscribe(branch => {
-            this.branch = branch;
+            this.branch = branch
             this.newBranchName = branch.name
             if (this.stageName != '') {
                 // this is a finish of adding new stage ie. select newly created stage
@@ -77,17 +77,20 @@ export class BranchMgmtComponent implements OnInit {
                 this.selectStage(branch.stages[0])
             }
 
-            let crumbs = [{
-                label: 'Projects',
-                project_id: branch.project_id,
-                project_name: branch.project_name
-            }, {
-                label: 'Branches',
-                branch_id: branch.id,
-                branch_name: branch.name
-            }];
-            this.breadcrumbService.setCrumbs(crumbs);
-        });
+            let crumbs = [
+                {
+                    label: 'Projects',
+                    project_id: branch.project_id,
+                    project_name: branch.project_name,
+                },
+                {
+                    label: 'Branches',
+                    branch_id: branch.id,
+                    branch_name: branch.name,
+                },
+            ]
+            this.breadcrumbService.setCrumbs(crumbs)
+        })
     }
 
     selectStage(stage) {
@@ -99,40 +102,52 @@ export class BranchMgmtComponent implements OnInit {
     }
 
     newStage() {
-        this.newStageDlgVisible = true;
+        this.newStageDlgVisible = true
     }
 
     cancelNewStage() {
-        this.newStageDlgVisible = false;
+        this.newStageDlgVisible = false
     }
 
     newStageKeyDown(event) {
-        if (event.key == "Enter") {
-            this.addNewStage();
+        if (event.key == 'Enter') {
+            this.addNewStage()
         }
     }
 
     addNewStage() {
-        this.managementService.createStage(this.branchId, {name: this.stageName}).subscribe(
-            data => {
-                console.info(data);
-                this.msgSrv.add({severity:'success', summary:'New stage succeeded', detail:'New stage operation succeeded.'});
-                this.newStageDlgVisible = false;
-                this.refresh();
-            },
-            err => {
-                console.info(err);
-                let msg = err.statusText;
-                if (err.error && err.error.detail) {
-                    msg = err.error.detail;
+        this.managementService
+            .createStage(this.branchId, { name: this.stageName })
+            .subscribe(
+                data => {
+                    console.info(data)
+                    this.msgSrv.add({
+                        severity: 'success',
+                        summary: 'New stage succeeded',
+                        detail: 'New stage operation succeeded.',
+                    })
+                    this.newStageDlgVisible = false
+                    this.refresh()
+                },
+                err => {
+                    console.info(err)
+                    let msg = err.statusText
+                    if (err.error && err.error.detail) {
+                        msg = err.error.detail
+                    }
+                    this.msgSrv.add({
+                        severity: 'error',
+                        summary: 'New stage erred',
+                        detail: 'New stage operation erred: ' + msg,
+                        life: 10000,
+                    })
+                    this.newStageDlgVisible = false
                 }
-                this.msgSrv.add({severity:'error', summary:'New stage erred', detail:'New stage operation erred: ' + msg, life: 10000});
-                this.newStageDlgVisible = false;
-            });
+            )
     }
 
     saveStage() {
-        this.saveErrorMsg = ""
+        this.saveErrorMsg = ''
         let stage = {
             name: this.stage.name,
             schema_code: this.stage.schema_code,
@@ -142,50 +157,70 @@ export class BranchMgmtComponent implements OnInit {
     }
 
     checkStageSchema() {
-        this.managementService.getStageSchemaAsJson(this.stage.id, {schema_code: this.stage.schema_code}).subscribe(
-            data => {
-                console.info(data);
-                this.schemaCheckContent = data
-                this.schemaCheckDisplay = true
-            },
-            err => {
-                console.info(err);
-                let msg = err.statusText;
-                if (err.error && err.error.detail) {
-                    msg = err.error.detail;
+        this.managementService
+            .getStageSchemaAsJson(this.stage.id, {
+                schema_code: this.stage.schema_code,
+            })
+            .subscribe(
+                data => {
+                    console.info(data)
+                    this.schemaCheckContent = data
+                    this.schemaCheckDisplay = true
+                },
+                err => {
+                    console.info(err)
+                    let msg = err.statusText
+                    if (err.error && err.error.detail) {
+                        msg = err.error.detail
+                    }
+                    this.msgSrv.add({
+                        severity: 'error',
+                        summary: 'Check schema erred',
+                        detail: 'Check schema operation erred: ' + msg,
+                        life: 10000,
+                    })
                 }
-                this.msgSrv.add({severity:'error', summary:'Check schema erred', detail:'Check schema operation erred: ' + msg, life: 10000});
-            });
+            )
     }
 
     deleteStage() {
         this.confirmationService.confirm({
-            message: 'Do you really want to delete stage "' + this.stage.name + '"?',
+            message:
+                'Do you really want to delete stage "' + this.stage.name + '"?',
             accept: () => {
                 this.managementService.deleteStage(this.stage.id).subscribe(
                     stage => {
                         this.selectStage(this.branch.stages[0])
-                        this.msgSrv.add({severity:'success', summary:'Stage deletion succeeded', detail:'Stage deletion operation succeeded.'});
+                        this.msgSrv.add({
+                            severity: 'success',
+                            summary: 'Stage deletion succeeded',
+                            detail: 'Stage deletion operation succeeded.',
+                        })
                         this.refresh()
                     },
                     err => {
-                        console.info(err);
-                        let msg = err.statusText;
+                        console.info(err)
+                        let msg = err.statusText
                         if (err.error && err.error.detail) {
-                            msg = err.error.detail;
+                            msg = err.error.detail
                         }
-                        this.msgSrv.add({severity:'error', summary:'Stage deletion erred', detail:'Stage deletion operation erred: ' + msg, life: 10000});
+                        this.msgSrv.add({
+                            severity: 'error',
+                            summary: 'Stage deletion erred',
+                            detail: 'Stage deletion operation erred: ' + msg,
+                            life: 10000,
+                        })
                     }
-                );
-            }
+                )
+            },
         })
     }
 
     branchNameKeyDown(event, branchNameInplace) {
-        if (event.key == "Enter") {
+        if (event.key == 'Enter') {
             branchNameInplace.deactivate()
         }
-        if (event.key == "Escape") {
+        if (event.key == 'Escape') {
             branchNameInplace.deactivate()
             this.newBranchName = this.branch.name
         }
@@ -201,17 +236,26 @@ export class BranchMgmtComponent implements OnInit {
                         break
                     }
                 }
-                this.msgSrv.add({severity:'success', summary:'Stage update succeeded', detail:'Stage update operation succeeded.'});
+                this.msgSrv.add({
+                    severity: 'success',
+                    summary: 'Stage update succeeded',
+                    detail: 'Stage update operation succeeded.',
+                })
             },
             err => {
-                console.info(err);
-                let msg = err.statusText;
+                console.info(err)
+                let msg = err.statusText
                 if (err.error && err.error.detail) {
-                    msg = err.error.detail;
+                    msg = err.error.detail
                 }
-                this.msgSrv.add({severity:'error', summary:'Stage update erred', detail:'Stage update operation erred: ' + msg, life: 10000});
+                this.msgSrv.add({
+                    severity: 'error',
+                    summary: 'Stage update erred',
+                    detail: 'Stage update operation erred: ' + msg,
+                    life: 10000,
+                })
             }
-        );
+        )
     }
 
     stageNameInplaceActivated() {
@@ -219,14 +263,14 @@ export class BranchMgmtComponent implements OnInit {
     }
 
     stageNameKeyDown($event, stageNameInplace) {
-        if (event['key'] == "Enter") {
+        if (event['key'] == 'Enter') {
             stageNameInplace.deactivate()
             let stage = {
                 name: this.newStageName,
             }
             this.doSaveStage(stage)
         }
-        if (event['key'] == "Escape") {
+        if (event['key'] == 'Escape') {
             stageNameInplace.deactivate()
         }
     }
@@ -236,7 +280,7 @@ export class BranchMgmtComponent implements OnInit {
     }
 
     stageDescrKeyDown($event, stageDescrInplace) {
-        if (event['key'] == "Enter") {
+        if (event['key'] == 'Enter') {
             stageDescrInplace.deactivate()
             let stage = {
                 name: this.stage.name,
@@ -244,11 +288,10 @@ export class BranchMgmtComponent implements OnInit {
             }
             this.doSaveStage(stage)
         }
-        if (event['key'] == "Escape") {
+        if (event['key'] == 'Escape') {
             stageDescrInplace.deactivate()
         }
     }
 
-    forkBranch() {
-    }
+    forkBranch() {}
 }

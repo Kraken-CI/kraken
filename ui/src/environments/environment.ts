@@ -5,7 +5,7 @@
 export const environment = {
     production: false,
     krakenVersion: '0.0',
-};
+}
 
 /*
  * For easier debugging in development mode, you can import the following file

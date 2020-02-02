@@ -1,7 +1,7 @@
-import { TestCaseResults } from './test-case-results';
+import { TestCaseResults } from './test-case-results'
 
 describe('TestCaseResults', () => {
-  it('should create an instance', () => {
-    expect(new TestCaseResults()).toBeTruthy();
-  });
-});
+    it('should create an instance', () => {
+        expect(new TestCaseResults()).toBeTruthy()
+    })
+})

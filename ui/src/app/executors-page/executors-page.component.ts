@@ -1,18 +1,22 @@
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, ParamMap, Router, NavigationEnd } from '@angular/router'
+import { Component, OnInit } from '@angular/core'
+import {
+    ActivatedRoute,
+    ParamMap,
+    Router,
+    NavigationEnd,
+} from '@angular/router'
 
 import { MessageService, MenuItem } from 'primeng/api'
 
-import { ManagementService } from '../backend/api/management.service';
-import { BreadcrumbsService } from '../breadcrumbs.service';
+import { ManagementService } from '../backend/api/management.service'
+import { BreadcrumbsService } from '../breadcrumbs.service'
 
 @Component({
-  selector: 'app-executors-page',
-  templateUrl: './executors-page.component.html',
-  styleUrls: ['./executors-page.component.sass']
+    selector: 'app-executors-page',
+    templateUrl: './executors-page.component.html',
+    styleUrls: ['./executors-page.component.sass'],
 })
 export class ExecutorsPageComponent implements OnInit {
-
     // executors table
     executors: any[]
     totalExecutors = 0
@@ -34,11 +38,12 @@ export class ExecutorsPageComponent implements OnInit {
 
     executorGroups: any[] = []
 
-    constructor(private route: ActivatedRoute,
-                private router: Router,
-                private msgSrv: MessageService,
-                protected managementService: ManagementService,
-                protected breadcrumbService: BreadcrumbsService
+    constructor(
+        private route: ActivatedRoute,
+        private router: Router,
+        private msgSrv: MessageService,
+        protected managementService: ManagementService,
+        protected breadcrumbService: BreadcrumbsService
     ) {}
 
     switchToTab(index) {
@@ -55,7 +60,7 @@ export class ExecutorsPageComponent implements OnInit {
     addExecutorTab(executor) {
         this.openedExecutors.push({
             executor,
-            name: executor.name
+            name: executor.name,
         })
         console.info('executor.groups', executor.groups)
         this.tabs.push({
@@ -65,11 +70,14 @@ export class ExecutorsPageComponent implements OnInit {
     }
 
     ngOnInit() {
-        let crumbs = [{
-            label: 'Home'
-        }, {
-            label: 'Executors'
-        }]
+        let crumbs = [
+            {
+                label: 'Home',
+            },
+            {
+                label: 'Executors',
+            },
+        ]
         this.breadcrumbService.setCrumbs(crumbs)
 
         this.tabs = [{ label: 'Executors', routerLink: '/executors/all' }]
@@ -129,7 +137,11 @@ export class ExecutorsPageComponent implements OnInit {
                             this.msgSrv.add({
                                 severity: 'error',
                                 summary: 'Cannot get executor',
-                                detail: 'Getting executor with ID ' + executorId + ' erred: ' + msg,
+                                detail:
+                                    'Getting executor with ID ' +
+                                    executorId +
+                                    ' erred: ' +
+                                    msg,
                                 life: 10000,
                             })
                             this.router.navigate(['/executors/all'])
@@ -141,7 +153,7 @@ export class ExecutorsPageComponent implements OnInit {
 
         this.managementService.getGroups(0, 1000).subscribe(data => {
             this.executorGroups = data.items.map(g => {
-                return {id: g.id, name: g.name}
+                return { id: g.id, name: g.name }
             })
             console.info(this.executorGroups)
         })
@@ -150,11 +162,13 @@ export class ExecutorsPageComponent implements OnInit {
     loadExecutorsLazy(event) {
         console.info(event)
         this.loadingExecutors = true
-        this.managementService.getExecutors(false, event.first, event.rows).subscribe(data => {
-            this.executors = data.items
-            this.totalExecutors = data.total
-            this.loadingExecutors = false
-        })
+        this.managementService
+            .getExecutors(false, event.first, event.rows)
+            .subscribe(data => {
+                this.executors = data.items
+                this.totalExecutors = data.total
+                this.loadingExecutors = false
+            })
     }
 
     refreshExecutors(executorsTable) {
@@ -173,7 +187,9 @@ export class ExecutorsPageComponent implements OnInit {
         if (this.activeTabIdx === idx) {
             this.switchToTab(idx - 1)
             if (idx - 1 > 0) {
-                this.router.navigate(['/executors/' + this.executorTab.executor.id])
+                this.router.navigate([
+                    '/executors/' + this.executorTab.executor.id,
+                ])
             } else {
                 this.router.navigate(['/executors/all'])
             }
@@ -190,24 +206,30 @@ export class ExecutorsPageComponent implements OnInit {
 
         // connect method to delete executor
         this.executorMenuItems[0].command = () => {
-            this.managementService.deleteExecutor(executor.id).subscribe(data => {
-                // remove from list of machines
-                for (let idx = 0; idx < this.executors.length; idx++) {
-                    const e = this.executors[idx]
-                    if (e.id === executor.id) {
-                        this.executors.splice(idx, 1) // TODO: does not work
-                        break
+            this.managementService
+                .deleteExecutor(executor.id)
+                .subscribe(data => {
+                    // remove from list of machines
+                    for (let idx = 0; idx < this.executors.length; idx++) {
+                        const e = this.executors[idx]
+                        if (e.id === executor.id) {
+                            this.executors.splice(idx, 1) // TODO: does not work
+                            break
+                        }
                     }
-                }
-                // remove from opened tabs if present
-                for (let idx = 0; idx < this.openedExecutors.length; idx++) {
-                    const e = this.openedExecutors[idx].executor
-                    if (e.id === executor.id) {
-                        this.closeTab(null, idx + 1)
-                        break
+                    // remove from opened tabs if present
+                    for (
+                        let idx = 0;
+                        idx < this.openedExecutors.length;
+                        idx++
+                    ) {
+                        const e = this.openedExecutors[idx].executor
+                        if (e.id === executor.id) {
+                            this.closeTab(null, idx + 1)
+                            break
+                        }
                     }
-                }
-            })
+                })
         }
     }
 
@@ -217,32 +239,34 @@ export class ExecutorsPageComponent implements OnInit {
         //     return
         // }
         let groups = this.executorTab.executor.groups.map(g => {
-            return {id: g.id}
+            return { id: g.id }
         })
         const ex = { groups: groups }
-        this.managementService.updateExecutor(this.executorTab.executor.id, ex).subscribe(
-            data => {
-                console.info('updated', data)
-                //executorTab.executor.name = data.name
-                this.msgSrv.add({
-                    severity: 'success',
-                    summary: 'Executor updated',
-                    detail: 'Executor update succeeded.',
-                })
-            },
-            err => {
-                let msg = err.statusText
-                if (err.error && err.error.message) {
-                    msg = err.error.message
+        this.managementService
+            .updateExecutor(this.executorTab.executor.id, ex)
+            .subscribe(
+                data => {
+                    console.info('updated', data)
+                    //executorTab.executor.name = data.name
+                    this.msgSrv.add({
+                        severity: 'success',
+                        summary: 'Executor updated',
+                        detail: 'Executor update succeeded.',
+                    })
+                },
+                err => {
+                    let msg = err.statusText
+                    if (err.error && err.error.message) {
+                        msg = err.error.message
+                    }
+                    this.msgSrv.add({
+                        severity: 'error',
+                        summary: 'Executor update failed',
+                        detail: 'Updating executor erred: ' + msg,
+                        life: 10000,
+                    })
                 }
-                this.msgSrv.add({
-                    severity: 'error',
-                    summary: 'Executor update failed',
-                    detail: 'Updating executor erred: ' + msg,
-                    life: 10000,
-                })
-            }
-        )
+            )
     }
 
     executorNameKeyDown(event, executorTab) {

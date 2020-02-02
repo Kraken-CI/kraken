@@ -1,15 +1,24 @@
-import { Component, OnInit, Input, AfterViewInit, ElementRef, ViewChild, ViewChildren, QueryList } from '@angular/core';
+import {
+    Component,
+    OnInit,
+    Input,
+    AfterViewInit,
+    ElementRef,
+    ViewChild,
+    ViewChildren,
+    QueryList,
+} from '@angular/core'
 
-import { ExecutionService } from '../backend/api/execution.service';
+import { ExecutionService } from '../backend/api/execution.service'
 
 @Component({
-  selector: 'app-log-box',
-  templateUrl: './log-box.component.html',
-  styleUrls: ['./log-box.component.sass']
+    selector: 'app-log-box',
+    templateUrl: './log-box.component.html',
+    styleUrls: ['./log-box.component.sass'],
 })
 export class LogBoxComponent implements OnInit, AfterViewInit {
-    @ViewChild('logBox', {static: false}) logBox: ElementRef;
-    @ViewChildren('logFrag') logFrags: QueryList<any>;
+    @ViewChild('logBox', { static: false }) logBox: ElementRef
+    @ViewChildren('logFrag') logFrags: QueryList<any>
     logBoxEl: any
     isNearBottom = true
 
@@ -32,13 +41,12 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
         }
     }
     get jobId() {
-        return this._jobId;
+        return this._jobId
     }
 
-    constructor(protected executionService: ExecutionService) { }
+    constructor(protected executionService: ExecutionService) {}
 
-    ngOnInit() {
-    }
+    ngOnInit() {}
 
     _prepareLogs(logs, job) {
         let fragment
@@ -89,7 +97,7 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
             }
             if (l.message.includes('ERRO')) {
                 for (let line of l.message.match(/[^\r\n]+/g)) {
-                    let l2 = {message: line, cls: l['cls']}
+                    let l2 = { message: line, cls: l['cls'] }
                     if (line.includes('ERRO')) {
                         l2['cls'] = 'log-red'
                     }
@@ -106,15 +114,20 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
             title: '',
             expanded: true,
             loading: true,
-            logs: [{
-                message: '... running ...',
-                cls: 'log-blue'
-            }]
+            logs: [
+                {
+                    message: '... running ...',
+                    cls: 'log-blue',
+                },
+            ],
         })
     }
 
     _addStepStatusEntryToLogs(job, stepIdx) {
-        if (this.logFragments.length > 0 && this.logFragments[this.logFragments.length - 1].stepStatus) {
+        if (
+            this.logFragments.length > 0 &&
+            this.logFragments[this.logFragments.length - 1].stepStatus
+        ) {
             // if last frag is already step status then do not add another one
             return
         }
@@ -136,10 +149,12 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
                 title: '',
                 expanded: true,
                 stepStatus: true,
-                logs: [{
-                    message: msg,
-                    cls: cls
-                }]
+                logs: [
+                    {
+                        message: msg,
+                        cls: cls,
+                    },
+                ],
             })
         }
     }
@@ -150,15 +165,19 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
             this.logFragments.push({
                 title: '',
                 expanded: true,
-                logs: [{
-                    message: '... skipped ' + skippedLogsCount + ' lines ...',
-                    cls: ''
-                }]
+                logs: [
+                    {
+                        message:
+                            '... skipped ' + skippedLogsCount + ' lines ...',
+                        cls: '',
+                    },
+                ],
             })
         }
         this._prepareLogs(data.items.reverse(), data.job)
 
-        if (data.job.state != 5 && this.lastAttempts < 4) {  // completed
+        if (data.job.state != 5 && this.lastAttempts < 4) {
+            // completed
             this._addLoadingMoreEntryToLogs()
         }
     }
@@ -174,7 +193,10 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
         if (data.items.length === 0) {
             if (data.job.state === 5 && this.lastAttempts === 4) {
                 //console.info('completed loading', jobId)
-                this._addStepStatusEntryToLogs(data.job, data.job.steps.length - 1)
+                this._addStepStatusEntryToLogs(
+                    data.job,
+                    data.job.steps.length - 1
+                )
             } else {
                 if (data.job.state === 5) {
                     this.lastAttempts += 1
@@ -188,10 +210,17 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
                         //console.info('!!!! job switch - stop processing in timer2 ', jobId, this.timer2)
                         return
                     }
-                    this.executionService.getJobLogs(jobId, this.skippedAngLoadedLogs, 200, 'asc').subscribe(data2 => {
-                        this._processNextLogs(jobId, data2)
-                    })
-                }, 3000);
+                    this.executionService
+                        .getJobLogs(
+                            jobId,
+                            this.skippedAngLoadedLogs,
+                            200,
+                            'asc'
+                        )
+                        .subscribe(data2 => {
+                            this._processNextLogs(jobId, data2)
+                        })
+                }, 3000)
                 return
             }
         }
@@ -205,9 +234,11 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
                 num = 1000
             }
             //console.info('load the rest ' + num + ' immediatelly', jobId)
-            this.executionService.getJobLogs(jobId, this.skippedAngLoadedLogs, num, 'asc').subscribe(data2 => {
-                this._processNextLogs(jobId, data2)
-            })
+            this.executionService
+                .getJobLogs(jobId, this.skippedAngLoadedLogs, num, 'asc')
+                .subscribe(data2 => {
+                    this._processNextLogs(jobId, data2)
+                })
         } else if (data.job.state != 5 || this.lastAttempts < 4) {
             if (data.job.state === 5) {
                 this.lastAttempts += 1
@@ -222,10 +253,12 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
                     //console.info('!!!! job switch - stop processing in timer3 ', jobId, this.timer3)
                     return
                 }
-                this.executionService.getJobLogs(jobId, this.skippedAngLoadedLogs, 200, 'asc').subscribe(data2 => {
-                    this._processNextLogs(jobId, data2)
-                })
-            }, 3000);
+                this.executionService
+                    .getJobLogs(jobId, this.skippedAngLoadedLogs, 200, 'asc')
+                    .subscribe(data2 => {
+                        this._processNextLogs(jobId, data2)
+                    })
+            }, 3000)
             return
         } else {
             //console.info('completed loading at next shot', jobId)
@@ -253,43 +286,56 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
         }
 
         this.logFragments = []
-        this.executionService.getJobLogs(jobId, 0, 200, 'desc').subscribe(data => {
-            if (jobId !== this._jobId) {
-                //console.info('!!!! job switch - stop processing getJobLogs', jobId)
-                return
-            }
-            //console.info('loaded first ' + data.items.length + ' of ' + data.total, jobId)
-            this.skippedAngLoadedLogs = data.total
-
-            this._processNewLogs(data, data.total - 200)
-
-            if (data.job.state != 5 || this.lastAttempts < 4) {  // completed
-                if (data.job.state === 5) {
-                    this.lastAttempts += 1
+        this.executionService
+            .getJobLogs(jobId, 0, 200, 'desc')
+            .subscribe(data => {
+                if (jobId !== this._jobId) {
+                    //console.info('!!!! job switch - stop processing getJobLogs', jobId)
+                    return
                 }
-                // wait for next logs 3 seconds
-                //console.info('waiting for next logs 3 seconds ', jobId)
-                this.timer1 = setTimeout(() => {
-                    //console.info('timer1 fired ', jobId, this.timer1)
-                    this.timer1 = null
-                    if (jobId !== this._jobId) {
-                        //console.info('!!!! job switch - stop processing in timer1 ', jobId, this.timer1)
-                        return
+                //console.info('loaded first ' + data.items.length + ' of ' + data.total, jobId)
+                this.skippedAngLoadedLogs = data.total
+
+                this._processNewLogs(data, data.total - 200)
+
+                if (data.job.state != 5 || this.lastAttempts < 4) {
+                    // completed
+                    if (data.job.state === 5) {
+                        this.lastAttempts += 1
                     }
-                    this.executionService.getJobLogs(jobId, this.skippedAngLoadedLogs, 200, 'asc').subscribe(data2 => {
-                        this._processNextLogs(jobId, data2)
-                    })
-                }, 3000);
-            } else {
-                //console.info('completed loading at first shot', jobId)
-                this._addStepStatusEntryToLogs(data.job, data.job.steps.length - 1)
-            }
-        })
+                    // wait for next logs 3 seconds
+                    //console.info('waiting for next logs 3 seconds ', jobId)
+                    this.timer1 = setTimeout(() => {
+                        //console.info('timer1 fired ', jobId, this.timer1)
+                        this.timer1 = null
+                        if (jobId !== this._jobId) {
+                            //console.info('!!!! job switch - stop processing in timer1 ', jobId, this.timer1)
+                            return
+                        }
+                        this.executionService
+                            .getJobLogs(
+                                jobId,
+                                this.skippedAngLoadedLogs,
+                                200,
+                                'asc'
+                            )
+                            .subscribe(data2 => {
+                                this._processNextLogs(jobId, data2)
+                            })
+                    }, 3000)
+                } else {
+                    //console.info('completed loading at first shot', jobId)
+                    this._addStepStatusEntryToLogs(
+                        data.job,
+                        data.job.steps.length - 1
+                    )
+                }
+            })
     }
 
     ngAfterViewInit() {
-        this.logBoxEl = this.logBox.nativeElement;
-        this.logFrags.changes.subscribe(_ => this.onLogFragsChanged());
+        this.logBoxEl = this.logBox.nativeElement
+        this.logFrags.changes.subscribe(_ => this.onLogFragsChanged())
     }
 
     ngOnDestroy() {
@@ -311,38 +357,37 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
     }
 
     onLogFragsChanged() {
-         if (this.isNearBottom) {
-             this.scrollToBottom()
-         }
+        if (this.isNearBottom) {
+            this.scrollToBottom()
+        }
     }
 
     scrollToBottom() {
         this.logBoxEl.scroll({
             top: this.logBoxEl.scrollHeight,
             left: 0,
-        });
+        })
     }
 
     scrollToTop() {
         this.logBoxEl.scroll({
             top: 0,
             left: 0,
-        });
+        })
     }
 
     isScrollNearBottom(): boolean {
-        const threshold = 150;
-        const position = this.logBoxEl.scrollTop + this.logBoxEl.offsetHeight;
-        const height = this.logBoxEl.scrollHeight;
-        return position > height - threshold;
+        const threshold = 150
+        const position = this.logBoxEl.scrollTop + this.logBoxEl.offsetHeight
+        const height = this.logBoxEl.scrollHeight
+        return position > height - threshold
     }
 
     scrolled(event: any): void {
-        this.isNearBottom = this.isScrollNearBottom();
+        this.isNearBottom = this.isScrollNearBottom()
     }
 
-    logDownload() {
-    }
+    logDownload() {}
 
     logZoomIn() {
         this.fontSize += 0.05

@@ -1,31 +1,32 @@
-import { Component, OnInit } from '@angular/core';
-import { Router, ActivatedRoute, ParamMap } from '@angular/router';
+import { Component, OnInit } from '@angular/core'
+import { Router, ActivatedRoute, ParamMap } from '@angular/router'
 
-import { ExecutionService } from '../backend/api/execution.service';
-import { BreadcrumbsService } from '../breadcrumbs.service';
+import { ExecutionService } from '../backend/api/execution.service'
+import { BreadcrumbsService } from '../breadcrumbs.service'
 
 @Component({
-  selector: 'app-new-run',
-  templateUrl: './new-run.component.html',
-  styleUrls: ['./new-run.component.sass']
+    selector: 'app-new-run',
+    templateUrl: './new-run.component.html',
+    styleUrls: ['./new-run.component.sass'],
 })
 export class NewRunComponent implements OnInit {
-
     flowId = 0
     stageId = 0
-    flow: any = {id: 0}
-    stage: any = {name: ''}
+    flow: any = { id: 0 }
+    stage: any = { name: '' }
     params: any[]
     args: any
 
-    constructor(private route: ActivatedRoute,
-                private router: Router,
-                protected executionService: ExecutionService,
-                protected breadcrumbService: BreadcrumbsService) { }
+    constructor(
+        private route: ActivatedRoute,
+        private router: Router,
+        protected executionService: ExecutionService,
+        protected breadcrumbService: BreadcrumbsService
+    ) {}
 
     ngOnInit() {
-        this.flowId = parseInt(this.route.snapshot.paramMap.get("flow_id"))
-        this.stageId = parseInt(this.route.snapshot.paramMap.get("stage_id"))
+        this.flowId = parseInt(this.route.snapshot.paramMap.get('flow_id'))
+        this.stageId = parseInt(this.route.snapshot.paramMap.get('stage_id'))
         this.executionService.getFlow(this.flowId).subscribe(flow => {
             this.flow = flow
 
@@ -37,23 +38,28 @@ export class NewRunComponent implements OnInit {
             }
 
             // prepare breadcrumb
-            let crumbs = [{
-                label: 'Projects',
-                project_id: flow.project_id,
-                project_name: flow.project_name
-            }, {
-                label: 'Branches',
-                branch_id: flow.branch_id,
-                branch_name: flow.base_branch_name
-            }, {
-                label: 'Results',
-                branch_id: flow.branch_id,
-                flow_kind: flow.kind
-            }, {
-                label: 'Flows',
-                flow_id: flow.id
-            }];
-            this.breadcrumbService.setCrumbs(crumbs);
+            let crumbs = [
+                {
+                    label: 'Projects',
+                    project_id: flow.project_id,
+                    project_name: flow.project_name,
+                },
+                {
+                    label: 'Branches',
+                    branch_id: flow.branch_id,
+                    branch_name: flow.base_branch_name,
+                },
+                {
+                    label: 'Results',
+                    branch_id: flow.branch_id,
+                    flow_kind: flow.kind,
+                },
+                {
+                    label: 'Flows',
+                    flow_id: flow.id,
+                },
+            ]
+            this.breadcrumbService.setCrumbs(crumbs)
 
             // prepare args form
             let args = {}
@@ -71,8 +77,7 @@ export class NewRunComponent implements OnInit {
             args: this.args,
         }
         this.executionService.createRun(this.flowId, run).subscribe(run => {
-            this.router.navigate(['/flows/' + this.flowId]);
-        });
+            this.router.navigate(['/flows/' + this.flowId])
+        })
     }
-
 }

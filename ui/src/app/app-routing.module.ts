@@ -1,19 +1,19 @@
-import { NgModule } from '@angular/core';
-import { Routes, RouterModule } from '@angular/router';
+import { NgModule } from '@angular/core'
+import { Routes, RouterModule } from '@angular/router'
 
 //import { AuthGuard } from './auth.guard';
-import { MainPageComponent } from './main-page/main-page.component';
-import { BranchResultsComponent } from './branch-results/branch-results.component';
-import { BranchMgmtComponent } from './branch-mgmt/branch-mgmt.component';
-import { RunResultsComponent } from './run-results/run-results.component';
-import { TestCaseResultComponent } from './test-case-result/test-case-result.component';
-import { FlowResultsComponent } from './flow-results/flow-results.component';
-import { NewFlowComponent } from './new-flow/new-flow.component';
-import { NewRunComponent } from './new-run/new-run.component';
-import { ProjectSettingsComponent } from './project-settings/project-settings.component';
-import { ExecutorsPageComponent } from './executors-page/executors-page.component';
-import { DiscoveredPageComponent } from './discovered-page/discovered-page.component';
-import { GroupsPageComponent } from './groups-page/groups-page.component';
+import { MainPageComponent } from './main-page/main-page.component'
+import { BranchResultsComponent } from './branch-results/branch-results.component'
+import { BranchMgmtComponent } from './branch-mgmt/branch-mgmt.component'
+import { RunResultsComponent } from './run-results/run-results.component'
+import { TestCaseResultComponent } from './test-case-result/test-case-result.component'
+import { FlowResultsComponent } from './flow-results/flow-results.component'
+import { NewFlowComponent } from './new-flow/new-flow.component'
+import { NewRunComponent } from './new-run/new-run.component'
+import { ProjectSettingsComponent } from './project-settings/project-settings.component'
+import { ExecutorsPageComponent } from './executors-page/executors-page.component'
+import { DiscoveredPageComponent } from './discovered-page/discovered-page.component'
+import { GroupsPageComponent } from './groups-page/groups-page.component'
 
 const routes: Routes = [
     {
@@ -28,39 +28,39 @@ const routes: Routes = [
     // },
     {
         path: 'branches/:id',
-        component: BranchMgmtComponent
+        component: BranchMgmtComponent,
     },
     {
         path: 'branches/:id/:kind',
-        component: BranchResultsComponent
+        component: BranchResultsComponent,
     },
     {
         path: 'branches/:id/:kind/flows/new',
-        component: NewFlowComponent
+        component: NewFlowComponent,
     },
     {
         path: 'flows/:flow_id/stages/:stage_id/new',
-        component: NewRunComponent
+        component: NewRunComponent,
     },
     {
         path: 'flows/:id',
-        component: FlowResultsComponent
+        component: FlowResultsComponent,
     },
     {
         path: 'runs/:id',
-        redirectTo: 'runs/:id/'
+        redirectTo: 'runs/:id/',
     },
     {
         path: 'runs/:id/:tab',
-        component: RunResultsComponent
+        component: RunResultsComponent,
     },
     {
         path: 'test_case_results/:id',
-        component: TestCaseResultComponent
+        component: TestCaseResultComponent,
     },
     {
         path: 'projects/:id',
-        component: ProjectSettingsComponent
+        component: ProjectSettingsComponent,
     },
     {
         path: 'executors',
@@ -69,11 +69,11 @@ const routes: Routes = [
     },
     {
         path: 'executors/:id',
-        component: ExecutorsPageComponent
+        component: ExecutorsPageComponent,
     },
     {
         path: 'discovered-executors',
-        component: DiscoveredPageComponent
+        component: DiscoveredPageComponent,
     },
     {
         path: 'executor-groups',
@@ -88,13 +88,12 @@ const routes: Routes = [
     // otherwise redirect to home
     {
         path: '**',
-        redirectTo: ''
-    }
-];
-
+        redirectTo: '',
+    },
+]
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes)],
-  exports: [RouterModule]
+    imports: [RouterModule.forRoot(routes)],
+    exports: [RouterModule],
 })
-export class AppRoutingModule { }
+export class AppRoutingModule {}

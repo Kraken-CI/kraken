@@ -1,19 +1,22 @@
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, ParamMap, Router, NavigationEnd } from '@angular/router'
+import { Component, OnInit } from '@angular/core'
+import {
+    ActivatedRoute,
+    ParamMap,
+    Router,
+    NavigationEnd,
+} from '@angular/router'
 
 import { MessageService, MenuItem } from 'primeng/api'
 
-import { ManagementService } from '../backend/api/management.service';
-import { BreadcrumbsService } from '../breadcrumbs.service';
-
+import { ManagementService } from '../backend/api/management.service'
+import { BreadcrumbsService } from '../breadcrumbs.service'
 
 @Component({
-  selector: 'app-groups-page',
-  templateUrl: './groups-page.component.html',
-  styleUrls: ['./groups-page.component.sass']
+    selector: 'app-groups-page',
+    templateUrl: './groups-page.component.html',
+    styleUrls: ['./groups-page.component.sass'],
 })
 export class GroupsPageComponent implements OnInit {
-
     // groups table
     groups: any[]
     totalGroups: number
@@ -33,11 +36,12 @@ export class GroupsPageComponent implements OnInit {
     openedGroups: any
     groupTab: any
 
-    constructor(private route: ActivatedRoute,
-                private router: Router,
-                private msgSrv: MessageService,
-                protected managementService: ManagementService,
-                protected breadcrumbService: BreadcrumbsService
+    constructor(
+        private route: ActivatedRoute,
+        private router: Router,
+        private msgSrv: MessageService,
+        protected managementService: ManagementService,
+        protected breadcrumbService: BreadcrumbsService
     ) {}
 
     switchToTab(index) {
@@ -54,7 +58,7 @@ export class GroupsPageComponent implements OnInit {
     addGroupTab(group) {
         this.openedGroups.push({
             group,
-            name: group.name
+            name: group.name,
         })
         this.tabs.push({
             label: group.name,
@@ -63,11 +67,14 @@ export class GroupsPageComponent implements OnInit {
     }
 
     ngOnInit() {
-        let crumbs = [{
-            label: 'Home'
-        }, {
-            label: 'Executor Groups'
-        }]
+        let crumbs = [
+            {
+                label: 'Home',
+            },
+            {
+                label: 'Executor Groups',
+            },
+        ]
         this.breadcrumbService.setCrumbs(crumbs)
 
         this.tabs = [{ label: 'Groups', routerLink: '/executor-groups/all' }]
@@ -127,7 +134,11 @@ export class GroupsPageComponent implements OnInit {
                             this.msgSrv.add({
                                 severity: 'error',
                                 summary: 'Cannot get group',
-                                detail: 'Getting group with ID ' + groupId + ' erred: ' + msg,
+                                detail:
+                                    'Getting group with ID ' +
+                                    groupId +
+                                    ' erred: ' +
+                                    msg,
                                 life: 10000,
                             })
                             this.router.navigate(['/executor-groups/all'])
@@ -140,10 +151,12 @@ export class GroupsPageComponent implements OnInit {
 
     loadGroupsLazy(event) {
         console.info(event)
-        this.managementService.getGroups(event.first, event.rows).subscribe(data => {
-            this.groups = data.items
-            this.totalGroups = data.total
-        })
+        this.managementService
+            .getGroups(event.first, event.rows)
+            .subscribe(data => {
+                this.groups = data.items
+                this.totalGroups = data.total
+            })
     }
 
     showNewGroupDlg() {
@@ -163,7 +176,7 @@ export class GroupsPageComponent implements OnInit {
 
         this.newGroupDlgVisible = false
 
-        const g = { name: this.groupName}
+        const g = { name: this.groupName }
 
         this.managementService.createGroup(g).subscribe(
             data => {
@@ -219,7 +232,9 @@ export class GroupsPageComponent implements OnInit {
         if (this.activeTabIdx === idx) {
             this.switchToTab(idx - 1)
             if (idx - 1 > 0) {
-                this.router.navigate(['/executor-groups/' + this.groupTab.group.id])
+                this.router.navigate([
+                    '/executor-groups/' + this.groupTab.group.id,
+                ])
             } else {
                 this.router.navigate(['/executor-groups/all'])
             }

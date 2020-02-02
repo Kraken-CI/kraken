@@ -1,9 +1,9 @@
 //import moment from 'moment';
-import moment from "moment-timezone";
+import moment from 'moment-timezone'
 
 export function datetimeToLocal(d, fmt) {
     try {
-        var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        var tz = Intl.DateTimeFormat().resolvedOptions().timeZone
         if (!tz) {
             tz = moment.tz.guess()
         }
@@ -19,8 +19,8 @@ export function datetimeToLocal(d, fmt) {
             fmt = 'YYYY-MM-DD HH:mm:ss'
         }
 
-        return d.format(fmt) + tz;
-    } catch(e) {
-        return d;
+        return d.format(fmt) + tz
+    } catch (e) {
+        return d
     }
 }

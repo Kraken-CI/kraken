@@ -1,12 +1,12 @@
-import { TestBed } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing'
 
-import { BreadcrumbsService } from './breadcrumbs.service';
+import { BreadcrumbsService } from './breadcrumbs.service'
 
 describe('BreadcrumbsService', () => {
-  beforeEach(() => TestBed.configureTestingModule({}));
+    beforeEach(() => TestBed.configureTestingModule({}))
 
-  it('should be created', () => {
-    const service: BreadcrumbsService = TestBed.get(BreadcrumbsService);
-    expect(service).toBeTruthy();
-  });
-});
+    it('should be created', () => {
+        const service: BreadcrumbsService = TestBed.get(BreadcrumbsService)
+        expect(service).toBeTruthy()
+    })
+})
