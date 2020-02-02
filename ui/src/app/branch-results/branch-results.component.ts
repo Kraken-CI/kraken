@@ -244,7 +244,7 @@ export class BranchResultsComponent implements OnInit {
         if (this.branch == null) {
             return
         }
-        let crumbs = [
+        const crumbs = [
             {
                 label: 'Projects',
                 project_id: this.branch.project_id,
@@ -265,8 +265,8 @@ export class BranchResultsComponent implements OnInit {
     }
 
     _processFlowData(flow, stages) {
-        for (let run of flow['runs']) {
-            stages.add(run['name'])
+        for (const run of flow.runs) {
+            stages.add(run.name)
         }
     }
 
@@ -283,17 +283,17 @@ export class BranchResultsComponent implements OnInit {
                 )
             )
             .subscribe(data => {
-                var flows = []
-                let stages = new Set<string>()
+                let flows = []
+                const stages = new Set<string>()
                 this.totalFlows = data.total
                 flows = flows.concat(data.items)
                 flows = flows.concat(this.flows0)
-                for (let flow of flows) {
+                for (const flow of flows) {
                     this._processFlowData(flow, stages)
                 }
                 this.flows = flows
-                let newStages = [{ name: 'All' }]
-                for (let st of Array.from(stages).sort()) {
+                const newStages = [{ name: 'All' }]
+                for (const st of Array.from(stages).sort()) {
                     newStages.push({ name: st })
                 }
                 this.stagesAvailable = newStages

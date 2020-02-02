@@ -20,7 +20,7 @@ export class DiscoveredPageComponent implements OnInit {
     ) {}
 
     ngOnInit() {
-        let crumbs = [
+        const crumbs = [
             {
                 label: 'Home',
             },
@@ -55,7 +55,7 @@ export class DiscoveredPageComponent implements OnInit {
     }
 
     authorize(executorsTable) {
-        let execs = this.selectedExecutors.map(e => {
+        const execs = this.selectedExecutors.map(e => {
             return { id: e.id, authorized: true }
         })
         this.managementService.updateExecutors(execs).subscribe(data => {

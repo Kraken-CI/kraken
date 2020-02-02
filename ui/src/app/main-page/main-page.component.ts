@@ -45,7 +45,7 @@ export class MainPageComponent implements OnInit {
         flow.fix_cnt = 0
         flow.regr_cnt = 0
         flow.issues_new = 0
-        for (let run of flow.runs) {
+        for (const run of flow.runs) {
             flow.tests_total += run.tests_total
             flow.tests_passed += run.tests_passed
             flow.fix_cnt += run.fix_cnt
@@ -70,12 +70,12 @@ export class MainPageComponent implements OnInit {
     refresh() {
         this.managementService.getProjects().subscribe(data => {
             this.projects = data.items
-            for (let proj of this.projects) {
-                for (let branch of proj.branches) {
-                    for (let flow of branch.ci_flows) {
+            for (const proj of this.projects) {
+                for (const branch of proj.branches) {
+                    for (const flow of branch.ci_flows) {
                         this.calculateFlowStats(flow)
                     }
-                    for (let flow of branch.dev_flows) {
+                    for (const flow of branch.dev_flows) {
                         this.calculateFlowStats(flow)
                     }
                 }

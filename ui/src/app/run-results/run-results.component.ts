@@ -102,9 +102,9 @@ export class RunResultsComponent implements OnInit {
 
     ngOnInit() {
         this.route.paramMap.subscribe(params => {
-            let runId = parseInt(params.get('id'))
+            const runId = parseInt(params.get('id'))
 
-            let tab = params.get('tab')
+            const tab = params.get('tab')
             if (tab === '') {
                 this.router.navigate(['/runs/' + runId + '/jobs'])
                 return
@@ -148,7 +148,7 @@ export class RunResultsComponent implements OnInit {
                         '' + run.tests_passed + ' / ' + run.tests_total
                     this.recordsCount[2] = '' + run.issues_total
 
-                    let crumbs = [
+                    const crumbs = [
                         {
                             label: 'Projects',
                             project_id: run.project_id,

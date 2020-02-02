@@ -52,7 +52,7 @@ export class TestCaseResultComponent implements OnInit {
 
         this.executionService.getResult(this.tcrId).subscribe(result => {
             this.result = result
-            let crumbs = [
+            const crumbs = [
                 {
                     label: 'Projects',
                     project_id: this.result.project_id,
@@ -85,9 +85,9 @@ export class TestCaseResultComponent implements OnInit {
             ]
             this.breadcrumbService.setCrumbs(crumbs)
 
-            let valueNames = []
-            for (let name in result.values) {
-                valueNames.push({ name: name })
+            const valueNames = []
+            for (const name in result.values) {
+                valueNames.push({ name })
             }
             this.valueNames = valueNames
             this.selectedValue = valueNames[0]
@@ -102,8 +102,8 @@ export class TestCaseResultComponent implements OnInit {
             tooltips: {
                 mode: 'index',
                 callbacks: {
-                    title: function(tooltipItems, data) {
-                        let res =
+                    title(tooltipItems, data) {
+                        const res =
                             data.datasets[0].origData[tooltipItems[0].index]
                         return TestCaseResults.resultToTxt(res)
                     },
@@ -114,12 +114,12 @@ export class TestCaseResultComponent implements OnInit {
     }
 
     statusColors(ctx) {
-        let res = ctx.dataset.origData[ctx.dataIndex]
+        const res = ctx.dataset.origData[ctx.dataIndex]
         return TestCaseResults.resultColor(res)
     }
 
     resultToChartVal(res) {
-        var resultMapping = {
+        const resultMapping = {
             0: 0, // 'Not run',
             1: 5, // 'Passed',
             2: 2, // 'Failed',
@@ -136,19 +136,19 @@ export class TestCaseResultComponent implements OnInit {
             return
         }
 
-        let lastRes = this.results[0]
+        const lastRes = this.results[0]
         this.iterations =
             lastRes.values[this.selectedValue.name].iterations || 1
 
-        let flowIds = []
-        let values = []
-        let median = []
-        let errorBars = {}
+        const flowIds = []
+        const values = []
+        const median = []
+        const errorBars = {}
         let errorBarsOk = true
         let minVal = 0
         let maxVal = null
-        for (let res of this.results.slice().reverse()) {
-            let val = res.values[this.selectedValue.name]
+        for (const res of this.results.slice().reverse()) {
+            const val = res.values[this.selectedValue.name]
             if (val.value === undefined) {
                 continue
             }
@@ -176,7 +176,7 @@ export class TestCaseResultComponent implements OnInit {
             }
         }
 
-        let valueData = {
+        const valueData = {
             labels: flowIds,
             datasets: [
                 {
@@ -191,7 +191,7 @@ export class TestCaseResultComponent implements OnInit {
             ],
         }
         if (errorBarsOk) {
-            valueData.datasets[0]['errorBars'] = errorBars
+            valueData.datasets[0].errorBars = errorBars
         }
         if (median.length > 0) {
             valueData.datasets.push({
@@ -205,7 +205,7 @@ export class TestCaseResultComponent implements OnInit {
             })
         }
         if (errorBarsOk) {
-            valueData.datasets[1]['errorBars'] = {}
+            valueData.datasets[1].errorBars = {}
         }
         this.valueData = valueData
 
@@ -230,19 +230,19 @@ export class TestCaseResultComponent implements OnInit {
                 this.results = data.items
                 this.totalRecords = data.total
 
-                let flowIds = []
-                let statuses = []
-                let origStatuses = []
-                for (let res of this.results.slice().reverse()) {
+                const flowIds = []
+                const statuses = []
+                const origStatuses = []
+                for (const res of this.results.slice().reverse()) {
                     flowIds.push(res.flow_id)
                     statuses.push(this.resultToChartVal(res.result))
-                    //statuses.push(TestCaseResults.resultToTxt(res.result));
+                    // statuses.push(TestCaseResults.resultToTxt(res.result));
                     origStatuses.push(res.result)
                 }
 
                 this.statusData = {
                     labels: flowIds,
-                    //yLabels: ['Not run', 'ERROR', 'Failed', 'Disabled', 'Unsupported', 'Passed'],
+                    // yLabels: ['Not run', 'ERROR', 'Failed', 'Disabled', 'Unsupported', 'Passed'],
                     datasets: [
                         {
                             label: 'Status',

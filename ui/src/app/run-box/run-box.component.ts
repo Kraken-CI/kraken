@@ -65,13 +65,13 @@ export class RunBoxComponent implements OnInit {
             ]
 
             // calculate bg color for box
-            if (this.run['jobs_error'] && this.run['jobs_error'] > 0) {
+            if (this.run.jobs_error && this.run.jobs_error > 0) {
                 this.bgColor = '#ffe6e6'
-            } else if (this.run['state'] == 'completed') {
+            } else if (this.run.state == 'completed') {
                 if (
-                    this.run['tests_passed'] &&
-                    this.run['tests_total'] &&
-                    this.run['tests_passed'] < this.run['tests_total']
+                    this.run.tests_passed &&
+                    this.run.tests_total &&
+                    this.run.tests_passed < this.run.tests_total
                 ) {
                     this.bgColor = '#fff9e6'
                 } else {

@@ -53,7 +53,7 @@ export class FlowResultsComponent implements OnInit {
     }
 
     _getRunForStage(stageName) {
-        for (let run of this.flow.runs) {
+        for (const run of this.flow.runs) {
             if (run.name == stageName) {
                 return run
             }
@@ -62,9 +62,9 @@ export class FlowResultsComponent implements OnInit {
     }
 
     _getParamFromStage(stageName, paramName) {
-        for (let stage of this.flow.stages) {
+        for (const stage of this.flow.stages) {
             if (stage.name == stageName) {
-                for (let param of stage.schema.parameters) {
+                for (const param of stage.schema.parameters) {
                     if (param.name == paramName) {
                         return param
                     }
@@ -75,8 +75,8 @@ export class FlowResultsComponent implements OnInit {
     }
 
     _buildSubtree(node, allParents, children) {
-        for (let c of children) {
-            let subtree = {
+        for (const c of children) {
+            const subtree = {
                 label: c.name,
                 expanded: true,
                 data: {
@@ -87,23 +87,23 @@ export class FlowResultsComponent implements OnInit {
             if (allParents[c.name] != undefined) {
                 this._buildSubtree(subtree, allParents, allParents[c.name])
             }
-            if (node['children'] == undefined) {
-                node['children'] = []
+            if (node.children == undefined) {
+                node.children = []
             }
-            node['children'].push(subtree)
+            node.children.push(subtree)
         }
     }
 
     _traverseTree(node, level) {
         if (node.data.run || node.data.stage) {
             this.flatTree.push({
-                level: level,
+                level,
                 run: node.data.run,
                 stage: node.data.stage,
             })
         }
-        if (node['children']) {
-            for (let c of node['children']) {
+        if (node.children) {
+            for (const c of node.children) {
                 this._traverseTree(c, level + 1)
             }
         }
@@ -112,7 +112,7 @@ export class FlowResultsComponent implements OnInit {
     refresh() {
         this.executionService.getFlow(this.flowId).subscribe(flow => {
             this.flow = flow
-            let crumbs = [
+            const crumbs = [
                 {
                     label: 'Projects',
                     project_id: flow.project_id,
@@ -136,7 +136,7 @@ export class FlowResultsComponent implements OnInit {
             this.breadcrumbService.setCrumbs(crumbs)
 
             // collect args from flow
-            let args = []
+            const args = []
             let sectionArgs = []
             if (this.flow.kind == 'dev') {
                 sectionArgs.push({
@@ -149,21 +149,21 @@ export class FlowResultsComponent implements OnInit {
                 args: sectionArgs,
             })
             // collect args from runs
-            for (let run of this.flow.runs) {
+            for (const run of this.flow.runs) {
                 sectionArgs = []
-                for (let a in run.args) {
-                    let param = this._getParamFromStage(run.name, a)
+                for (const a in run.args) {
+                    const param = this._getParamFromStage(run.name, a)
                     let description = ''
                     let defaultValue
                     if (param) {
                         description = param.description
-                        defaultValue = param['default']
+                        defaultValue = param.default
                     }
 
                     sectionArgs.push({
                         name: a,
                         value: run.args[a],
-                        description: description,
+                        description,
                         default: defaultValue,
                     })
                 }
@@ -177,10 +177,10 @@ export class FlowResultsComponent implements OnInit {
             this.args = args
 
             // build tree of runs
-            let allParents = {
+            const allParents = {
                 root: [],
             }
-            for (let stage of flow.stages) {
+            for (const stage of flow.stages) {
                 if (allParents[stage.schema.parent] == undefined) {
                     allParents[stage.schema.parent] = []
                 }
@@ -195,12 +195,12 @@ export class FlowResultsComponent implements OnInit {
                     data: flow,
                 },
             ]
-            this._buildSubtree(this.runsTree[0], allParents, allParents['root'])
-            //console.info(this.runsTree);
+            this._buildSubtree(this.runsTree[0], allParents, allParents.root)
+            // console.info(this.runsTree);
 
             this.flatTree = []
             this._traverseTree(this.runsTree[0], 0)
-            //console.info('flatTree', this.flatTree);
+            // console.info('flatTree', this.flatTree);
         })
     }
 
@@ -225,7 +225,7 @@ export class FlowResultsComponent implements OnInit {
                     label: 'Run this stage',
                     icon: 'pi pi-caret-right',
                     command: () => {
-                        let stage = node.data.stage
+                        const stage = node.data.stage
                         console.info(stage.schema.parameters)
                         if (stage.schema.parameters.length == 0) {
                             this.executionService
@@ -263,7 +263,7 @@ export class FlowResultsComponent implements OnInit {
     }
 
     onStageRun(newRun) {
-        //console.info(newRun)
+        // console.info(newRun)
         this.refresh()
     }
 }

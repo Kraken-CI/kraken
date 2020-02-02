@@ -67,7 +67,7 @@ export class GroupsPageComponent implements OnInit {
     }
 
     ngOnInit() {
-        let crumbs = [
+        const crumbs = [
             {
                 label: 'Home',
             },

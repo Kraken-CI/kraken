@@ -1,9 +1,9 @@
-//import moment from 'moment';
+// import moment from 'moment';
 import moment from 'moment-timezone'
 
 export function datetimeToLocal(d, fmt) {
     try {
-        var tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+        let tz = Intl.DateTimeFormat().resolvedOptions().timeZone
         if (!tz) {
             tz = moment.tz.guess()
         }

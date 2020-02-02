@@ -58,14 +58,14 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
             // get last fragment
             fragment = this.logFragments[this.logFragments.length - 1]
         }
-        for (let l of logs) {
+        for (const l of logs) {
             if (fragment === undefined) {
                 let title = ''
                 if (l.step !== undefined) {
                     title = l.tool
                 }
                 fragment = {
-                    title: title,
+                    title,
                     step: l.step,
                     expanded: true,
                     logs: [],
@@ -80,7 +80,7 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
                         title = l.tool
                     }
                     fragment = {
-                        title: title,
+                        title,
                         step: l.step,
                         expanded: true,
                         logs: [],
@@ -91,15 +91,15 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
             if (fragment.title === '' && l.tool !== '') {
                 fragment.title = l.tool
             }
-            l['cls'] = ''
+            l.cls = ''
             if (l.level === 'ERROR') {
-                l['cls'] = 'log-red'
+                l.cls = 'log-red'
             }
             if (l.message.includes('ERRO')) {
-                for (let line of l.message.match(/[^\r\n]+/g)) {
-                    let l2 = { message: line, cls: l['cls'] }
+                for (const line of l.message.match(/[^\r\n]+/g)) {
+                    const l2 = { message: line, cls: l.cls }
                     if (line.includes('ERRO')) {
-                        l2['cls'] = 'log-red'
+                        l2.cls = 'log-red'
                     }
                     fragment.logs.push(l2)
                 }
@@ -133,7 +133,7 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
         }
         let msg = ''
         let cls = ''
-        for (let step of job.steps) {
+        for (const step of job.steps) {
             if (step.index === stepIdx) {
                 if (step.status === 2) {
                     msg = 'Step succeeded'
@@ -152,7 +152,7 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
                 logs: [
                     {
                         message: msg,
-                        cls: cls,
+                        cls,
                     },
                 ],
             })
@@ -160,7 +160,7 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
     }
 
     _processNewLogs(data, skippedLogsCount) {
-        //console.info('process new logs', data)
+        // console.info('process new logs', data)
         if (skippedLogsCount > 0) {
             this.logFragments.push({
                 title: '',
@@ -184,15 +184,15 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
 
     _processNextLogs(jobId, data) {
         if (jobId !== this._jobId) {
-            //console.info('!!!! job switch - stop processing in processNextLogs', jobId)
+            // console.info('!!!! job switch - stop processing in processNextLogs', jobId)
             return
         }
-        //console.info('loaded next ' + data.items.length + ' of ' + data.total, jobId)
+        // console.info('loaded next ' + data.items.length + ' of ' + data.total, jobId)
         this.skippedAngLoadedLogs += data.items.length
 
         if (data.items.length === 0) {
             if (data.job.state === 5 && this.lastAttempts === 4) {
-                //console.info('completed loading', jobId)
+                // console.info('completed loading', jobId)
                 this._addStepStatusEntryToLogs(
                     data.job,
                     data.job.steps.length - 1
@@ -202,12 +202,12 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
                     this.lastAttempts += 1
                 }
                 // nothing loaded but still running then wait 3 seconds and then load more
-                //console.info('nothing loaded but still running then wait 3 seconds and then load more', jobId)
+                // console.info('nothing loaded but still running then wait 3 seconds and then load more', jobId)
                 this.timer2 = setTimeout(() => {
-                    //console.info('timer2 fired ', jobId, this.timer2)
+                    // console.info('timer2 fired ', jobId, this.timer2)
                     this.timer2 = null
                     if (jobId !== this._jobId) {
-                        //console.info('!!!! job switch - stop processing in timer2 ', jobId, this.timer2)
+                        // console.info('!!!! job switch - stop processing in timer2 ', jobId, this.timer2)
                         return
                     }
                     this.executionService
@@ -233,7 +233,7 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
             if (num > 1000) {
                 num = 1000
             }
-            //console.info('load the rest ' + num + ' immediatelly', jobId)
+            // console.info('load the rest ' + num + ' immediatelly', jobId)
             this.executionService
                 .getJobLogs(jobId, this.skippedAngLoadedLogs, num, 'asc')
                 .subscribe(data2 => {
@@ -245,12 +245,12 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
             }
             this._addLoadingMoreEntryToLogs()
             // wait for next logs 3 seconds
-            //console.info('wait for next logs 3 seconds', jobId)
+            // console.info('wait for next logs 3 seconds', jobId)
             this.timer3 = setTimeout(() => {
-                //console.info('timer3 fired ', jobId, this.timer3)
+                // console.info('timer3 fired ', jobId, this.timer3)
                 this.timer3 = null
                 if (jobId !== this._jobId) {
-                    //console.info('!!!! job switch - stop processing in timer3 ', jobId, this.timer3)
+                    // console.info('!!!! job switch - stop processing in timer3 ', jobId, this.timer3)
                     return
                 }
                 this.executionService
@@ -261,26 +261,26 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
             }, 3000)
             return
         } else {
-            //console.info('completed loading at next shot', jobId)
+            // console.info('completed loading at next shot', jobId)
             this._addStepStatusEntryToLogs(data.job, data.job.steps.length - 1)
         }
     }
 
     loadJobLogs(jobId) {
-        //console.info('loading logs for ', jobId)
+        // console.info('loading logs for ', jobId)
 
         if (this.timer1 !== null) {
-            //console.info('!!!! canceled timer1 ', jobId, this.timer1)
+            // console.info('!!!! canceled timer1 ', jobId, this.timer1)
             clearTimeout(this.timer1)
             this.timer1 = null
         }
         if (this.timer2 !== null) {
-            //console.info('!!!! canceled timer2 ', jobId, this.timer2)
+            // console.info('!!!! canceled timer2 ', jobId, this.timer2)
             clearTimeout(this.timer2)
             this.timer2 = null
         }
         if (this.timer3 !== null) {
-            //console.info('!!!! canceled timer3 ', jobId, this.timer3)
+            // console.info('!!!! canceled timer3 ', jobId, this.timer3)
             clearTimeout(this.timer3)
             this.timer3 = null
         }
@@ -290,10 +290,10 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
             .getJobLogs(jobId, 0, 200, 'desc')
             .subscribe(data => {
                 if (jobId !== this._jobId) {
-                    //console.info('!!!! job switch - stop processing getJobLogs', jobId)
+                    // console.info('!!!! job switch - stop processing getJobLogs', jobId)
                     return
                 }
-                //console.info('loaded first ' + data.items.length + ' of ' + data.total, jobId)
+                // console.info('loaded first ' + data.items.length + ' of ' + data.total, jobId)
                 this.skippedAngLoadedLogs = data.total
 
                 this._processNewLogs(data, data.total - 200)
@@ -304,12 +304,12 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
                         this.lastAttempts += 1
                     }
                     // wait for next logs 3 seconds
-                    //console.info('waiting for next logs 3 seconds ', jobId)
+                    // console.info('waiting for next logs 3 seconds ', jobId)
                     this.timer1 = setTimeout(() => {
-                        //console.info('timer1 fired ', jobId, this.timer1)
+                        // console.info('timer1 fired ', jobId, this.timer1)
                         this.timer1 = null
                         if (jobId !== this._jobId) {
-                            //console.info('!!!! job switch - stop processing in timer1 ', jobId, this.timer1)
+                            // console.info('!!!! job switch - stop processing in timer1 ', jobId, this.timer1)
                             return
                         }
                         this.executionService
@@ -324,7 +324,7 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
                             })
                     }, 3000)
                 } else {
-                    //console.info('completed loading at first shot', jobId)
+                    // console.info('completed loading at first shot', jobId)
                     this._addStepStatusEntryToLogs(
                         data.job,
                         data.job.steps.length - 1
@@ -340,17 +340,17 @@ export class LogBoxComponent implements OnInit, AfterViewInit {
 
     ngOnDestroy() {
         if (this.timer1 !== null) {
-            //console.info('!!!! canceled timer1 on destroy ', this.timer1)
+            // console.info('!!!! canceled timer1 on destroy ', this.timer1)
             clearTimeout(this.timer1)
             this.timer1 = null
         }
         if (this.timer2 !== null) {
-            //console.info('!!!! canceled timer2 on destroy ', this.timer2)
+            // console.info('!!!! canceled timer2 on destroy ', this.timer2)
             clearTimeout(this.timer2)
             this.timer2 = null
         }
         if (this.timer3 !== null) {
-            //console.info('!!!! canceled timer3 on destroy ', this.timer3)
+            // console.info('!!!! canceled timer3 on destroy ', this.timer3)
             clearTimeout(this.timer3)
             this.timer3 = null
         }

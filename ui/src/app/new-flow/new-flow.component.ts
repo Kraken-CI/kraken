@@ -38,7 +38,7 @@ export class NewFlowComponent implements OnInit {
             this.branch = branch
 
             // prepare breadcrumb
-            let crumbs = [
+            const crumbs = [
                 {
                     label: 'Projects',
                     project_id: branch.project_id,
@@ -53,8 +53,8 @@ export class NewFlowComponent implements OnInit {
             this.breadcrumbService.setCrumbs(crumbs)
 
             // prepare args form
-            let args = { Common: { BRANCH: branch.branch_name } }
-            let params = []
+            const args = { Common: { BRANCH: branch.branch_name } }
+            const params = []
 
             if (this.kind == 'dev') {
                 params.push({
@@ -68,7 +68,7 @@ export class NewFlowComponent implements OnInit {
                 })
             }
 
-            for (let s of branch.stages) {
+            for (const s of branch.stages) {
                 if (
                     s.schema.parent != 'root' ||
                     s.schema.triggers.parent === false
@@ -80,8 +80,8 @@ export class NewFlowComponent implements OnInit {
                     params: s.schema.parameters,
                 })
                 args[s.name] = {}
-                for (let p of s.schema.parameters) {
-                    args[s.name][p.name] = p['default']
+                for (const p of s.schema.parameters) {
+                    args[s.name][p.name] = p.default
                 }
             }
             this.params = params
@@ -90,13 +90,13 @@ export class NewFlowComponent implements OnInit {
     }
 
     submitFlow() {
-        let flow = {
+        const flow = {
             args: this.args,
         }
         this.executionService
             .createFlow(this.branchId, this.kind, flow)
             .subscribe(flow => {
-                //console.info(flow)
+                // console.info(flow)
                 this.router.navigate(['/flows/' + flow.id])
             })
     }

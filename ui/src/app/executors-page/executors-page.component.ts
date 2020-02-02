@@ -70,7 +70,7 @@ export class ExecutorsPageComponent implements OnInit {
     }
 
     ngOnInit() {
-        let crumbs = [
+        const crumbs = [
             {
                 label: 'Home',
             },
@@ -238,16 +238,16 @@ export class ExecutorsPageComponent implements OnInit {
         // if (executorTab.name === executorTab.executor.name) {
         //     return
         // }
-        let groups = this.executorTab.executor.groups.map(g => {
+        const groups = this.executorTab.executor.groups.map(g => {
             return { id: g.id }
         })
-        const ex = { groups: groups }
+        const ex = { groups }
         this.managementService
             .updateExecutor(this.executorTab.executor.id, ex)
             .subscribe(
                 data => {
                     console.info('updated', data)
-                    //executorTab.executor.name = data.name
+                    // executorTab.executor.name = data.name
                     this.msgSrv.add({
                         severity: 'success',
                         summary: 'Executor updated',

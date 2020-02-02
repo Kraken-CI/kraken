@@ -1,6 +1,6 @@
 export class TestCaseResults {
     static resultColor(result) {
-        var mapping = {
+        const mapping = {
             0: '#FF8800',
             1: '#008800',
             2: '#FF2200',
@@ -12,7 +12,7 @@ export class TestCaseResults {
     }
 
     static formatResult(result) {
-        var resultMapping = {
+        const resultMapping = {
             0: {
                 style: 'color: ' + TestCaseResults.resultColor(result) + ';',
                 txt: 'Not run',
@@ -39,13 +39,13 @@ export class TestCaseResults {
             },
         }
 
-        let val = resultMapping[result]
+        const val = resultMapping[result]
 
         return '<span style="' + val.style + '">' + val.txt + '</span>'
     }
 
     static resultToTxt(result) {
-        var resultMapping = {
+        const resultMapping = {
             0: 'Not run',
             1: 'Passed',
             2: 'Failed',

@@ -75,21 +75,21 @@ export class ProjectSettingsComponent implements OnInit {
     }
 
     prepareSecret(secret) {
-        let secretVal = {
+        const secretVal = {
             name: secret.name,
             kind: secret.kind,
         }
         if (secret.kind === 'simple') {
-            secretVal['secret'] = secret['secret']
+            secretVal.secret = secret.secret
         } else if (secret.kind === 'ssh-key') {
-            secretVal['username'] = secret['username']
-            secretVal['key'] = secret['key']
+            secretVal.username = secret.username
+            secretVal.key = secret.key
         }
         return secretVal
     }
 
     secretAdd() {
-        let secretVal = this.prepareSecret(this.secretForm.value)
+        const secretVal = this.prepareSecret(this.secretForm.value)
         this.managementService
             .createSecret(this.projectId, secretVal)
             .subscribe(
@@ -119,12 +119,12 @@ export class ProjectSettingsComponent implements OnInit {
     }
 
     secretSave() {
-        let secretVal = this.prepareSecret(this.secretForm.value)
+        const secretVal = this.prepareSecret(this.secretForm.value)
         this.managementService
             .updateSecret(this.secretForm.value.id, secretVal)
             .subscribe(
                 secret => {
-                    for (let idx in this.project.secrets) {
+                    for (const idx in this.project.secrets) {
                         if (this.project.secrets[idx].id == secret.id) {
                             this.project.secrets[idx] = secret
                             break
@@ -154,7 +154,7 @@ export class ProjectSettingsComponent implements OnInit {
     }
 
     secretDelete() {
-        let secretVal = this.secretForm.value
+        const secretVal = this.secretForm.value
         this.confirmationService.confirm({
             message:
                 'Do you really want to delete secret "' + secretVal.name + '"?',
@@ -193,16 +193,16 @@ export class ProjectSettingsComponent implements OnInit {
         this.selectedSecret = secret
         this.selectedSecret.selectedClass = 'selectedClass'
 
-        var secretVal = this.prepareSecret(secret)
-        secretVal['id'] = secret.id
-        if (secretVal['secret'] === undefined) {
-            secretVal['secret'] = ''
+        const secretVal = this.prepareSecret(secret)
+        secretVal.id = secret.id
+        if (secretVal.secret === undefined) {
+            secretVal.secret = ''
         }
-        if (secretVal['username'] === undefined) {
-            secretVal['username'] = ''
+        if (secretVal.username === undefined) {
+            secretVal.username = ''
         }
-        if (secretVal['key'] === undefined) {
-            secretVal['key'] = ''
+        if (secretVal.key === undefined) {
+            secretVal.key = ''
         }
         this.secretForm.setValue(secretVal)
 
@@ -214,16 +214,16 @@ export class ProjectSettingsComponent implements OnInit {
     }
 
     getOrGenerateSecret() {
-        if (!this.project.webhooks['github_secret']) {
-            this.project.webhooks['github_secret'] = [...Array(20)]
+        if (!this.project.webhooks.github_secret) {
+            this.project.webhooks.github_secret = [...Array(20)]
                 .map(i => (~~(Math.random() * 36)).toString(36))
                 .join('')
         }
-        return this.project.webhooks['github_secret']
+        return this.project.webhooks.github_secret
     }
 
     saveWebhooks() {
-        let projectVal = { webhooks: this.project.webhooks }
+        const projectVal = { webhooks: this.project.webhooks }
         this.managementService
             .updateProject(this.projectId, projectVal)
             .subscribe(

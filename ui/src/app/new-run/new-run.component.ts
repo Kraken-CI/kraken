@@ -30,7 +30,7 @@ export class NewRunComponent implements OnInit {
         this.executionService.getFlow(this.flowId).subscribe(flow => {
             this.flow = flow
 
-            for (let s of flow.stages) {
+            for (const s of flow.stages) {
                 if (s.id == this.stageId) {
                     this.stage = s
                     break
@@ -38,7 +38,7 @@ export class NewRunComponent implements OnInit {
             }
 
             // prepare breadcrumb
-            let crumbs = [
+            const crumbs = [
                 {
                     label: 'Projects',
                     project_id: flow.project_id,
@@ -62,9 +62,9 @@ export class NewRunComponent implements OnInit {
             this.breadcrumbService.setCrumbs(crumbs)
 
             // prepare args form
-            let args = {}
-            for (let p of this.stage.schema.parameters) {
-                args[p.name] = p['default']
+            const args = {}
+            for (const p of this.stage.schema.parameters) {
+                args[p.name] = p.default
             }
             this.params = this.stage.schema.parameters
             this.args = args
@@ -72,7 +72,7 @@ export class NewRunComponent implements OnInit {
     }
 
     submitRun() {
-        let run = {
+        const run = {
             stage_id: this.stageId,
             args: this.args,
         }

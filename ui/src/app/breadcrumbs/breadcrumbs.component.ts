@@ -54,9 +54,9 @@ export class BreadcrumbsComponent implements OnInit {
             let getFlows = false
             let getRuns = false
 
-            let data2 = []
-            for (let it of data) {
-                let it2 = {
+            const data2 = []
+            for (const it of data) {
+                const it2 = {
                     label: it.label,
                     url: '',
                     id: '',
@@ -116,14 +116,14 @@ export class BreadcrumbsComponent implements OnInit {
                 (this.branches[this.currProjectId] === undefined ||
                     this.branches[this.currProjectId].length === 0)
             ) {
-                let projId = this.currProjectId
+                const projId = this.currProjectId
                 this.managementService.getProject(projId).subscribe(data => {
                     this.branches[projId] = data.branches
                 })
             }
 
             if (getFlows) {
-                let flowsKey = '' + this.currBranchId + '-' + this.currFlowKind
+                const flowsKey = '' + this.currBranchId + '-' + this.currFlowKind
                 if (
                     this.flows[flowsKey] === undefined ||
                     this.flows[flowsKey].length === 0
@@ -148,7 +148,7 @@ export class BreadcrumbsComponent implements OnInit {
                 (this.runs[this.currFlowId] === undefined ||
                     this.runs[this.currFlowId].length === 0)
             ) {
-                let flowId = this.currFlowId
+                const flowId = this.currFlowId
                 this.executionService.getFlow(flowId).subscribe(data => {
                     this.runs[flowId] = data.runs
                 })
@@ -180,7 +180,7 @@ export class BreadcrumbsComponent implements OnInit {
                 )
                 break
             case 'Flows':
-                let flowsKey = '' + this.currBranchId + '-' + this.currFlowKind
+                const flowsKey = '' + this.currBranchId + '-' + this.currFlowKind
                 this.crumbMenuItems = this.flows[flowsKey].map(f => {
                     return { label: f.id, routerLink: '/flows/' + f.id }
                 })
