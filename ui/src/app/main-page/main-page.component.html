@@ -46,7 +46,7 @@
             <table *ngIf="flows.flows.length > 0">
               <tr *ngFor="let flow of flows.flows" style="padding: 3px 6px;">
                 <td><b><a routerLink="/flows/{{ flow.id }}">{{ flow.id }}</a>.</b><td>
-                <td><a routerLink="/flows/{{ flow.id }}" style="color: black;">{{ flow.created | localtime:'YYYY-MM-DD hh:mm' }}</a><td>
+                <td><a routerLink="/flows/{{ flow.id }}" style="color: black;">{{ flow.created | localtime:'YYYY-MM-DD HH:mm' }}</a><td>
                 <td>
                   <span *ngIf="flow.tests_total > 0" [ngStyle]="{'border-radius': '4px', 'background-color': flow.tests_color, 'padding': '1px 3px', 'margin-right': '2px'}">{{ flow.tests_pass_ratio }}% pass</span>
                   <span *ngIf="flow.fix_cnt > 0" style="border-radius: 4px; background-color: #beffbe; padding: 1px 3px; margin-right: 2px;">{{ flow.fix_cnt }} fixes</span>

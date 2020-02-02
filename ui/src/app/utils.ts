@@ -16,7 +16,7 @@ export function datetimeToLocal(d, fmt) {
         }
 
         if (!fmt) {
-            fmt = 'YYYY-MM-DD hh:mm:ss'
+            fmt = 'YYYY-MM-DD HH:mm:ss'
         }
 
         return d.format(fmt) + tz;
