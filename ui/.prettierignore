@@ -1,0 +1,16 @@
+*html
+browserslist
+*~
+*sass
+.editorconfig
+.gitignore
+.prettierignore
+*.sh
+.gitkeep
+src/app/backend/*
+*.ico
+.dockerignore
+*.in
+Dockerfile
+nginx.conf
+dist
