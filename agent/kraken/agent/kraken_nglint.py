@@ -44,17 +44,26 @@ def run_analysis(step, report_issue=None):
     except:
         git_url = None
 
+    repo_parent = None
+    cmd = 'git rev-parse --show-toplevel'
+    ret, out = utils.execute(cmd, cwd=cwd, tracing=False)
+    if ret == 0:
+        repo_parent = out.strip()
+
     cmd = 'npx ng lint --format json --force'
     ret, out = utils.execute(cmd, cwd=cwd, out_prefix='', timeout=180)
     if ret != 0:
         log.error('ng list exited with non-zero retcode: %s', ret)
         return ret, 'ng list exited with non-zero retcode'
 
-    cwd = os.path.abspath(cwd) + os.path.sep
 
     result = json.loads(out)
     for issue in result:
-        filepath = issue['name'].replace(cwd, '')
+        if repo_parent:
+            filepath = issue['name'].replace(repo_parent, '')
+        else:
+            filepath = issue['name']
+
         log.info('%s:%s  %s', filepath, issue['startPosition']['line'], issue['failure'])
         if git_url:
             issue['url'] = '%s/%s#L%s' % (git_url, filepath, issue['startPosition']['line'])
