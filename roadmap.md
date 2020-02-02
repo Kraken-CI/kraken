@@ -24,6 +24,7 @@
 * DONE add monitoring executors in watchdog with timeout 10mins
 * DONE timeout for whole run
 * DONE przerobić stronę główną na bardziej statyczną bez rozwijanego drzewa
+* DONE czas na branchu jest pokazywany jako AM a jest PM
 * support repos:
 ** trigger on commit
 ** DONE trigger on github push event
@@ -41,5 +42,4 @@
 * add handling NOT FOUND when ID in URL is incorrect
 * kraken_shell: clearly report timeout errors
 * fork branch operation with test results history continuity
-* czas na branchu jest pokazywany jako AM a jest PM
 * jak sie wywali poprzedni stage to nie startować następnego
