@@ -1,4 +1,4 @@
-import { Component } from '@angular/core'
+import { Component, OnInit } from '@angular/core'
 
 import { PanelMenuModule } from 'primeng/panelmenu'
 import { MenuModule } from 'primeng/menu'
@@ -14,7 +14,7 @@ import { environment } from './../environments/environment'
     templateUrl: './app.component.html',
     styleUrls: ['./app.component.sass'],
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
     title = 'Kraken'
     logoClass = 'logo1'
     krakenVersion = '0.4'

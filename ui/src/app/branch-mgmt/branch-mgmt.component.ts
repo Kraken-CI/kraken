@@ -55,7 +55,7 @@ export class BranchMgmtComponent implements OnInit {
 
     ngOnInit() {
         this.schemaCheckContent = { schema: '', error: '' }
-        this.branchId = parseInt(this.route.snapshot.paramMap.get('id'))
+        this.branchId = parseInt(this.route.snapshot.paramMap.get('id'), 10)
         this.refresh()
     }
 
@@ -63,10 +63,10 @@ export class BranchMgmtComponent implements OnInit {
         this.managementService.getBranch(this.branchId).subscribe(branch => {
             this.branch = branch
             this.newBranchName = branch.name
-            if (this.stageName != '') {
+            if (this.stageName !== '') {
                 // this is a finish of adding new stage ie. select newly created stage
-                for (let s of this.branch.stages) {
-                    if (s.name == this.stageName) {
+                for (const s of this.branch.stages) {
+                    if (s.name === this.stageName) {
                         this.stage = s
                         this.stageName = ''
                         break
@@ -77,7 +77,7 @@ export class BranchMgmtComponent implements OnInit {
                 this.selectStage(branch.stages[0])
             }
 
-            let crumbs = [
+            const crumbs = [
                 {
                     label: 'Projects',
                     project_id: branch.project_id,
@@ -110,7 +110,7 @@ export class BranchMgmtComponent implements OnInit {
     }
 
     newStageKeyDown(event) {
-        if (event.key == 'Enter') {
+        if (event.key === 'Enter') {
             this.addNewStage()
         }
     }
@@ -148,7 +148,7 @@ export class BranchMgmtComponent implements OnInit {
 
     saveStage() {
         this.saveErrorMsg = ''
-        let stage = {
+        const stage = {
             name: this.stage.name,
             schema_code: this.stage.schema_code,
             enabled: this.stage.enabled,
@@ -217,10 +217,10 @@ export class BranchMgmtComponent implements OnInit {
     }
 
     branchNameKeyDown(event, branchNameInplace) {
-        if (event.key == 'Enter') {
+        if (event.key === 'Enter') {
             branchNameInplace.deactivate()
         }
-        if (event.key == 'Escape') {
+        if (event.key === 'Escape') {
             branchNameInplace.deactivate()
             this.newBranchName = this.branch.name
         }
@@ -230,8 +230,8 @@ export class BranchMgmtComponent implements OnInit {
         this.managementService.updateStage(this.stage.id, stageData).subscribe(
             stage => {
                 this.selectStage(stage)
-                for (let idx in this.branch.stages) {
-                    if (this.branch.stages[idx].id == stage.id) {
+                for (const idx in this.branch.stages) {
+                    if (this.branch.stages[idx].id === stage.id) {
                         this.branch.stages[idx] = stage
                         break
                     }
@@ -263,14 +263,14 @@ export class BranchMgmtComponent implements OnInit {
     }
 
     stageNameKeyDown($event, stageNameInplace) {
-        if (event['key'] == 'Enter') {
+        if (event['key'] === 'Enter') {
             stageNameInplace.deactivate()
             let stage = {
                 name: this.newStageName,
             }
             this.doSaveStage(stage)
         }
-        if (event['key'] == 'Escape') {
+        if (event['key'] === 'Escape') {
             stageNameInplace.deactivate()
         }
     }

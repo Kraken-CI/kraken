@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core'
 import { Routes, RouterModule } from '@angular/router'
 
-//import { AuthGuard } from './auth.guard';
+// import { AuthGuard } from './auth.guard';
 import { MainPageComponent } from './main-page/main-page.component'
 import { BranchResultsComponent } from './branch-results/branch-results.component'
 import { BranchMgmtComponent } from './branch-mgmt/branch-mgmt.component'
@@ -20,7 +20,7 @@ const routes: Routes = [
         path: '',
         component: MainPageComponent,
         pathMatch: 'full',
-        //canActivate: [AuthGuard],
+        // canActivate: [AuthGuard],
     },
     // {
     //     path: 'login',
