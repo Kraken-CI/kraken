@@ -10,10 +10,12 @@
 <p-dialog header="Schema Validation" [(visible)]="schemaCheckDisplay" [modal]="true" [responsive]="true"
           [style]="{minWidth: '400px'}" [minY]="70" [maximizable]="true">
   <pre *ngIf="schemaCheckContent.error">{{ schemaCheckContent.error }}</pre>
-  <ngx-codemirror *ngIf="schemaCheckContent.schema"
-    id="ngx-cm-json"
-    [(ngModel)]="schemaCheckContent.schema"
-    [options]="codeMirrorJsonOpts"></ngx-codemirror>
+  <div style="height: calc(100vh - 200px);">
+    <ngx-codemirror *ngIf="schemaCheckContent.schema"
+                    id="ngx-cm-json"
+                    [(ngModel)]="schemaCheckContent.schema"
+                    [options]="codeMirrorJsonOpts"></ngx-codemirror>
+  </div>
 
   <p-footer style="display: flex; justify-content: space-between; align-items: center;">
     <div *ngIf="schemaCheckContent.schema">

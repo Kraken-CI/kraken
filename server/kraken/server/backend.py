@@ -62,7 +62,7 @@ def _handle_get_job(executor):
     if executor.job.run.flow.trigger_data:
         job['trigger_data'] = executor.job.run.flow.trigger_data
 
-    # process steps
+    # prepare steps
     project = executor.job.run.flow.branch.project
     for step in job['steps']:
         # insert secret from ssh-key

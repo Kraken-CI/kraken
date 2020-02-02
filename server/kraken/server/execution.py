@@ -48,6 +48,7 @@ def _substitute_vars(fields, args):
     new_fields = {}
     for f, val in fields.items():
         if not isinstance(val, str):
+            new_fields[f] = val
             continue
         for var in re.findall('#{[A-Z]+}', val):
             name = var[2:-1]

@@ -17,6 +17,7 @@ setup(
             'shell = kraken.agent.kraken_shell',
             'pylint = kraken.agent.kraken_pylint',
             'cloc = kraken.agent.kraken_cloc',
+            'nglint = kraken.agent.kraken_nglint',
         ]
     },
 )

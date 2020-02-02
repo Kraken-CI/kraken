@@ -137,8 +137,13 @@ export class TestCaseResultComponent implements OnInit {
         }
 
         const lastRes = this.results[0]
-        this.iterations =
-            lastRes.values[this.selectedValue.name].iterations || 1
+        this.iterations = 1
+        for (let res of this.results) {
+            if (res.values) {
+                this.iterations = res.values[this.selectedValue.name].iterations
+                break
+            }
+        }
 
         const flowIds = []
         const values = []
@@ -148,6 +153,9 @@ export class TestCaseResultComponent implements OnInit {
         let minVal = 0
         let maxVal = null
         for (const res of this.results.slice().reverse()) {
+            if (!res.values) {
+                continue
+            }
             const val = res.values[this.selectedValue.name]
             if (val.value === undefined) {
                 continue
@@ -187,6 +195,7 @@ export class TestCaseResultComponent implements OnInit {
                     backgroundColor: '#f00',
                     lineTension: 0,
                     borderWidth: 2,
+                    errorBars: null,
                 },
             ],
         }
@@ -202,6 +211,7 @@ export class TestCaseResultComponent implements OnInit {
                 backgroundColor: '#f88',
                 lineTension: 0,
                 borderWidth: 1,
+                errorBars: null,
             })
         }
         if (errorBarsOk) {

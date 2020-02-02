@@ -76,8 +76,12 @@ export class ProjectSettingsComponent implements OnInit {
 
     prepareSecret(secret) {
         const secretVal = {
+            id: null,
             name: secret.name,
             kind: secret.kind,
+            secret: null,
+            username: null,
+            key: null,
         }
         if (secret.kind === 'simple') {
             secretVal.secret = secret.secret

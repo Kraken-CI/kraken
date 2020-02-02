@@ -643,6 +643,7 @@ def prepare_initial_data():
         'artifacts': {'type': 'choice:file', 'upload': 'text'},
         'pylint': {'rcfile': 'text', 'modules_or_packages': 'text'},
         'cloc': {'not-match-f': 'text', 'exclude-dir': 'text'},
+        'nglint': {},
     }
     tools = {}
     for name, fields in tool_fields.items():
