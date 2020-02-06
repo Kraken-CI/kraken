@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core'
+import { Title } from '@angular/platform-browser'
 
 import { ManagementService } from '../backend/api/management.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
@@ -16,10 +17,12 @@ export class DiscoveredPageComponent implements OnInit {
 
     constructor(
         protected managementService: ManagementService,
-        protected breadcrumbService: BreadcrumbsService
+        protected breadcrumbService: BreadcrumbsService,
+        private titleService: Title
     ) {}
 
     ngOnInit() {
+        this.titleService.setTitle('Kraken - Discovered Executors')
         const crumbs = [
             {
                 label: 'Home',

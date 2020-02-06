@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core'
 import { Router, ActivatedRoute, ParamMap } from '@angular/router'
+import { Title } from '@angular/platform-browser'
 
 import { PanelModule } from 'primeng/panel'
 import { TreeModule } from 'primeng/tree'
@@ -32,10 +33,12 @@ export class MainPageComponent implements OnInit {
         protected executionService: ExecutionService,
         protected managementService: ManagementService,
         protected breadcrumbService: BreadcrumbsService,
-        private msgSrv: MessageService
+        private msgSrv: MessageService,
+        private titleService: Title
     ) {}
 
     ngOnInit() {
+        this.titleService.setTitle('Kraken - Main')
         this.refresh()
     }
 

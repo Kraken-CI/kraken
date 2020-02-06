@@ -577,8 +577,8 @@ class Executor(db.Model, DatesMixin):
                     job=self.job.get_json() if self.job else None)
 
 
-class Preference(db.Model):
-    __tablename__ = "preferences"
+class Setting(db.Model):
+    __tablename__ = "settings"
     id = Column(Integer, primary_key=True)
     name = Column(Unicode(50))
     value = Column(Text)
@@ -607,14 +607,15 @@ class Preference(db.Model):
             self.value = value
 
 
-INITIAL_PREFERENCES = {
-    "smtp_server": ""
+INITIAL_SETTINGS = {
+    "smtp_server": "",
+    "slack_token": ""
 }
 
 
 def _prepare_initial_preferences():
-    for name, val in INITIAL_PREFERENCES.items():
-        p = Preference.query.filter_by(name=name).one_or_none()
+    for name, val in INITIAL_SETTINGS.items():
+        p = Setting.query.filter_by(name=name).one_or_none()
         if p is not None:
             continue
         if isinstance(val, bool):
@@ -628,7 +629,7 @@ def _prepare_initial_preferences():
             val = ''
         else:
             val_type = 'text'
-        Preference(name=name, value=val, val_type=val_type)
+        Setting(name=name, value=val, val_type=val_type)
     db.session.commit()
 
 

@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core'
 import { Router, ActivatedRoute, ParamMap } from '@angular/router'
+import { Title } from '@angular/platform-browser'
 import { Observable } from 'rxjs'
 import { switchMap } from 'rxjs/operators'
 
@@ -35,7 +36,8 @@ export class BranchResultsComponent implements OnInit {
         private router: Router,
         protected executionService: ExecutionService,
         protected breadcrumbService: BreadcrumbsService,
-        private msgSrv: MessageService
+        private msgSrv: MessageService,
+        private titleService: Title
     ) {}
 
     ngOnInit() {
@@ -228,6 +230,7 @@ export class BranchResultsComponent implements OnInit {
         ]
 
         this.executionService.getBranch(this.branchId).subscribe(branch => {
+            this.titleService.setTitle('Kraken - Branch Results - ' + branch.name + ' ' + this.kind)
             this.branch = branch
             this.updateBreadcrumb()
         })

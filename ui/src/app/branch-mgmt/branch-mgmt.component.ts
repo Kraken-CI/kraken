@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core'
 import { Router, ActivatedRoute, ParamMap } from '@angular/router'
+import { Title } from '@angular/platform-browser'
 
 import { MessageService } from 'primeng/api'
 import { ConfirmationService } from 'primeng/api'
@@ -50,7 +51,8 @@ export class BranchMgmtComponent implements OnInit {
         protected managementService: ManagementService,
         protected breadcrumbService: BreadcrumbsService,
         private msgSrv: MessageService,
-        private confirmationService: ConfirmationService
+        private confirmationService: ConfirmationService,
+        private titleService: Title
     ) {}
 
     ngOnInit() {
@@ -61,6 +63,7 @@ export class BranchMgmtComponent implements OnInit {
 
     refresh() {
         this.managementService.getBranch(this.branchId).subscribe(branch => {
+            this.titleService.setTitle('Kraken - Branch Management - ' + branch.name)
             this.branch = branch
             this.newBranchName = branch.name
             if (this.stageName !== '') {

@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core'
 import { Router, ActivatedRoute, ParamMap } from '@angular/router'
+import { Title } from '@angular/platform-browser'
 
 import { TreeNode } from 'primeng/api'
 import { MenuItem } from 'primeng/api'
@@ -31,12 +32,14 @@ export class FlowResultsComponent implements OnInit {
         protected managementService: ManagementService,
         protected executionService: ExecutionService,
         protected breadcrumbService: BreadcrumbsService,
-        private msgSrv: MessageService
+        private msgSrv: MessageService,
+        private titleService: Title
     ) {}
 
     ngOnInit() {
         this.route.paramMap.subscribe(params => {
             this.flowId = parseInt(params.get('id'), 10)
+            this.titleService.setTitle('Kraken - Flow ' + this.flowId)
 
             this.runsTree = [
                 {

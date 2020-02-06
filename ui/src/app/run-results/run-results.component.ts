@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core'
 import { Router, ActivatedRoute, ParamMap } from '@angular/router'
+import { Title } from '@angular/platform-browser'
 
 import { MenuItem } from 'primeng/api'
 
@@ -63,7 +64,8 @@ export class RunResultsComponent implements OnInit {
         private route: ActivatedRoute,
         private router: Router,
         protected executionService: ExecutionService,
-        protected breadcrumbService: BreadcrumbsService
+        protected breadcrumbService: BreadcrumbsService,
+        private titleService: Title
     ) {
         this.resultStatuses = [
             { name: 'Not Run', code: 0 },
@@ -142,6 +144,7 @@ export class RunResultsComponent implements OnInit {
                 }
 
                 this.executionService.getRun(this.runId).subscribe(run => {
+                    this.titleService.setTitle('Kraken - Run ' + run.name + ' ' + this.runId)
                     this.run = run
                     this.recordsCount[0] = '' + run.jobs_total
                     this.recordsCount[1] =

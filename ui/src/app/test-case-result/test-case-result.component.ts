@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core'
 import { Router, ActivatedRoute, ParamMap } from '@angular/router'
+import { Title } from '@angular/platform-browser'
 
 import { MenuItem } from 'primeng/api'
 
@@ -35,7 +36,8 @@ export class TestCaseResultComponent implements OnInit {
         private route: ActivatedRoute,
         private router: Router,
         protected executionService: ExecutionService,
-        protected breadcrumbService: BreadcrumbsService
+        protected breadcrumbService: BreadcrumbsService,
+        private titleService: Title
     ) {}
 
     ngOnInit() {
@@ -49,6 +51,7 @@ export class TestCaseResultComponent implements OnInit {
                 tc_name: this.tcrId,
             },
         ])
+
 
         this.executionService.getResult(this.tcrId).subscribe(result => {
             this.result = result
@@ -84,6 +87,8 @@ export class TestCaseResultComponent implements OnInit {
                 },
             ]
             this.breadcrumbService.setCrumbs(crumbs)
+
+            this.titleService.setTitle('Kraken - Test ' + this.result.test_case_name + ' ' + this.tcrId)
 
             const valueNames = []
             for (const name of Object.keys(result.values)) {

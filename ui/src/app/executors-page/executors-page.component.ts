@@ -5,6 +5,7 @@ import {
     Router,
     NavigationEnd,
 } from '@angular/router'
+import { Title } from '@angular/platform-browser'
 
 import { MessageService, MenuItem } from 'primeng/api'
 
@@ -43,7 +44,8 @@ export class ExecutorsPageComponent implements OnInit {
         private router: Router,
         private msgSrv: MessageService,
         protected managementService: ManagementService,
-        protected breadcrumbService: BreadcrumbsService
+        protected breadcrumbService: BreadcrumbsService,
+        private titleService: Title
     ) {}
 
     switchToTab(index) {
@@ -70,6 +72,7 @@ export class ExecutorsPageComponent implements OnInit {
     }
 
     ngOnInit() {
+        this.titleService.setTitle('Kraken - Executors')
         const crumbs = [
             {
                 label: 'Home',
