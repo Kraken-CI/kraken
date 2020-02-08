@@ -33,6 +33,7 @@ import { CheckboxModule } from 'primeng/checkbox'
 import { MenubarModule } from 'primeng/menubar'
 import { InputSwitchModule } from 'primeng/inputswitch'
 import { SpinnerModule } from 'primeng/spinner'
+import { PasswordModule } from 'primeng/password'
 
 import { ApiModule, BASE_PATH, Configuration } from './backend'
 import { AppRoutingModule } from './app-routing.module'
@@ -117,6 +118,7 @@ export function cfgFactory() {
         MenubarModule,
         InputSwitchModule,
         SpinnerModule,
+        PasswordModule,
     ],
     providers: [
         Title,

@@ -512,11 +512,7 @@ def get_settings():
         if s.group not in groups:
             groups[s.group] = {}
         grp = groups[s.group]
-
-        if s.val_type == 'password':
-            grp[s.name] = ''
-        else:
-            grp[s.name] = s.value
+        grp[s.name] = s.get_value()
 
     return groups, 200
 
@@ -530,10 +526,12 @@ def update_settings(settings):
         for name, val in group.items():
             for s in settings_recs:
                 if s.group == group_name and s.name == name:
+                    if s.val_type == 'password' and val == '':
+                        continue
                     s.set_value(val)
 
     db.session.commit()
 
-    groups = get_settings()
+    groups, _ = get_settings()
 
     return groups, 200

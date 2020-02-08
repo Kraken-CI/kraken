@@ -586,18 +586,20 @@ class Setting(db.Model):
     val_type = Column(String(8))  # integer, text, boolean, password
 
     def get_json(self):
-        if self.val_type == "integer":
-            val = int(self.value)
-        elif self.val_type == "boolean":
-            val = (self.value == 'True')
-        else:
-            val = self.value
-
         return {
             "id": self.id,
             "name": self.name,
-            "value": val,
+            "value": self.get_value(),
             "type": self.val_type}
+
+    def get_value(self, password_blank=True):
+        if self.val_type == "integer":
+            return int(self.value)
+        elif self.val_type == "boolean":
+            return (self.value == 'True')
+        elif self.val_type == "password" and password_blank:
+            return ''
+        return self.value
 
     def set_value(self, value):
         if self.val_type == "integer":
@@ -617,9 +619,16 @@ def get_setting(group, name):
 
 
 INITIAL_SETTINGS = {
+    'general': {
+        'server_url': ''
+    },
     'notification': {
-        "smtp_server": "",
-        "slack_token": ""
+        'smtp_server': '',
+        'smtp_tls': False,
+        'smtp_from': '',
+        'smtp_user': '',
+        'smtp_password': None,  # password
+        'slack_token': None  # password
     }
 }
 
@@ -629,7 +638,18 @@ def _prepare_initial_preferences():
         for name, val in group_fields.items():
             s = Setting.query.filter_by(group=group_name, name=name).one_or_none()
             if s is not None:
+                # correct type if necessary
+                if isinstance(val, bool):
+                    s.val_type = 'boolean'
+                elif isinstance(val, int):
+                    s.val_type = 'integer'
+                elif val is None:
+                    s.val_type = 'password'
+                else:
+                    s.val_type = 'text'
                 continue
+
+            # set value and type
             if isinstance(val, bool):
                 val_type = 'boolean'
                 val = str(val)
@@ -736,7 +756,7 @@ def prepare_initial_data():
         #     "notification": {
         #         "changes": {
         #             "slack": {"channel": "abc"},
-        #             "email": {}
+        #             "email": "godfryd@abc.pl"
         #         }
         #     }
         # }

@@ -1,0 +1,43 @@
+<p-tabView>
+  <p-tabPanel header="General">
+      <!-- https://www.sanwebe.com/2014/08/css-html-forms-designs -->
+      <form [formGroup]="generalForm" class="form-style-2">
+        <label for="server_url"><span>Kraken Server URL</span>
+          <input type="text" class="input-field" name="server_url" pInputText formControlName="server_url" placeholder="ex: https://kraken.mycorp.com"/>
+        </label>
+      </form>
+  </p-tabPanel>
+
+  <p-tabPanel header="Notifications">
+      <!-- https://www.sanwebe.com/2014/08/css-html-forms-designs -->
+      <form [formGroup]="notificationForm" class="form-style-2">
+
+        <div class="form-style-2-heading">E-Mail</div>
+        <label for="smtp_server"><span>SMTP Server</span>
+          <input type="text" class="input-field" name="smtp_server" pInputText formControlName="smtp_server"/>
+        </label>
+        <label for="smtp_tls"><span>SMTP SSL/TLS</span>
+          <p-inputSwitch formControlName="smtp_tls" name="smtp_tls"></p-inputSwitch>
+        </label>
+        <label for="smtp_from"><span>From Address</span>
+          <input type="text" class="input-field" name="smtp_from" pInputText formControlName="smtp_from"/>
+        </label>
+        <label for="smtp_user"><span>SMTP User</span>
+          <input type="text" class="input-field" name="smtp_user" pInputText formControlName="smtp_user"/>
+        </label>
+        <label for="smtp_password"><span>SMTP Password</span>
+          <input type="password" class="input-field" name="smtp_password" pPassword [feedback]="false" formControlName="smtp_password"/>
+        </label>
+
+        <div class="form-style-2-heading" style="padding-top: 20px;">Slack</div>
+        <label for="slack_token"><span>Access Token</span>
+          <input type="password" class="input-field" name="slack_token" pPassword [feedback]="false" formControlName="slack_token"/>
+        </label>
+      </form>
+  </p-tabPanel>
+
+</p-tabView>
+
+<div style="margin: 8px 0 0 4px;">
+  <p-button label="Save Settings" icon="pi pi-check" (onClick)="saveSettings()"></p-button>
+</div>

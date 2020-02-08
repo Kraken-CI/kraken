@@ -44,3 +44,6 @@
 * kraken_shell: clearly report timeout errors
 * fork branch operation with test results history continuity
 * jak sie wywali poprzedni stage to nie startować następnego
+* show OS instead of hardcoded Ubuntu 18.04
+* add links to executors and groups
+* do not count issues in run.get_json(), do this at the end of run

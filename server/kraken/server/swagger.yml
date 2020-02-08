@@ -1531,6 +1531,8 @@ definitions:
   Settings:
     type: "object"
     properties:
+      general:
+        type: object
       notification:
         type: object
 
