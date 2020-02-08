@@ -14,6 +14,7 @@ import { ProjectSettingsComponent } from './project-settings/project-settings.co
 import { ExecutorsPageComponent } from './executors-page/executors-page.component'
 import { DiscoveredPageComponent } from './discovered-page/discovered-page.component'
 import { GroupsPageComponent } from './groups-page/groups-page.component'
+import { SettingsPageComponent } from './settings-page/settings-page.component'
 
 const routes: Routes = [
     {
@@ -83,6 +84,10 @@ const routes: Routes = [
     {
         path: 'executor-groups/:id',
         component: GroupsPageComponent,
+    },
+    {
+        path: 'settings',
+        component: SettingsPageComponent,
     },
 
     // otherwise redirect to home

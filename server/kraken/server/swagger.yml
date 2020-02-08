@@ -1073,6 +1073,36 @@ paths:
         200:
           description: Successfully
 
+  /settings:
+    get:
+      operationId: get_settings
+      tags:
+        - Management
+      summary: Get settings
+      description: Get settings details
+      responses:
+        200:
+          description: Settings details
+          schema:
+            $ref: '#/definitions/Settings'
+    put:
+      operationId: update_settings
+      tags:
+        - Management
+      summary: Update a project
+      description: Update project settings
+      parameters:
+        - name: settings
+          in: body
+          description: settings details
+          schema:
+            $ref: '#/definitions/Settings'
+      responses:
+        200:
+          description: Successfully
+          schema:
+            $ref: '#/definitions/Settings'
+
 
 definitions:
   Flow:
@@ -1497,6 +1527,12 @@ definitions:
       total:
         type: integer
         format: int64
+
+  Settings:
+    type: "object"
+    properties:
+      notification:
+        type: object
 
   ApiError:
     type: "object"

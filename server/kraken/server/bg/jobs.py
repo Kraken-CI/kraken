@@ -12,6 +12,7 @@ from .clry import app as clry_app
 from ..models import db, Run, Job, TestCaseResult, Branch, Flow, Stage, Project, Issue
 from .. import execution  # pylint: disable=cyclic-import
 from .. import consts
+from .. import notify
 
 log = logging.getLogger(__name__)
 
@@ -176,6 +177,9 @@ def analyze_results_history(self, run_id):
 
             log.info('anlysis of run %s completed', run)
 
+            t = notify_about_completed_run.delay(run.id)
+            log.info('enqueued notification about completion of run %s, bg processing: %s', run, t)
+
             # trigger analysis of the following run
             q = Run.query
             q = q.filter_by(stage_id=run.stage_id)
@@ -186,6 +190,25 @@ def analyze_results_history(self, run_id):
             if next_run is not None:
                 t = analyze_results_history.delay(next_run.id)
                 log.info('enqueued anlysis of run %s, bg processing: %s', next_run, t)
+
+    except Exception as exc:
+        log.exception('will retry')
+        raise self.retry(exc=exc)
+
+
+@clry_app.task(base=BaseTask, bind=True)
+def notify_about_completed_run(self, run_id):
+    try:
+        app = _create_app()
+
+        with app.app_context():
+            log.info('starting analysis of run %s', run_id)
+            run = Run.query.filter_by(id=run_id).one_or_none()
+            if run is None:
+                log.error('got unknown run to analyze: %s', run_id)
+                return
+
+            notify.notify(run)
 
     except Exception as exc:
         log.exception('will retry')

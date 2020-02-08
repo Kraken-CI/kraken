@@ -580,6 +580,7 @@ class Executor(db.Model, DatesMixin):
 class Setting(db.Model):
     __tablename__ = "settings"
     id = Column(Integer, primary_key=True)
+    group = Column(Unicode(50))
     name = Column(Unicode(50))
     value = Column(Text)
     val_type = Column(String(8))  # integer, text, boolean, password
@@ -607,29 +608,40 @@ class Setting(db.Model):
             self.value = value
 
 
+def get_setting(group, name):
+    s = Setting.query.filter_by(group=group, name=name).one_or_none()
+    if s is None:
+        raise Exception('cannot find setting %s:%s' % (group, name))
+
+    return s.value
+
+
 INITIAL_SETTINGS = {
-    "smtp_server": "",
-    "slack_token": ""
+    'notification': {
+        "smtp_server": "",
+        "slack_token": ""
+    }
 }
 
 
 def _prepare_initial_preferences():
-    for name, val in INITIAL_SETTINGS.items():
-        p = Setting.query.filter_by(name=name).one_or_none()
-        if p is not None:
-            continue
-        if isinstance(val, bool):
-            val_type = 'boolean'
-            val = str(val)
-        elif isinstance(val, int):
-            val_type = 'integer'
-            val = str(val)
-        elif val is None:
-            val_type = 'password'
-            val = ''
-        else:
-            val_type = 'text'
-        Setting(name=name, value=val, val_type=val_type)
+    for group_name, group_fields in INITIAL_SETTINGS.items():
+        for name, val in group_fields.items():
+            s = Setting.query.filter_by(group=group_name, name=name).one_or_none()
+            if s is not None:
+                continue
+            if isinstance(val, bool):
+                val_type = 'boolean'
+                val = str(val)
+            elif isinstance(val, int):
+                val_type = 'integer'
+                val = str(val)
+            elif val is None:
+                val_type = 'password'
+                val = ''
+            else:
+                val_type = 'text'
+            Setting(group=group_name, name=name, value=val, val_type=val_type)
     db.session.commit()
 
 
@@ -720,7 +732,13 @@ def prepare_initial_data():
         #             "executor_group": "server",
         #             "config": "c1"
         #         }]
-        #     }]
+        #     }],
+        #     "notification": {
+        #         "changes": {
+        #             "slack": {"channel": "abc"},
+        #             "email": {}
+        #         }
+        #     }
         # }
         #
         # TRIGGER:

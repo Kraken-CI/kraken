@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core'
 import { Router, ActivatedRoute, ParamMap } from '@angular/router'
 import { FormGroup, FormControl } from '@angular/forms'
+import { Title } from '@angular/platform-browser'
 
 import { MessageService } from 'primeng/api'
 import { ConfirmationService } from 'primeng/api'
@@ -40,7 +41,8 @@ export class ProjectSettingsComponent implements OnInit {
         private msgSrv: MessageService,
         private confirmationService: ConfirmationService,
         protected breadcrumbService: BreadcrumbsService,
-        protected managementService: ManagementService
+        protected managementService: ManagementService,
+        private titleService: Title
     ) {}
 
     ngOnInit() {
@@ -51,6 +53,7 @@ export class ProjectSettingsComponent implements OnInit {
                 .getProject(this.projectId)
                 .subscribe(project => {
                     this.project = project
+                    this.titleService.setTitle('Kraken - Project Settings ' + this.project.name)
 
                     this.breadcrumbService.setCrumbs([
                         {

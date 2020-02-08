@@ -47,6 +47,11 @@ export class AppComponent implements OnInit {
                     },
                 ],
             },
+            {
+                label: 'Settings',
+                icon: 'fa fa-wrench',
+                routerLink: '/settings',
+            },
         ]
     }
 

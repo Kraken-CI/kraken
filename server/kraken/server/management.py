@@ -10,7 +10,7 @@ import pytimeparse
 import dateutil.parser
 
 from . import consts
-from .models import db, Branch, Stage, Executor, ExecutorGroup, Secret, ExecutorAssignment
+from .models import db, Branch, Stage, Executor, ExecutorGroup, Secret, ExecutorAssignment, Setting
 from .models import Project
 from .schema import execute_schema_code
 
@@ -502,3 +502,38 @@ def delete_group(group_id):
     db.session.commit()
 
     return {}, 200
+
+
+def get_settings():
+    settings = Setting.query.filter_by().all()
+
+    groups = {}
+    for s in settings:
+        if s.group not in groups:
+            groups[s.group] = {}
+        grp = groups[s.group]
+
+        if s.val_type == 'password':
+            grp[s.name] = ''
+        else:
+            grp[s.name] = s.value
+
+    return groups, 200
+
+
+def update_settings(settings):
+    log.info(settings)
+
+    settings_recs = Setting.query.filter_by().all()
+
+    for group_name, group in settings.items():
+        for name, val in group.items():
+            for s in settings_recs:
+                if s.group == group_name and s.name == name:
+                    s.set_value(val)
+
+    db.session.commit()
+
+    groups = get_settings()
+
+    return groups, 200
