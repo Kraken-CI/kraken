@@ -50,8 +50,8 @@
         <i *ngIf="run.tests_passed === run.tests_total" class="pi pi-thumbs-up" style="color: green; font-size: 1.3em; vertical-align: bottom;"></i>
         <br>
         {{run.tests_passed}}/{{run.tests_total}}
-        <span *ngIf="run.tests_pending">
-          <br>{{run.tests_pending}} pending
+        <span *ngIf="run.tests_not_run">
+          <br>{{run.tests_not_run}} not run
         </span>
       </div>
       <div style="margin-left: 15px;" *ngIf="run.regr_cnt > 0 || run.fix_cnt > 0">

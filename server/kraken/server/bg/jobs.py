@@ -51,12 +51,26 @@ class BaseTask(Task):  # pylint: disable=abstract-method
 def _analyze_job_results_history(job):
     # TODO: if branch is forked from another base branch take base branch results into account
 
+    # simple stats
+    tests_total = 0
+    tests_passed = 0
+    tests_not_run = 0
+
+    # history stats
     new_cnt = 0
     no_change_cnt = 0
     regr_cnt = 0
     fix_cnt = 0
 
     for job_tcr in job.results:
+        # simple results stats
+        tests_total += 1
+        if job_tcr.result == consts.TC_RESULT_PASSED:
+            tests_passed += 1
+        elif job_tcr.result == consts.TC_RESULT_NOT_RUN:
+            tests_not_run += 1
+
+        # analyze history, get previous 10 results for each TCR
         log.info('Analyze result %s %s', job_tcr, job_tcr.test_case.name)
         q = TestCaseResult.query
         q = q.filter(TestCaseResult.id != job_tcr.id)
@@ -98,7 +112,7 @@ def _analyze_job_results_history(job):
 
         db.session.commit()
 
-    return new_cnt, no_change_cnt, regr_cnt, fix_cnt
+    return tests_total, tests_passed, tests_not_run, new_cnt, no_change_cnt, regr_cnt, fix_cnt
 
 
 def _analyze_job_issues_history(job):
@@ -109,7 +123,12 @@ def _analyze_job_issues_history(job):
     if prev_run is None:
         return
 
+    issues_total = 0
+    issues_new = 0
+
     for issue in job.issues:
+        issues_total += 1
+
         log.info('Analyze issue %s', issue)
         q = Issue.query
         q = q.filter_by(path=issue.path, issue_type=issue.issue_type, symbol=issue.symbol)
@@ -131,7 +150,11 @@ def _analyze_job_issues_history(job):
 
         if prev_issue is not None:
             issue.age = prev_issue.age + 1
+        if issue.age == 0:
+            issues_new += 1
     db.session.commit()
+
+    return issues_total, issues_new
 
 
 @clry_app.task(base=BaseTask, bind=True)
@@ -163,17 +186,35 @@ def analyze_results_history(self, run_id):
 
             # analyze jobs of this run
             run.new_cnt = run.no_change_cnt = run.regr_cnt = run.fix_cnt = 0
+            run.tests_total = run.tests_passed = run.tests_not_run = 0
+            run.jobs_error = run.jobs_total = 0
+            run.issues_total = run.issues_new = 0
             for job in run.jobs:
                 if job.covered:
                     continue
-                new_cnt, no_change_cnt, regr_cnt, fix_cnt = _analyze_job_results_history(job)
+                # analyze results history
+                counts = _analyze_job_results_history(job)
+                tests_total, tests_passed, tests_not_run, new_cnt, no_change_cnt, regr_cnt, fix_cnt = counts
                 run.new_cnt += new_cnt
                 run.no_change_cnt += no_change_cnt
                 run.regr_cnt += regr_cnt
                 run.fix_cnt += fix_cnt
+                run.tests_total += tests_total
+                run.tests_passed += tests_passed
+                run.tests_not_run += tests_not_run
                 db.session.commit()
 
-                _analyze_job_issues_history(job)
+                # analyze issues history
+                issues_total, issues_new = _analyze_job_issues_history(job)
+                run.issues_total += issues_total
+                run.issues_new += issues_new
+                db.session.commit()
+
+                # compute jobs stats
+                run.jobs_total += 1
+                if job.completion_status not in [consts.JOB_CMPLT_ALL_OK, None]:
+                    run.jobs_error += 1
+                db.session.commit()
 
             log.info('anlysis of run %s completed', run)
 

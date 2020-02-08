@@ -235,52 +235,49 @@ class Run(db.Model, DatesMixin):
     no_change_cnt = Column(Integer, default=0)
     regr_cnt = Column(Integer, default=0)
     fix_cnt = Column(Integer, default=0)
+    tests_total = Column(Integer, default=0)
+    tests_passed = Column(Integer, default=0)
+    tests_not_run = Column(Integer, default=0)
+    jobs_error = Column(Integer, default=0)
+    jobs_total = Column(Integer, default=0)
+    issues_total = Column(Integer, default=0)
+    issues_new = Column(Integer, default=0)
 
     def get_json(self):
-        non_covered_jobs = Job.query.filter_by(run=self).filter_by(covered=False).all()
-        tests_total = 0
-        tests_passed = 0
-        tests_pending = 0
         jobs_processing = 0
         jobs_executing = 0
         jobs_waiting = 0
         jobs_completed = 0
         jobs_error = 0
-        jobs_total = len(non_covered_jobs)
-        issues_total = 0
-        issues_new = 0
-        last_time = None
-        for job in non_covered_jobs:
-            if job.state == consts.JOB_STATE_EXECUTING_FINISHED:
-                jobs_processing += 1
-            elif job.state == consts.JOB_STATE_ASSIGNED:
-                jobs_executing += 1
-            elif job.state != consts.JOB_STATE_COMPLETED:
-                jobs_waiting += 1
-            elif job.state == consts.JOB_STATE_COMPLETED:
-                jobs_completed += 1
-                if last_time is None or (job.completed and job.completed > last_time):
-                    last_time = job.completed
+        jobs_total = 0
 
-            if job.completion_status not in [consts.JOB_CMPLT_ALL_OK, None]:
-                jobs_error += 1
-
-            tests_total += len(job.results)
-            for tcr in job.results:
-                if tcr.result == consts.TC_RESULT_PASSED:
-                    tests_passed += 1
-                elif tcr.result == consts.TC_RESULT_NOT_RUN:
-                    tests_pending += 1
-
-            issues_total += len(job.issues)
-            for issue in job.issues:
-                if issue.age == 0:
-                    issues_new += 1
-
-        if jobs_total == jobs_completed and last_time:
-            duration = last_time - self.created
+        if self.state == consts.RUN_STATE_COMPLETED:
+            jobs_completed = self.jobs_total
+            jobs_error = self.jobs_error
+            duration = self.finished - self.created
         else:
-            duration = datetime.datetime.utcnow() - self.created
+            non_covered_jobs = Job.query.filter_by(run=self).filter_by(covered=False).all()
+            jobs_total = len(non_covered_jobs)
+            last_time = None
+            for job in non_covered_jobs:
+                if job.state == consts.JOB_STATE_EXECUTING_FINISHED:
+                    jobs_processing += 1
+                elif job.state == consts.JOB_STATE_ASSIGNED:
+                    jobs_executing += 1
+                elif job.state != consts.JOB_STATE_COMPLETED:
+                    jobs_waiting += 1
+                elif job.state == consts.JOB_STATE_COMPLETED:
+                    jobs_completed += 1
+                    if last_time is None or (job.completed and job.completed > last_time):
+                        last_time = job.completed
+
+                if job.completion_status not in [consts.JOB_CMPLT_ALL_OK, None]:
+                    jobs_error += 1
+
+            if jobs_total == jobs_completed and last_time:
+                duration = last_time - self.created
+            else:
+                duration = datetime.datetime.utcnow() - self.created
 
         data = dict(id=self.id,
                     created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,
@@ -302,12 +299,11 @@ class Run(db.Model, DatesMixin):
                     jobs_executing=jobs_executing,
                     jobs_processing=jobs_processing,
                     jobs_error=jobs_error,
-                    jobs_id=[j.id for j in non_covered_jobs],
-                    tests_total=tests_total,
-                    tests_passed=tests_passed,
-                    tests_pending=tests_pending,
-                    issues_total=issues_total,
-                    issues_new=issues_new,
+                    tests_total=self.tests_total,
+                    tests_passed=self.tests_passed,
+                    tests_not_run=self.tests_not_run,
+                    issues_total=self.issues_total,
+                    issues_new=self.issues_new,
                     new_cnt=self.new_cnt,
                     no_change_cnt=self.no_change_cnt,
                     regr_cnt=self.regr_cnt,

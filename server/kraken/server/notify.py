@@ -31,7 +31,7 @@ def _notify_slack(run, slack):
     if server_url is None:
         server_url = 'http://localhost:4200'
 
-    text = 'Project <%s|%s>, branch <%s|%s> <%s|%s>, flow <%s|%s>, run <%s|%s %s>, regressions: %d, fixes: %d'
+    text = 'Project <%s|%s>, branch <%s|%s> <%s|%s>, flow <%s|%s>, run <%s|%s %s>'
     text = text % (urljoin(server_url, '/projects/%d' % run.flow.branch.project.id),
                    run.flow.branch.project.name,
                    urljoin(server_url, '/branches/%s' % run.flow.branch.id),
@@ -42,9 +42,13 @@ def _notify_slack(run, slack):
                    run.flow.id,
                    urljoin(server_url, '/runs/%d' % run.id),
                    run.stage.name,
-                   run.id,
-                   run.regr_cnt,
-                   run.fix_cnt)
+                   run.id)
+    if run.regr_cnt > 0:
+        text += ', regressions: %d' % run.regr_cnt
+    if run.fix_cnt > 0:
+        text += ', fixes: %d' % run.fix_cnt
+    if run.issues_new > 0:
+        text += ', new issues: %d' % run.issues_new
 
     log.info('slack channel: %s, msg: %s', channel, text)
     data = dict(token=slack_token, channel=channel, text=text)
@@ -92,18 +96,35 @@ def _notify_email(run, email):
                    urljoin(server_url, '/runs/%d' % run.id),
                    run.stage.name,
                    run.id)
-    html += '<br><br>regressions: %d<br>fixes: %d' % (run.regr_cnt, run.fix_cnt)
-    html += '<br><br><br>-- Kraken'
+    html += '<br>'
+    if run.tests_total > 0:
+        html += '<br><b>Tests</b><br>'
+        html += 'regressions: %d<br>' % run.regr_cnt
+        html += 'fixes: %d<br>' % run.fix_cnt
+        html += 'passed: %d<br>' % run.tests_passed
+        html += 'total: %d<br>' % run.tests_total
+        html += 'new: %d<br>' % run.new_cnt
 
-    subject = '[Kraken] Project %s, branch %s %s, flow %s, run %s %s, regressions: %d, fixes: %d'
+    if run.issues_total > 0:
+        html += '<br><b>Issues</b><br>'
+        html += 'new issues: %d<br>' % run.issues_new
+        html += 'total: %d<br>' % run.issues_total
+
+    html += '<br>-- Kraken'
+
+    subject = '[Kraken] Project %s, branch %s %s, flow %s, run %s %s'
     subject = subject % (run.flow.branch.project.name,
                          run.flow.branch.name,
                          'CI' if run.flow.kind == 0 else 'Dev',
                          run.flow.id,
                          run.stage.name,
-                         run.id,
-                         run.regr_cnt,
-                         run.fix_cnt)
+                         run.id)
+    if run.regr_cnt > 0:
+        subject += ', regressions: %d' % run.regr_cnt
+    if run.fix_cnt > 0:
+        subject += ', fixes: %d' % run.fix_cnt
+    if run.issues_new > 0:
+        subject += ', new issues: %d' % run.issues_new
 
     message = MIMEMultipart("alternative")
     message["Subject"] = subject

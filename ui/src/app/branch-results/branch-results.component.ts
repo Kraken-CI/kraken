@@ -75,7 +75,7 @@ export class BranchResultsComponent implements OnInit {
                         jobs_total: 103,
                         jobs_error: 78,
                         jobs_rerun: 7,
-                        jobs_pending: 2,
+                        jobs_not_run: 2,
                         tests_passed: 987,
                         tests_total: 1033,
                         issues_total: 12,

@@ -44,7 +44,11 @@
       <td>{{executor.ip_address}}</td>
       <td>{{executor.state}}</td>
       <td>{{executor.disabled}}</td>
-      <td>{{executor.groups}}</td>
+      <td>
+          <span *ngFor="let g of executor.groups" style="padding-right: 5px;">
+            <a routerLink="/executor-groups/{{ g.id }}">{{ g.name }}</a>
+          </span>
+      </td>
     </tr>
   </ng-template>
 </p-table>

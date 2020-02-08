@@ -47,3 +47,4 @@
 * show OS instead of hardcoded Ubuntu 18.04
 * add links to executors and groups
 * do not count issues in run.get_json(), do this at the end of run
+* improve auto refreshing of run page

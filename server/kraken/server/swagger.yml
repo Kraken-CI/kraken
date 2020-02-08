@@ -1197,7 +1197,7 @@ definitions:
         type: integer
       jobs_total:
         type: integer
-      tests_pending:
+      tests_not_run:
         type: integer
       tests_passed:
         type: integer
