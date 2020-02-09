@@ -62,6 +62,11 @@ def _handle_get_job(executor):
     if executor.job.run.flow.trigger_data:
         job['trigger_data'] = executor.job.run.flow.trigger_data
 
+    # attach storage info to job
+    storage_addr = os.environ.get('KRAKEN_STORAGE_ADDR', consts.DEFAULT_STORAGE_ADDR)
+    job['storage_addr'] = storage_addr
+    job['flow_id'] = executor.job.run.flow_id
+
     # prepare steps
     project = executor.job.run.flow.branch.project
     for step in job['steps']:

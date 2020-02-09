@@ -6,6 +6,7 @@ COPY kkplanner /server
 COPY kkscheduler /server
 COPY kkwatchdog /server
 COPY kkdbmigrate /server
+COPY kkstorage /server
 CMD ./kkdbmigrate && supervisord -c /etc/supervisor.conf
 ARG kkver=0.0
 LABEL kkver=${kkver} kkname=server

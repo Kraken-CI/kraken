@@ -282,9 +282,13 @@ def run(srv, job):
             if step['status'] == 2:
                 continue
             log.set_ctx(step=idx)
+
             step['job_id'] = job['id']
+            step['storage_addr'] = job['storage_addr']
+            step['flow_id'] = job['flow_id']
             if 'trigger_data' in job:
                 step['trigger_data'] = job['trigger_data']
+
             try:
                 result = _run_step(srv, exec_ctx, job_dir, job['id'], idx, step, tools, job['deadline'])
                 last_status = result['status']

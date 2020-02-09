@@ -92,14 +92,14 @@ def setup_py_develop
   end
 end
 
-['./server/venv/bin/kkserver', './server/venv/bin/kkscheduler', './server/venv/bin/kkcelery', './server/venv/bin/kkplanner', './server/venv/bin/kkdbmigrate', './server/venv/bin/kkwatchdog'].each {|f|
+['./server/venv/bin/kkserver', './server/venv/bin/kkscheduler', './server/venv/bin/kkcelery', './server/venv/bin/kkplanner', './server/venv/bin/kkdbmigrate', './server/venv/bin/kkwatchdog', './server/venv/bin/kkstorage'].each {|f|
   file f => ['./server/venv/bin/python3', './server/requirements.txt'] do
     setup_py_develop
   end
 }
 
 task :run_server => './server/venv/bin/kkserver' do
-  sh 'KRAKEN_LOGSTASH_ADDR=192.168.0.88:5959 ./server/venv/bin/kkserver'
+  sh 'KRAKEN_LOGSTASH_ADDR=192.168.0.88:5959 KRAKEN_STORAGE_ADDR=192.168.0.88:2121 ./server/venv/bin/kkserver'
 end
 
 task :run_scheduler => './server/venv/bin/kkscheduler' do
@@ -139,6 +139,10 @@ task :run_watchdog => './server/venv/bin/kkwatchdog' do
   sh './server/venv/bin/kkwatchdog'
 end
 
+task :run_storage => './server/venv/bin/kkstorage' do
+  sh './server/venv/bin/kkstorage'
+end
+
 file './venv/bin/shiv' => ['./venv/bin/python3', 'requirements.txt'] do
     sh './venv/bin/pip install -r requirements.txt'
 end
@@ -155,6 +159,7 @@ task :build_server => './venv/bin/shiv' do
     sh "../venv/bin/shiv --site-packages dist --compressed -p '/usr/bin/env python3' -o kkplanner -c kkplanner"
     sh "../venv/bin/shiv --site-packages dist --compressed -p '/usr/bin/env python3' -o kkwatchdog -c kkwatchdog"
     sh "../venv/bin/shiv --site-packages dist --compressed -p '/usr/bin/env python3' -o kkdbmigrate -c kkdbmigrate"
+    sh "../venv/bin/shiv --site-packages dist --compressed -p '/usr/bin/env python3' -o kkstorage -c kkstorage"
   end
 end
 

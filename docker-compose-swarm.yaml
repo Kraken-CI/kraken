@@ -14,6 +14,7 @@ services:
       - KRAKEN_SERVER_PORT
       - KRAKEN_SERVER_ADDR
       - KRAKEN_PLANNER_URL
+      - KRAKEN_STORAGE_ADDR
     expose:
       - $KRAKEN_SERVER_PORT
     ports:
@@ -62,6 +63,9 @@ services:
       - KRAKEN_SERVER_PORT
       - KRAKEN_SERVER_ADDR
       - KRAKEN_PLANNER_URL
+      - KRAKEN_STORAGE_DIR
+    volumes:
+      - kraken-storage:$KRAKEN_STORAGE_DIR
 
   celery:
     restart: always
@@ -171,3 +175,4 @@ services:
 volumes:
   db-data:
   elasticsearch:
+  kraken-storage:
