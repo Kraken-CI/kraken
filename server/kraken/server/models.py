@@ -595,6 +595,8 @@ class Setting(db.Model):
             return (self.value == 'True')
         elif self.val_type == "password" and password_blank:
             return ''
+        elif self.value is None:
+            return ''
         return self.value
 
     def set_value(self, value):

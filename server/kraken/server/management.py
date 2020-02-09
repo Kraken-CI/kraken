@@ -518,8 +518,6 @@ def get_settings():
 
 
 def update_settings(settings):
-    log.info(settings)
-
     settings_recs = Setting.query.filter_by().all()
 
     for group_name, group in settings.items():
@@ -533,5 +531,6 @@ def update_settings(settings):
     db.session.commit()
 
     groups, _ = get_settings()
+    log.info('settings %s', groups)
 
     return groups, 200
