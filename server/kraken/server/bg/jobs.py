@@ -163,10 +163,10 @@ def analyze_results_history(self, run_id):
         app = _create_app()
 
         with app.app_context():
-            log.info('starting analysis of run %s', run_id)
+            log.info('starting results history analysis of run %s', run_id)
             run = Run.query.filter_by(id=run_id).one_or_none()
             if run is None:
-                log.error('got unknown run to analyze: %s', run_id)
+                log.error('got unknown run to analyze results history: %s', run_id)
                 return
 
             # check prev run
@@ -243,10 +243,10 @@ def notify_about_completed_run(self, run_id):
         app = _create_app()
 
         with app.app_context():
-            log.info('starting analysis of run %s', run_id)
+            log.info('starting notification about completed run %s', run_id)
             run = Run.query.filter_by(id=run_id).one_or_none()
             if run is None:
-                log.error('got unknown run to analyze: %s', run_id)
+                log.error('got unknown run to notify: %s', run_id)
                 return
 
             notify.notify(run)
@@ -342,7 +342,6 @@ def _estimate_timeout(job):
     stage.timeouts[job.name] = timeout
     flag_modified(stage, 'timeouts')
     db.session.commit()
-
 
 
 @clry_app.task(base=BaseTask, bind=True)

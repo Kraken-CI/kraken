@@ -188,6 +188,7 @@ class Flow(db.Model, DatesMixin):
     runs = relationship('Run', back_populates="flow", order_by="Run.created")
     args = Column(JSONB, nullable=False, default={})
     trigger_data = Column(JSONB)
+    artifacts = Column(JSONB, default={})
 
     def get_json(self):
         if self.state == consts.FLOW_STATE_COMPLETED:
@@ -210,7 +211,8 @@ class Flow(db.Model, DatesMixin):
                     project_name=self.branch.project.name,
                     args=self.args,
                     stages=[s.get_json() for s in self.branch.stages.filter_by(deleted=None)],
-                    runs=[r.get_json() for r in self.runs])
+                    runs=[r.get_json() for r in self.runs],
+                    artifacts=self.artifacts)
 
 
 class Run(db.Model, DatesMixin):

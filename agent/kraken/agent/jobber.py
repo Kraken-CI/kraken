@@ -35,7 +35,7 @@ def _load_tools_list():
 
     for entry_point in pkg_resources.iter_entry_points('kraken.tools'):
         entry_point.load()
-        log.info("TOOL %s: %s", entry_point.name, entry_point.module_name)
+        # log.info("TOOL %s: %s", entry_point.name, entry_point.module_name)
         tools[entry_point.name] = 'kktool -m %s' % entry_point.module_name
 
     return tools
@@ -124,14 +124,12 @@ class RequestHandler():
 
             self.proc_coord.result = data
 
-            if self.proc_coord.command in ['run_tests', 'run_analysis']:
+            if self.proc_coord.command in ['run_tests', 'run_analysis', 'run_artifacts']:
                 # report partial results
                 srv = self.proc_coord.kk_srv
-                # TODO: check if result is not send twice: here and at the end of process
                 srv.report_step_result(self.proc_coord.job_id,
                                        self.proc_coord.idx,
                                        self.proc_coord.result)
-                self.proc_coord.result = {'status': 'in-progress'}
 
 
 async def _async_tcp_server(server):
@@ -192,7 +190,7 @@ def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
         raise Exception('bad result received from tool: %s' % result)
     available_commands = result['commands']
 
-    if 'run' not in available_commands and 'run_tests' not in available_commands and 'run_analysis' not in available_commands:
+    if 'run' not in available_commands and 'run_tests' not in available_commands and 'run_analysis' not in available_commands and 'run_artifacts' not in available_commands:
         raise Exception('missing run and run_tests in available commands: %s' % available_commands)
 
     if 'collect_tests' in available_commands and ('tests' not in step or step['tests'] is None or len(step['tests']) == 0):
@@ -230,7 +228,7 @@ def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
             return {'status': 'error', 'reason': 'timeout'}
         result = _exec_tool(srv, exec_ctx, tool_path, 'run_tests', job_dir, timeout, step_file_path, job_id, idx)
         log.info('result for run_tests: %s', str(result)[:200])
-        srv.report_step_result(job_id, idx, result)
+        # do not srv.report_step_result, it was already done in RequestHandler.async_handle_request
 
     if 'run_analysis' in available_commands:
         timeout = deadline - time.time()
@@ -238,7 +236,15 @@ def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
             return {'status': 'error', 'reason': 'timeout'}
         result = _exec_tool(srv, exec_ctx, tool_path, 'run_analysis', job_dir, timeout, step_file_path, job_id, idx)
         log.info('result for run_analysis: %s', str(result)[:200])
-        srv.report_step_result(job_id, idx, result)
+        # do not srv.report_step_result, it was already done in RequestHandler.async_handle_request
+
+    if 'run_artifacts' in available_commands:
+        timeout = deadline - time.time()
+        if timeout <= 0:
+            return {'status': 'error', 'reason': 'timeout'}
+        result = _exec_tool(srv, exec_ctx, tool_path, 'run_artifacts', job_dir, timeout, step_file_path, job_id, idx)
+        log.info('result for run_artifacts: %s', str(result)[:200])
+        # do not srv.report_step_result, it was already done in RequestHandler.async_handle_request
 
     if 'run' in available_commands:
         timeout = deadline - time.time()

@@ -2,7 +2,7 @@
 <div class="round-shadow" [ngStyle]="{'background-color': bgColor, 'height': '100%'}">
   <!-- title bar -->
   <div style="display: flex;">
-    <b *ngIf="run" style="font-size: 1.1rem; flex: 1;"><a routerLink="/runs/{{run.id}}" routerLinkActive="active" style="color: unset;">{{run.name}}</a></b>
+    <b *ngIf="run" style="font-size: 1.1rem; flex: 1;"><a routerLink="/runs/{{run.id}}/jobs" routerLinkActive="active" style="color: unset;">{{run.name}}</a></b>
     <b *ngIf="!run" style="font-size: 1.1rem; flex: 1; color: #aaa;">{{stage.name}}</b>
     <div *ngIf="run" style="font-size: 0.7rem; margin-right: 10px;">
       <div>{{run.started | localtime}}</div>

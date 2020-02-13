@@ -64,19 +64,19 @@ class KrakenAuthorizer(DummyAuthorizer):
         if '_' not in username:
             raise AuthenticationFailed(msg)
         try:
-            prv_pub, flow_id_txt = username.split('_')
+            dest, flow_id_txt = username.split('_')
             flow_id = int(flow_id_txt)
         except:
             raise AuthenticationFailed(msg)
 
-        if prv_pub not in ['pub', 'prv']:
+        if dest not in ['public', 'private', 'report']:
             raise AuthenticationFailed(msg)
 
         flow = Flow.query.filter_by(id=flow_id).one_or_none()
         if flow is None:
             raise AuthenticationFailed(msg)
 
-        home_dir = os.path.join(self.homes_dir, prv_pub, flow_id_txt)
+        home_dir = os.path.join(self.homes_dir, dest, flow_id_txt)
         if not os.path.exists(home_dir):
             os.makedirs(home_dir)
 

@@ -7,6 +7,7 @@ import datetime
 from flask import request
 from sqlalchemy import or_
 from sqlalchemy.orm import joinedload
+from sqlalchemy.orm.attributes import flag_modified
 import giturlparse
 
 from .models import db, Job, Step, Executor, TestCase, TestCaseResult, Issue, Secret
@@ -166,6 +167,38 @@ def _store_issues(job, result):
     log.info('reporting %s issues took %ss', len(result['issues']), (t1 - t0))
 
 
+def _store_artifacts(job, step):
+    t0 = time.time()
+    flow = job.run.flow
+    if not flow.artifacts:
+        flow.artifacts = dict(public=dict(size=0, count=0),
+                              private=dict(size=0, count=0),
+                              report=dict(size=0, count=0, entries=[]))
+
+    action = step.fields.get('action', 'upload')
+    public = step.fields.get('public', False)
+    if action == 'report':
+        dest = 'report'
+    elif public:
+        dest = 'public'
+    else:
+        dest = 'private'
+
+    for artifact in step.result['artifacts']:
+        flow.artifacts[dest]['size'] += artifact['size']
+        flow.artifacts[dest]['count'] += 1
+        if dest == 'report':
+            report_entry = artifact.get('report_entry', None)
+            if report_entry:
+                flow.artifacts['report']['entries'].append(report_entry)
+
+    flag_modified(flow, 'artifacts')
+    db.session.commit()
+
+    t1 = time.time()
+    log.info('reporting %s artifacts took %ss', len(step.result['artifacts']), (t1 - t0))
+
+
 def _handle_step_result(executor, req):
     response = {}
     if executor.job is None:
@@ -202,6 +235,10 @@ def _handle_step_result(executor, req):
     # store issues
     if 'issues' in result:
         _store_issues(job, result)
+
+    # store issues
+    if 'artifacts' in result:
+        _store_artifacts(job, step)
 
     # check if all steps are done so job is finised
     job_finished = True

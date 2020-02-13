@@ -50,8 +50,28 @@
     </div>
   </p-tabPanel>
 
-
   <p-tabPanel header="Repo Changes">
+  </p-tabPanel>
+
+  <p-tabPanel header="Artifacts" *ngIf="flow && flow.artifacts && (flow.artifacts.private.count > 0 || flow.artifacts.public.count > 0 || flow.artifacts.report.count > 0)">
+    <div *ngIf="flow.artifacts.public.count > 0">
+      <h3>Public</h3>
+      Files: {{ flow.artifacts.public.count }}
+      <br>
+      Total size: {{ humanFileSize(flow.artifacts.public.size) }}
+    </div>
+    <div *ngIf="flow.artifacts.private.count > 0">
+      <h3>Private</h3>
+      Files: {{ flow.artifacts.private.count }}
+      <br>
+      Total size: {{ humanFileSize(flow.artifacts.private.size) }}
+    </div>
+    <div *ngIf="flow.artifacts.report.count > 0">
+      <h3>Report</h3>
+      Files: {{ flow.artifacts.report.count }}
+      <br>
+      Total size: {{ humanFileSize(flow.artifacts.report.size) }}
+    </div>
   </p-tabPanel>
 
   <p-tabPanel header="Stages Chart">

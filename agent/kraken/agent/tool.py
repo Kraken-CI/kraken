@@ -54,6 +54,27 @@ class IssuesCollector():
         self.last_reported = datetime.datetime.now()
 
 
+class ArtifactsCollector():
+    def __init__(self, sock):
+        self.sock = sock
+        self.artifacts = []
+        self.last_reported = datetime.datetime.now()
+
+    def report_artifact(self, artifact):
+        self.artifacts.append(artifact)
+
+        now = datetime.datetime.now()
+        # report artifacts after 100 artifacts or after 20 seconds
+        if len(self.artifacts) > 100 or (now - self.last_reported > datetime.timedelta(seconds=20)):
+            self.flush()
+
+    def flush(self):
+        self.sock.send_json({'status': 'in-progress',
+                             'artifacts': self.artifacts})
+        self.artifacts = []
+        self.last_reported = datetime.datetime.now()
+
+
 def execute(sock, module, command, step_file_path):
     try:
         logs.setup_logging('tool')
@@ -66,7 +87,7 @@ def execute(sock, module, command, step_file_path):
 
         log.set_ctx(job=step['job_id'], step=step['index'], tool=tool_name)
 
-        log.info('started tool for step', tool=None)
+        # log.info('started tool for step', tool=None)
 
         #tool = sys.modules['__main__']
         tool = importlib.import_module(module)
@@ -96,6 +117,12 @@ def execute(sock, module, command, step_file_path):
             report_issue_cb = issues_collector.report_issue
             ret, msg = tool.run_analysis(step, report_issue=report_issue_cb)
             issues_collector.flush()
+
+        elif command == 'run_artifacts':
+            artifacts_collector = ArtifactsCollector(sock)
+            report_artifact_cb = artifacts_collector.report_artifact
+            ret, msg = tool.run_artifacts(step, report_artifact=report_artifact_cb)
+            artifacts_collector.flush()
 
         elif command == 'run':
             ret, msg = tool.run(step)

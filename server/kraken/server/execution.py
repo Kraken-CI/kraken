@@ -25,7 +25,7 @@ def complete_run(run, now):
     t = bg_jobs.trigger_stages.delay(run.id)
     log.info('run %s completed, trigger the following stages: %s', run, t)
 
-    # establish new flow state
+    # establish new state for flow
     flow = run.flow
     is_completed = True
     for r in flow.runs:
@@ -41,7 +41,7 @@ def complete_run(run, now):
 
     # trigger results history analysis
     t = bg_jobs.analyze_results_history.delay(run.id)
-    log.info('run %s completed, process results: %s', run, t)
+    log.info('run %s completed, analyze results history: %s', run, t)
 
 
 def _substitute_vars(fields, args):
