@@ -1,6 +1,6 @@
 <p-button label="Refresh" icon="pi pi-refresh" (onClick)="refresh()"></p-button>
 
-<p-tabView>
+<p-tabView [activeIndex]="activeTabIndex">
   <p-tabPanel header="Stages">
     <div class="p-grid">
       <div class="p-col-6">
@@ -53,20 +53,56 @@
   <p-tabPanel header="Repo Changes">
   </p-tabPanel>
 
-  <p-tabPanel header="Artifacts" *ngIf="flow && flow.artifacts && (flow.artifacts.private.count > 0 || flow.artifacts.public.count > 0 || flow.artifacts.report.count > 0)">
-    <div *ngIf="flow.artifacts.public.count > 0">
+  <p-tabPanel header="Artifacts" *ngIf="flow && flow.artifacts && ((flow.artifacts.private && flow.artifacts.private.count > 0) || (flow.artifacts.public && flow.artifacts.public.count > 0) || (flow.artifacts.report && flow.artifacts.report.count > 0))">
+    <div *ngIf="flow.artifacts.public && flow.artifacts.public.count > 0">
       <h3>Public</h3>
-      Files: {{ flow.artifacts.public.count }}
-      <br>
-      Total size: {{ humanFileSize(flow.artifacts.public.size) }}
+      <div style="display: flex;">
+        <div>
+          Files: {{ flow.artifacts.public.count }}
+          <br>
+          Total size: {{ humanFileSize(flow.artifacts.public.size) }}
+        </div>
+
+        <div style="margin-left: 30px; flex: 1;">
+          <p-table #artifactsTable
+                   id="artifacts"
+                   [value]="artifacts"
+                   [lazy]="true"
+                   (onLazyLoad)="loadArtifactsLazy($event)"
+                   [paginator]="true"
+                   [rows]="30"
+                   [totalRecords]="totalArtifacts"
+                   [loading]="loadingArtifacts"
+                   [rowsPerPageOptions]="[10,20,30,50,100]"
+                   [showCurrentPageReport]="true">
+            <ng-template pTemplate="header">
+              <tr>
+                <th style="overflow-x: hidden;">Name</th>
+                <th style="width: 14em;">Size</th>
+                <th style="width: 6em;">Stage</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-a>
+              <tr>
+                <td><a href="{{ a.url }}">{{a.path}}</a></td>
+                <td>{{ humanFileSize(a.size) }}</td>
+                <td><a href="/runs/{{ a.run_id }}/jobs">{{ a.stage }}</a></td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="paginatorright" let-state>
+              Total Records: {{ state.totalRecords }}
+            </ng-template>
+          </p-table>
+        </div>
+      </div>
     </div>
-    <div *ngIf="flow.artifacts.private.count > 0">
+    <div *ngIf="flow.artifacts.private && flow.artifacts.private.count > 0">
       <h3>Private</h3>
       Files: {{ flow.artifacts.private.count }}
       <br>
       Total size: {{ humanFileSize(flow.artifacts.private.size) }}
     </div>
-    <div *ngIf="flow.artifacts.report.count > 0">
+    <div *ngIf="flow.artifacts.report && flow.artifacts.report.count > 0">
       <h3>Report</h3>
       Files: {{ flow.artifacts.report.count }}
       <br>

@@ -2,6 +2,7 @@ import os
 import re
 import logging
 import datetime
+from urllib.parse import urljoin
 
 from flask import abort
 from sqlalchemy.sql.expression import asc, desc
@@ -9,7 +10,8 @@ from sqlalchemy.orm import joinedload
 from elasticsearch import Elasticsearch
 
 from . import consts
-from .models import db, Branch, Flow, Run, Stage, Job, Step, ExecutorGroup, Tool, TestCaseResult, TestCase, Issue
+from .models import db, Branch, Flow, Run, Stage, Job, Step, ExecutorGroup, Tool, TestCaseResult, TestCase, Issue, Artifact
+from .models import get_setting
 
 log = logging.getLogger(__name__)
 
@@ -247,6 +249,20 @@ def get_flow_runs(flow_id):
         runs.append(run.get_json())
     return runs, 200
 
+
+def get_flow_artifacts(flow_id):
+    flow = Flow.query.filter_by(id=flow_id).one_or_none()
+    if flow is None:
+        abort(404, "Flow not found")
+
+    base_url = '/artifacts/public/%d' % flow_id
+
+    artifacts = []
+    for art in Artifact.query.filter_by(flow=flow, section=consts.ARTIFACTS_SECTION_PUBLIC):
+        art = art.get_json()
+        art['url'] = urljoin(base_url, art['path'].strip('/'))
+        artifacts.append(art)
+    return {'items': artifacts, 'total': len(artifacts)}, 200
 
 def create_run(flow_id, run):
     """

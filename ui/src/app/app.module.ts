@@ -34,6 +34,7 @@ import { MenubarModule } from 'primeng/menubar'
 import { InputSwitchModule } from 'primeng/inputswitch'
 import { SpinnerModule } from 'primeng/spinner'
 import { PasswordModule } from 'primeng/password'
+import { TooltipModule } from 'primeng/tooltip';
 
 import { ApiModule, BASE_PATH, Configuration } from './backend'
 import { AppRoutingModule } from './app-routing.module'
@@ -119,6 +120,7 @@ export function cfgFactory() {
         InputSwitchModule,
         SpinnerModule,
         PasswordModule,
+        TooltipModule,
     ],
     providers: [
         Title,

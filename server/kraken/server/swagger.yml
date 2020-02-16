@@ -368,6 +368,32 @@ paths:
           description: unexpected error
           schema:
             $ref: '#/definitions/ApiError'
+  /flows/{flow_id}/artifacts:
+    get:
+      summary: List artifacts of given flow
+      operationId: get_flow_artifacts
+      tags:
+        - Execution
+      parameters:
+        - name: flow_id
+          in: path
+          description: ID of pet to return
+          required: true
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: A paged array of runs
+          headers:
+            x-next:
+              type: string
+              description: A link to the next page of responses
+          schema:
+            $ref: '#/definitions/Artifacts'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/ApiError'
   /stages/{stage_id}:
     put:
       operationId: update_stage
@@ -1137,6 +1163,8 @@ definitions:
         type: object
       kind:
         type: string
+      artifacts:
+        type: object
   Flows:
     type: object
     properties:
@@ -1267,6 +1295,33 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/Issue'
+      total:
+        type: integer
+        format: int64
+
+  Artifact:
+    type: "object"
+    properties:
+      id:
+        type: integer
+        format: int64
+      flow_id:
+        type: integer
+        format: int64
+      run_id:
+        type: integer
+        format: int64
+      size:
+        type: integer
+      path:
+        type: string
+  Artifacts:
+    type: object
+    properties:
+      items:
+        type: array
+        items:
+          $ref: '#/definitions/Artifact'
       total:
         type: integer
         format: int64

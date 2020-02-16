@@ -114,3 +114,8 @@ DEFAULT_JOB_TIMEOUT = 5 * 60  # 5 minutes (in seconds)
 EXECUTOR_TIMEOUT = 5 * 60  # 5 minutes (in seconds)
 
 DEFAULT_STORAGE_DIR = '/tmp/kraken_storage'
+
+
+ARTIFACTS_SECTION_PRIVATE = 0
+ARTIFACTS_SECTION_PUBLIC = 1
+ARTIFACTS_SECTION_REPORT = 2

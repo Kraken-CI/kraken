@@ -10,7 +10,7 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.attributes import flag_modified
 import giturlparse
 
-from .models import db, Job, Step, Executor, TestCase, TestCaseResult, Issue, Secret
+from .models import db, Job, Step, Executor, TestCase, TestCaseResult, Issue, Secret, Artifact, File
 from . import consts
 from .bg import jobs as bg_jobs
 
@@ -174,25 +174,50 @@ def _store_artifacts(job, step):
         flow.artifacts = dict(public=dict(size=0, count=0),
                               private=dict(size=0, count=0),
                               report=dict(size=0, count=0, entries=[]))
+    if not flow.artifacts_files:
+        flow.artifacts_files = []
+
+    run = job.run
+    if not run.artifacts:
+        run.artifacts = dict(public=dict(size=0, count=0),
+                             private=dict(size=0, count=0),
+                             report=dict(size=0, count=0, entries=[]))
+    if not run.artifacts_files:
+        run.artifacts_files = []
 
     action = step.fields.get('action', 'upload')
     public = step.fields.get('public', False)
     if action == 'report':
-        dest = 'report'
+        section = 'report'
+        section_id = consts.ARTIFACTS_SECTION_REPORT
     elif public:
-        dest = 'public'
+        section = 'public'
+        section_id = consts.ARTIFACTS_SECTION_PUBLIC
     else:
-        dest = 'private'
+        section = 'private'
+        section_id = consts.ARTIFACTS_SECTION_PRIVATE
 
     for artifact in step.result['artifacts']:
-        flow.artifacts[dest]['size'] += artifact['size']
-        flow.artifacts[dest]['count'] += 1
-        if dest == 'report':
+        flow.artifacts[section]['size'] += artifact['size']
+        flow.artifacts[section]['count'] += 1
+
+        run.artifacts[section]['size'] += artifact['size']
+        run.artifacts[section]['count'] += 1
+
+        if section == 'report':
             report_entry = artifact.get('report_entry', None)
             if report_entry:
                 flow.artifacts['report']['entries'].append(report_entry)
+                run.artifacts['report']['entries'].append(report_entry)
+
+        path = artifact['path']
+        f = File.query.filter_by(path=path).one_or_none()
+        if f is None:
+            f = File(path=path)
+        Artifact(file=f, flow=flow, run=run, size=artifact['size'], section=section_id)
 
     flag_modified(flow, 'artifacts')
+    flag_modified(run, 'artifacts')
     db.session.commit()
 
     t1 = time.time()

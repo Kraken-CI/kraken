@@ -168,59 +168,59 @@
 
   </div>
 
-      <p-table #resultsTable
-             id="results"
-             [value]="results"
-             [lazy]="true"
-             (onLazyLoad)="loadResultsLazy($event)"
-             [paginator]="true"
-             [rows]="30"
-             [totalRecords]="totalResults"
-             [loading]="loadingResults"
-             [rowsPerPageOptions]="[10,20,30,50,100]"
-             [showCurrentPageReport]="true">
-      <ng-template pTemplate="header">
-        <tr>
-          <th style="width: 150px;">Job Name</th>
-          <th style="width: 60px;">Job ID</th>
-          <th style="width: 100px;">Result</th>
-          <th style="width: 70px;">Change</th>
-          <th style="width: 50%;">Name</th>
-          <th style="width: 40px;">Age</th>
-          <th style="width: 40px; overflow-x: hidden;">Instability</th>
-          <th style="width: 150px;">Values</th>
-          <th style="width: 30%;">System</th>
-          <th style="width: 10%;">Config</th>
-          <th style="width: 10%;">Executor Group</th>
-          <th style="width: 10%;">Executor</th>
-          <th style="width: 90px;">Cmd Line</th>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="body" let-res>
-        <tr>
-          <td>{{res.job_name}}</td>
-          <td><a routerLink="/jobs/{{res.job_id}}">{{res.job_id}}</a></td>
-          <td [class]="resultToClass(res.result)">{{resultToTxt(res.result)}}</td>
-          <td [class]="getResultChangeCls(res.change)">{{getResultChangeTxt(res.change)}}</td>
-          <td><a routerLink="/test_case_results/{{res.id}}">{{res.test_case_name}}</a></td>
-          <td>{{res.age}}</td>
-          <td>{{res.instability}}</td>
-          <td>
-            <div *ngFor="let v of res.values | keyvalue">
-              {{v.key}}:&nbsp;{{v.value.value}}
-            </div>
-          </td>
-          <td>Ubuntu 18.04</td>
-          <td>default</td>
-          <td>{{res.executor_group_name}}</td>
-          <td>{{res.executor_name}}</td>
-          <td><p-button label="CmdLine" (onClick)="showCmdLine()" styleClass="cmd-line-btn"></p-button></td>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="paginatorright" let-state>
-           Total Records: {{state.totalRecords}}
-      </ng-template>
-      </p-table>
+  <p-table #resultsTable
+           id="results"
+           [value]="results"
+           [lazy]="true"
+           (onLazyLoad)="loadResultsLazy($event)"
+           [paginator]="true"
+           [rows]="30"
+           [totalRecords]="totalResults"
+           [loading]="loadingResults"
+           [rowsPerPageOptions]="[10,20,30,50,100]"
+           [showCurrentPageReport]="true">
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="width: 150px;">Job Name</th>
+        <th style="width: 60px;">Job ID</th>
+        <th style="width: 100px;">Result</th>
+        <th style="width: 70px;">Change</th>
+        <th style="width: 50%;">Name</th>
+        <th style="width: 40px;">Age</th>
+        <th style="width: 40px; overflow-x: hidden;">Instability</th>
+        <th style="width: 150px;">Values</th>
+        <th style="width: 30%;">System</th>
+        <th style="width: 10%;">Config</th>
+        <th style="width: 10%;">Executor Group</th>
+        <th style="width: 10%;">Executor</th>
+        <th style="width: 90px;">Cmd Line</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-res>
+      <tr>
+        <td>{{res.job_name}}</td>
+        <td><a routerLink="/jobs/{{res.job_id}}">{{res.job_id}}</a></td>
+        <td [class]="resultToClass(res.result)">{{resultToTxt(res.result)}}</td>
+        <td [class]="getResultChangeCls(res.change)">{{getResultChangeTxt(res.change)}}</td>
+        <td><a routerLink="/test_case_results/{{res.id}}">{{res.test_case_name}}</a></td>
+        <td>{{res.age}}</td>
+        <td>{{res.instability}}</td>
+        <td>
+          <div *ngFor="let v of res.values | keyvalue">
+            {{v.key}}:&nbsp;{{v.value.value}}
+          </div>
+        </td>
+        <td>Ubuntu 18.04</td>
+        <td>default</td>
+        <td>{{res.executor_group_name}}</td>
+        <td>{{res.executor_name}}</td>
+        <td><p-button label="CmdLine" (onClick)="showCmdLine()" styleClass="cmd-line-btn"></p-button></td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="paginatorright" let-state>
+      Total Records: {{state.totalRecords}}
+    </ng-template>
+  </p-table>
 </div>
 
 

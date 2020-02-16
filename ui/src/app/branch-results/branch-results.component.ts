@@ -9,7 +9,7 @@ import { MessageService } from 'primeng/api'
 import { ExecutionService } from '../backend/api/execution.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
 import { Run } from '../backend/model/run'
-import { datetimeToLocal } from '../utils'
+import { datetimeToLocal, humanBytes } from '../utils'
 
 @Component({
     selector: 'app-branch-results',
@@ -312,4 +312,8 @@ export class BranchResultsComponent implements OnInit {
     }
 
     onStageRun(newRun) {}
+
+    humanFileSize(bytes) {
+        return humanBytes(bytes, false)
+    }
 }

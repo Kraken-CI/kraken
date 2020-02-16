@@ -14,20 +14,29 @@
 
   <div *ngFor="let flow of flows" class="p-grid p-align-stretch">
     <div class="p-col-1">
-      <a routerLink="/flows/{{flow.id}}" style="color: unset;">
-        <b style="font-size: 1.2rem;">{{flow.name}}.</b>
-        <div style="font-size: 0.7rem;">
-          <div *ngIf="flow.branch_name">
-            {{flow.branch_name}}
-          </div>
-          <div>{{flow.created | localtime}}</div>
-          <div>{{flow.duration}}
-            <span *ngIf="flow.state == 'in-progress'">
-              <i class="pi pi-spin pi-spinner" style="font-size: 16px; vertical-align: text-top;"></i>
-            </span>
+        <div style="display: flex; justify-content: space-between;">
+          <a routerLink="/flows/{{flow.id}}" style="color: unset; display: block;">
+            <b style="font-size: 1.2rem;">{{flow.name}}.</b>
+            <div style="font-size: 0.7rem;">
+              <div *ngIf="flow.branch_name">
+                {{flow.branch_name}}
+              </div>
+              <div>{{flow.created | localtime}}</div>
+              <div>{{flow.duration}}
+                <span *ngIf="flow.state == 'in-progress'">
+                  <i class="pi pi-spin pi-spinner" style="font-size: 16px; vertical-align: text-top;"></i>
+                </span>
+              </div>
+            </div>
+          </a>
+          <div style="margin: 10px 0 0 6px;" *ngIf="flow.artifacts && flow.artifacts.public && flow.artifacts.public.count > 0">
+            <a routerLink="/flows/{{flow.id}}" [queryParams]="{tab: 'artifacts'}" style="color: unset; display: block;">
+              <i class="pi pi-download" style="font-size: 1.6em;"
+                 pTooltip="Files: {{ flow.artifacts.public.count }}<br>Size: {{ humanFileSize(flow.artifacts.public.size) }}"
+                 tooltipStyleClass="artifacts-tooltip" [escape]="false"></i>
+            </a>
           </div>
         </div>
-      </a>
     </div>
     <div class="p-col" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr)); gap: 6px;">
       <ng-container *ngFor="let run of flow.runs">

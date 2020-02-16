@@ -113,6 +113,8 @@ services:
       - KRAKEN_SERVER_ADDR
     ports:
       - "80:80"
+    volumes:
+      - kraken-storage:$KRAKEN_STORAGE_DIR
 
   postgres:
     image: postgres:11

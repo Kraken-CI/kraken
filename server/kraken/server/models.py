@@ -189,6 +189,7 @@ class Flow(db.Model, DatesMixin):
     args = Column(JSONB, nullable=False, default={})
     trigger_data = Column(JSONB)
     artifacts = Column(JSONB, default={})
+    artifacts_files = relationship('Artifact', back_populates="flow")
 
     def get_json(self):
         if self.state == consts.FLOW_STATE_COMPLETED:
@@ -229,6 +230,8 @@ class Run(db.Model, DatesMixin):
     flow_id = Column(Integer, ForeignKey('flows.id'), nullable=False)
     flow = relationship('Flow', back_populates="runs")
     jobs = relationship('Job', back_populates="run")
+    artifacts = Column(JSONB, default={})
+    artifacts_files = relationship('Artifact', back_populates="run")
     hard_timeout_reached = Column(DateTime)
     soft_timeout_reached = Column(DateTime)
     args = Column(JSONB, nullable=False, default={})
@@ -489,6 +492,35 @@ class Issue(db.Model):
         if self.extra:
             data.update(self.extra)
         return data
+
+
+class File(db.Model):
+    __tablename__ = "files"
+    id = Column(Integer, primary_key=True)
+    path = Column(Unicode(512))
+    artifacts = relationship('Artifact', back_populates="file")
+
+
+class Artifact(db.Model):
+    __tablename__ = "artifacts"
+    id = Column(Integer, primary_key=True)
+    file_id = Column(Integer, ForeignKey('files.id'), nullable=False)
+    file = relationship('File', back_populates="artifacts")
+    flow_id = Column(Integer, ForeignKey('flows.id'), nullable=False)
+    flow = relationship('Flow', back_populates="artifacts_files")
+    run_id = Column(Integer, ForeignKey('runs.id'), nullable=False)
+    run = relationship('Run', back_populates="artifacts_files")
+    size = Column(Integer, default=0)
+    section = Column(Integer, default=0)
+
+    def get_json(self):
+        return dict(id=self.id,
+                    path=self.file.path,
+                    size=self.size,
+                    flow_id=self.flow_id,
+                    run_id=self.run_id,
+                    stage=self.run.stage.name)
+
 
 # RESOURCES
 
