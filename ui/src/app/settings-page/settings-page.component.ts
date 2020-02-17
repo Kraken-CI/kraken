@@ -64,8 +64,8 @@ export class SettingsPageComponent implements OnInit {
         this.managementService
             .updateSettings(settings)
             .subscribe(
-                settings => {
-                    this.settings = settings
+                settings2 => {
+                    this.settings = settings2
                     this.msgSrv.add({
                         severity: 'success',
                         summary: 'Settings update succeeded',

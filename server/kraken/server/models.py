@@ -635,11 +635,11 @@ class Setting(db.Model):
     def get_value(self, password_blank=True):
         if self.val_type == "integer":
             return int(self.value)
-        elif self.val_type == "boolean":
-            return (self.value == 'True')
-        elif self.val_type == "password" and password_blank:
+        if self.val_type == "boolean":
+            return self.value == 'True'
+        if self.val_type == "password" and password_blank:
             return ''
-        elif self.value is None:
+        if self.value is None:
             return ''
         return self.value
 

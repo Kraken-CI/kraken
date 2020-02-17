@@ -11,7 +11,6 @@ from elasticsearch import Elasticsearch
 
 from . import consts
 from .models import db, Branch, Flow, Run, Stage, Job, Step, ExecutorGroup, Tool, TestCaseResult, TestCase, Issue, Artifact
-from .models import get_setting
 
 log = logging.getLogger(__name__)
 

@@ -190,7 +190,10 @@ def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
         raise Exception('bad result received from tool: %s' % result)
     available_commands = result['commands']
 
-    if 'run' not in available_commands and 'run_tests' not in available_commands and 'run_analysis' not in available_commands and 'run_artifacts' not in available_commands:
+    if ('run' not in available_commands and
+        'run_tests' not in available_commands and
+        'run_analysis' not in available_commands and
+        'run_artifacts' not in available_commands):
         raise Exception('missing run and run_tests in available commands: %s' % available_commands)
 
     if 'collect_tests' in available_commands and ('tests' not in step or step['tests'] is None or len(step['tests']) == 0):

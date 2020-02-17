@@ -214,7 +214,7 @@ export class FlowResultsComponent implements OnInit {
             this._traverseTree(this.runsTree[0], 0)
             // console.info('flatTree', this.flatTree);
 
-            let tab = this.route.snapshot.queryParamMap.get('tab');
+            const tab = this.route.snapshot.queryParamMap.get('tab');
             if (tab === 'artifacts' && flow.artifacts && flow.artifacts['public'] && flow.artifacts['public'].count > 0) {
                 setTimeout(() => {
                     this.activeTabIndex = 3

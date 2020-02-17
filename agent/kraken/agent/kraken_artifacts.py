@@ -35,10 +35,7 @@ def _upload_all(ftp, cwd, source, dest, report_artifact):
         if '*' not in src and os.path.isdir(src):
             src = os.path.join(src, '**')
 
-        if '**' in src:
-            recursive = True
-        else:
-            recursive = False
+        recursive = '**' in src
 
         for f in glob.iglob(src, recursive=recursive):
             if cwd:
@@ -59,7 +56,7 @@ def _upload_all(ftp, cwd, source, dest, report_artifact):
                 artifact = dict(path=dest_f, size=os.path.getsize(f))
                 report_artifact(artifact)
 
-def _download_dir(ftp, cwd, source, dest):
+def _download_dir(ftp, source, dest):
     dest_file = os.path.join(dest, source)
     with open(dest_file, 'wb') as f:
         ftp.retrbinary("RETR " + source, f.write)
@@ -84,11 +81,13 @@ def _download_dir(ftp, cwd, source, dest):
 def _download_all(ftp, cwd, source, dest):
     log.info('DOWNLOAD')
 
+    dest = os.path.join(cwd, dest)
+
     if not os.path.exists(dest):
         os.makedirs(dest)
 
     for src in source:
-        _download_dir(ftp, cwd, src, dest)
+        _download_dir(ftp, src, dest)
 
 
 def run_artifacts(step, report_artifact=None):

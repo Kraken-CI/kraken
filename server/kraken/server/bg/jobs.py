@@ -121,7 +121,7 @@ def _analyze_job_issues_history(job):
     q = q.order_by(desc(Run.created))
     prev_run = q.first()
     if prev_run is None:
-        return
+        return 0, 0
 
     issues_total = 0
     issues_new = 0

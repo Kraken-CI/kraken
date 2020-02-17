@@ -296,6 +296,7 @@ good-names=a,
            bp,
            c,
            cj,
+           d,
            e,
            ea,
            eg,
@@ -307,6 +308,7 @@ good-names=a,
            l,
            f,
            fh,
+           fp,
            n,
            t,
            v,
@@ -547,7 +549,7 @@ max-parents=7
 max-public-methods=20
 
 # Maximum number of return / yield for function / method body.
-max-returns=6
+max-returns=10
 
 # Maximum number of statements in function / method body.
 max-statements=75
