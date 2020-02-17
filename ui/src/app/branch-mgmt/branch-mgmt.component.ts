@@ -308,4 +308,7 @@ export class BranchMgmtComponent implements OnInit {
     }
 
     forkBranch() {}
+
+    reloadSchema() {
+    }
 }
