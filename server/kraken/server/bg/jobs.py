@@ -189,9 +189,8 @@ def analyze_results_history(self, run_id):
             run.tests_total = run.tests_passed = run.tests_not_run = 0
             run.jobs_error = run.jobs_total = 0
             run.issues_total = run.issues_new = 0
-            for job in run.jobs:
-                if job.covered:
-                    continue
+            non_covered_jobs = Job.query.filter_by(run=run).filter_by(covered=False).all()
+            for job in non_covered_jobs:
                 # analyze results history
                 counts = _analyze_job_results_history(job)
                 tests_total, tests_passed, tests_not_run, new_cnt, no_change_cnt, regr_cnt, fix_cnt = counts

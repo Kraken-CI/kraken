@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core'
 import { Router, ActivatedRoute, ParamMap } from '@angular/router'
+import { FormGroup, FormControl } from '@angular/forms'
 import { Title } from '@angular/platform-browser'
 
 import { MessageService } from 'primeng/api'
@@ -44,6 +45,14 @@ export class BranchMgmtComponent implements OnInit {
 
     schemaCheckDisplay = false
     schemaCheckContent: any
+
+    schemaFromRepoForm = new FormGroup({
+        schema_from_repo_enabled: new FormControl(''),
+        repo_url: new FormControl(''),
+        repo_branch: new FormControl(''),
+        repo_access_token: new FormControl(''),
+        schema_file: new FormControl(''),
+    })
 
     constructor(
         private route: ActivatedRoute,
@@ -151,11 +160,13 @@ export class BranchMgmtComponent implements OnInit {
 
     saveStage() {
         this.saveErrorMsg = ''
-        const stage = {
+
+        let stage = {
             name: this.stage.name,
             schema_code: this.stage.schema_code,
             enabled: this.stage.enabled,
         }
+        stage = Object.assign(stage, this.schemaFromRepoForm.value)
         this.doSaveStage(stage)
     }
 

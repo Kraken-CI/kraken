@@ -130,6 +130,11 @@ class Stage(db.Model, DatesMixin):
     enabled = Column(Boolean, default=True)
     schema = Column(JSONB, nullable=False)
     schema_code = Column(UnicodeText)
+    schema_from_repo_enabled = Column(Boolean, default=False)
+    repo_url = Column(UnicodeText)
+    repo_branch = Column(UnicodeText)
+    repo_access_token = Column(UnicodeText)
+    schema_file = Column(UnicodeText)
     triggers = Column(JSONB)
     timeouts = Column(JSONB)
     runs = relationship('Run', back_populates="stage")
@@ -143,7 +148,12 @@ class Stage(db.Model, DatesMixin):
                     description=self.description,
                     enabled=self.enabled,
                     schema=self.schema,
-                    schema_code=self.schema_code)
+                    schema_code=self.schema_code,
+                    schema_from_repo_enabled=self.schema_from_repo_enabled,
+                    repo_url=self.repo_url,
+                    repo_branch=self.repo_branch,
+                    repo_access_token=self.repo_access_token,
+                    schema_file=self.schema_file)
 
     def __repr__(self):
         return "<Stage %s, '%s'>" % (self.id, self.name)
@@ -252,17 +262,17 @@ class Run(db.Model, DatesMixin):
         jobs_processing = 0
         jobs_executing = 0
         jobs_waiting = 0
-        jobs_completed = 0
         jobs_error = 0
         jobs_total = 0
 
         if self.state == consts.RUN_STATE_COMPLETED:
-            jobs_completed = self.jobs_total
+            jobs_total = self.jobs_total
             jobs_error = self.jobs_error
             duration = self.finished - self.created
         else:
             non_covered_jobs = Job.query.filter_by(run=self).filter_by(covered=False).all()
             jobs_total = len(non_covered_jobs)
+            jobs_completed = 0
             last_time = None
             for job in non_covered_jobs:
                 if job.state == consts.JOB_STATE_EXECUTING_FINISHED:

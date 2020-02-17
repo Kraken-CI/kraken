@@ -311,7 +311,12 @@ def update_stage(stage_id, data):
     if 'enabled' in data:
         stage.enabled = data['enabled']
 
-    if 'schema_code' in data:
+    if 'schema_from_repo_enabled' in data:
+        schema_from_repo_enabled = data['schema_from_repo_enabled']
+    else:
+        schema_from_repo_enabled = stage.schema_from_repo_enabled
+
+    if not schema_from_repo_enabled and 'schema_code' in data:
         _, schema = _check_and_correct_stage_schema(stage.branch, data, stage.schema_code)
         stage.schema = schema
         stage.schema_code = data['schema_code']
@@ -321,6 +326,16 @@ def update_stage(stage_id, data):
         _prepare_new_planner_triggers(stage.id, schema['triggers'], stage.schema['triggers'], stage.triggers)
         flag_modified(stage, 'triggers')
         log.info('new schema: %s', stage.schema)
+
+    if schema_from_repo_enabled:
+        if 'repo_url' in data:
+            stage.repo_url = data['repo_url']
+        if 'repo_branch' in data:
+            stage.repo_branch = data['repo_branch']
+        if 'repo_access_token' in data:
+            stage.repo_access_token = data['repo_access_token']
+        if 'schema_file' in data:
+            stage.schema_file = data['schema_file']
 
     db.session.commit()
 

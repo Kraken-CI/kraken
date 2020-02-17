@@ -87,7 +87,7 @@
             <div class="p-col-4">
               <p-inplace #stageNameInplace (onActivate)="stageNameInplaceActivated()">
                 <span pInplaceDisplay style="font-size: 1.5rem; font-weight: bold;">
-                  {{stage.name}}
+                  <span style="color: #999;">Stage</span> {{stage.name}}
                 </span>
                 <span pInplaceContent>
                   <input type="text" pInputText [(ngModel)]="newStageName" (keydown)="stageNameKeyDown($event, stageNameInplace)"/>
@@ -110,7 +110,7 @@
           </div>
 
           <p-tabView>
-            <p-tabPanel header="Stage Schema">
+            <p-tabPanel header="Schema">
               <div style="height: calc(100vh - 450px); padding: 5px 0 10px 0;">
                 <ngx-codemirror
                   id="ngx-cm"
@@ -119,10 +119,38 @@
               </div>
               <button type="button" (click)="checkStageSchema()" pButton icon="pi pi-eye" label="Check Schema"></button>
             </p-tabPanel>
+            <p-tabPanel header="Schema from Repository">
+              <div class="form-style-2">
+                <form [formGroup]="schemaFromRepoForm">
+                  <label for="schema_from_repo_enabled"><span>Enabled</span>
+                    <p-checkbox binary="true" formControlName="schema_from_repo_enabled"></p-checkbox>
+                  </label>
+                  <label for="repo_url"><span>Repo URL</span>
+                    <input type="text" class="input-field" name="repo_url" pInputText formControlName="repo_url"/>
+                  </label>
+
+                  <label for="repo_branch"><span>Branch</span>
+                    <input type="text" class="input-field" name="repo_branch" pInputText formControlName="repo_branch"/>
+                  </label>
+
+                  <label for="repo_access_token"><span>Access Token</span>
+                    <input type="text" class="input-field" name="repo_access_token" pInputText formControlName="repo_access_token"/>
+                  </label>
+
+                  <label for="schema_file"><span>Schema File</span>
+                    <input type="text" class="input-field" name="schema_file" pInputText formControlName="schema_file"/>
+                  </label>
+
+                  <label>
+                    <p-button label="Reload" icon="pi pi-refresh" (onClick)="reloadSchema()"></p-button>
+                  </label>
+                </form>
+              </div>
+            </p-tabPanel>
           </p-tabView>
         </div>
-        <button type="button" (click)="saveStage()" pButton icon="pi pi-check" label="Save Stage"></button>
-        <button type="button" (click)="deleteStage()" pButton icon="pi pi-trash" class="ui-button-danger" style="margin-left: 50px;" label="Delete Stage"></button>
+        <button type="button" (click)="saveStage()" pButton icon="pi pi-check" label="Save Stage" style="margin: 0 50px 0 0.25em;"></button>
+        <button type="button" (click)="deleteStage()" pButton icon="pi pi-trash" class="ui-button-danger" label="Delete Stage"></button>
         <span *ngIf="saveErrorMsg.length > 0">
           <p-message severity="error" [text]="saveErrorMsg" style="margin-left: 40px;"></p-message>
         </span>

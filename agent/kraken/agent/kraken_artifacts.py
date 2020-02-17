@@ -59,23 +59,26 @@ def _upload_all(ftp, cwd, source, dest, report_artifact):
                 artifact = dict(path=dest_f, size=os.path.getsize(f))
                 report_artifact(artifact)
 
-def _download_dir(ftp, cwd, path, dest):
+def _download_dir(ftp, cwd, source, dest):
+    dest_file = os.path.join(dest, source)
+    with open(dest_file, 'wb') as f:
+        ftp.retrbinary("RETR " + source, f.write)
 
-    #list children:
-    filelist=ftp.nlst()
+    # #list children:
+    # filelist=ftp.nlst()
 
-    for f in filelist:
-        try:
-            #this will check if file is folder:
-            ftp.cwd(path+f+"/")
-            #if so, explore it:
-            downloadFiles(path+f+"/",destination)
-        except ftplib.error_perm:
-            #not a folder with accessible content
-            #download & return
-            os.chdir(destination[0:len(destination)-1]+path)
-            #possibly need a permission exception catch:
-            ftp.retrbinary("RETR "+f, open(os.path.join(destination,f),"wb").write)
+    # for f in filelist:
+    #     try:
+    #         #this will check if file is folder:
+    #         ftp.cwd(path+f+"/")
+    #         #if so, explore it:
+    #         downloadFiles(path+f+"/",destination)
+    #     except ftplib.error_perm:
+    #         #not a folder with accessible content
+    #         #download & return
+    #         os.chdir(destination[0:len(destination)-1]+path)
+    #         #possibly need a permission exception catch:
+    #         ftp.retrbinary("RETR "+f, open(os.path.join(destination,f),"wb").write)
 
 
 def _download_all(ftp, cwd, source, dest):
@@ -106,7 +109,7 @@ def run_artifacts(step, report_artifact=None):
         user = 'private_%d' % flow_id
 
     source = step['source']
-    dest = step.get('destination', '/')
+    dest = step.get('destination', '.' if action == 'download' else '/')
 
     if not isinstance(source, list):
         source = [source]
