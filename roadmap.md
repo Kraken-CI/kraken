@@ -48,3 +48,4 @@
 * add links to executors and groups
 * do not count issues in run.get_json(), do this at the end of run
 * improve auto refreshing of run page
+* add reruning single job
