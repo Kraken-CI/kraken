@@ -24,10 +24,10 @@ def assign_jobs_to_executors():
         return 0
     idle_executors_by_group = {}
     for e in all_idle_executors:
-        log.info('idle executor: %s', e)
+        # log.info('idle executor: %s', e)
         for asm in e.executor_groups:
             grp_id = asm.executor_group_id
-            log.info('  grp: %s', grp_id)
+            # log.info('  grp: %s', grp_id)
             if grp_id not in idle_executors_by_group:
                 idle_executors_by_group[grp_id] = []
             idle_executors_by_group[grp_id].append(e)

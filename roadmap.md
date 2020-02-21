@@ -26,6 +26,7 @@
 * DONE przerobić stronę główną na bardziej statyczną bez rozwijanego drzewa
 * DONE czas na branchu jest pokazywany jako AM a jest PM
 * DONE local_run nie zapisuje do logstash'a
+* DONE do not count issues in run.get_json(), do this at the end of run
 * support repos:
 ** trigger on commit
 ** DONE trigger on github push event
@@ -35,9 +36,10 @@
 * canceling job or run
 * nie pozwalać na run stage gdy parent stage nie był jeszcze puszczony
 * stage definition files from repo
-* artifacts
+* TODO artifacts
 ** integrate Nexus
 ** implement artifacts tool
+** DONE artifacts on FTP
 * add support for config in job
 * add support for system in job
 * add handling NOT FOUND when ID in URL is incorrect
@@ -45,7 +47,6 @@
 * fork branch operation with test results history continuity
 * jak sie wywali poprzedni stage to nie startować następnego
 * show OS instead of hardcoded Ubuntu 18.04
-* add links to executors and groups
-* do not count issues in run.get_json(), do this at the end of run
+* add links to executors and groups on run page and everywhere else
 * improve auto refreshing of run page
 * add reruning single job

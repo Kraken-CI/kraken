@@ -81,7 +81,8 @@ def _download_dir(ftp, source, dest):
 def _download_all(ftp, cwd, source, dest):
     log.info('DOWNLOAD')
 
-    dest = os.path.join(cwd, dest)
+    if cwd:
+        dest = os.path.join(cwd, dest)
 
     if not os.path.exists(dest):
         os.makedirs(dest)
