@@ -72,7 +72,12 @@ class KrakenAuthorizer(DummyAuthorizer):
         if dest not in ['public', 'private', 'report']:
             raise AuthenticationFailed(msg)
 
-        flow = Flow.query.filter_by(id=flow_id).one_or_none()
+        flow = None
+        try:
+            flow = Flow.query.filter_by(id=flow_id).one_or_none()
+        except:
+            log.exception('problem with sql')
+            db.session.rollback()
         if flow is None:
             raise AuthenticationFailed(msg)
 
