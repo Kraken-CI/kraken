@@ -22,7 +22,6 @@ def _mkdir_p(ftp, existing_dirs, path):
 
 
 def _upload_all(ftp, cwd, source, dest, report_artifact):
-    log.info('UPLOAD')
     existing_dirs = set()
 
     _mkdir_p(ftp, existing_dirs, dest)
@@ -79,8 +78,6 @@ def _download_dir(ftp, source, dest):
 
 
 def _download_all(ftp, cwd, source, dest):
-    log.info('DOWNLOAD')
-
     if cwd:
         dest = os.path.join(cwd, dest)
 
@@ -111,14 +108,14 @@ def run_artifacts(step, report_artifact=None):
     source = step['source']
     dest = step.get('destination', '.' if action == 'download' else '/')
 
+    log.info('%s: source: %s, dest: %s', action, source, dest)
+
     if not isinstance(source, list):
         source = [source]
 
     ftp = FTP()
     ftp.connect(host, port)
     ftp.login(user)
-
-    log.info('source: %s, dest: %s', source, dest)
 
     if action == 'download':
         _download_all(ftp, cwd, source, dest)
