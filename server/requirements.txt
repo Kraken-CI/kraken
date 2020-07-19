@@ -26,7 +26,7 @@ SQLAlchemy==1.2.17
 swagger-ui-bundle==0.0.3
 urllib3==1.24.1
 vine==1.3.0
-Werkzeug==0.14.1
+Werkzeug==0.15.3
 zipp==0.6.0
 apscheduler==3.6.1
 pytimeparse==1.1.8
