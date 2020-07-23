@@ -11,3 +11,7 @@ alembic_args = [
 
 def main():
     alembic.config.main(argv=alembic_args)
+
+
+if __name__ == "__main__":
+    main()

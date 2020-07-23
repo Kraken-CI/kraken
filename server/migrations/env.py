@@ -76,6 +76,15 @@ def run_migrations_online():
         )
 
         with context.begin_transaction():
+            # if this is upgrade command and db is not yet initialized then do not do migrations,
+            # planner will initialize db
+            if config.cmd_opts.cmd[0].__name__ == 'upgrade':
+                mc = context.get_context()
+                rev = mc.get_current_revision()
+                if not rev:
+                    # initial db setup is made in planner.py, _db_setup function
+                    return
+
             context.run_migrations()
 
 

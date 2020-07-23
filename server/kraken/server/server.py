@@ -31,7 +31,6 @@ def create_app():
     planner_url = os.environ.get('KRAKEN_PLANNER_URL', consts.DEFAULT_PLANNER_URL)
     server_addr = os.environ.get('KRAKEN_SERVER_ADDR', consts.DEFAULT_SERVER_ADDR)
 
-    #_check_udp_service('logstash', 'logstash', 5959)
     srvcheck.check_postgresql(db_url)
     srvcheck.check_tcp_service('redis', redis_addr, 6379)
     srvcheck.check_url('elasticsearch', elasticsearch_url, 9200)

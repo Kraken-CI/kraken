@@ -189,15 +189,22 @@ task :build_all => [:build_py, :build_ui]
 
 
 # DATABASE
+DB_URL = "postgresql://kraken:kk123@localhost:5433/kraken"
 task :db_up do
   Dir.chdir('server/migrations') do
-    sh 'KRAKEN_DB_URL=postgresql://kraken:kk123@localhost:5433/kraken ../venv/bin/alembic -c alembic.ini upgrade head'
+    sh "KRAKEN_DB_URL=#{DB_URL} ../venv/bin/alembic -c alembic.ini upgrade head"
   end
 end
 
 task :db_down do
   Dir.chdir('server/migrations') do
-    sh 'KRAKEN_DB_URL=postgresql://kraken:kk123@localhost:5433/kraken ../venv/bin/alembic -c alembic.ini downgrade -1'
+    sh "KRAKEN_DB_URL=#{DB_URL} ../venv/bin/alembic -c alembic.ini downgrade -1"
+  end
+end
+
+task :db_init do
+  Dir.chdir('server/migrations') do
+    sh "KRAKEN_DB_URL=#{DB_URL} ../venv/bin/python3 apply.py"
   end
 end
 
