@@ -20,7 +20,7 @@ Kraken CI is a continuous integration and testing system.
 
 Online demo version can be visited on: http://lab.kraken.ci/
 
-## Under the your desk
+## Under your desk
 
 To start demo instance run:
 
