@@ -2,10 +2,10 @@
 
 Kraken CI is a continuous integration and testing system.
 
-[Features](#features)
-[Demo](#Demo)
-[Terminology](#Terminology)
-[Architecture](#Architecture)
+[Features](#features)<br>
+[Demo](#Demo)<br>
+[Terminology](#Terminology)<br>
+[Architecture](#Architecture)<br>
 
 # Features
 
@@ -37,13 +37,25 @@ Then open http://0.0.0.0:8080/
 
 # Terminology
 
-- `project`
-- `branch`
-- `flow`
-- `stage`
-- `run`
-- `step`
-- `job`
+### Project
+`Project` separates things from other `projects`, it contains multiple `branches`.
+
+### Branch
+`Branch` can map to source code repository branch. In a `branch` there are defined `stages`. 
+Each `stage` has its own workflow schema. An execution of stages form a flow. `Branch` contains two kinds of `flows` lists: 
+- `CI flows` - they are triggered by e.g. commits to production source repository branch eg. to master
+- `dev flows` - they are triggered by e.g. commits to developer branches
+
+### Flow
+`Flow` is an execution instance of in a `branch`. It contains one or more `runs` of `stages` ie. execution instances of `stages`.
+
+### Stage
+
+### Run
+
+### Step
+
+### Job
 
 # Architecture
 
