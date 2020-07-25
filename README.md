@@ -4,7 +4,7 @@ Kraken CI is a continuous integration and testing system.
 
 [Features](#features)<br>
 [Demo](#Demo)<br>
-[Terminology](#Terminology)<br>
+[Entities & Terminology](#Entities)<br>
 [Architecture](#Architecture)<br>
 
 # Features
@@ -35,7 +35,7 @@ rake docker_up
 
 Then open http://0.0.0.0:8080/
 
-# Terminology
+# Entities & Terminology
 
 ### Project
 `Project` separates things from other `projects`, it contains multiple `branches`.
@@ -56,6 +56,8 @@ Each `stage` has its own workflow schema. An execution of stages form a flow. `B
 ### Step
 
 ### Job
+
+![Kraken Entities](https://i.imgur.com/P5xc8PL.png)
 
 # Architecture
 
