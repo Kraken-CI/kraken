@@ -47,12 +47,12 @@ Each `stage` has its own workflow schema. An execution of stages form a flow. `B
 - `dev flows` - they are triggered by e.g. commits to developer branches
 
 ### Stage
-`Stage` defines workflow for a `branch`. There can be several `stages` in a `branch`. `Stage`'s workflow defines set of `jobs` 
+`Stage` defines workflow schema for a `branch`. There can be several `stages` in a `branch`. `Stage`'s workflow schema defines set of `jobs` 
 that are executed in parallel. There can be defined many `jobs` in a `stage`. `Stage` can have `parameters` that are passed to `jobs`.
 `Stage` can also have one or more `configurations`. Each `job` is executed in indicated one or more `environments`. 
 `Environment` is defined by `operating system`, `executors group` and `configuration`.
 
-`Stage` is defined in Python-like syntax. Example `stage` definition:
+`Stage` is defined in Python-like syntax. Example `stage` workflow schema definition:
 
 ```python
 def stage(ctx):
@@ -101,14 +101,24 @@ def stage(ctx):
     }
 ```
 
+### Job in Stage
+
+### Step in Stage
+
 ### Flow
 `Flow` is an execution instance in a `branch`. It contains one or more `runs` of `stages` ie. execution instances of `stages`.
 
 ### Run
+`Run` is an execution instance of given `stage` in a given `flow`. `Run` of first `stage` in a `branch` 
+is triggered with triggering its `flow`. The following `run` of subsequent `stage` in a `branch` are triggered 
+by a prior `run`. `Runs` can also be triggered manually ie. their start require manual confirmation.
 
-### Step
+### Job in Run
+This is an execution instance of a `job` defined in workflow schema in a `stage`.
+It has a execution statues. It can have multiple test results or issues.
 
-### Job
+### Step in Run
+This is an execution instance of a `step` defined in workflow schema in a `stage`.
 
 ![Kraken Entities](https://i.imgur.com/QzUGsUu.png)
 
