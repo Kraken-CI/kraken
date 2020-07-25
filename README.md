@@ -4,7 +4,7 @@ Kraken CI is a continuous integration and testing system.
 
 [Features](#features)<br>
 [Demo](#Demo)<br>
-[Entities & Terminology](#Entities)<br>
+[Entities & Terminology](#entities--terminology)<br>
 [Architecture](#Architecture)<br>
 
 # Features
@@ -46,10 +46,63 @@ Each `stage` has its own workflow schema. An execution of stages form a flow. `B
 - `CI flows` - they are triggered by e.g. commits to production source repository branch eg. to master
 - `dev flows` - they are triggered by e.g. commits to developer branches
 
-### Flow
-`Flow` is an execution instance of in a `branch`. It contains one or more `runs` of `stages` ie. execution instances of `stages`.
-
 ### Stage
+`Stage` defines workflow for a `branch`. There can be several `stages` in a `branch`. `Stage`'s workflow defines set of `jobs` 
+that are executed in parallel. There can be defined many `jobs` in a `stage`. `Stage` can have `parameters` that are passed to `jobs`.
+`Stage` can also have one or more `configurations`. Each `job` is executed in indicated one or more `environments`. 
+`Environment` is defined by `operating system`, `executors group` and `configuration`.
+
+`Stage` is defined in Python-like syntax. Example `stage` definition:
+
+```python
+def stage(ctx):
+    return {
+        "parent": "Unit Tests",
+        "triggers": {
+            "parent": True,
+            "cron": "1 * * * *",
+            "interval": "10m",
+            "repository": True,
+            "webhook": True
+        },
+        "parameters": [],
+        "configs": [{
+            "name": "c1",
+            "p1": "1",
+            "p2": "3"
+        }, {
+            "name": "c2",
+            "n3": "33",
+            "t2": "asdf"
+        }],
+        "jobs": [{
+            "name": "make dist",
+            "steps": [{
+                "tool": "git",
+                "checkout": "https://github.com/frankhjung/python-helloworld.git",
+                "branch": "master"
+            }, {
+                "tool": "pytest",
+                "params": "tests/testhelloworld.py",
+                "cwd": "python-helloworld"
+            }],
+            "environments": [{
+                "system": "ubuntu-18.04",
+                "executor_group": "all",
+                "config": "c1"
+            }]
+        }],
+        "notification": {
+            "changes": {
+                "slack": {"channel": "kk-results"},
+                "email": "godfryd@gmail.com"
+            }
+        }
+    }
+```
+
+### Flow
+`Flow` is an execution instance in a `branch`. It contains one or more `runs` of `stages` ie. execution instances of `stages`.
 
 ### Run
 
@@ -57,7 +110,7 @@ Each `stage` has its own workflow schema. An execution of stages form a flow. `B
 
 ### Job
 
-![Kraken Entities](https://i.imgur.com/P5xc8PL.png)
+![Kraken Entities](https://i.imgur.com/QzUGsUu.png)
 
 # Architecture
 
