@@ -2,6 +2,11 @@
 
 Kraken CI is a continuous integration and testing system.
 
+[Features](#features)
+[Demo](#Demo)
+[Terminology](#Terminology)
+[Architecture](#Architecture)
+
 # Features
 
 - distributes builds and tests execution to multiple machines
@@ -30,8 +35,17 @@ rake docker_up
 
 Then open http://0.0.0.0:8080/
 
-# Architecture
+# Terminology
 
+- `project`
+- `branch`
+- `flow`
+- `stage`
+- `run`
+- `step`
+- `job`
+
+# Architecture
 
 ![Kraken Architecture](https://i.imgur.com/S11Lyfj.png)
 
