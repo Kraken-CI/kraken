@@ -1,8 +1,8 @@
 import asyncio
 import logging
 import datetime
-import netifaces
 
+from . import sysutils
 
 log = logging.getLogger(__name__)
 
@@ -22,16 +22,11 @@ class LocalExecContext:
         pass
 
     def get_return_ip_addr(self):  # pylint: disable=no-self-use
-        for iface in netifaces.interfaces():
+        for iface, ip_addr in sysutils.get_ifaces():
+            log.info('adr: %s', ip_addr)
             if iface == 'lo':
                 continue
-            addrs = netifaces.ifaddresses(iface)
-            if netifaces.AF_INET not in addrs:
-                continue
-            addrs = addrs[netifaces.AF_INET]
-            if len(addrs) == 0:
-                continue
-            return addrs[0]['addr']
+            return ip_addr
         return '0.0.0.0'
 
     async def async_run(self, proc_coord, tool_path, return_addr, step_file_path, command, cwd, timeout):

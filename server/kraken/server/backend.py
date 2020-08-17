@@ -8,6 +8,7 @@ from flask import request
 from sqlalchemy import or_
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.attributes import flag_modified
+import pkg_resources
 import giturlparse
 
 from .models import db, Job, Step, Executor, TestCase, TestCaseResult, Issue, Secret, Artifact, File
@@ -386,6 +387,9 @@ def serve_agent_request():
 
     msg = req['msg']
     address = req['address']
+    if address is None:
+        address = request.remote_addr
+    # log.info('executor address: %s', address)
 
     executor = Executor.query.filter_by(address=address).one_or_none()
     if executor is None:
@@ -406,6 +410,7 @@ def serve_agent_request():
 
         logstash_addr = os.environ.get('KRAKEN_LOGSTASH_ADDR', consts.DEFAULT_LOGSTASH_ADDR)
         response['cfg'] = dict(logstash_addr=logstash_addr)
+        response['version'] = pkg_resources.get_distribution('kraken-server').version
 
     elif msg == 'in-progres':
         pass

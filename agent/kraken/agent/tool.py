@@ -1,3 +1,4 @@
+import sys
 import json
 import socket
 import inspect
@@ -159,6 +160,10 @@ class StdoutSock:
         log.info('tool response: %s', data[:200], tool=None)
 
 
+def check_integrity():
+    return True
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-r', '--return-address', help="TCP return address for reporting progress and end status.")
@@ -166,6 +171,12 @@ def main():
     parser.add_argument('-m', '--module', help="A full module name.")
     parser.add_argument('command', help="A command to execute")
     args = parser.parse_args()
+
+    if args.command == 'check-integrity':
+        if check_integrity():
+            sys.exit(0)
+        else:
+            sys.exit(1)
 
     if args.return_address:
         with JsonSocket(args.return_address.split(':')) as sock:

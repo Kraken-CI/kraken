@@ -4,13 +4,16 @@ import time
 import logging
 import datetime
 import urllib.request
+from urllib.parse import urljoin, urlparse
 
 from . import config
+from . import sysutils
 
 log = logging.getLogger(__name__)
 
 
 def _send_http_request(url, data):
+    url = urljoin(url, 'backend')
     data = json.dumps(data)
     data = data.encode('utf-8')
     req = urllib.request.Request(url=url, data=data, headers={'content-type': 'application/json'})
@@ -64,10 +67,14 @@ class Server():
         self.checks_num = 0
         self.last_check = datetime.datetime.now()
         slot = os.environ.get('KRAKEN_AGENT_SLOT', None)
+        builtin = os.environ.get('KRAKEN_AGENT_BUILTIN', None)
         if slot is not None:
             self.my_addr = 'agent.%s' % slot
-        else:
+        elif builtin is not None:
             self.my_addr = 'server'
+        else:
+            srv_ip_addr = urlparse(self.srv_addr).hostname
+            self.my_addr = sysutils.get_my_ip(srv_ip_addr)
 
     def check_server(self):
         current_addr = self.srv_addr
@@ -120,10 +127,14 @@ class Server():
         if 'cfg' in response:
             cfg_changes = config.merge(response['cfg'])
 
-        if 'job' in response:
-            return response['job'], cfg_changes
+        version = None
+        if 'version' in response:
+            version = response['version']
 
-        return {}, cfg_changes
+        if 'job' in response:
+            return response['job'], cfg_changes, version
+
+        return {}, cfg_changes, version
 
     def report_step_result(self, job_id, step_idx, result):
         request = {'address': self.my_addr,

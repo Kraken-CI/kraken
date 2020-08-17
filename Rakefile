@@ -6,6 +6,9 @@ NG = File.expand_path('webui/node_modules/.bin/ng')
 SWAGGER_CODEGEN = "#{TOOLS_DIR}/swagger-codegen-cli-2.4.8.jar"
 SWAGGER_FILE = File.expand_path("server/kraken/server/swagger.yml")
 
+kk_ver = ENV['kk_ver'] || '0.0'
+ENV['KRAKEN_VERSION'] = kk_ver
+
 # prepare env
 task :prepare_env do
   sh 'sudo DEBIAN_FRONTEND=noninteractive apt-get install -y default-jre python3-venv npm libpq-dev libpython3.7-dev'
@@ -39,7 +42,6 @@ file NG => NPX do
 end
 
 task :build_ui => [NG, :gen_client] do
-  kk_ver = ENV['kk_ver'] || '0.0'
   Dir.chdir('ui') do
     sh "sed -e 's/0\.0/#{kk_ver}/g' src/environments/environment.prod.ts.in > src/environments/environment.prod.ts"
     sh 'npx ng build --prod'
@@ -108,6 +110,7 @@ end
 
 file './agent/venv/bin/kkagent' => './agent/venv/bin/python3' do
   Dir.chdir('agent') do
+    sh './venv/bin/pip install -r requirements.txt'
     sh './venv/bin/python3 setup.py develop --upgrade'
   end
 end
@@ -116,15 +119,59 @@ task :run_agent => './agent/venv/bin/kkagent' do
   sh 'cp server/kraken/server/consts.py agent/kraken/agent/'
   sh 'cp server/kraken/server/logs.py agent/kraken/agent/'
   sh 'rm -rf /tmp/kk-jobs/'
-  sh 'bash -c "source ./agent/venv/bin/activate && kkagent -d /tmp/kk-jobs -s http://localhost:8080/backend"'
+  sh 'bash -c "source ./agent/venv/bin/activate && kkagent -d /tmp/kk-jobs -s http://localhost:8080 run"'
 end
 
-task :run_agent_container do
+task :run_agent_in_docker do
   Rake::Task["build_agent"].invoke
   Dir.chdir('agent') do
     sh 'docker build -f docker-agent.txt -t kkagent .'
   end
   sh 'docker run --rm -ti  -v /var/run/docker.sock:/var/run/docker.sock -v /var/snap/lxd/common/lxd/unix.socket:/var/snap/lxd/common/lxd/unix.socket -v `pwd`/agent:/agent -e KRAKEN_AGENT_SLOT=7 -e KRAKEN_SERVER_ADDR=192.168.0.89:8080  kkagent'
+end
+
+task :run_agent_in_lxd do
+#  Rake::Task["build_agent"].invoke
+  Dir.chdir('agent') do
+    systems = [
+      ['ubuntu:20.04', 'u20'],
+      ['images:fedora/32/amd64', 'f32'],
+#      ['images:centos/7/amd64', 'c7'],
+      ['images:centos/8/amd64', 'c8'],
+      ['images:debian/buster/amd64', 'd10'],
+      ['images:debian/bullseye/amd64', 'd11'],
+      ['images:opensuse/15.2/amd64', 's15'],
+    ]
+
+    sh 'lxc network delete kk-net || true'
+    sh 'lxc network create kk-net || true'
+    systems.each do |sys, name|
+      cntr_name = "kk-agent-#{name}"
+      sh "lxc stop #{cntr_name} || true"
+      sh "lxc delete #{cntr_name} || true"
+      sh "lxc launch #{sys} #{cntr_name}"
+      sh "lxc network attach kk-net #{cntr_name}"
+      sh "lxc exec #{cntr_name} -- sleep 5"
+      if sys.include?('centos/7') or sys.include?('debian/buster')
+        sh "lxc exec #{cntr_name} -- dhclient"
+      end
+      if sys.include?('centos')
+        sh "lxc exec #{cntr_name} -- yum install -y python3 sudo"
+      end
+      if sys.include?('debian')
+        sh "lxc exec #{cntr_name} -- apt-get update"
+        sh "lxc exec #{cntr_name} -- apt-get install -y curl python3 sudo"
+      end
+      if sys.include?('opensuse/15.2')
+        sh "lxc exec #{cntr_name} -- zypper install -y curl python3 sudo system-group-wheel"
+      end
+      sh "lxc exec #{cntr_name} -- curl -o agent http://192.168.0.89:8080/install/agent"
+      sh "lxc exec #{cntr_name} -- chmod a+x agent"
+      sh "lxc exec #{cntr_name} -- ./agent -s http://192.168.0.89:8080 install"
+      sh "lxc exec #{cntr_name} -- journalctl -u kraken-agent.service"
+      #sh "lxc exec #{cntr_name} -- journalctl -f -u kraken-agent.service'
+    end
+  end
 end
 
 task :run_celery => './server/venv/bin/kkcelery' do
@@ -239,14 +286,16 @@ task :build_docker_deploy do
 end
 
 task :docker_release do
-  kk_ver = ENV['kk_ver']
+  # for lab.kraken.ci
   sh "docker-compose -f docker-compose-swarm.yaml config > kraken-docker-stack-#{kk_ver}.yaml"
   sh "sed -i -e s/kk_ver/#{kk_ver}/g kraken-docker-stack-#{kk_ver}.yaml"
-  sh "docker-compose -f docker-compose.yaml config > docker-compose-#{kk_ver}.yaml"
-  sh "sed -i -e s/kk_ver/#{kk_ver}/g docker-compose-#{kk_ver}.yaml"
-  sh "sed -i -e 's#127.0.0.1:5000#eu.gcr.io/kraken-261806#g' docker-compose-#{kk_ver}.yaml"
-  sh "docker-compose -f docker-compose-#{kk_ver}.yaml build --build-arg kkver=#{kk_ver}"
-  sh "docker-compose -f docker-compose-#{kk_ver}.yaml push"
+  # for installing under the desk and for pushing images to docker images repository
+  sh "docker-compose -f docker-compose.yaml config > kraken-docker-compose-#{kk_ver}.yaml"
+  sh "sed -i -e s/kk_ver/#{kk_ver}/g kraken-docker-compose-#{kk_ver}.yaml"
+  sh "sed -i -e 's#127.0.0.1:5000#eu.gcr.io/kraken-261806#g' kraken-docker-compose-#{kk_ver}.yaml"
+  sh "cp agent/kkagent agent/kktool server/"
+  sh "docker-compose -f kraken-docker-compose-#{kk_ver}.yaml build --force-rm --no-cache --pull --build-arg kkver=#{kk_ver}"
+  sh "docker-compose -f kraken-docker-compose-#{kk_ver}.yaml push"
 end
 
 task :prepare_swarm do
@@ -266,12 +315,11 @@ task :run_portainer do
 end
 
 task :deploy_lab do
-  kk_ver = ENV['kk_ver']
   sh "./venv/bin/fab -e -H lab.kraken.ci upgrade --kk-ver #{kk_ver}"
 end
 
 task :release_deploy do
   Rake::Task["build_all"].invoke
   Rake::Task["docker_release"].invoke
-  Rake::Task["deploy_lab"].invoke
+#  Rake::Task["deploy_lab"].invoke
 end

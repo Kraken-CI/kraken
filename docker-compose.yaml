@@ -27,53 +27,9 @@ services:
       - lab_net
     depends_on:
       - postgres
-#      - planner
-#      - scheduler
       - controller
       - celery
       - elasticsearch
-
-  # scheduler:
-  #   restart: always
-  #   image: 127.0.0.1:5000/kkscheduler:kk_ver
-  #   build:
-  #     context: server
-  #     dockerfile: docker-scheduler.txt
-  #   environment:
-  #     - KRAKEN_REDIS_ADDR
-  #     - KRAKEN_DB_URL
-  #     - KRAKEN_LOGSTASH_PORT
-  #     - KRAKEN_LOGSTASH_ADDR
-  #     - KRAKEN_ELASTICSEARCH_PORT
-  #     - KRAKEN_ELASTICSEARCH_URL
-  #     - KRAKEN_SERVER_PORT
-  #     - KRAKEN_SERVER_ADDR
-  #   networks:
-  #     - db_net
-  #   depends_on:
-  #     - postgres
-
-  # planner:
-  #   restart: always
-  #   image: 127.0.0.1:5000/kkplanner:kk_ver
-  #   build:
-  #     context: server
-  #     dockerfile: docker-planner.txt
-  #   environment:
-  #     - KRAKEN_REDIS_ADDR
-  #     - KRAKEN_DB_URL
-  #     - KRAKEN_LOGSTASH_PORT
-  #     - KRAKEN_LOGSTASH_ADDR
-  #     - KRAKEN_ELASTICSEARCH_PORT
-  #     - KRAKEN_ELASTICSEARCH_URL
-  #     - KRAKEN_SERVER_PORT
-  #     - KRAKEN_SERVER_ADDR
-  #     - KRAKEN_PLANNER_URL
-  #   networks:
-  #     - db_net
-  #   depends_on:
-  #     - celery
-  #     - postgres
 
   controller:
     restart: always
@@ -134,6 +90,7 @@ services:
       - KRAKEN_ELASTICSEARCH_URL
       - KRAKEN_SERVER_PORT
       - KRAKEN_SERVER_ADDR
+      - KRAKEN_AGENT_BUILTIN=1
     networks:
       - lab_net
     depends_on:

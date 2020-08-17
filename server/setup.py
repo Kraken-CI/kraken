@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
+import os
 from setuptools import setup, find_packages
 
 setup(
     name='kraken-server',
-    version='0.0.1',
+    version=os.environ['KRAKEN_VERSION'],
     packages=find_packages(),
     package_data={
         'kraken.server': ['swagger.yml'],

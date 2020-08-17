@@ -6,6 +6,7 @@ from pyftpdlib.authorizers import DummyAuthorizer, AuthenticationFailed
 from pyftpdlib.handlers import FTPHandler
 from pyftpdlib.servers import FTPServer
 from flask import Flask
+import pkg_resources
 
 from . import logs
 from .models import db, Flow
@@ -25,7 +26,8 @@ def create_app():
     srvcheck.check_url('planner', planner_url, 7997)
 
     logs.setup_logging('storage')
-    log.info('Kraken Storage started')
+    kraken_version = pkg_resources.get_distribution('kraken-server').version
+    log.info('Kraken Storage started, version %s', kraken_version)
 
     # Create  Flask app instance
     app = Flask('Kraken Storage')

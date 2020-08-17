@@ -36,7 +36,7 @@ def _load_tools_list():
     for entry_point in pkg_resources.iter_entry_points('kraken.tools'):
         entry_point.load()
         # log.info("TOOL %s: %s", entry_point.name, entry_point.module_name)
-        tools[entry_point.name] = 'kktool -m %s' % entry_point.module_name
+        tools[entry_point.name] = '/opt/kraken/kktool -m %s' % entry_point.module_name
 
     return tools
 
@@ -145,9 +145,9 @@ async def _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeou
     return_addr = "%s:%s" % addr
     log.info('return_addr %s', return_addr)
 
-    subprocess_task = asyncio.create_task(exec_ctx.async_run(
+    subprocess_task = asyncio.ensure_future(exec_ctx.async_run(
         proc_coord, tool_path, return_addr, step_file_path, command, cwd, timeout))
-    tcp_server_task = asyncio.create_task(_async_tcp_server(server))
+    tcp_server_task = asyncio.ensure_future(_async_tcp_server(server))
     done, _ = await asyncio.wait([subprocess_task, tcp_server_task],
                                  return_when=asyncio.FIRST_COMPLETED)
     if tcp_server_task not in done:
@@ -163,7 +163,13 @@ def _exec_tool(kk_srv, exec_ctx, tool_path, command, cwd, timeout, step_file_pat
         tool_path = "%s %s" % (sys.executable, tool_path)
 
     proc_coord = ProcCoord(kk_srv, command, job_id, idx)
-    asyncio.run(_async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeout, step_file_path))
+    f = _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeout, step_file_path)
+    if hasattr(asyncio, 'run'):
+        asyncio.run(f)  # this is available since Python 3.7
+    else:
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(f)
+        loop.close()
     return proc_coord.result
 
 

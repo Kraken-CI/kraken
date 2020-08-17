@@ -4,6 +4,7 @@ import logging
 
 import connexion
 from connexion.resolver import Resolver
+import pkg_resources
 
 from . import logs
 from . import models
@@ -11,6 +12,7 @@ from . import backend
 from . import consts
 from . import srvcheck
 from . import webhooks
+from . import agentblob
 
 log = logging.getLogger('server')
 
@@ -37,7 +39,8 @@ def create_app():
     srvcheck.check_url('planner', planner_url, 7997)
 
     logs.setup_logging('server')
-    log.info('Kraken Server started')
+    kraken_version = pkg_resources.get_distribution('kraken-server').version
+    log.info('Kraken Server started, version %s', kraken_version)
 
     # Create the connexion application instance
     basedir = os.path.abspath(os.path.dirname(__file__))
@@ -60,6 +63,9 @@ def create_app():
 
     # backend for serving agents
     connex_app.add_url_rule("/backend", view_func=backend.serve_agent_request, methods=['POST'])
+
+    # backend for serving agents
+    connex_app.add_url_rule("/install/<blob>", view_func=agentblob.serve_agent_blob, methods=['GET'])
 
     # install webhooks
     webhooks_bp = webhooks.create_blueprint()

@@ -1,28 +1,35 @@
 #!/usr/bin/env python3
 
 import os
+import sys
 import time
 import logging
 import argparse
 import platform
 import traceback
 
+import pkg_resources
+
 from . import logs
+from . import consts
 from . import config
 from . import server
 from . import jobber
+from . import update
+from . import install
 
 log = logging.getLogger('agent')
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Kraken Agent')
-    parser.add_argument('-s', '--server', help='Server URL', required=True)
-    parser.add_argument('-d', '--data-dir', help='Directory for presistent data', required=True)
+    parser.add_argument('-s', '--server', help='Server URL')
+    parser.add_argument('-d', '--data-dir', help='Directory for presistent data')
     parser.add_argument('-t', '--tools-dirs', help='List of tools directories')
+    parser.add_argument('command', help="A command to execute")
 
     args = parser.parse_args()
-    return args
+    return parser, args
 
 
 def dispatch_job(srv, job):
@@ -51,20 +58,49 @@ def collect_sys_info():
     sys_info = {}
     s = platform.system().lower()
     sys_info['system'] = s
-    if s == 'linux':
-        distr = platform.linux_distribution(full_distribution_name=False)  # pylint: disable=deprecated-method
-        sys_info['distro_name'] = distr[0].lower()
-        sys_info['distro_version'] = distr[1]
+    # if s == 'linux':
+    #     distr = platform.linux_distribution(full_distribution_name=False)  # pylint: disable=deprecated-method
+    #     sys_info['distro_name'] = distr[0].lower()
+    #     sys_info['distro_version'] = distr[1]
 
     return sys_info
 
 
+def check_integrity():
+    return True
+
+
 def main():
     logs.setup_logging('agent')
+    kraken_version = pkg_resources.get_distribution('kraken-agent').version
+    log.info('Starting Kraken Agent, version %s', kraken_version)
 
-    args = parse_args()
+    parser, args = parse_args()
     cfg = vars(args)
     config.set_config(cfg)
+
+    # check integrity (used during update)
+    if args.command == 'check-integrity':
+        if check_integrity():
+            sys.exit(0)
+        else:
+            sys.exit(1)
+    # install agent
+    elif args.command == 'install':
+        install.install()
+        sys.exit(0)
+
+    # no specific command so start agent main loop
+
+    if args.server is None:
+        parser.print_usage()
+        print('missing required --server option')
+        sys.exit(1)
+
+    if args.data_dir is None:
+        parser.print_usage()
+        print('missing required --data-dir option')
+        sys.exit(1)
 
     # allow running kktool from current dir in container
     os.environ["PATH"] += os.pathsep + os.getcwd()
@@ -84,10 +120,14 @@ def main():
 
     while True:
         try:
-            job, cfg_changes = srv.get_job()
+            job, cfg_changes, version = srv.get_job()
 
             if cfg_changes:
                 apply_cfg_changes(cfg_changes)
+
+            if version and version != kraken_version:
+                log.info('new version: %s, was: %s, updating agent' % (version, kraken_version))
+                update.update_agent(version)
 
             if job:
                 log.set_ctx(job=job['id'], run=job['run_id'])
