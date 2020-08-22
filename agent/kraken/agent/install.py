@@ -39,11 +39,11 @@ def install_linux():
 
     # create kraken user
     if dstr in ['ubuntu', 'debian']:
-        run('sudo useradd kraken -d %s -m -s /bin/bash -G sudo' % update.AGENT_DIR)
+        run('sudo useradd kraken -d %s -m -s /bin/bash -G sudo' % consts.AGENT_DIR)
     elif dstr in ['fedora', 'centos']:
-        run('sudo useradd kraken -d %s -m -s /bin/bash -G wheel --system' % update.AGENT_DIR)
+        run('sudo useradd kraken -d %s -m -s /bin/bash -G wheel --system' % consts.AGENT_DIR)
     elif 'suse' in dstr:
-        run('sudo useradd kraken -d %s -m -s /bin/bash -G wheel --system -U' % update.AGENT_DIR)
+        run('sudo useradd kraken -d %s -m -s /bin/bash -G wheel --system -U' % consts.AGENT_DIR)
     else:
         raise Exception('distro %s is not supported yet' % dstr)
 
@@ -53,7 +53,7 @@ def install_linux():
     if dest_dir.exists():
         run('sudo rm -rf %s' % dest_dir)
     run('sudo mkdir -p %s' % dest_dir)
-    data_dir = Path(update.AGENT_DIR) / 'data'
+    data_dir = Path(consts.AGENT_DIR) / 'data'
     run('sudo mkdir -p %s' % data_dir)
     run('sudo chown kraken:kraken %s' % dest_dir)
     tmp_dir = Path(tempfile.gettempdir())

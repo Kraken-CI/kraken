@@ -8,12 +8,12 @@ from flask import request
 from sqlalchemy import or_
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.attributes import flag_modified
-import pkg_resources
 import giturlparse
 
 from .models import db, Job, Step, Executor, TestCase, TestCaseResult, Issue, Secret, Artifact, File
 from . import consts
 from .bg import jobs as bg_jobs
+from .. import version
 
 log = logging.getLogger(__name__)
 
@@ -410,7 +410,7 @@ def serve_agent_request():
 
         logstash_addr = os.environ.get('KRAKEN_LOGSTASH_ADDR', consts.DEFAULT_LOGSTASH_ADDR)
         response['cfg'] = dict(logstash_addr=logstash_addr)
-        response['version'] = pkg_resources.get_distribution('kraken-server').version
+        response['version'] = version.version
 
     elif msg == 'in-progres':
         pass

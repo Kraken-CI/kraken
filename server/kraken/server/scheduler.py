@@ -6,12 +6,12 @@ import datetime
 
 from flask import Flask
 from sqlalchemy.sql.expression import asc
-import pkg_resources
 
 from . import logs
 from .models import db, Executor, Run, Job
 from . import consts
 from . import srvcheck
+from .. import version
 
 log = logging.getLogger('scheduler')
 
@@ -81,8 +81,7 @@ def create_app():
     srvcheck.check_url('planner', planner_url, 7997)
 
     logs.setup_logging('scheduler')
-    kraken_version = pkg_resources.get_distribution('kraken-server').version
-    log.info('Kraken Scheduler started, version %s', kraken_version)
+    log.info('Kraken Scheduler started, version %s', version.version)
 
     # Create  Flask app instance
     app = Flask('Kraken Scheduler')

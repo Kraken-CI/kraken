@@ -40,9 +40,19 @@ def run_tests(step, report_result=None):
 
         tree = ET.parse(os.path.join(cwd, 'result.xml'))
         root = tree.getroot()
-        errors = int(root.get('errors'))
-        failures = int(root.get('failures'))
-        skips = int(root.get('skips'))
+
+        errors = 0
+        if root.get('errors'):
+            errors = int(root.get('errors'))
+
+        failures = 0
+        if root.get('failures'):
+            failures = int(root.get('failures'))
+
+        skips = 0
+        if root.get('skips'):
+            skips = int(root.get('skips'))
+
         if errors > 0:
             result['status'] = 3  # error
         elif failures > 0:

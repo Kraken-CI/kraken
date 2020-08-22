@@ -5,13 +5,13 @@ import logging
 import datetime
 
 from flask import Flask
-import pkg_resources
 
 from . import logs
 from .models import db, Executor, Run, Job
 from . import consts
 from . import srvcheck
 from . import execution
+from .. import version
 
 log = logging.getLogger('watchdog')
 
@@ -25,8 +25,7 @@ def create_app():
     srvcheck.check_url('planner', planner_url, 7997)
 
     logs.setup_logging('watchdog')
-    kraken_version = pkg_resources.get_distribution('kraken-server').version
-    log.info('Kraken Watchdog started, version %s', kraken_version)
+    log.info('Kraken Watchdog started, version %s', version.version)
 
     # Create  Flask app instance
     app = Flask('Kraken Watchdog')

@@ -8,11 +8,10 @@ from pathlib import Path
 from urllib.parse import urljoin
 
 from . import config
+from . import consts
 
 
 log = logging.getLogger(__name__)
-
-AGENT_DIR = '/opt/kraken'
 
 
 def get_blob(dest_dir, name):
@@ -35,7 +34,7 @@ def get_blobs(dest_dir):
 
 
 def get_dest_dir(version):
-    dest_dir = Path(AGENT_DIR) / version
+    dest_dir = Path(consts.AGENT_DIR) / version
     return dest_dir
 
 

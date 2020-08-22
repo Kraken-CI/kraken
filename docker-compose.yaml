@@ -6,7 +6,7 @@ services:
     image: 127.0.0.1:5000/kkserver:kk_ver
     build:
       context: server
-      dockerfile: docker-server.txt
+      target: server
     environment:
       - KRAKEN_REDIS_ADDR
       - KRAKEN_DB_URL
@@ -30,13 +30,14 @@ services:
       - controller
       - celery
       - elasticsearch
+      - logstash
 
   controller:
     restart: always
     image: 127.0.0.1:5000/kkcontroller:kk_ver
     build:
       context: server
-      dockerfile: docker-controller.txt
+      target: controller
     environment:
       - KRAKEN_REDIS_ADDR
       - KRAKEN_DB_URL
@@ -52,13 +53,14 @@ services:
     depends_on:
       - celery
       - postgres
+      - logstash
 
   celery:
     restart: always
     image: 127.0.0.1:5000/kkcelery:kk_ver
     build:
       context: server
-      dockerfile: docker-celery.txt
+      target: celery
     environment:
       - KRAKEN_REDIS_ADDR
       - KRAKEN_DB_URL

@@ -13,7 +13,7 @@ from . import config
 from . import local_run
 from . import docker_run
 from . import lxd_run
-
+from . import consts
 
 log = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ def _load_tools_list():
     for entry_point in pkg_resources.iter_entry_points('kraken.tools'):
         entry_point.load()
         # log.info("TOOL %s: %s", entry_point.name, entry_point.module_name)
-        tools[entry_point.name] = '/opt/kraken/kktool -m %s' % entry_point.module_name
+        tools[entry_point.name] = '%s/kktool -m %s' % (consts.AGENT_DIR, entry_point.module_name)
 
     return tools
 

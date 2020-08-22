@@ -10,12 +10,12 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.triggers.date import DateTrigger
 from apscheduler.triggers.cron import CronTrigger
-import pkg_resources
 
 from . import consts
 from . import logs
 from . import srvcheck
 from . import models
+from .. import version
 
 log = logging.getLogger('planner')
 
@@ -139,8 +139,7 @@ def main():
     #srvcheck.check_tcp_service('logstash', logstash_addr, 9600)
 
     logs.setup_logging('planner')
-    kraken_version = pkg_resources.get_distribution('kraken-server').version
-    log.info('Kraken Planner started, version %s', kraken_version)
+    log.info('Kraken Planner started, version %s', version.version)
 
     # db setup
     _db_setup(db_url)

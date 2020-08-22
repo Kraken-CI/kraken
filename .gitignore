@@ -15,14 +15,9 @@ venv
 /agent/kkagent
 /agent/kktool
 /server/dist/
-/server/kkcelery
-/server/kkplanner
-/server/kkscheduler
-/server/kkserver
-/server/kkgunicorn
-/server/kkdbmigrate
-/server/kkwatchdog
-/server/kkstorage
+/server/kraken/version.py
+/server/kkagent
+/server/kktool
 
 /ui/src/environments/environment.prod.ts
 

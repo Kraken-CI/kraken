@@ -1,3 +1,5 @@
+require 'json'
+
 TOOLS_DIR = File.expand_path('tools')
 NODE_VER = 'node-v10.16.3-linux-x64'
 ENV['PATH'] = "#{TOOLS_DIR}/#{NODE_VER}/bin:#{ENV['PATH']}"
@@ -8,6 +10,7 @@ SWAGGER_FILE = File.expand_path("server/kraken/server/swagger.yml")
 
 kk_ver = ENV['kk_ver'] || '0.0'
 ENV['KRAKEN_VERSION'] = kk_ver
+KRAKEN_VERSION_FILE = File.expand_path("kraken-version-#{kk_ver}.txt")
 
 # prepare env
 task :prepare_env do
@@ -94,18 +97,25 @@ def setup_py_develop
   end
 end
 
-['./server/venv/bin/kkserver', './server/venv/bin/kkscheduler', './server/venv/bin/kkcelery', './server/venv/bin/kkplanner', './server/venv/bin/kkdbmigrate', './server/venv/bin/kkwatchdog', './server/venv/bin/kkstorage'].each {|f|
-  file f => ['./server/venv/bin/python3', './server/requirements.txt'] do
-    setup_py_develop
-  end
-}
-
-task :run_server => './server/venv/bin/kkserver' do
-  sh 'KRAKEN_LOGSTASH_ADDR=192.168.0.88:5959 KRAKEN_STORAGE_ADDR=192.168.0.88:2121 ./server/venv/bin/kkserver'
+file KRAKEN_VERSION_FILE do
+  sh 'rm -f kraken-version-*.txt'
+  sh "touch #{KRAKEN_VERSION_FILE}"
 end
 
-task :run_scheduler => './server/venv/bin/kkscheduler' do
-  sh './server/venv/bin/kkscheduler'
+file 'server/kraken/version.py' => KRAKEN_VERSION_FILE do
+  sh "echo \"version = '#{kk_ver}'\" > server/kraken/version.py"
+end
+
+task :run_server => 'server/kraken/version.py' do
+  Dir.chdir('server') do
+    sh 'KRAKEN_LOGSTASH_ADDR=192.168.0.88:5959 KRAKEN_STORAGE_ADDR=192.168.0.88:2121 ../venv/bin/poetry run kkplanner'
+  end
+end
+
+task :run_scheduler => 'server/kraken/version.py' do
+  Dir.chdir('server') do
+    sh '../venv/bin/poetry run kkscheduler'
+  end
 end
 
 file './agent/venv/bin/kkagent' => './agent/venv/bin/python3' do
@@ -178,36 +188,26 @@ task :run_celery => './server/venv/bin/kkcelery' do
   sh './server/venv/bin/kkcelery'
 end
 
-task :run_planner => './server/venv/bin/kkplanner' do
-  sh './server/venv/bin/kkplanner'
+task :run_planner => 'server/kraken/version.py' do
+  Dir.chdir('server') do
+    sh '../venv/bin/poetry run kkplanner'
+  end
 end
 
-task :run_watchdog => './server/venv/bin/kkwatchdog' do
-  sh './server/venv/bin/kkwatchdog'
+task :run_watchdog => 'server/kraken/version.py' do
+  Dir.chdir('server') do
+    sh '../venv/bin/poetry run kkwatchdog'
+  end
 end
 
-task :run_storage => './server/venv/bin/kkstorage' do
-  sh './server/venv/bin/kkstorage'
+task :run_storage => 'server/kraken/version.py' do
+  Dir.chdir('server') do
+    sh '../venv/bin/poetry run kkstorage'
+  end
 end
 
 file './venv/bin/shiv' => ['./venv/bin/python3', 'requirements.txt'] do
     sh './venv/bin/pip install -r requirements.txt'
-end
-
-task :build_server => './venv/bin/shiv' do
-  Dir.chdir('server') do
-    sh 'rm -rf dist'
-    sh '../venv/bin/pip install --target dist -r requirements.txt'
-    sh '../venv/bin/pip install --target dist --upgrade .'
-    sh "../venv/bin/shiv --site-packages dist --compressed -p '/usr/bin/env python3' -o kkgunicorn -c gunicorn"
-    sh "../venv/bin/shiv --site-packages dist --compressed -p '/usr/bin/env python3' -o kkserver -c kkserver"
-    sh "../venv/bin/shiv --site-packages dist --compressed -p '/usr/bin/env python3' -o kkscheduler -c kkscheduler"
-    sh "../venv/bin/shiv --site-packages dist --compressed -p '/usr/bin/env python3' -o kkcelery -c kkcelery"
-    sh "../venv/bin/shiv --site-packages dist --compressed -p '/usr/bin/env python3' -o kkplanner -c kkplanner"
-    sh "../venv/bin/shiv --site-packages dist --compressed -p '/usr/bin/env python3' -o kkwatchdog -c kkwatchdog"
-    sh "../venv/bin/shiv --site-packages dist --compressed -p '/usr/bin/env python3' -o kkdbmigrate -c kkdbmigrate"
-    sh "../venv/bin/shiv --site-packages dist --compressed -p '/usr/bin/env python3' -o kkstorage -c kkstorage"
-  end
 end
 
 task :build_agent => './venv/bin/shiv' do
@@ -222,9 +222,10 @@ task :build_agent => './venv/bin/shiv' do
     sh '../venv/bin/pip install --target dist-tool --upgrade .'
     sh "../venv/bin/shiv --site-packages dist-tool --compressed -p '/usr/bin/env python3' -o kktool -c kktool"
   end
+  sh "cp agent/kkagent agent/kktool server/"
 end
 
-task :build_py => [:build_agent, :build_server]
+task :build_py => [:build_agent]
 
 task :clean_backend do
   sh 'rm -rf venv'
@@ -234,6 +235,11 @@ end
 
 task :build_all => [:build_py, :build_ui]
 
+# when there is storage limit hit in ELK then do this
+task :unlock_elk do
+  sh 'curl -XPUT -H "Content-Type: application/json" http://localhost:9200/_cluster/settings -d \'{ "transient": { "cluster.routing.allocation.disk.threshold_enabled": false } }\''
+  sh 'curl -XPUT -H "Content-Type: application/json" http://localhost:9200/_all/_settings -d \'{"index.blocks.read_only_allow_delete": null}\''
+end
 
 # DATABASE
 DB_URL = "postgresql://kraken:kk123@localhost:5433/kraken"
@@ -258,10 +264,10 @@ end
 
 # DOCKER
 
-#task :docker_up => [:build_ui] do
-task :docker_up do
+task :docker_up => :build_all do
+#task :docker_up do
   sh "docker-compose down"
-  sh "docker-compose build"
+  sh "docker-compose build --build-arg kkver=#{kk_ver}"
   sh "docker-compose up"
 end
 
@@ -290,12 +296,14 @@ task :docker_release do
   sh "docker-compose -f docker-compose-swarm.yaml config > kraken-docker-stack-#{kk_ver}.yaml"
   sh "sed -i -e s/kk_ver/#{kk_ver}/g kraken-docker-stack-#{kk_ver}.yaml"
   # for installing under the desk and for pushing images to docker images repository
-  sh "docker-compose -f docker-compose.yaml config > kraken-docker-compose-#{kk_ver}.yaml"
-  sh "sed -i -e s/kk_ver/#{kk_ver}/g kraken-docker-compose-#{kk_ver}.yaml"
-  sh "sed -i -e 's#127.0.0.1:5000#eu.gcr.io/kraken-261806#g' kraken-docker-compose-#{kk_ver}.yaml"
+  sh "docker-compose -f docker-compose.yaml config > kraken-docker-compose-#{kk_ver}-tmp.yaml"
+  sh "sed -i -e s/kk_ver/#{kk_ver}/g kraken-docker-compose-#{kk_ver}-tmp.yaml"
+  sh "sed -i -e 's#127.0.0.1:5000#eu.gcr.io/kraken-261806#g' kraken-docker-compose-#{kk_ver}-tmp.yaml"
   sh "cp agent/kkagent agent/kktool server/"
-  sh "docker-compose -f kraken-docker-compose-#{kk_ver}.yaml build --force-rm --no-cache --pull --build-arg kkver=#{kk_ver}"
-  sh "docker-compose -f kraken-docker-compose-#{kk_ver}.yaml push"
+  sh "docker-compose -f kraken-docker-compose-#{kk_ver}-tmp.yaml build --force-rm --no-cache --pull --build-arg kkver=#{kk_ver}"
+#  sh "docker-compose -f kraken-docker-compose-#{kk_ver}-tmp.yaml push"
+  sh "cat kraken-docker-compose-#{kk_ver}-tmp.yaml | grep -v 'context:' | grep -v 'dockerfile:'| grep -v 'build:' > kraken-docker-compose-#{kk_ver}.yaml"
+  sh "rm kraken-docker-compose-#{kk_ver}-tmp.yaml"
 end
 
 task :prepare_swarm do
@@ -316,6 +324,14 @@ end
 
 task :deploy_lab do
   sh "./venv/bin/fab -e -H lab.kraken.ci upgrade --kk-ver #{kk_ver}"
+end
+
+task :github_release do
+  sh "curl --netrc  --fail --location --data '{\"tag_name\": \"v#{kk_ver}\"}' -o github-release-#{kk_ver}.json  https://api.github.com/repos/kraken-ci/kraken/releases"
+  file = File.read("github-release-#{kk_ver}.json")
+  rel = JSON.parse(file)
+  upload_url = rel['upload_url'].chomp('{?name,label}')
+  sh "curl --netrc --header 'Content-Type:application/gzip' --data-binary @kraken-docker-compose-#{kk_ver}.yaml '#{upload_url}?name=kraken-docker-compose-#{kk_ver}.yaml'"
 end
 
 task :release_deploy do

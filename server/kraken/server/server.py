@@ -4,7 +4,6 @@ import logging
 
 import connexion
 from connexion.resolver import Resolver
-import pkg_resources
 
 from . import logs
 from . import models
@@ -13,6 +12,7 @@ from . import consts
 from . import srvcheck
 from . import webhooks
 from . import agentblob
+from .. import version
 
 log = logging.getLogger('server')
 
@@ -39,8 +39,7 @@ def create_app():
     srvcheck.check_url('planner', planner_url, 7997)
 
     logs.setup_logging('server')
-    kraken_version = pkg_resources.get_distribution('kraken-server').version
-    log.info('Kraken Server started, version %s', kraken_version)
+    log.info('Kraken Server started, version %s', version.version)
 
     # Create the connexion application instance
     basedir = os.path.abspath(os.path.dirname(__file__))
