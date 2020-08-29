@@ -22,6 +22,6 @@ venv
 /ui/src/environments/environment.prod.ts
 
 /kraken-docker-stack-*.yaml
-/docker-compose-*.yaml
+/kraken-docker-compose-*.yaml
 
 /.vagrant

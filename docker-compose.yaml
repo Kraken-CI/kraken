@@ -17,6 +17,7 @@ services:
       - KRAKEN_SERVER_PORT
       - KRAKEN_SERVER_ADDR
       - KRAKEN_PLANNER_URL
+      - KRAKEN_STORAGE_ADDR
     expose:
       - $KRAKEN_SERVER_PORT
     ports:
@@ -48,6 +49,9 @@ services:
       - KRAKEN_SERVER_PORT
       - KRAKEN_SERVER_ADDR
       - KRAKEN_PLANNER_URL
+      - KRAKEN_STORAGE_DIR
+    volumes:
+      - kraken-storage:$KRAKEN_STORAGE_DIR
     networks:
       - db_net
     depends_on:
@@ -120,6 +124,8 @@ services:
       - web_net
     depends_on:
       - server
+    volumes:
+      - kraken-storage:$KRAKEN_STORAGE_DIR
 
   postgres:
     image: postgres:11
@@ -193,6 +199,7 @@ services:
 volumes:
   db-data:
   elasticsearch:
+  kraken-storage:
 
 networks:
   db_net:

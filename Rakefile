@@ -293,7 +293,9 @@ end
 
 task :docker_release do
   # for lab.kraken.ci
+  Rake::Task["compose_to_swarm"].invoke
   sh "docker-compose -f docker-compose-swarm.yaml config > kraken-docker-stack-#{kk_ver}.yaml"
+  sh 'rm docker-compose-swarm.yaml'
   sh "sed -i -e s/kk_ver/#{kk_ver}/g kraken-docker-stack-#{kk_ver}.yaml"
 
   # for installing under the desk and for pushing images to docker images repository
@@ -310,6 +312,19 @@ task :docker_release do
   # validate final docker compose file
   sh "docker-compose -f kraken-docker-compose-#{kk_ver}-tmp.yaml config > /dev/null"
   sh "mv kraken-docker-compose-#{kk_ver}-tmp.yaml kraken-docker-compose-#{kk_ver}.yaml"
+end
+
+task :compose_to_swarm do
+  sh 'cp docker-compose.yaml docker-compose-swarm-tmp.yaml'
+  sh "yq d -i docker-compose-swarm-tmp.yaml 'services.*.depends_on'"
+  sh "yq d -i docker-compose-swarm-tmp.yaml 'services.*.build'"
+  sh "yq d -i docker-compose-swarm-tmp.yaml 'services.*.networks'"
+  sh "yq d -i docker-compose-swarm-tmp.yaml 'networks'"
+  sh "yq d -i docker-compose-swarm-tmp.yaml 'services.ui.ports'"
+  sh "yq w -i docker-compose-swarm-tmp.yaml 'services.ui.ports[+]' 80:80"
+  sh "yq d -i docker-compose-swarm-tmp.yaml 'services.elasticsearch.ports'"
+  sh 'yq m docker-compose-swarm-patch.yaml docker-compose-swarm-tmp.yaml > docker-compose-swarm.yaml'
+  sh 'rm docker-compose-swarm-tmp.yaml'
 end
 
 task :prepare_swarm do

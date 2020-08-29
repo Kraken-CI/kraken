@@ -1,0 +1,25 @@
+services:
+  server:
+    image: eu.gcr.io/kraken-261806/kkserver:kk_ver
+    deploy:
+      replicas: 2
+  controller:
+    image: eu.gcr.io/kraken-261806/kkcontroller:kk_ver
+  celery:
+    image: eu.gcr.io/kraken-261806/kkcelery:kk_ver
+  agent:
+    image: eu.gcr.io/kraken-261806/kkagent:kk_ver
+    environment:
+      - KRAKEN_AGENT_SLOT={{.Task.Slot}}
+    deploy:
+      replicas: 3
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/snap/lxd/common/lxd/unix.socket:/var/snap/lxd/common/lxd/unix.socket
+  ui:
+    image: eu.gcr.io/kraken-261806/kkui:kk_ver
+  elasticsearch:
+    deploy:
+      mode: replicated
+      replicas: 1
+      endpoint_mode: dnsrr
