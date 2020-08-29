@@ -295,15 +295,21 @@ task :docker_release do
   # for lab.kraken.ci
   sh "docker-compose -f docker-compose-swarm.yaml config > kraken-docker-stack-#{kk_ver}.yaml"
   sh "sed -i -e s/kk_ver/#{kk_ver}/g kraken-docker-stack-#{kk_ver}.yaml"
+
   # for installing under the desk and for pushing images to docker images repository
-  sh "docker-compose -f docker-compose.yaml config > kraken-docker-compose-#{kk_ver}-tmp.yaml"
+  sh "cp docker-compose.yaml kraken-docker-compose-#{kk_ver}-tmp.yaml"
   sh "sed -i -e s/kk_ver/#{kk_ver}/g kraken-docker-compose-#{kk_ver}-tmp.yaml"
   sh "sed -i -e 's#127.0.0.1:5000#eu.gcr.io/kraken-261806#g' kraken-docker-compose-#{kk_ver}-tmp.yaml"
   sh "cp agent/kkagent agent/kktool server/"
   sh "docker-compose -f kraken-docker-compose-#{kk_ver}-tmp.yaml build --force-rm --no-cache --pull --build-arg kkver=#{kk_ver}"
   sh "docker-compose -f kraken-docker-compose-#{kk_ver}-tmp.yaml push"
-  sh "cat kraken-docker-compose-#{kk_ver}-tmp.yaml | grep -v 'context:' | grep -v 'dockerfile:'| grep -v 'build:' > kraken-docker-compose-#{kk_ver}.yaml"
-  sh "rm kraken-docker-compose-#{kk_ver}-tmp.yaml"
+  # strip build: section - release docker-compose file should use build images directly
+  sh "yq d -i kraken-docker-compose-#{kk_ver}-tmp.yaml 'services.*.build'"
+  # strip deploy: section - deploy is used only in swarm
+  sh "yq d -i kraken-docker-compose-#{kk_ver}-tmp.yaml 'services.*.deploy'"
+  # validate final docker compose file
+  sh "docker-compose -f kraken-docker-compose-#{kk_ver}-tmp.yaml config > /dev/null"
+  sh "mv kraken-docker-compose-#{kk_ver}-tmp.yaml kraken-docker-compose-#{kk_ver}.yaml"
 end
 
 task :prepare_swarm do
@@ -331,7 +337,8 @@ task :github_release do
   file = File.read("github-release-#{kk_ver}.json")
   rel = JSON.parse(file)
   upload_url = rel['upload_url'].chomp('{?name,label}')
-  sh "curl --netrc --header 'Content-Type:application/gzip' --data-binary @kraken-docker-compose-#{kk_ver}.yaml '#{upload_url}?name=kraken-docker-compose-#{kk_ver}.yaml'"
+  sh "curl -H 'Authorization: token #{GITHUB_TOKEN}' -H 'Content-Type:text/plain' --data-binary @kraken-docker-compose-#{kk_ver}.yaml '#{upload_url}?name=kraken-docker-compose-#{kk_ver}.yaml'"
+  sh "curl -H 'Authorization: token #{GITHUB_TOKEN}' -H 'Content-Type:text/plain' --data-binary @.env '#{upload_url}?name=dot-0.87.env'"
 end
 
 task :release_deploy do
