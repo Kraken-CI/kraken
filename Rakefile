@@ -225,7 +225,7 @@ task :build_agent => './venv/bin/shiv' do
   sh "cp agent/kkagent agent/kktool server/"
 end
 
-task :build_py => [:build_agent]
+task :build_py => [:build_agent, 'server/kraken/version.py']
 
 task :clean_backend do
   sh 'rm -rf venv'
@@ -361,5 +361,5 @@ task :release_deploy do
   Rake::Task["build_all"].invoke
   Rake::Task["docker_release"].invoke
   Rake::Task["github_release"].invoke
-#  Rake::Task["deploy_lab"].invoke
+  Rake::Task["deploy_lab"].invoke
 end
