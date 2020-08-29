@@ -348,11 +348,11 @@ task :deploy_lab do
 end
 
 task :github_release do
+  gh_token = ENV['GITHUB_TOKEN']
   sh "curl -H 'Authorization: token #{gh_token}'  --fail --location --data '{\"tag_name\": \"v#{kk_ver}\"}' -o github-release-#{kk_ver}.json  https://api.github.com/repos/kraken-ci/kraken/releases"
   file = File.read("github-release-#{kk_ver}.json")
   rel = JSON.parse(file)
   upload_url = rel['upload_url'].chomp('{?name,label}')
-  gh_token = ENV['GITHUB_TOKEN']
   sh "curl -H 'Authorization: token #{gh_token}' -H 'Content-Type:text/plain' --data-binary @kraken-docker-compose-#{kk_ver}.yaml '#{upload_url}?name=kraken-docker-compose-#{kk_ver}.yaml'"
   sh "curl -H 'Authorization: token #{gh_token}' -H 'Content-Type:text/plain' --data-binary @.env '#{upload_url}?name=dot-0.87.env'"
 end
