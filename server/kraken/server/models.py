@@ -931,8 +931,12 @@ def prepare_initial_data():
             "name": "pylint",
             "steps": [{
                 "tool": "git",
-                "checkout": "git@github.com:godfryd/kraken.git",
+                "checkout": "https://github.com/Kraken-CI/kraken.git",
                 "branch": "master"
+            }, {
+                "tool": "shell",
+                "cmd": "cp server/kraken/server/logs.py server/kraken/server/consts.py agent/kraken/agent",
+                "cwd": "kraken"
             }, {
                 "tool": "pylint",
                 "rcfile": "pylint.rc",
@@ -965,8 +969,12 @@ def prepare_initial_data():
             "name": "pytest",
             "steps": [{
                 "tool": "git",
-                "checkout": "git@github.com:godfryd/kraken.git",
+                "checkout": "https://github.com/Kraken-CI/kraken.git",
                 "branch": "master"
+            }, {
+                "tool": "shell",
+                "cmd": "cp server/kraken/server/logs.py server/kraken/server/consts.py agent/kraken/agent",
+                "cwd": "kraken"
             }, {
                 "tool": "pytest",
                 "params": "-vv",

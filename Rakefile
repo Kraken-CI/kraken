@@ -301,7 +301,7 @@ task :docker_release do
   sh "sed -i -e 's#127.0.0.1:5000#eu.gcr.io/kraken-261806#g' kraken-docker-compose-#{kk_ver}-tmp.yaml"
   sh "cp agent/kkagent agent/kktool server/"
   sh "docker-compose -f kraken-docker-compose-#{kk_ver}-tmp.yaml build --force-rm --no-cache --pull --build-arg kkver=#{kk_ver}"
-#  sh "docker-compose -f kraken-docker-compose-#{kk_ver}-tmp.yaml push"
+  sh "docker-compose -f kraken-docker-compose-#{kk_ver}-tmp.yaml push"
   sh "cat kraken-docker-compose-#{kk_ver}-tmp.yaml | grep -v 'context:' | grep -v 'dockerfile:'| grep -v 'build:' > kraken-docker-compose-#{kk_ver}.yaml"
   sh "rm kraken-docker-compose-#{kk_ver}-tmp.yaml"
 end
@@ -337,5 +337,6 @@ end
 task :release_deploy do
   Rake::Task["build_all"].invoke
   Rake::Task["docker_release"].invoke
+  Rake::Task["github_release"].invoke
 #  Rake::Task["deploy_lab"].invoke
 end

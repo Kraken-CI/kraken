@@ -27,6 +27,7 @@ def run(step, **kwargs):  # pylint: disable=unused-argument
     if 'destination' in step:
         dest = step['destination']
 
+    # prepare accessing git repo
     ssh_agent = None
     access_token = None
     if 'ssh-key' in step:
