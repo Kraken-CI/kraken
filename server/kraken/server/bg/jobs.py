@@ -262,12 +262,14 @@ def trigger_stages(self, run_id):
         app = _create_app()
 
         with app.app_context():
+            # find completed parent run
             log.info('starting triggering stages after run %s', run_id)
             run = Run.query.filter_by(id=run_id).one_or_none()
             if run is None:
                 log.error('got unknown run: %s', run_id)
                 return
 
+            # go through next stages and trigger them if needed
             curr_stage_name = run.stage.name
             branch = run.stage.branch
             for stage in branch.stages.filter_by(deleted=None, enabled=True):

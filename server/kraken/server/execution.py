@@ -166,11 +166,20 @@ def start_run(stage, flow, args=None):
     run_args = stage.get_default_args()
     if args is not None:
         run_args.update(args)
-    new_run = Run(stage=stage, flow=flow, args=run_args)
-    db.session.commit()
-    log.info('starting run %s for stage %s of branch %s', new_run, stage, stage.branch)
-    trigger_jobs(new_run)
-    return new_run
+
+    # if there was already run for this stage then replay it, otherwise create new one
+    replay = True
+    run = Run.query.filter_by(stage=stage, flow=flow).one_or_none()
+    if run is None:
+        run = Run(stage=stage, flow=flow, args=run_args)
+        db.session.commit()
+        replay = False
+
+    # trigger jobs
+    log.info('starting run %s for stage %s of branch %s', run, stage, stage.branch)
+    trigger_jobs(run, replay=replay)
+
+    return run
 
 
 def create_flow(branch_id, kind, flow, trigger_data=None):
