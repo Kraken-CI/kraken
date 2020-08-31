@@ -388,7 +388,7 @@ def _handle_sys_info(executor, req):  # pylint: disable=unused-argument
 
 
 def _handle_unknown_executor(address, ip_address):
-    Executor(name=address, address=address, authorized=False, ip_address=ip_address)
+    Executor(name=address, address=address, authorized=False, ip_address=ip_address, last_seen=datetime.datetime.utcnow())
     db.session.commit()
 
 
@@ -410,12 +410,14 @@ def serve_agent_request():
         log.warning('unknown executor %s', address)
         _handle_unknown_executor(address, request.remote_addr)
         return json.dumps({})
+
+    executor.last_seen = datetime.datetime.utcnow()
+    executor.deleted = None
+    db.session.commit()
+
     if not executor.authorized:
         log.warning('unauthorized executor %s from %s', address, request.remote_addr)
         return json.dumps({})
-
-    executor.last_seen = datetime.datetime.utcnow()
-    db.session.commit()
 
     response = {}
 

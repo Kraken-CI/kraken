@@ -50,6 +50,7 @@ def create_app():
     app.config["SQLALCHEMY_ECHO"] = False
     app.config["SQLALCHEMY_DATABASE_URI"] = db_url
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    app.config["SQLALCHEMY_ENGINE_OPTIONS" = dict(pool_recycle=600, pool_pre_ping=True)
 
     # initialize SqlAlchemy
     db.init_app(app)
@@ -140,6 +141,7 @@ def main():
         storage_addr = os.environ.get('KRAKEN_STORAGE_ADDR', consts.DEFAULT_STORAGE_ADDR)
         _, storage_port = storage_addr.split(':')
         address = ('', int(storage_port))
+        log.info('listening on %s', address)
         server = FTPServer(address, handler)
 
         # set a limit for connections

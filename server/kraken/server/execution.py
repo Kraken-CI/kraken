@@ -172,8 +172,10 @@ def start_run(stage, flow, args=None):
     run = Run.query.filter_by(stage=stage, flow=flow).one_or_none()
     if run is None:
         run = Run(stage=stage, flow=flow, args=run_args)
-        db.session.commit()
         replay = False
+    else:
+        run.state = consts.RUN_STATE_IN_PROGRESS
+    db.session.commit()
 
     # trigger jobs
     log.info('starting run %s for stage %s of branch %s', run, stage, stage.branch)

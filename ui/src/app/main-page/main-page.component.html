@@ -41,7 +41,9 @@
 
         <div class="p-grid">
           <div class="p-col-6" *ngFor="let flows of getFlows(branch)">
-            <b style="width: 100px; display: inline-block;"><a routerLink="/branches/{{ branch.id }}/{{ flows.name.toLowerCase() }}">{{ flows.name }} flows</a></b>
+            <b style="width: 100px; display: inline-block; font-size: 1.4em; margin: 0 0 10px 2px;">
+              <a routerLink="/branches/{{ branch.id }}/{{ flows.name.toLowerCase() }}">{{ flows.name }} flows</a>
+            </b>
             {{ flows.flows.length === 0 ? 'no flows yet' : '' }}
             <table *ngIf="flows.flows.length > 0">
               <tr *ngFor="let flow of flows.flows" style="padding: 3px 6px;">

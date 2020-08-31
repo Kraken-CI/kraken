@@ -108,7 +108,7 @@ end
 
 task :run_server => 'server/kraken/version.py' do
   Dir.chdir('server') do
-    sh 'KRAKEN_LOGSTASH_ADDR=192.168.0.88:5959 KRAKEN_STORAGE_ADDR=192.168.0.88:2121 ../venv/bin/poetry run kkplanner'
+    sh 'KRAKEN_LOGSTASH_ADDR=192.168.0.88:5959 KRAKEN_STORAGE_ADDR=192.168.0.88:2121 ../venv/bin/poetry run python -m kraken.server.server'
   end
 end
 
@@ -140,7 +140,7 @@ task :run_agent_in_docker do
   sh 'docker run --rm -ti  -v /var/run/docker.sock:/var/run/docker.sock -v /var/snap/lxd/common/lxd/unix.socket:/var/snap/lxd/common/lxd/unix.socket -v `pwd`/agent:/agent -e KRAKEN_AGENT_SLOT=7 -e KRAKEN_SERVER_ADDR=192.168.0.89:8080  kkagent'
 end
 
-task :run_agent_in_lxd do
+task :run_agent_in_lxd_all do
 #  Rake::Task["build_agent"].invoke
   Dir.chdir('agent') do
     systems = [
@@ -184,8 +184,53 @@ task :run_agent_in_lxd do
   end
 end
 
-task :run_celery => './server/venv/bin/kkcelery' do
-  sh './server/venv/bin/kkcelery'
+task :run_agent_in_lxd do
+#  Rake::Task["build_agent"].invoke
+  Dir.chdir('agent') do
+    systems = [
+      ['ubuntu:20.04', 'u20'],
+    ]
+
+    sh 'lxc network delete kk-net || true'
+    sh 'lxc network create kk-net || true'
+    systems.each do |sys, name|
+      cntr_name = "kk-agent-#{name}"
+      sh "lxc stop #{cntr_name} || true"
+      sh "lxc delete #{cntr_name} || true"
+      sh "lxc launch #{sys} #{cntr_name}"
+      sh "lxc config set #{cntr_name} security.nesting true"
+      sh "lxc network attach kk-net #{cntr_name}"
+      sh "lxc exec #{cntr_name} -- sleep 5"
+      if sys.include?('centos/7') or sys.include?('debian/buster')
+        sh "lxc exec #{cntr_name} -- dhclient"
+      end
+      if sys.include?('centos')
+        sh "lxc exec #{cntr_name} -- yum install -y python3 sudo"
+      end
+      if sys.include?('debian')
+        sh "lxc exec #{cntr_name} -- apt-get update"
+        sh "lxc exec #{cntr_name} -- apt-get install -y curl python3 sudo"
+      end
+      if sys.include?('opensuse/15.2')
+        sh "lxc exec #{cntr_name} -- zypper install -y curl python3 sudo system-group-wheel"
+      end
+
+      sh "lxc exec #{cntr_name} -- apt-get update"
+      sh "lxc exec #{cntr_name} -- apt-get install -y python3-docker docker.io"
+
+      sh "lxc exec #{cntr_name} -- curl -o agent http://192.168.0.89:8080/install/agent"
+      sh "lxc exec #{cntr_name} -- chmod a+x agent"
+      sh "lxc exec #{cntr_name} -- ./agent -s http://192.168.0.89:8080 install"
+      #sh "lxc exec #{cntr_name} -- journalctl -u kraken-agent.service"
+      sh "lxc exec #{cntr_name} -- journalctl -f -u kraken-agent.service"
+    end
+  end
+end
+
+task :run_celery => './server/kraken/version.py' do
+  Dir.chdir('server') do
+    sh '../venv/bin/poetry run kkcelery'
+  end
 end
 
 task :run_planner => 'server/kraken/version.py' do

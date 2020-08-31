@@ -98,7 +98,7 @@ def _check_executors():
     five_mins_ago = now - datetime.timedelta(seconds=consts.EXECUTOR_TIMEOUT)
 
     q = Executor.query
-    q = q.filter_by(disabled=False)
+    q = q.filter_by(disabled=False, deleted=None)
     q = q.filter(Executor.last_seen < five_mins_ago)
 
     for e in q.all():

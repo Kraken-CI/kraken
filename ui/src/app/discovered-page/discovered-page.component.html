@@ -28,9 +28,7 @@
       <th style="width: 100px;">Address</th>
       <th style="width: 120px;">Name</th>
       <th style="width: 120px;">IP Address</th>
-      <th style="width: 120px;">State</th>
-      <th style="width: 120px;">Disabled</th>
-      <th style="width: 10%;">Groups</th>
+      <th style="width: 10%;">Last Seen</th>
     </tr>
   </ng-template>
   <ng-template pTemplate="body" let-executor>
@@ -42,13 +40,7 @@
       <td>{{executor.address}}</td>
       <td><a routerLink="/executors/{{executor.id}}">{{executor.name}}</a></td>
       <td>{{executor.ip_address}}</td>
-      <td>{{executor.state}}</td>
-      <td>{{executor.disabled}}</td>
-      <td>
-          <span *ngFor="let g of executor.groups" style="padding-right: 5px;">
-            <a routerLink="/executor-groups/{{ g.id }}">{{ g.name }}</a>
-          </span>
-      </td>
+      <td>{{ executor.last_seen ? (executor.last_seen | localtime) : '' }}</td>
     </tr>
   </ng-template>
 </p-table>
