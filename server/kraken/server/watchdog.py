@@ -89,8 +89,17 @@ def _check_runs():
         note = 'run %s timed out, deadline was: %s' % (str(run), str(end_time))
         log.info(note)
         run.note = note
+
+        # cancel any pending jobs
+        canceled_jobs_count = 0
         for job in run.jobs:
-            execution.cancel_job(job, note=note)
+            if job.state != consts.JOB_STATE_COMPLETED:
+                execution.cancel_job(job, note=note)
+                canceled_jobs_count += 1
+
+        # if there is no pending jobs then complete run now
+        if canceled_jobs_count == 0:
+            execution.complete_run(run, now)
 
 
 def _check_executors():
