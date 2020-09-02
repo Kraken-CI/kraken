@@ -40,6 +40,7 @@ def parse_args():
     parser.add_argument('-s', '--server', help='Server URL')
     parser.add_argument('-d', '--data-dir', help='Directory for presistent data')
     parser.add_argument('-t', '--tools-dirs', help='List of tools directories')
+    parser.add_argument('--no-update', action='store_true', help='Do not update agent automatically (useful in agent development)')
     parser.add_argument('command', help="A command to execute")
 
     args = parser.parse_args()
@@ -139,7 +140,7 @@ def main():
             if cfg_changes:
                 apply_cfg_changes(cfg_changes)
 
-            if version and version != kraken_version:
+            if not args.no_update and version and version != kraken_version:
                 log.info('new version: %s, was: %s, updating agent' % (version, kraken_version))
                 update.update_agent(version)
 

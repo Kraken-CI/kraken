@@ -273,7 +273,15 @@ def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
         timeout = deadline - time.time()
         if timeout <= 0:
             return {'status': 'error', 'reason': 'timeout'}
-        result = _exec_tool(srv, exec_ctx, tool_path, 'run', job_dir, timeout, step_file_path, job_id, idx)
+        attempts = step.get('attempts', 1)
+        sleep_time_after_attempt = step.get('sleep_time_after_attempt', 0)
+        for n in range(attempts):
+            result = _exec_tool(srv, exec_ctx, tool_path, 'run', job_dir, timeout, step_file_path, job_id, idx)
+            if result['status'] == 'done':
+                break
+            log.info('command failed, it was attempt %d/%d, %s', n + 1, attempts, 'no more retries' if n + 1 == attempts else ('retrying after %ds' % sleep_time_after_attempt))
+            if sleep_time_after_attempt > 0:
+                time.sleep(sleep_time_after_attempt)
         log.info('result for run: %s', result)
         srv.report_step_result(job_id, idx, result)
 
