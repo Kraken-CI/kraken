@@ -1,5 +1,5 @@
 <p-menu #runBoxMenu [popup]="true" [model]="runBoxMenuItems"></p-menu>
-<div class="round-shadow" [ngStyle]="{'background-color': bgColor, 'height': '100%'}">
+<div class="round-shadow" [ngStyle]="{'background': bgColor, 'height': '100%'}">
   <!-- title bar -->
   <div style="display: flex;">
     <b *ngIf="run" style="font-size: 1.1rem; flex: 1;"><a routerLink="/runs/{{run.id}}/jobs" routerLinkActive="active" style="color: unset;">{{run.name}}</a></b>

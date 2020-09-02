@@ -20,7 +20,7 @@ export class RunBoxComponent implements OnInit {
 
     runBoxMenuItems: MenuItem[]
 
-    bgColor = '#fff'
+    bgColor = ''
 
     constructor(
         private router: Router,
@@ -66,16 +66,16 @@ export class RunBoxComponent implements OnInit {
 
             // calculate bg color for box
             if (this.run.jobs_error && this.run.jobs_error > 0) {
-                this.bgColor = '#ffe6e6'
+                this.bgColor = 'linear-gradient(90deg, rgba(255,230,230,1) 0%, rgba(227,193,193,1) 100%)' //'#ffe6e6'  // redish
             } else if (this.run.state === 'completed') {
                 if (
                     this.run.tests_passed &&
                     this.run.tests_total &&
                     this.run.tests_passed < this.run.tests_total
                 ) {
-                    this.bgColor = '#fff9e6'
+                    this.bgColor = 'linear-gradient(90deg, rgba(255,230,230,1) 0%, rgba(227,193,193,1) 100%)' //'#fff9e6'  // redish
                 } else {
-                    this.bgColor = '#e6ffe6'
+                    this.bgColor = 'linear-gradient(90deg, rgba(230,255,230,1) 0%, rgba(193,227,193,1) 100%)' //'#e6ffe6'  // greenish
                 }
             }
         } else {
