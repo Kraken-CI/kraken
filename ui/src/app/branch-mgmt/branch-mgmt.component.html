@@ -18,11 +18,11 @@
   </div>
 
   <p-footer style="display: flex; justify-content: space-between; align-items: center;">
-    <div *ngIf="schemaCheckContent.schema">
+    <div *ngIf="schemaCheckContent.schema" style="color: green;font-weight: bold;font-size: 1.4em;">
       <i class="pi pi-check" style="vertical-align: text-bottom;"></i>
       All ok
     </div>
-    <div *ngIf="schemaCheckContent.error">
+    <div *ngIf="schemaCheckContent.error" style="color: red;font-weight: bold;font-size: 1.4em;">
       <i class="pi pi-exclamation-triangle" style="vertical-align: text-bottom;"></i>
       Error in schema code
     </div>

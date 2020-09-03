@@ -18,7 +18,7 @@ export class RunResultsComponent implements OnInit {
     tabs: MenuItem[]
     activeTab: MenuItem
     activeTabIdx = 0
-    recordsCount: string[] = ['0', '0', '0']
+    recordsCount: string[] = ['0', '0', '0', '0']
 
     runId = 0
     run: Run = { tests_passed: 0 }
@@ -60,6 +60,11 @@ export class RunResultsComponent implements OnInit {
     filterIssueMaxAge = 1000
     filterIssueJob = ''
 
+    // artifacts
+    artifacts: any[]
+    totalArtifacts = 0
+    loadingArtifacts = true
+
     constructor(
         private route: ActivatedRoute,
         private router: Router,
@@ -97,6 +102,8 @@ export class RunResultsComponent implements OnInit {
             idx = 1
         } else if (tabName === 'issues') {
             idx = 2
+        } else if (tabName === 'artifacts') {
+            idx = 3
         }
         this.activeTab = this.tabs[idx]
         this.activeTabIdx = idx
@@ -128,6 +135,10 @@ export class RunResultsComponent implements OnInit {
                         label: 'Issues',
                         routerLink: '/runs/' + this.runId + '/issues',
                     },
+                    {
+                        label: 'Artifacts',
+                        routerLink: '/runs/' + this.runId + '/artifacts',
+                    },
                 ]
 
                 this.jobs = []
@@ -141,6 +152,8 @@ export class RunResultsComponent implements OnInit {
                     this.loadResultsLazy({ first: 0, rows: 30 })
                 } else if (tab === 'issues') {
                     this.loadIssuesLazy({ first: 0, rows: 30 })
+                } else if (tab === 'artifacts') {
+                    this.loadArtifactsLazy({ first: 0, rows: 30 })
                 }
 
                 this.executionService.getRun(this.runId).subscribe(run => {
@@ -150,6 +163,7 @@ export class RunResultsComponent implements OnInit {
                     this.recordsCount[1] =
                         '' + run.tests_passed + ' / ' + run.tests_total
                     this.recordsCount[2] = '' + run.issues_total
+                    this.recordsCount[3] = '' + run.artifacts_total
 
                     const crumbs = [
                         {
@@ -289,6 +303,20 @@ export class RunResultsComponent implements OnInit {
                 this.issues = data.items
                 this.totalIssues = data.total
                 this.loadingIssues = false
+            })
+    }
+
+    loadArtifactsLazy(event) {
+        this.executionService
+            .getRunArtifacts(
+                this.runId,
+                event.first,
+                event.rows
+            )
+            .subscribe(data => {
+                this.artifacts = data.items
+                this.totalArtifacts = data.total
+                this.loadingArtifacts = false
             })
     }
 

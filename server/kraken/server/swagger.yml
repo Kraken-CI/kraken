@@ -2,7 +2,7 @@ swagger: "2.0"
 info:
   description: This is the swagger file that goes with our server code
   version: "1.0.0"
-  title: Swagger Rest Article
+  title: Kraken CI ReST API
 consumes:
   - application/json
 produces:
@@ -705,6 +705,44 @@ paths:
           description: unexpected error
           schema:
             $ref: '#/definitions/ApiError'
+  /runs/{run_id}/artifacts:
+    get:
+      summary: List artifacts of given run
+      operationId: get_run_artifacts
+      tags:
+        - Execution
+      parameters:
+        - name: run_id
+          in: path
+          description: ID of pet to return
+          required: true
+          type: integer
+          format: int64
+        - name: start
+          in: query
+          description: How many items to return at one time (max 100)
+          required: false
+          type: integer
+          format: int32
+        - name: limit
+          in: query
+          description: How many items to return at one time (max 100)
+          required: false
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: A paged array of runs
+          headers:
+            x-next:
+              type: string
+              description: A link to the next page of responses
+          schema:
+            $ref: '#/definitions/Artifacts'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/ApiError'
   /runs/{run_id}:
     get:
       summary: List all results
@@ -1234,6 +1272,8 @@ definitions:
       issues_total:
         type: integer
       issues_new:
+        type: integer
+      artifacts_total:
         type: integer
       fix_cnt:
         type: integer

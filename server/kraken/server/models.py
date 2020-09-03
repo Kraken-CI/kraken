@@ -333,6 +333,7 @@ class Run(db.Model, DatesMixin):
                     tests_not_run=self.tests_not_run,
                     issues_total=self.issues_total,
                     issues_new=self.issues_new,
+                    artifacts_total=len(self.artifacts_files),
                     new_cnt=self.new_cnt,
                     no_change_cnt=self.no_change_cnt,
                     regr_cnt=self.regr_cnt,
@@ -539,7 +540,7 @@ class Artifact(db.Model):
 
     def get_json(self):
         return dict(id=self.id,
-                    path=self.file.path,
+                    path=self.file.path[1:],
                     size=self.size,
                     flow_id=self.flow_id,
                     run_id=self.run_id,

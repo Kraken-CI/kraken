@@ -130,7 +130,7 @@ task :run_agent => './agent/venv/bin/kkagent' do
   sh 'cp server/kraken/server/logs.py agent/kraken/agent/'
   sh 'rm -rf /tmp/kk-jobs/ /opt/kraken/*'
   sh 'cp agent/venv/bin/kkagent agent/venv/bin/kktool /opt/kraken'
-  sh 'bash -c "source ./agent/venv/bin/activate && kkagent --no-update -d /tmp/kk-jobs -s http://localhost:8080 run"'
+  sh './agent/venv/bin/kkagent --no-update -d /tmp/kk-jobs -s http://localhost:8080 run'
 end
 
 task :run_agent_in_docker do

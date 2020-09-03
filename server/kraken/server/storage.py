@@ -20,10 +20,16 @@ import logging
 from pyftpdlib.authorizers import DummyAuthorizer, AuthenticationFailed
 from pyftpdlib.handlers import FTPHandler
 from pyftpdlib.servers import FTPServer
-from flask import Flask
+from pyftpdlib.filesystems import AbstractedFS
+from flask import Flask, abort, request, Response
+from ftplib import FTP, error_perm
+from threading import Thread, Event
+from queue import Queue, Empty
+from io import BytesIO
+import mimetypes
 
 from . import logs
-from .models import db, Flow
+from .models import db, Run, Flow
 from . import consts
 from . import srvcheck
 from .. import version
@@ -69,36 +75,39 @@ class KrakenAuthorizer(DummyAuthorizer):
         None.
         """
 
-        msg = "Authentication failed."
-        # if not self.has_user(username):
-        #     if username == 'anonymous':
-        #         msg = "Anonymous access not allowed."
-        #     raise AuthenticationFailed(msg)
-        # if username != 'anonymous':
-        #     if self.user_table[username]['pwd'] != password:
-        #         raise AuthenticationFailed(msg)
-
         if '_' not in username:
-            raise AuthenticationFailed(msg)
+            raise AuthenticationFailed('Authentication failed: not _ in username')
         try:
-            dest, flow_id_txt = username.split('_')
-            flow_id = int(flow_id_txt)
-        except:
-            raise AuthenticationFailed(msg)
+            dest, ul_dl, entity_id_txt = username.split('_')
+            entity_id = int(entity_id_txt)
+        except Exception as e:
+            raise AuthenticationFailed('Authentication failed: parsing username failed: %s' % str(e))
 
         if dest not in ['public', 'private', 'report']:
-            raise AuthenticationFailed(msg)
+            raise AuthenticationFailed('Authentication failed: wrong destination: %s' % dest)
 
-        flow = None
+        if ul_dl not in ['ul', 'dl']:
+            raise AuthenticationFailed('Authentication failed: wrong ul/dl: %s' % ul_dl)
+
+        handler.latest_runs = None
+        home_dir = os.path.join(self.homes_dir, dest)
         try:
-            flow = Flow.query.filter_by(id=flow_id).one_or_none()
-        except:
+            if ul_dl == 'ul':
+                run = Run.query.filter_by(id=entity_id).one_or_none()
+                home_dir = os.path.join(home_dir, str(run.flow_id), str(run.id))
+            else:
+                flow = Flow.query.filter_by(id=entity_id).one_or_none()
+                latest_runs = {}
+                for r in flow.runs:
+                    if r.stage_id not in latest_runs or r.id > latest_runs[r.stage_id]:
+                        latest_runs[r.stage_id] = r.id
+                handler.latest_runs = latest_runs
+                home_dir = os.path.join(home_dir, str(flow.id))
+        except Exception as e:
             log.exception('problem with sql')
             db.session.rollback()
-        if flow is None:
-            raise AuthenticationFailed(msg)
+            raise AuthenticationFailed('Authentication failed: problem with SQL: %s' % str(e))
 
-        home_dir = os.path.join(self.homes_dir, dest, flow_id_txt)
         if not os.path.exists(home_dir):
             os.makedirs(home_dir)
 
@@ -120,6 +129,88 @@ class KrakenFTPHandler(FTPHandler):
             self.authorizer.remove_user(self.username)
             self.username = None
 
+    def on_file_received(self, f):
+        log.info('received %s', f)
+
+
+class KrakenFilesystem(AbstractedFS):
+    def ftp2fs(self, ftppath):
+        if self.cmd_channel.latest_runs is None:
+            return super().ftp2fs(ftppath)
+
+        path = self.ftpnorm(ftppath)
+        newpath = os.path.join(self.root, '0', path)
+        for run_id in self.cmd_channel.latest_runs.values():
+            path2 = os.path.join(self.root, str(run_id), path[1:])
+            if os.path.exists(path2):
+                newpath = path2
+                break
+        return newpath
+
+
+##########################################
+
+class FTPDownloader(object):
+    def __init__(self, host, port, user, timeout=0.01):
+        self.ftp = FTP()
+        self.ftp.connect(host, port)
+        try:
+            self.ftp.login(user)
+        except:
+        # try one more time
+            self.ftp.login(user)
+
+        self.timeout = timeout
+
+    def getBytes(self, filename):
+        print("getBytes")
+        self.ftp.retrbinary("RETR {}".format(filename) , self.bytes.put)
+        self.bytes.join()   # wait for all blocks in the queue to be marked as processed
+        self.finished.set() # mark streaming as finished
+
+    def sendBytes(self):
+        while not self.finished.is_set():
+            try:
+                yield self.bytes.get(timeout=self.timeout)
+                self.bytes.task_done()
+            except Empty:
+                self.finished.wait(self.timeout)
+        self.worker.join()
+
+    def download(self, filename):
+        self.bytes = Queue()
+        self.finished = Event()
+        self.worker = Thread(target=self.getBytes, args=(filename,))
+        self.worker.start()
+        return self.sendBytes()
+
+def serve_web_request(store_type, flow_id, path):
+    log.info('path %s, %s, %s', store_type, flow_id, path)
+
+    if store_type not in ['public', 'report']:
+        abort(400, "Not supported store type: %s" % store_type)
+
+    storage_addr = os.environ.get('KRAKEN_STORAGE_ADDR', consts.DEFAULT_STORAGE_ADDR)
+    host, port = storage_addr.split(':')
+
+    log.info('FTP HOST %s', storage_addr)
+
+    flow = Flow.query.filter_by(id=int(flow_id)).one_or_none()
+    if flow is None:
+        abort(404, "Flow not found")
+
+    user = '%s_dl_%s' % (store_type, flow_id)
+
+    mt, _ = mimetypes.guess_type(path)
+    if mt is None:
+        mt = 'application/octet-stream'
+
+    ftp = FTPDownloader(host, int(port), user)
+    return Response(ftp.download(path), mimetype=mt)
+
+
+##########################################
+
 def main():
     app = create_app()
 
@@ -133,6 +224,7 @@ def main():
         # Instantiate FTP handler class
         handler = KrakenFTPHandler
         handler.authorizer = authorizer
+        handler.abstracted_fs = KrakenFilesystem
         handler.permit_foreign_addresses = True  # to allow connecting from docker containers while their address are changing
 
         handler.banner = "Kraken Storage."

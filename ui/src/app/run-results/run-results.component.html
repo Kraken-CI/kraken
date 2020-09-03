@@ -5,6 +5,7 @@
   </ng-template>
 </p-tabMenu>
 
+<!-- JOBS TAB -->
 <div *ngIf="activeTabIdx === 0">
   <div class="p-grid" style="margin-top: 0;">
     <div class="p-col-5">
@@ -93,6 +94,7 @@
 </div>
 
 
+<!-- TESTS RESULTS TAB -->
 <div *ngIf="activeTabIdx === 1" style="margin-top: 5px;">
 
   <div style="display: flex; margin: 15px 5px;">
@@ -224,6 +226,7 @@
 </div>
 
 
+<!-- ISSUES TAB -->
 <div *ngIf="activeTabIdx === 2" style="margin-top: 5px;">
 
   <div style="display: flex; margin: 15px 5px;">
@@ -337,4 +340,39 @@
            Total Records: {{state.totalRecords}}
       </ng-template>
     </p-table>
+</div>
+
+
+<!-- ARTIFACTS TAB -->
+<div *ngIf="activeTabIdx === 3" style="margin-top: 5px;">
+
+  <p-table #artifactsTable
+           id="artifacts"
+           [value]="artifacts"
+           [lazy]="true"
+           (onLazyLoad)="loadArtifactsLazy($event)"
+           [paginator]="true"
+           [rows]="30"
+           [totalRecords]="totalArtifacts"
+           [loading]="loadingArtifacts"
+           [rowsPerPageOptions]="[10,20,30,50,100]"
+           [showCurrentPageReport]="true">
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="width: 60px;">ID</th>
+        <th>Path</th>
+        <th style="width: 100px;">Size</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-artifact>
+      <tr>
+        <td>{{ artifact.id }}</td>
+        <td><a [href]="artifact.url">{{ artifact.path }}</a></td>
+        <td>{{ artifact.size }} B</td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="paginatorright" let-state>
+      Total Records: {{state.totalRecords}}
+    </ng-template>
+  </p-table>
 </div>

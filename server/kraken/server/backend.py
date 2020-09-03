@@ -82,6 +82,7 @@ def _handle_get_job(executor):
     storage_addr = os.environ.get('KRAKEN_STORAGE_ADDR', consts.DEFAULT_STORAGE_ADDR)
     job['storage_addr'] = storage_addr
     job['flow_id'] = executor.job.run.flow_id
+    job['run_id'] = executor.job.run_id
 
     # prepare steps
     project = executor.job.run.flow.branch.project

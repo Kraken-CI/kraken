@@ -279,7 +279,7 @@ def get_flow_artifacts(flow_id):
     if flow is None:
         abort(404, "Flow not found")
 
-    base_url = '/artifacts/public/%d' % flow_id
+    base_url = '/artifacts/public/%d/' % flow_id
 
     artifacts = []
     for art in Artifact.query.filter_by(flow=flow, section=consts.ARTIFACTS_SECTION_PUBLIC):
@@ -287,6 +287,7 @@ def get_flow_artifacts(flow_id):
         art['url'] = urljoin(base_url, art['path'].strip('/'))
         artifacts.append(art)
     return {'items': artifacts, 'total': len(artifacts)}, 200
+
 
 def create_run(flow_id, run):
     """
@@ -450,6 +451,21 @@ def get_run_issues(run_id, start=0, limit=10, issue_types=None, location=None, m
     for i in q.all():
         issues.append(i.get_json())
     return {'items': issues, 'total': total}, 200
+
+
+def get_run_artifacts(run_id):
+    run = Run.query.filter_by(id=run_id).one_or_none()
+    if run is None:
+        abort(404, "Run not found")
+
+    base_url = '/artifacts/public/%d/' % run.flow_id
+
+    artifacts = []
+    for art in Artifact.query.filter_by(run=run, section=consts.ARTIFACTS_SECTION_PUBLIC):
+        art = art.get_json()
+        art['url'] = urljoin(base_url, art['path'].strip('/'))
+        artifacts.append(art)
+    return {'items': artifacts, 'total': len(artifacts)}, 200
 
 
 def get_result_history(test_case_result_id, start=0, limit=10):

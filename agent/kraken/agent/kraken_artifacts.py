@@ -50,6 +50,7 @@ def _upload_all(ftp, cwd, source, dest, report_artifact):
 
         recursive = '**' in src
 
+        files_num = 0
         for f in glob.iglob(src, recursive=recursive):
             if cwd:
                 f_path = os.path.relpath(f, cwd)
@@ -68,6 +69,19 @@ def _upload_all(ftp, cwd, source, dest, report_artifact):
 
                 artifact = dict(path=dest_f, size=os.path.getsize(f))
                 report_artifact(artifact)
+                files_num += 1
+
+        # if no files were uploaded then raise error or just mention about that
+        if files_num == 0:
+            if '*' in src:
+                log.warning('no files found for %s', src)
+            else:
+                msg = 'file %s not found for upload' % src
+                log.error(msg)
+                return 1, msg
+
+    return 0, ''
+
 
 def _download_dir(ftp, source, dest):
     dest_file = os.path.join(dest, source)
@@ -99,25 +113,37 @@ def _download_all(ftp, cwd, source, dest):
         os.makedirs(dest)
 
     for src in source:
-        _download_dir(ftp, src, dest)
+        try:
+            _download_dir(ftp, src, dest)
+        except Exception as e:
+            msg = 'problem with downloading %s: %s' % (src, str(e))
+            log.error(msg)
+            return 1, msg
+
+    return 0, ''
 
 
 def run_artifacts(step, report_artifact=None):
 
     storage_addr = step['storage_addr']
-    flow_id = step['flow_id']
     action = step.get('action', 'upload')
     cwd = step.get('cwd', None)
     public = step.get('public', False)
 
     host, port = storage_addr.split(':')
     port = int(port)
+
     if action == 'report':
-        user = 'report_%d' % flow_id
+        user = 'report_'
     elif public:
-        user = 'public_%d' % flow_id
+        user = 'public_'
     else:
-        user = 'private_%d' % flow_id
+        user = 'private_'
+
+    if action == 'download':
+        user += 'dl_%d' % step['flow_id']
+    else:
+        user += 'ul_%d' % step['run_id']
 
     source = step['source']
     dest = step.get('destination', '.' if action == 'download' else '/')
@@ -129,11 +155,15 @@ def run_artifacts(step, report_artifact=None):
 
     ftp = FTP()
     ftp.connect(host, port)
-    ftp.login(user)
+    try:
+        ftp.login(user)
+    except:
+        # try one more time
+        ftp.login(user)
 
     if action == 'download':
-        _download_all(ftp, cwd, source, dest)
+        status, msg = _download_all(ftp, cwd, source, dest)
     else:
-        _upload_all(ftp, cwd, source, dest, report_artifact)
+        status, msg = _upload_all(ftp, cwd, source, dest, report_artifact)
 
-    return 0, ''
+    return status, msg

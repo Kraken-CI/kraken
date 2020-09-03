@@ -10,5 +10,9 @@
     "/webhooks/*": {
         "target": "http://localhost:8080",
         "secure": false
+    },
+    "/artifacts/*": {
+        "target": "http://localhost:8080",
+        "secure": false
     }
 }
