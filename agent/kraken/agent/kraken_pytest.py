@@ -27,7 +27,11 @@ def collect_tests(step):
     cwd = step.get('cwd', '.')
     params = params.replace('-vv', '')
     params = params.replace('-v', '')
-    cmd = 'PYTHONPATH=`pwd` pytest-3 --collect-only -q %s  | head -n -2' % params
+    pypath = step.get('pythonpath', '')
+    if pypath:
+        pypath = ':' + pypath
+
+    cmd = 'PYTHONPATH=`pwd`%s pytest-3 --collect-only -q %s  | head -n -2' % (pypath, params)
     _, out = utils.execute(cmd, cwd=cwd, out_prefix='')
     tests = out
     tests = tests.splitlines()
@@ -38,11 +42,16 @@ def run_tests(step, report_result=None):
     params = step.get('params', '')
     tests = step['tests']
 
+    cwd = step.get('cwd', '.')
+    params = [p for p in params.split() if p.startswith('-')]
+    params = " ".join(params)
+
+    pypath = step.get('pythonpath', '')
+    if pypath:
+        pypath = ':' + pypath
+
     for test in tests:
-        cwd = step.get('cwd', '.')
-        params = [p for p in params.split() if p.startswith('-')]
-        params = " ".join(params)
-        cmd = 'PYTHONPATH=`pwd` pytest-3 -vv -r ap --junit-xml=result.xml %s %s' % (params, test)
+        cmd = 'PYTHONPATH=`pwd`%s pytest-3 -vv -r ap --junit-xml=result.xml %s %s' % (pypath, params, test)
         ret, _ = utils.execute(cmd, cwd=cwd, out_prefix='')
 
         result = dict(cmd=cmd, test=test)
