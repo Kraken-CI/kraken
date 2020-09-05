@@ -91,22 +91,27 @@ class KrakenAuthorizer(DummyAuthorizer):
 
         handler.latest_runs = None
         home_dir = os.path.join(self.homes_dir, dest)
-        try:
-            if ul_dl in ['ul', 'dlr']:
-                run = Run.query.filter_by(id=entity_id).one_or_none()
-                home_dir = os.path.join(home_dir, str(run.flow_id), str(run.id))
-            else:
-                flow = Flow.query.filter_by(id=entity_id).one_or_none()
-                latest_runs = {}
-                for r in flow.runs:
-                    if r.stage_id not in latest_runs or r.id > latest_runs[r.stage_id]:
-                        latest_runs[r.stage_id] = r.id
-                handler.latest_runs = latest_runs
-                home_dir = os.path.join(home_dir, str(flow.id))
-        except Exception as e:
-            log.exception('problem with sql')
-            db.session.rollback()
-            raise AuthenticationFailed('Authentication failed: problem with SQL: %s' % str(e))
+        attemtps = 3
+        while True:
+            try:
+                if ul_dl in ['ul', 'dlr']:
+                    run = Run.query.filter_by(id=entity_id).one_or_none()
+                    home_dir = os.path.join(home_dir, str(run.flow_id), str(run.id))
+                else:
+                    flow = Flow.query.filter_by(id=entity_id).one_or_none()
+                    latest_runs = {}
+                    for r in flow.runs:
+                        if r.stage_id not in latest_runs or r.id > latest_runs[r.stage_id]:
+                            latest_runs[r.stage_id] = r.id
+                    handler.latest_runs = latest_runs
+                    home_dir = os.path.join(home_dir, str(flow.id))
+                break
+            except Exception as e:
+                log.exception('problem with sql')
+                db.session.rollback()
+                attemtps -= 1
+                if attemtps == 0:
+                    raise AuthenticationFailed('Authentication failed: problem with SQL: %s' % str(e))
 
         if not os.path.exists(home_dir):
             os.makedirs(home_dir)
@@ -126,7 +131,10 @@ class KrakenFTPHandler(FTPHandler):
     def on_disconnect(self):
         log.info("%s:%s disconnected", self.remote_ip, self.remote_port)
         if self.username:
-            self.authorizer.remove_user(self.username)
+            try:
+                self.authorizer.remove_user(self.username)
+            except:
+                pass
             self.username = None
 
     def on_file_received(self, f):
