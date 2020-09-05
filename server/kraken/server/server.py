@@ -83,7 +83,8 @@ def create_app():
     connex_app.add_url_rule("/install/<blob>", view_func=agentblob.serve_agent_blob, methods=['GET'])
 
     # server build artifacts
-    connex_app.add_url_rule("/artifacts/<store_type>/<flow_id>/<path:path>", view_func=storage.serve_web_request, methods=['GET'])
+    connex_app.add_url_rule("/artifacts/<store_type>/f/<flow_id>/<path:path>", view_func=storage.serve_flow_artifact, methods=['GET'])
+    connex_app.add_url_rule("/artifacts/<store_type>/r/<run_id>/<path:path>", view_func=storage.serve_run_artifact, methods=['GET'])
 
     # install webhooks
     webhooks_bp = webhooks.create_blueprint()

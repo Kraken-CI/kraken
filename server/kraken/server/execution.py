@@ -279,7 +279,7 @@ def get_flow_artifacts(flow_id):
     if flow is None:
         abort(404, "Flow not found")
 
-    base_url = '/artifacts/public/%d/' % flow_id
+    base_url = '/artifacts/public/f/%d/' % flow_id
 
     artifacts = []
     for art in Artifact.query.filter_by(flow=flow, section=consts.ARTIFACTS_SECTION_PUBLIC):
@@ -458,7 +458,7 @@ def get_run_artifacts(run_id):
     if run is None:
         abort(404, "Run not found")
 
-    base_url = '/artifacts/public/%d/' % run.flow_id
+    base_url = '/artifacts/public/r/%d/' % run.id
 
     artifacts = []
     for art in Artifact.query.filter_by(run=run, section=consts.ARTIFACTS_SECTION_PUBLIC):

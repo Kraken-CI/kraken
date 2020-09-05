@@ -86,13 +86,13 @@ class KrakenAuthorizer(DummyAuthorizer):
         if dest not in ['public', 'private', 'report']:
             raise AuthenticationFailed('Authentication failed: wrong destination: %s' % dest)
 
-        if ul_dl not in ['ul', 'dl']:
+        if ul_dl not in ['ul', 'dl', 'dlr']:
             raise AuthenticationFailed('Authentication failed: wrong ul/dl: %s' % ul_dl)
 
         handler.latest_runs = None
         home_dir = os.path.join(self.homes_dir, dest)
         try:
-            if ul_dl == 'ul':
+            if ul_dl in ['ul', 'dlr']:
                 run = Run.query.filter_by(id=entity_id).one_or_none()
                 home_dir = os.path.join(home_dir, str(run.flow_id), str(run.id))
             else:
@@ -184,7 +184,8 @@ class FTPDownloader(object):
         self.worker.start()
         return self.sendBytes()
 
-def serve_web_request(store_type, flow_id, path):
+
+def serve_artifact(store_type, flow_id, run_id, path):
     log.info('path %s, %s, %s', store_type, flow_id, path)
 
     if store_type not in ['public', 'report']:
@@ -195,18 +196,35 @@ def serve_web_request(store_type, flow_id, path):
 
     log.info('FTP HOST %s', storage_addr)
 
-    flow = Flow.query.filter_by(id=int(flow_id)).one_or_none()
-    if flow is None:
-        abort(404, "Flow not found")
-
-    user = '%s_dl_%s' % (store_type, flow_id)
+    if flow_id:
+        flow = Flow.query.filter_by(id=int(flow_id)).one_or_none()
+        if flow is None:
+            abort(404, "Flow not found")
+        user = '%s_dl_%s' % (store_type, flow_id)
+    else:
+        run = Run.query.filter_by(id=int(run_id)).one_or_none()
+        if run is None:
+            abort(404, "Run not found")
+        user = '%s_dlr_%s' % (store_type, run_id)
 
     mt, _ = mimetypes.guess_type(path)
     if mt is None:
         mt = 'application/octet-stream'
 
-    ftp = FTPDownloader(host, int(port), user)
+    try:
+        ftp = FTPDownloader(host, int(port), user)
+    except OSError:
+        abort(500, 'Cannot connect to storage service')
+
     return Response(ftp.download(path), mimetype=mt)
+
+
+def serve_flow_artifact(store_type, flow_id, path):
+    return serve_artifact(store_type, flow_id, None, path)
+
+
+def serve_run_artifact(store_type, run_id, path):
+    return serve_artifact(store_type, None, run_id, path)
 
 
 ##########################################
