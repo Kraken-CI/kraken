@@ -61,7 +61,7 @@ class Project(db.Model, DatesMixin):
     description = Column(Unicode(200))
     branches = relationship("Branch", back_populates="project", order_by="Branch.created")
     secrets = relationship("Secret", back_populates="project", order_by="Secret.name")
-    executor_groups = relationship("ExecutorGroup", back_populates="project")
+    agents_groups = relationship("AgentsGroup", back_populates="project")
     webhooks = Column(JSONB)
 
     def get_json(self):
@@ -191,7 +191,7 @@ class Stage(db.Model, DatesMixin):
 #     __tablename__ = "environments"
 #     id = Column(Integer, primary_key=True)
 #     #system
-#     #executor_group
+#     #agents_group
 #     config_id = Column(Integer, ForeignKey('configs.id'), nullable=False)
 #     config = relationship("Config", back_populates="environments")
 #     job_plan_id = Column(Integer, ForeignKey('job_plans.id'), nullable=False)
@@ -387,12 +387,12 @@ class Job(db.Model, DatesMixin):
     covered = Column(Boolean, default=False)
     notes = Column(Unicode(2048))
     system = Column(Unicode(200))
-    executor = relationship('Executor', uselist=False, back_populates="job",
-                            foreign_keys="Executor.job_id", post_update=True)
-    executor_group_id = Column(Integer, ForeignKey('executor_groups.id'), nullable=False)
-    executor_group = relationship('ExecutorGroup', back_populates="jobs")
-    executor_used_id = Column(Integer, ForeignKey('executors.id'))
-    executor_used = relationship('Executor', foreign_keys=[executor_used_id], post_update=True)
+    agent = relationship('Agent', uselist=False, back_populates="job",
+                            foreign_keys="Agent.job_id", post_update=True)
+    agents_group_id = Column(Integer, ForeignKey('agents_groups.id'), nullable=False)
+    agents_group = relationship('AgentsGroup', back_populates="jobs")
+    agent_used_id = Column(Integer, ForeignKey('agents.id'))
+    agent_used = relationship('Agent', foreign_keys=[agent_used_id], post_update=True)
     results = relationship('TestCaseResult', back_populates="job")
     issues = relationship('Issue', back_populates="job")
 
@@ -413,17 +413,17 @@ class Job(db.Model, DatesMixin):
                     notes=self.notes,
                     system=self.system,
                     run_id=self.run_id,
-                    executor_group_id=self.executor_group_id,
-                    executor_group_name=self.executor_group.name,
-                    executor_id=self.executor_used_id if self.executor_used else 0,
-                    executor_name=self.executor_used.name if self.executor_used else '',
+                    agents_group_id=self.agents_group_id,
+                    agents_group_name=self.agents_group.name,
+                    agent_id=self.agent_used_id if self.agent_used else 0,
+                    agent_name=self.agent_used.name if self.agent_used else '',
                     steps=[s.get_json() for s in sorted(self.steps, key=lambda s: s.index)])
 
     def __repr__(self):
         txt = 'Job %s, state:%s' % (self.id, consts.JOB_STATES_NAME[self.state])
-        txt += ', g:%s' % self.executor_group_id
-        if self.executor_used_id:
-            txt += ', ex:%s' % self.executor_used_id
+        txt += ', g:%s' % self.agents_group_id
+        if self.agent_used_id:
+            txt += ', ag:%s' % self.agent_used_id
         return "<%s>" % txt
 
 
@@ -466,10 +466,10 @@ class TestCaseResult(db.Model):
                     change=self.change,
                     job_id=self.job_id,
                     job_name=self.job.name,
-                    executor_group_name=self.job.executor_group.name,
-                    executor_group_id=self.job.executor_group_id,
-                    executor_name=self.job.executor_used.name if self.job.executor_used else '',
-                    executor_id=self.job.executor_used_id if self.job.executor_used else 0)
+                    agents_group_name=self.job.agents_group.name,
+                    agents_group_id=self.job.agents_group_id,
+                    agent_name=self.job.agent_used.name if self.job.agent_used else '',
+                    agent_id=self.job.agent_used_id if self.job.agent_used else 0)
 
         if with_extra:
             data['project_id'] = self.job.run.flow.branch.project_id
@@ -510,10 +510,10 @@ class Issue(db.Model):
                     age=self.age,
                     job_id=self.job_id,
                     job_name=self.job.name,
-                    executor_group_name=self.job.executor_group.name,
-                    executor_group_id=self.job.executor_group_id,
-                    executor_name=self.job.executor_used.name,
-                    executor_id=self.job.executor_used_id)
+                    agents_group_name=self.job.agents_group.name,
+                    agents_group_id=self.job.agents_group_id,
+                    agent_name=self.job.agent_used.name,
+                    agent_id=self.job.agent_used_id)
         if self.extra:
             data.update(self.extra)
         return data
@@ -567,23 +567,23 @@ class Tool(db.Model, DatesMixin):
     test_cases = relationship("TestCase", back_populates="tool")
 
 
-class ExecutorAssignment(db.Model):
-    __tablename__ = "executor_assignments"
-    executor_id = Column(Integer, ForeignKey('executors.id'), primary_key=True)
-    executor = relationship('Executor', back_populates="executor_groups")
-    executor_group_id = Column(Integer, ForeignKey('executor_groups.id'), primary_key=True)
-    executor_group = relationship('ExecutorGroup', back_populates="executors")
+class AgentAssignment(db.Model):
+    __tablename__ = "agent_assignments"
+    agent_id = Column(Integer, ForeignKey('agents.id'), primary_key=True)
+    agent = relationship('Agent', back_populates="agents_groups")
+    agents_group_id = Column(Integer, ForeignKey('agents_groups.id'), primary_key=True)
+    agents_group = relationship('AgentsGroup', back_populates="agents")
 
 
-class ExecutorGroup(db.Model, DatesMixin):
-    __tablename__ = "executor_groups"
+class AgentsGroup(db.Model, DatesMixin):
+    __tablename__ = "agents_groups"
     id = Column(Integer, primary_key=True)
     name = Column(Unicode(50))
     project_id = Column(Integer, ForeignKey('projects.id'), nullable=True)
-    project = relationship('Project', back_populates="executor_groups")
-    # executors = relationship("Executor", back_populates="executor_group")  # static assignments
-    executors = relationship('ExecutorAssignment', back_populates="executor_group")
-    jobs = relationship("Job", back_populates="executor_group")
+    project = relationship('Project', back_populates="agents_groups")
+    # agents = relationship("Agent", back_populates="agents_group")  # static assignments
+    agents = relationship('AgentAssignment', back_populates="agents_group")
+    jobs = relationship("Job", back_populates="agents_group")
 
     def get_json(self):
         return dict(id=self.id,
@@ -592,11 +592,11 @@ class ExecutorGroup(db.Model, DatesMixin):
                     name=self.name,
                     project_id=self.project_id,
                     project_name=self.project.name if self.project else None,
-                    executors_count=len(self.executors))
+                    agents_count=len(self.agents))
 
 
-class Executor(db.Model, DatesMixin):
-    __tablename__ = "executors"
+class Agent(db.Model, DatesMixin):
+    __tablename__ = "agents"
     id = Column(Integer, primary_key=True)
     name = Column(Unicode(50), nullable=False)
     address = Column(Unicode(25), index=True, nullable=False)
@@ -607,13 +607,13 @@ class Executor(db.Model, DatesMixin):
     comment = Column(Text)
     status_line = Column(Text)
     last_seen = Column(DateTime)
-    # executor_group_id = Column(Integer, ForeignKey('executor_groups.id'))  # static assignment to exactly one machines group, if NULL then not authorized
-    executor_groups = relationship('ExecutorAssignment', back_populates="executor")
+    # agents_group_id = Column(Integer, ForeignKey('agents_groups.id'))  # static assignment to exactly one machines group, if NULL then not authorized
+    agents_groups = relationship('AgentAssignment', back_populates="agent")
     job_id = Column(Integer, ForeignKey('jobs.id'))
-    job = relationship('Job', back_populates="executor", foreign_keys=[job_id])
+    job = relationship('Job', back_populates="agent", foreign_keys=[job_id])
 
     def __repr__(self):
-        return "<Executor %s, job:%s>" % (self.id, self.job_id)
+        return "<Agent %s, job:%s>" % (self.id, self.job_id)
 
     def get_json(self):
         return dict(id=self.id,
@@ -628,7 +628,7 @@ class Executor(db.Model, DatesMixin):
                     disabled=self.disabled,
                     comment=self.comment,
                     status_line=self.status_line,
-                    groups=[dict(id=a.executor_group.id, name=a.executor_group.name) for a in self.executor_groups],
+                    groups=[dict(id=a.agents_group.id, name=a.agents_group.name) for a in self.agents_groups],
                     job=self.job.get_json() if self.job else None)
 
 
@@ -744,25 +744,25 @@ def prepare_initial_data():
             log.info("   created Tool record '%s'", name)
         tools[name] = tool
 
-    executor = Executor.query.filter_by(name="agent.7").one_or_none()
-    if executor is None:
-        executor = Executor(name='agent.7', address="agent.7", authorized=False)
+    agent = Agent.query.filter_by(name="agent.7").one_or_none()
+    if agent is None:
+        agent = Agent(name='agent.7', address="agent.7", authorized=False)
         db.session.commit()
-        log.info("   created Executor record 'agent.7'")
+        log.info("   created Agent record 'agent.7'")
     else:
-        executor.authorized = False
+        agent.authorized = False
         db.session.commit()
-        log.info("   Executor 'agent.7' unauthorized")
+        log.info("   Agent 'agent.7' unauthorized")
 
-    executor_group = ExecutorGroup.query.filter_by(name="all").one_or_none()
-    if executor_group is None:
-        executor_group = ExecutorGroup(name='all')
+    agents_group = AgentsGroup.query.filter_by(name="all").one_or_none()
+    if agents_group is None:
+        agents_group = AgentsGroup(name='all')
         db.session.commit()
-        log.info("   created ExecutorGroup record 'all'")
+        log.info("   created AgentsGroup record 'all'")
 
-        # ExecutorAssignment(executor=executor, executor_group=executor_group)
+        # AgentAssignment(agent=agent, agents_group=agents_group)
         # db.session.commit()
-        # log.info("   created ExecutorAssignment for record 'all'")
+        # log.info("   created AgentAssignment for record 'all'")
 
     # Project DEMO
     project = Project.query.filter_by(name="Demo").one_or_none()
@@ -806,7 +806,7 @@ def prepare_initial_data():
         #         }],
         #         "environments": [{
         #             "system": "ubuntu-18.04",
-        #             "executor_group": "server",
+        #             "agents_group": "server",
         #             "config": "c1"
         #         }]
         #     }],
@@ -857,7 +857,7 @@ def prepare_initial_data():
             }],
             "environments": [{
                 "system": "ubuntu-18.04",
-                "executor_group": "all",
+                "agents_group": "all",
                 "config": "c1"
             }]
         }]
@@ -889,7 +889,7 @@ def prepare_initial_data():
             }],
             "environments": [{
                 "system": "centos-7",
-                "executor_group": "all",
+                "agents_group": "all",
                 "config": "default"
             }]
         }]
@@ -946,7 +946,7 @@ def prepare_initial_data():
             }],
             "environments": [{
                 "system": "ubuntu-18.04",
-                "executor_group": "all",
+                "agents_group": "all",
                 "config": "c1"
             }]
         }]
@@ -983,7 +983,7 @@ def prepare_initial_data():
             }],
             "environments": [{
                 "system": "centos-7",
-                "executor_group": "all",
+                "agents_group": "all",
                 "config": "default"
             }]
         }]

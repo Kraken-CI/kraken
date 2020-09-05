@@ -16,26 +16,26 @@
 </p-tabMenu>
 
 
-<!-- Executors tab -->
+<!-- Agents tab -->
 <div *ngIf="activeTabIdx == 0">
   <div style="display: flex; margin: 15px 5px;">
 
-    <p-button label="Refresh" icon="pi pi-refresh" (onClick)="refreshExecutors(executorsTable)" [style]="{'margin': '0 20px 0 60px'}"></p-button>
+    <p-button label="Refresh" icon="pi pi-refresh" (onClick)="refreshAgents(agentsTable)" [style]="{'margin': '0 20px 0 60px'}"></p-button>
 
   </div>
 
-  <p-menu #executorMenu [popup]="true" [model]="executorMenuItems"></p-menu>
-  <p-table #executorsTable
-           id="executors"
-           [value]="executors"
+  <p-menu #agentMenu [popup]="true" [model]="agentMenuItems"></p-menu>
+  <p-table #agentsTable
+           id="agents"
+           [value]="agents"
            [lazy]="true"
            selectionMode="single"
-           [(selection)]="executor"
-           (onLazyLoad)="loadExecutorsLazy($event)"
+           [(selection)]="agent"
+           (onLazyLoad)="loadAgentsLazy($event)"
            [paginator]="true"
            [rows]="30"
-           [totalRecords]="totalExecutors"
-           [loading]="loadingExecutors"
+           [totalRecords]="totalAgents"
+           [loading]="loadingAgents"
            [rowsPerPageOptions]="[10,20,30,50,100]"
            [showCurrentPageReport]="true">
     <ng-template pTemplate="header">
@@ -52,27 +52,27 @@
         <th style="width: 4rem;">Action</th>
       </tr>
     </ng-template>
-    <ng-template pTemplate="body" let-executor>
-      <tr [pSelectableRow]="executor">
-        <td>{{executor.id}}</td>
-        <td>{{executor.address}}</td>
-        <td><a routerLink="/executors/{{executor.id}}">{{executor.name}}</a></td>
-        <td>{{executor.ip_address}}</td>
-        <td>{{executor.state}}</td>
-        <td>{{executor.disabled}}</td>
-        <td>{{ executor.last_seen ? (executor.last_seen | localtime) : '' }}</td>
+    <ng-template pTemplate="body" let-agent>
+      <tr [pSelectableRow]="agent">
+        <td>{{agent.id}}</td>
+        <td>{{agent.address}}</td>
+        <td><a routerLink="/agents/{{agent.id}}">{{agent.name}}</a></td>
+        <td>{{agent.ip_address}}</td>
+        <td>{{agent.state}}</td>
+        <td>{{agent.disabled}}</td>
+        <td>{{ agent.last_seen ? (agent.last_seen | localtime) : '' }}</td>
         <td>
-          <span *ngFor="let g of executor.groups" style="padding-right: 5px;">
-            <a routerLink="/executor-groups/{{ g.id }}">{{ g.name }}</a>
+          <span *ngFor="let g of agent.groups" style="padding-right: 5px;">
+            <a routerLink="/agents-groups/{{ g.id }}">{{ g.name }}</a>
           </span>
         </td>
-        <td><a *ngIf="executor.job" routerLink="/runs/{{ executor.job.run_id }}/jobs">{{ executor.job.id }}</a></td>
+        <td><a *ngIf="agent.job" routerLink="/runs/{{ agent.job.run_id }}/jobs">{{ agent.job.id }}</a></td>
         <td>
           <button
             type="button"
             pButton
             icon="pi pi-bars"
-            (click)="showExecutorMenu($event, executorMenu, executor)"
+            (click)="showAgentMenu($event, agentMenu, agent)"
             ></button>
         </td>
       </tr>
@@ -80,7 +80,7 @@
   </p-table>
 </div>
 
-<!-- Single executor tab -->
+<!-- Single agent tab -->
 <div *ngIf="activeTabIdx != 0" class="ui-widget">
   <table style="margin-top: 10px;">
     <tr>
@@ -90,10 +90,10 @@
 
     <tr>
       <td style="text-align: right; padding-right: 10px;">
-        Executor Name
+        Agent Name
       </td>
       <td>
-        {{ executorTab.executor.name }}
+        {{ agentTab.agent.name }}
       </td>
     </tr>
 
@@ -102,7 +102,7 @@
         Address
       </td>
       <td>
-        {{ executorTab.executor.address }}
+        {{ agentTab.agent.address }}
       </td>
     </tr>
 
@@ -111,7 +111,7 @@
         IP Address
       </td>
       <td>
-        {{ executorTab.executor.ip_address }}
+        {{ agentTab.agent.ip_address }}
       </td>
     </tr>
 
@@ -120,7 +120,7 @@
         State
       </td>
       <td>
-        {{ executorTab.executor.state }}
+        {{ agentTab.agent.state }}
       </td>
     </tr>
 
@@ -129,7 +129,7 @@
         Disabled
       </td>
       <td>
-        {{ executorTab.executor.disabled }}
+        {{ agentTab.agent.disabled }}
       </td>
     </tr>
 
@@ -138,9 +138,9 @@
         Groups
       </td>
       <td>
-        <p-multiSelect [options]="executorGroups" optionLabel="name" [(ngModel)]="executorTab.executor.groups" [panelStyle]="{minWidth:'12em'}"></p-multiSelect>
+        <p-multiSelect [options]="agentGroups" optionLabel="name" [(ngModel)]="agentTab.agent.groups" [panelStyle]="{minWidth:'12em'}"></p-multiSelect>
       </td>
     </tr>
   </table>
-  <p-button label="Save" icon="pi pi-check" (onClick)="saveExecutor(executorsTable)"></p-button>
+  <p-button label="Save" icon="pi pi-check" (onClick)="saveAgent(agentsTable)"></p-button>
 </div>

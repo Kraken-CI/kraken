@@ -30,20 +30,20 @@ export class AppComponent implements OnInit {
 
         this.topMenuItems = [
             {
-                label: 'Executors',
+                label: 'Agents',
                 icon: 'fa fa-server',
                 items: [
                     {
-                        label: 'Executors',
-                        routerLink: '/executors',
+                        label: 'Agents',
+                        routerLink: '/agents',
                     },
                     {
                         label: 'Groups',
-                        routerLink: '/executor-groups',
+                        routerLink: '/agents-groups',
                     },
                     {
                         label: 'Discovered',
-                        routerLink: '/discovered-executors',
+                        routerLink: '/discovered-agents',
                     },
                 ],
             },

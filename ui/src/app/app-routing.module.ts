@@ -11,7 +11,7 @@ import { FlowResultsComponent } from './flow-results/flow-results.component'
 import { NewFlowComponent } from './new-flow/new-flow.component'
 import { NewRunComponent } from './new-run/new-run.component'
 import { ProjectSettingsComponent } from './project-settings/project-settings.component'
-import { ExecutorsPageComponent } from './executors-page/executors-page.component'
+import { AgentsPageComponent } from './agents-page/agents-page.component'
 import { DiscoveredPageComponent } from './discovered-page/discovered-page.component'
 import { GroupsPageComponent } from './groups-page/groups-page.component'
 import { SettingsPageComponent } from './settings-page/settings-page.component'
@@ -64,25 +64,25 @@ const routes: Routes = [
         component: ProjectSettingsComponent,
     },
     {
-        path: 'executors',
+        path: 'agents',
         pathMatch: 'full',
-        redirectTo: 'executors/all',
+        redirectTo: 'agents/all',
     },
     {
-        path: 'executors/:id',
-        component: ExecutorsPageComponent,
+        path: 'agents/:id',
+        component: AgentsPageComponent,
     },
     {
-        path: 'discovered-executors',
+        path: 'discovered-agents',
         component: DiscoveredPageComponent,
     },
     {
-        path: 'executor-groups',
+        path: 'agents-groups',
         pathMatch: 'full',
-        redirectTo: 'executor-groups/all',
+        redirectTo: 'agents-groups/all',
     },
     {
-        path: 'executor-groups/:id',
+        path: 'agents-groups/:id',
         component: GroupsPageComponent,
     },
     {

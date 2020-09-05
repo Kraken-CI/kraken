@@ -1,22 +1,22 @@
 <div style="display: flex; margin: 15px 5px;">
 
-    <p-button label="Refresh" icon="pi pi-refresh" (onClick)="refreshExecutors(executorsTable)" [style]="{'margin-right': '10px'}"></p-button>
-    <p-button label="Authorize" icon="pi pi-check" (onClick)="authorize(executorsTable)"></p-button>
+    <p-button label="Refresh" icon="pi pi-refresh" (onClick)="refreshAgents(agentsTable)" [style]="{'margin-right': '10px'}"></p-button>
+    <p-button label="Authorize" icon="pi pi-check" (onClick)="authorize(agentsTable)"></p-button>
 
 </div>
 
-<p-table #executorsTable
-         id="executors"
-         [value]="executors"
+<p-table #agentsTable
+         id="agents"
+         [value]="agents"
          [lazy]="true"
          selectionMode="multiple"
-         [(selection)]="selectedExecutors"
-         (onLazyLoad)="loadExecutorsLazy($event)"
+         [(selection)]="selectedAgents"
+         (onLazyLoad)="loadAgentsLazy($event)"
          [paginator]="true"
          [rows]="30"
-         [totalRecords]="totalExecutors"
-         [loading]="loadingExecutors"
-         (onRowSelect)="executorSelected($event)"
+         [totalRecords]="totalAgents"
+         [loading]="loadingAgents"
+         (onRowSelect)="agentSelected($event)"
          [rowsPerPageOptions]="[10,20,30,50,100]"
          [showCurrentPageReport]="true">
   <ng-template pTemplate="header">
@@ -31,16 +31,16 @@
       <th style="width: 10%;">Last Seen</th>
     </tr>
   </ng-template>
-  <ng-template pTemplate="body" let-executor>
-    <tr [pSelectableRow]="executor">
+  <ng-template pTemplate="body" let-agent>
+    <tr [pSelectableRow]="agent">
       <td>
-        <p-tableCheckbox [value]="executor"></p-tableCheckbox>
+        <p-tableCheckbox [value]="agent"></p-tableCheckbox>
       </td>
-      <td>{{executor.id}}</td>
-      <td>{{executor.address}}</td>
-      <td><a routerLink="/executors/{{executor.id}}">{{executor.name}}</a></td>
-      <td>{{executor.ip_address}}</td>
-      <td>{{ executor.last_seen ? (executor.last_seen | localtime) : '' }}</td>
+      <td>{{agent.id}}</td>
+      <td>{{agent.address}}</td>
+      <td><a routerLink="/agents/{{agent.id}}">{{agent.name}}</a></td>
+      <td>{{agent.ip_address}}</td>
+      <td>{{ agent.last_seen ? (agent.last_seen | localtime) : '' }}</td>
     </tr>
   </ng-template>
 </p-table>

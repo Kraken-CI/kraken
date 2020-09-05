@@ -13,31 +13,31 @@ import { ManagementService } from '../backend/api/management.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
 
 @Component({
-    selector: 'app-executors-page',
-    templateUrl: './executors-page.component.html',
-    styleUrls: ['./executors-page.component.sass'],
+    selector: 'app-agents-page',
+    templateUrl: './agents-page.component.html',
+    styleUrls: ['./agents-page.component.sass'],
 })
-export class ExecutorsPageComponent implements OnInit {
-    // executors table
-    executors: any[]
-    totalExecutors = 0
-    loadingExecutors = true
-    executor: any
-    executorsTable: any
+export class AgentsPageComponent implements OnInit {
+    // agents table
+    agents: any[]
+    totalAgents = 0
+    loadingAgents = true
+    agent: any
+    agentsTable: any
 
-    executorMenuItems: MenuItem[]
+    agentMenuItems: MenuItem[]
 
     // action panel
     filterText = ''
 
-    // executor tabs
+    // agent tabs
     activeTabIdx = 0
     tabs: MenuItem[]
     activeItem: MenuItem
-    openedExecutors: any
-    executorTab: any
+    openedAgents: any
+    agentTab: any
 
-    executorGroups: any[] = []
+    agentGroups: any[] = []
 
     constructor(
         private route: ActivatedRoute,
@@ -55,69 +55,69 @@ export class ExecutorsPageComponent implements OnInit {
         this.activeTabIdx = index
         this.activeItem = this.tabs[index]
         if (index > 0) {
-            this.executorTab = this.openedExecutors[index - 1]
+            this.agentTab = this.openedAgents[index - 1]
         }
     }
 
-    addExecutorTab(executor) {
-        this.openedExecutors.push({
-            executor,
-            name: executor.name,
+    addAgentTab(agent) {
+        this.openedAgents.push({
+            agent,
+            name: agent.name,
         })
-        console.info('executor.groups', executor.groups)
+        console.info('agent.groups', agent.groups)
         this.tabs.push({
-            label: executor.name,
-            routerLink: '/executors/' + executor.id,
+            label: agent.name,
+            routerLink: '/agents/' + agent.id,
         })
     }
 
     ngOnInit() {
-        this.titleService.setTitle('Kraken - Executors')
+        this.titleService.setTitle('Kraken - Agents')
         const crumbs = [
             {
                 label: 'Home',
             },
             {
-                label: 'Executors',
+                label: 'Agents',
             },
         ]
         this.breadcrumbService.setCrumbs(crumbs)
 
-        this.tabs = [{ label: 'Executors', routerLink: '/executors/all' }]
+        this.tabs = [{ label: 'Agents', routerLink: '/agents/all' }]
 
-        this.executors = []
-        this.executorMenuItems = [
+        this.agents = []
+        this.agentMenuItems = [
             {
                 label: 'Delete',
                 icon: 'pi pi-times',
             },
         ]
 
-        this.openedExecutors = []
+        this.openedAgents = []
 
         this.route.paramMap.subscribe((params: ParamMap) => {
-            const executorIdStr = params.get('id')
-            if (executorIdStr === 'all') {
+            const agentIdStr = params.get('id')
+            if (agentIdStr === 'all') {
                 this.switchToTab(0)
             } else {
-                const executorId = parseInt(executorIdStr, 10)
+                const agentId = parseInt(agentIdStr, 10)
 
                 let found = false
-                // if tab for this executor is already opened then switch to it
-                for (let idx = 0; idx < this.openedExecutors.length; idx++) {
-                    const g = this.openedExecutors[idx].executor
-                    if (g.id === executorId) {
+                // if tab for this agent is already opened then switch to it
+                for (let idx = 0; idx < this.openedAgents.length; idx++) {
+                    const g = this.openedAgents[idx].agent
+                    if (g.id === agentId) {
                         this.switchToTab(idx + 1)
                         found = true
                     }
                 }
 
-                // if tab is not opened then search for list of executors if the one is present there,
+                // if tab is not opened then search for list of agents if the one is present there,
                 // if so then open it in new tab and switch to it
                 if (!found) {
-                    for (const g of this.executors) {
-                        if (g.id === executorId) {
-                            this.addExecutorTab(g)
+                    for (const g of this.agents) {
+                        if (g.id === agentId) {
+                            this.addAgentTab(g)
                             this.switchToTab(this.tabs.length - 1)
                             found = true
                             break
@@ -125,11 +125,11 @@ export class ExecutorsPageComponent implements OnInit {
                     }
                 }
 
-                // if executor is not loaded in list fetch it individually
+                // if agent is not loaded in list fetch it individually
                 if (!found) {
-                    this.managementService.getExecutor(executorId).subscribe(
+                    this.managementService.getAgent(agentId).subscribe(
                         data => {
-                            this.addExecutorTab(data)
+                            this.addAgentTab(data)
                             this.switchToTab(this.tabs.length - 1)
                         },
                         err => {
@@ -139,15 +139,15 @@ export class ExecutorsPageComponent implements OnInit {
                             }
                             this.msgSrv.add({
                                 severity: 'error',
-                                summary: 'Cannot get executor',
+                                summary: 'Cannot get agent',
                                 detail:
-                                    'Getting executor with ID ' +
-                                    executorId +
+                                    'Getting agent with ID ' +
+                                    agentId +
                                     ' erred: ' +
                                     msg,
                                 life: 10000,
                             })
-                            this.router.navigate(['/executors/all'])
+                            this.router.navigate(['/agents/all'])
                         }
                     )
                 }
@@ -155,46 +155,46 @@ export class ExecutorsPageComponent implements OnInit {
         })
 
         this.managementService.getGroups(0, 1000).subscribe(data => {
-            this.executorGroups = data.items.map(g => {
+            this.agentGroups = data.items.map(g => {
                 return { id: g.id, name: g.name }
             })
-            console.info(this.executorGroups)
+            console.info(this.agentGroups)
         })
     }
 
-    loadExecutorsLazy(event) {
+    loadAgentsLazy(event) {
         console.info(event)
-        this.loadingExecutors = true
+        this.loadingAgents = true
         this.managementService
-            .getExecutors(false, event.first, event.rows)
+            .getAgents(false, event.first, event.rows)
             .subscribe(data => {
-                this.executors = data.items
-                this.totalExecutors = data.total
-                this.loadingExecutors = false
+                this.agents = data.items
+                this.totalAgents = data.total
+                this.loadingAgents = false
             })
     }
 
-    refreshExecutors(executorsTable) {
-        executorsTable.onLazyLoad.emit(executorsTable.createLazyLoadMetadata())
+    refreshAgents(agentsTable) {
+        agentsTable.onLazyLoad.emit(agentsTable.createLazyLoadMetadata())
     }
 
-    keyDownFilterText(executorsTable, event) {
+    keyDownFilterText(agentsTable, event) {
         if (this.filterText.length >= 3 || event.key === 'Enter') {
-            executorsTable.filter(this.filterText, 'text', 'equals')
+            agentsTable.filter(this.filterText, 'text', 'equals')
         }
     }
 
     closeTab(event, idx) {
-        this.openedExecutors.splice(idx - 1, 1)
+        this.openedAgents.splice(idx - 1, 1)
         this.tabs.splice(idx, 1)
         if (this.activeTabIdx === idx) {
             this.switchToTab(idx - 1)
             if (idx - 1 > 0) {
                 this.router.navigate([
-                    '/executors/' + this.executorTab.executor.id,
+                    '/agents/' + this.agentTab.agent.id,
                 ])
             } else {
-                this.router.navigate(['/executors/all'])
+                this.router.navigate(['/agents/all'])
             }
         } else if (this.activeTabIdx > idx) {
             this.activeTabIdx = this.activeTabIdx - 1
@@ -204,30 +204,30 @@ export class ExecutorsPageComponent implements OnInit {
         }
     }
 
-    showExecutorMenu(event, executorMenu, executor) {
-        executorMenu.toggle(event)
+    showAgentMenu(event, agentMenu, agent) {
+        agentMenu.toggle(event)
 
-        // connect method to delete executor
-        this.executorMenuItems[0].command = () => {
+        // connect method to delete agent
+        this.agentMenuItems[0].command = () => {
             this.managementService
-                .deleteExecutor(executor.id)
+                .deleteAgent(agent.id)
                 .subscribe(data => {
                     // remove from list of machines
-                    for (let idx = 0; idx < this.executors.length; idx++) {
-                        const e = this.executors[idx]
-                        if (e.id === executor.id) {
-                            this.executors.splice(idx, 1) // TODO: does not work
+                    for (let idx = 0; idx < this.agents.length; idx++) {
+                        const e = this.agents[idx]
+                        if (e.id === agent.id) {
+                            this.agents.splice(idx, 1) // TODO: does not work
                             break
                         }
                     }
                     // remove from opened tabs if present
                     for (
                         let idx = 0;
-                        idx < this.openedExecutors.length;
+                        idx < this.openedAgents.length;
                         idx++
                     ) {
-                        const e = this.openedExecutors[idx].executor
-                        if (e.id === executor.id) {
+                        const e = this.openedAgents[idx].agent
+                        if (e.id === agent.id) {
                             this.closeTab(null, idx + 1)
                             break
                         }
@@ -236,25 +236,25 @@ export class ExecutorsPageComponent implements OnInit {
         }
     }
 
-    saveExecutor(executorsTable) {
+    saveAgent(agentsTable) {
         // if nothing changed
-        // if (executorTab.name === executorTab.executor.name) {
+        // if (agentTab.name === agentTab.agent.name) {
         //     return
         // }
-        const groups = this.executorTab.executor.groups.map(g => {
+        const groups = this.agentTab.agent.groups.map(g => {
             return { id: g.id }
         })
         const ex = { groups }
         this.managementService
-            .updateExecutor(this.executorTab.executor.id, ex)
+            .updateAgent(this.agentTab.agent.id, ex)
             .subscribe(
                 data => {
                     console.info('updated', data)
-                    // executorTab.executor.name = data.name
+                    // agentTab.agent.name = data.name
                     this.msgSrv.add({
                         severity: 'success',
-                        summary: 'Executor updated',
-                        detail: 'Executor update succeeded.',
+                        summary: 'Agent updated',
+                        detail: 'Agent update succeeded.',
                     })
                 },
                 err => {
@@ -264,17 +264,17 @@ export class ExecutorsPageComponent implements OnInit {
                     }
                     this.msgSrv.add({
                         severity: 'error',
-                        summary: 'Executor update failed',
-                        detail: 'Updating executor erred: ' + msg,
+                        summary: 'Agent update failed',
+                        detail: 'Updating agent erred: ' + msg,
                         life: 10000,
                     })
                 }
             )
     }
 
-    executorNameKeyDown(event, executorTab) {
+    agentNameKeyDown(event, agentTab) {
         if (event.key === 'Enter') {
-            this.saveExecutor(executorTab)
+            this.saveAgent(agentTab)
         }
     }
 }

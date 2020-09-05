@@ -75,23 +75,23 @@
                 <th style="width: 1rem;">ID</th>
                 <th style="width: 10rem;">Name</th>
                 <th style="width: 10rem;">Project</th>
-                <th style="width: 7rem;">Executors Count</th>
+                <th style="width: 7rem;">Agents Count</th>
                 <th style="width: 4rem;">Action</th>
             </tr>
         </ng-template>
         <ng-template pTemplate="body" let-g>
             <tr>
                 <td>
-                    <a routerLink="/executor-groups/{{ g.id }}">{{ g.id }}</a>
+                    <a routerLink="/agents-groups/{{ g.id }}">{{ g.id }}</a>
                 </td>
                 <td>
-                    <a routerLink="/executor-groups/{{ g.id }}">{{ g.name }}</a>
+                    <a routerLink="/agents-groups/{{ g.id }}">{{ g.name }}</a>
                 </td>
                 <td>
                   <span *ngIf="g.project_id === null" style="color: #aaa;">(shared)</span>
                   <a *ngIf="g.project_id !== null" routerLink="/projects/{{ g.project_id }}">{{ g.project_name }}</a>
                 </td>
-                <td>{{ g.executors_count }}</td>
+                <td>{{ g.agents_count }}</td>
                 <td>
                     <button
                         type="button"

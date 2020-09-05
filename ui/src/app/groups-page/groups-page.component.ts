@@ -64,7 +64,7 @@ export class GroupsPageComponent implements OnInit {
         })
         this.tabs.push({
             label: group.name,
-            routerLink: '/executor-groups/' + group.id,
+            routerLink: '/agents-groups/' + group.id,
         })
     }
 
@@ -75,12 +75,12 @@ export class GroupsPageComponent implements OnInit {
                 label: 'Home',
             },
             {
-                label: 'Executor Groups',
+                label: 'Agent Groups',
             },
         ]
         this.breadcrumbService.setCrumbs(crumbs)
 
-        this.tabs = [{ label: 'Groups', routerLink: '/executor-groups/all' }]
+        this.tabs = [{ label: 'Groups', routerLink: '/agents-groups/all' }]
 
         this.groups = []
         this.groupMenuItems = [
@@ -144,7 +144,7 @@ export class GroupsPageComponent implements OnInit {
                                     msg,
                                 life: 10000,
                             })
-                            this.router.navigate(['/executor-groups/all'])
+                            this.router.navigate(['/agents-groups/all'])
                         }
                     )
                 }
@@ -190,7 +190,7 @@ export class GroupsPageComponent implements OnInit {
                 })
                 this.newGroupDlgVisible = false
                 this.addGroupTab(data)
-                this.router.navigate(['/executor-groups/' + data.id])
+                this.router.navigate(['/agents-groups/' + data.id])
             },
             err => {
                 console.info(err)
@@ -236,10 +236,10 @@ export class GroupsPageComponent implements OnInit {
             this.switchToTab(idx - 1)
             if (idx - 1 > 0) {
                 this.router.navigate([
-                    '/executor-groups/' + this.groupTab.group.id,
+                    '/agents-groups/' + this.groupTab.group.id,
                 ])
             } else {
-                this.router.navigate(['/executor-groups/all'])
+                this.router.navigate(['/agents-groups/all'])
             }
         } else if (this.activeTabIdx > idx) {
             this.activeTabIdx = this.activeTabIdx - 1

@@ -1,19 +1,19 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing'
 
-import { ExecutorsPageComponent } from './executors-page.component'
+import { AgentsPageComponent } from './agents-page.component'
 
-describe('ExecutorsPageComponent', () => {
-    let component: ExecutorsPageComponent
-    let fixture: ComponentFixture<ExecutorsPageComponent>
+describe('AgentsPageComponent', () => {
+    let component: AgentsPageComponent
+    let fixture: ComponentFixture<AgentsPageComponent>
 
     beforeEach(async(() => {
         TestBed.configureTestingModule({
-            declarations: [ExecutorsPageComponent],
+            declarations: [AgentsPageComponent],
         }).compileComponents()
     }))
 
     beforeEach(() => {
-        fixture = TestBed.createComponent(ExecutorsPageComponent)
+        fixture = TestBed.createComponent(AgentsPageComponent)
         component = fixture.componentInstance
         fixture.detectChanges()
     })

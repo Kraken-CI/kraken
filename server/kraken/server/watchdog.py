@@ -22,7 +22,7 @@ import datetime
 from flask import Flask
 
 from . import logs
-from .models import db, Executor, Run, Job
+from .models import db, Agent, Run, Job
 from . import consts
 from . import srvcheck
 from . import execution
@@ -102,19 +102,19 @@ def _check_runs():
             execution.complete_run(run, now)
 
 
-def _check_executors():
+def _check_agents():
     now = datetime.datetime.utcnow()
-    five_mins_ago = now - datetime.timedelta(seconds=consts.EXECUTOR_TIMEOUT)
+    five_mins_ago = now - datetime.timedelta(seconds=consts.AGENT_TIMEOUT)
 
-    q = Executor.query
+    q = Agent.query
     q = q.filter_by(disabled=False, deleted=None)
-    q = q.filter(Executor.last_seen < five_mins_ago)
+    q = q.filter(Agent.last_seen < five_mins_ago)
 
     for e in q.all():
         e.disable = True
-        e.status_line = 'executor was not seen for last 5 minutes, disabled'
+        e.status_line = 'agent was not seen for last 5 minutes, disabled'
         db.session.commit()
-        log.info('executor %s not seen for 5 minutes, disabled', e)
+        log.info('agent %s not seen for 5 minutes, disabled', e)
 
 
 def main():
@@ -122,7 +122,7 @@ def main():
 
     with app.app_context():
 
-        t0_jobs = t0_runs = t0_executors = time.time()
+        t0_jobs = t0_runs = t0_agents = time.time()
 
         while True:
             # check jobs
@@ -137,11 +137,11 @@ def main():
                 _check_runs()
                 t0_runs = time.time()
 
-            # check executors
-            dt = time.time() - t0_executors
+            # check agents
+            dt = time.time() - t0_agents
             if dt > 30:
-                _check_executors()
-                t0_executors = time.time()
+                _check_agents()
+                t0_agents = time.time()
 
             time.sleep(1)
 

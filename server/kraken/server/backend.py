@@ -24,7 +24,7 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.attributes import flag_modified
 import giturlparse
 
-from .models import db, Job, Step, Executor, TestCase, TestCaseResult, Issue, Secret, Artifact, File
+from .models import db, Job, Step, Agent, TestCase, TestCaseResult, Issue, Secret, Artifact, File
 from . import consts
 from .bg import jobs as bg_jobs
 from .. import version
@@ -59,33 +59,33 @@ def _left_time(job):
     return int(timeout)
 
 
-def _handle_get_job(executor):
-    if executor.job is None:
+def _handle_get_job(agent):
+    if agent.job is None:
         return {'job': {}}
 
-    job = executor.job.get_json()
+    job = agent.job.get_json()
 
-    job['timeout'] = _left_time(executor.job)
+    job['timeout'] = _left_time(agent.job)
 
     # prepare test list for execution
     tests = []
-    for tcr in executor.job.results:
+    for tcr in agent.job.results:
         tests.append(tcr.test_case.name)
     if tests:
         job['steps'][-1]['tests'] = tests
 
     # attach trigger data to job
-    if executor.job.run.flow.trigger_data:
-        job['trigger_data'] = executor.job.run.flow.trigger_data
+    if agent.job.run.flow.trigger_data:
+        job['trigger_data'] = agent.job.run.flow.trigger_data
 
     # attach storage info to job
     storage_addr = os.environ.get('KRAKEN_STORAGE_ADDR', consts.DEFAULT_STORAGE_ADDR)
     job['storage_addr'] = storage_addr
-    job['flow_id'] = executor.job.run.flow_id
-    job['run_id'] = executor.job.run_id
+    job['flow_id'] = agent.job.run.flow_id
+    job['run_id'] = agent.job.run_id
 
     # prepare steps
-    project = executor.job.run.flow.branch.project
+    project = agent.job.run.flow.branch.project
     for step in job['steps']:
         # insert secret from ssh-key
         if 'ssh-key' in step:
@@ -114,9 +114,9 @@ def _handle_get_job(executor):
             else:
                 log.info('invalid git url %s', step['checkout'])
 
-    if not executor.job.started:
-        executor.job.started = datetime.datetime.utcnow()
-        executor.job.state = consts.JOB_STATE_ASSIGNED
+    if not agent.job.started:
+        agent.job.started = datetime.datetime.utcnow()
+        agent.job.state = consts.JOB_STATE_ASSIGNED
         db.session.commit()
 
     return {'job': job}
@@ -240,16 +240,16 @@ def _store_artifacts(job, step):
     log.info('reporting %s artifacts took %ss', len(step.result['artifacts']), (t1 - t0))
 
 
-def _handle_step_result(executor, req):
+def _handle_step_result(agent, req):
     response = {}
-    if executor.job is None:
-        log.error('job in executor %s is missing, reporting some old job %s, step %s',
-                  executor, req['job_id'], req['step_idx'])
+    if agent.job is None:
+        log.error('job in agent %s is missing, reporting some old job %s, step %s',
+                  agent, req['job_id'], req['step_idx'])
         return response
 
-    if executor.job_id != req['job_id']:
-        log.error('executor %s is reporting some other job %s',
-                  executor, req['job_id'])
+    if agent.job_id != req['job_id']:
+        log.error('agent %s is reporting some other job %s',
+                  agent, req['job_id'])
         return response
 
     try:
@@ -263,7 +263,7 @@ def _handle_step_result(executor, req):
         log.exception('problems with parsing request')
         return response
 
-    job = executor.job
+    job = agent.job
     step = job.steps[step_idx]
     step.result = result
     step.status = consts.STEP_STATUS_TO_INT[status]
@@ -297,10 +297,10 @@ def _handle_step_result(executor, req):
     if job_finished:
         job.state = consts.JOB_STATE_EXECUTING_FINISHED
         job.finished = datetime.datetime.utcnow()
-        executor.job = None
+        agent.job = None
         db.session.commit()
         t = bg_jobs.job_completed.delay(job.id)
-        log.info('job %s finished by %s, bg processing: %s', job, executor, t)
+        log.info('job %s finished by %s, bg processing: %s', job, agent, t)
     else:
         response['timeout'] = _left_time(job)
 
@@ -324,18 +324,18 @@ def _create_test_records(step, tests):
     log.info('creating %s test records took %ss', len(tests), (t1 - t0))
 
 
-def _handle_dispatch_tests(executor, req):
-    if executor.job is None:
-        log.error('job in executor %s is missing, reporting some old job %s, step %s',
-                  executor, req['job_id'], req['step_idx'])
+def _handle_dispatch_tests(agent, req):
+    if agent.job is None:
+        log.error('job in agent %s is missing, reporting some old job %s, step %s',
+                  agent, req['job_id'], req['step_idx'])
         return {}
 
-    if executor.job_id != req['job_id']:
-        log.error('executor %s is reporting some other job %s',
-                  executor, req['job_id'])
+    if agent.job_id != req['job_id']:
+        log.error('agent %s is reporting some other job %s',
+                  agent, req['job_id'])
         return {}
 
-    job = executor.job
+    job = agent.job
 
     try:
         tests = req['tests']
@@ -374,7 +374,7 @@ def _handle_dispatch_tests(executor, req):
         timeout = 60
 
     # create new job and its steps
-    job2 = Job(run=job.run, name=job.name, executor_group=job.executor_group, system=job.system, timeout=timeout)
+    job2 = Job(run=job.run, name=job.name, agents_group=job.agents_group, system=job.system, timeout=timeout)
     for s in job.steps:
         s2 = Step(job=job2, index=s.index, tool=s.tool, fields=s.fields.copy())
         if s.index == step_idx:
@@ -384,12 +384,12 @@ def _handle_dispatch_tests(executor, req):
     return {'tests': part1}
 
 
-def _handle_sys_info(executor, req):  # pylint: disable=unused-argument
+def _handle_sys_info(agent, req):  # pylint: disable=unused-argument
     pass
 
 
-def _handle_unknown_executor(address, ip_address):
-    Executor(name=address, address=address, authorized=False, ip_address=ip_address, last_seen=datetime.datetime.utcnow())
+def _handle_unknown_agent(address, ip_address):
+    Agent(name=address, address=address, authorized=False, ip_address=ip_address, last_seen=datetime.datetime.utcnow())
     db.session.commit()
 
 
@@ -404,26 +404,26 @@ def serve_agent_request():
     address = req['address']
     if address is None:
         address = request.remote_addr
-    # log.info('executor address: %s', address)
+    # log.info('agent address: %s', address)
 
-    executor = Executor.query.filter_by(address=address).one_or_none()
-    if executor is None:
-        log.warning('unknown executor %s', address)
-        _handle_unknown_executor(address, request.remote_addr)
+    agent = Agent.query.filter_by(address=address).one_or_none()
+    if agent is None:
+        log.warning('unknown agent %s', address)
+        _handle_unknown_agent(address, request.remote_addr)
         return json.dumps({})
 
-    executor.last_seen = datetime.datetime.utcnow()
-    executor.deleted = None
+    agent.last_seen = datetime.datetime.utcnow()
+    agent.deleted = None
     db.session.commit()
 
-    if not executor.authorized:
-        log.warning('unauthorized executor %s from %s', address, request.remote_addr)
+    if not agent.authorized:
+        log.warning('unauthorized agent %s from %s', address, request.remote_addr)
         return json.dumps({})
 
     response = {}
 
     if msg == 'get-job':
-        response = _handle_get_job(executor)
+        response = _handle_get_job(agent)
 
         logstash_addr = os.environ.get('KRAKEN_LOGSTASH_ADDR', consts.DEFAULT_LOGSTASH_ADDR)
         response['cfg'] = dict(logstash_addr=logstash_addr)
@@ -433,13 +433,13 @@ def serve_agent_request():
         pass
 
     elif msg == 'step-result':
-        response = _handle_step_result(executor, req)
+        response = _handle_step_result(agent, req)
 
     elif msg == 'dispatch-tests':
-        response = _handle_dispatch_tests(executor, req)
+        response = _handle_dispatch_tests(agent, req)
 
     elif msg == 'sys-info':
-        _handle_sys_info(executor, req)
+        _handle_sys_info(agent, req)
         response = {}
 
     else:

@@ -23,7 +23,7 @@ from flask import Flask
 from sqlalchemy.sql.expression import asc
 
 from . import logs
-from .models import db, Executor, Run, Job
+from .models import db, Agent, Run, Job
 from . import consts
 from . import srvcheck
 from .. import version
@@ -31,57 +31,57 @@ from .. import version
 log = logging.getLogger('scheduler')
 
 
-def assign_jobs_to_executors():
+def assign_jobs_to_agents():
     counter = 0
 
-    all_idle_executors = Executor.query.filter_by(job=None, authorized=True).all()
-    executors_count = len(all_idle_executors)
-    if executors_count == 0:
+    all_idle_agents = Agent.query.filter_by(job=None, authorized=True).all()
+    agents_count = len(all_idle_agents)
+    if agents_count == 0:
         return 0
-    idle_executors_by_group = {}
-    for e in all_idle_executors:
-        # log.info('idle executor: %s', e)
-        for asm in e.executor_groups:
-            grp_id = asm.executor_group_id
+    idle_agents_by_group = {}
+    for e in all_idle_agents:
+        # log.info('idle agent: %s', e)
+        for asm in e.agents_groups:
+            grp_id = asm.agents_group_id
             # log.info('  grp: %s', grp_id)
-            if grp_id not in idle_executors_by_group:
-                idle_executors_by_group[grp_id] = []
-            idle_executors_by_group[grp_id].append(e)
+            if grp_id not in idle_agents_by_group:
+                idle_agents_by_group[grp_id] = []
+            idle_agents_by_group[grp_id].append(e)
 
-    q = Job.query.filter_by(state=consts.JOB_STATE_QUEUED, executor_used=None)
+    q = Job.query.filter_by(state=consts.JOB_STATE_QUEUED, agent_used=None)
     q = q.join('run')
     waiting_jobs = q.order_by(asc(Run.created), asc(Job.created)).all()  # FIFO
     if waiting_jobs:
-        log.info('idle executors: %s, waiting jobs %s', executors_count, waiting_jobs)
+        log.info('idle agents: %s, waiting jobs %s', agents_count, waiting_jobs)
 
     for j in waiting_jobs:
         log.info('job %s', j)
-        # find idle executor from given executors group
-        best_executor = None
-        idle_executors = idle_executors_by_group.get(j.executor_group_id, [])
-        while best_executor is None:
-            if len(idle_executors) == 0:
-                log.info('no avail executors for job %s', j)
+        # find idle agent from given agents group
+        best_agent = None
+        idle_agents = idle_agents_by_group.get(j.agents_group_id, [])
+        while best_agent is None:
+            if len(idle_agents) == 0:
+                log.info('no avail agents for job %s', j)
                 break
-            best_executor = idle_executors.pop()
-            if best_executor.job:
-                log.info('executor busy %s', best_executor)
-                best_executor = None
+            best_agent = idle_agents.pop()
+            if best_agent.job:
+                log.info('agent busy %s', best_agent)
+                best_agent = None
 
-        if best_executor is None:
-            log.info('no executors for job %s', j)
+        if best_agent is None:
+            log.info('no agents for job %s', j)
             continue
 
-        # assign job to found executor
-        best_executor.job = j
-        j.executor_used = best_executor
+        # assign job to found agent
+        best_agent.job = j
+        j.agent_used = best_agent
         j.assigned = datetime.datetime.utcnow()
         db.session.commit()
-        log.info("assigned job %s to executor %s", j, best_executor)
+        log.info("assigned job %s to agent %s", j, best_agent)
 
         counter += 1
-        # if all idle executors used then stop assigning
-        if counter == executors_count:
+        # if all idle agents used then stop assigning
+        if counter == agents_count:
             break
 
     return counter
@@ -119,7 +119,7 @@ def main():
 
         while True:
             t0 = time.time()
-            jobs_cnt = assign_jobs_to_executors()
+            jobs_cnt = assign_jobs_to_agents()
             t1 = time.time()
 
             dt = t1 - t0

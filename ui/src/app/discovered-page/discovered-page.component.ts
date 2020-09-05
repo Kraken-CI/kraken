@@ -10,10 +10,10 @@ import { BreadcrumbsService } from '../breadcrumbs.service'
     styleUrls: ['./discovered-page.component.sass'],
 })
 export class DiscoveredPageComponent implements OnInit {
-    executors: any[]
-    totalExecutors = 0
-    loadingExecutors = true
-    selectedExecutors: any[]
+    agents: any[]
+    totalAgents = 0
+    loadingAgents = true
+    selectedAgents: any[]
 
     constructor(
         protected managementService: ManagementService,
@@ -22,47 +22,47 @@ export class DiscoveredPageComponent implements OnInit {
     ) {}
 
     ngOnInit() {
-        this.titleService.setTitle('Kraken - Discovered Executors')
+        this.titleService.setTitle('Kraken - Discovered Agents')
         const crumbs = [
             {
                 label: 'Home',
             },
             {
-                label: 'Discovered Executors',
+                label: 'Discovered Agents',
             },
         ]
         this.breadcrumbService.setCrumbs(crumbs)
     }
 
-    loadExecutorsLazy(event) {
-        this.loadingExecutors = true
-        this.managementService.getExecutors(true).subscribe(data => {
-            this.executors = data.items
-            this.totalExecutors = data.total
-            this.loadingExecutors = false
+    loadAgentsLazy(event) {
+        this.loadingAgents = true
+        this.managementService.getAgents(true).subscribe(data => {
+            this.agents = data.items
+            this.totalAgents = data.total
+            this.loadingAgents = false
         })
     }
 
-    refreshExecutors(executorsTable) {
-        executorsTable.onLazyLoad.emit(executorsTable.createLazyLoadMetadata())
+    refreshAgents(agentsTable) {
+        agentsTable.onLazyLoad.emit(agentsTable.createLazyLoadMetadata())
     }
 
-    resetExecutorsFilter(executorsTable) {
-        if (executorsTable) {
-            this.refreshExecutors(executorsTable)
+    resetAgentsFilter(agentsTable) {
+        if (agentsTable) {
+            this.refreshAgents(agentsTable)
         }
     }
 
-    executorSelected(ev) {
+    agentSelected(ev) {
         console.info(ev)
     }
 
-    authorize(executorsTable) {
-        const execs = this.selectedExecutors.map(e => {
+    authorize(agentsTable) {
+        const execs = this.selectedAgents.map(e => {
             return { id: e.id, authorized: true }
         })
-        this.managementService.updateExecutors(execs).subscribe(data => {
-            this.refreshExecutors(executorsTable)
+        this.managementService.updateAgents(execs).subscribe(data => {
+            this.refreshAgents(agentsTable)
         })
     }
 }

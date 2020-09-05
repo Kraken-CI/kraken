@@ -24,7 +24,7 @@ import pytimeparse
 import dateutil.parser
 
 from . import consts
-from .models import db, Branch, Stage, Executor, ExecutorGroup, Secret, ExecutorAssignment, Setting
+from .models import db, Branch, Stage, Agent, AgentsGroup, Secret, AgentAssignment, Setting
 from .models import Project
 from .schema import execute_schema_code
 
@@ -383,116 +383,116 @@ def get_stage_schema_as_json(stage_id, schema_code):
     return dict(stage_id=stage_id, schema=schema), 200
 
 
-def get_executor(executor_id):
-    ex = Executor.query.filter_by(id=executor_id).one_or_none()
-    if ex is None:
-        abort(400, "Cannot find executor with id %s" % executor_id)
+def get_agent(agent_id):
+    ag = Agent.query.filter_by(id=agent_id).one_or_none()
+    if ag is None:
+        abort(400, "Cannot find agent with id %s" % agent_id)
 
-    return ex.get_json(), 200
+    return ag.get_json(), 200
 
 
-def get_executors(unauthorized=None, start=0, limit=10):
-    q = Executor.query
+def get_agents(unauthorized=None, start=0, limit=10):
+    q = Agent.query
     q = q.filter_by(deleted=None)
     if unauthorized:
         q = q.filter_by(authorized=False)
     else:
         q = q.filter_by(authorized=True)
-    q = q.order_by(Executor.name)
+    q = q.order_by(Agent.name)
     total = q.count()
     q = q.offset(start).limit(limit)
-    executors = []
+    agents = []
     for e in q.all():
-        executors.append(e.get_json())
-    return {'items': executors, 'total': total}, 200
+        agents.append(e.get_json())
+    return {'items': agents, 'total': total}, 200
 
 
-def update_executors(executors):
-    log.info('executors %s', executors)
+def update_agents(agents):
+    log.info('agents %s', agents)
 
-    execs = []
-    for e in executors:
-        executor = Executor.query.filter_by(id=e['id']).one_or_none()
-        if executor is None:
-            abort(400, 'Cannot find executor %s' % e['id'])
-        execs.append(executor)
+    agents2 = []
+    for a in agents:
+        agent = Agent.query.filter_by(id=a['id']).one_or_none()
+        if agent is None:
+            abort(400, 'Cannot find agent %s' % a['id'])
+        agents2.append(agent)
 
-    for data, executor in zip(executors, execs):
+    for data, agent in zip(agents, agents2):
         if 'authorized' in data:
-            executor.authorized = data['authorized']
+            agent.authorized = data['authorized']
     db.session.commit()
 
     return {}, 200
 
 
-def update_executor(executor_id, data):
-    executor = Executor.query.filter_by(id=executor_id).one_or_none()
-    if executor is None:
-        abort(404, "Executor not found")
+def update_agent(agent_id, data):
+    agent = Agent.query.filter_by(id=agent_id).one_or_none()
+    if agent is None:
+        abort(404, "Agent not found")
 
     if 'groups' in data:
         # check new groups
         new_groups = set()
         if data['groups']:
             for g_id in data['groups']:
-                g = ExecutorGroup.query.filter_by(id=g_id['id']).one_or_none()
+                g = AgentsGroup.query.filter_by(id=g_id['id']).one_or_none()
                 if g is None:
-                    abort(404, "Executor Group with id %s not found" % g_id)
+                    abort(404, "Agents Group with id %s not found" % g_id)
                 new_groups.add(g)
 
         # get old groups
         current_groups = set()
         assignments_map = {}
-        for ea in executor.executor_groups:
-            current_groups.add(ea.executor_group)
-            assignments_map[ea.executor_group.id] = ea
+        for aa in agent.agents_groups:
+            current_groups.add(aa.agents_group)
+            assignments_map[aa.agents_group.id] = aa
 
         # remove groups
         removed = current_groups - new_groups
         for r in removed:
-            ea = assignments_map[r.id]
-            db.session.delete(ea)
+            aa = assignments_map[r.id]
+            db.session.delete(aa)
 
         # add groups
         added = new_groups - current_groups
         for a in added:
-            ExecutorAssignment(executor=executor, executor_group=a)
+            AgentAssignment(agent=agent, agents_group=a)
 
     db.session.commit()
 
-    return executor.get_json(), 200
+    return agent.get_json(), 200
 
 
-def delete_executor(executor_id):
-    executor = Executor.query.filter_by(id=executor_id).one_or_none()
-    if executor is None:
-        abort(404, "Executor not found")
+def delete_agent(agent_id):
+    agent = Agent.query.filter_by(id=agent_id).one_or_none()
+    if agent is None:
+        abort(404, "Agent not found")
 
-    if executor.job is not None:
-        job = executor.job
-        job.executor = None
+    if agent.job is not None:
+        job = agent.job
+        job.agent = None
         job.state = consts.JOB_STATE_QUEUED
-        executor.job = None
+        agent.job = None
 
-    executor.deleted = datetime.datetime.utcnow()
-    executor.authorized = False
+    agent.deleted = datetime.datetime.utcnow()
+    agent.authorized = False
     db.session.commit()
 
     return {}, 200
 
 
 def get_group(group_id):
-    eg = ExecutorGroup.query.filter_by(id=group_id).one_or_none()
-    if eg is None:
-        abort(400, "Cannot find executor group with id %s" % group_id)
+    ag = AgentsGroup.query.filter_by(id=group_id).one_or_none()
+    if ag is None:
+        abort(400, "Cannot find agent group with id %s" % group_id)
 
-    return eg.get_json(), 200
+    return ag.get_json(), 200
 
 
 def get_groups(start=0, limit=10):
-    q = ExecutorGroup.query
+    q = AgentsGroup.query
     q = q.filter_by(deleted=None)
-    q = q.order_by(ExecutorGroup.name)
+    q = q.order_by(AgentsGroup.name)
     total = q.count()
     q = q.offset(start).limit(limit)
     groups = []
@@ -502,7 +502,7 @@ def get_groups(start=0, limit=10):
 
 
 def create_group(group):
-    group_rec = ExecutorGroup.query.filter_by(name=group['name']).one_or_none()
+    group_rec = AgentsGroup.query.filter_by(name=group['name']).one_or_none()
     if group_rec is not None:
         abort(400, "Group with name %s already exists" % group['name'])
 
@@ -512,7 +512,7 @@ def create_group(group):
         if project is None:
             abort(400, "Cannot find project with id %s" % group['project_id'])
 
-    new_group = ExecutorGroup(name=group['name'], project=project)
+    new_group = AgentsGroup(name=group['name'], project=project)
     db.session.commit()
 
     return new_group.get_json(), 201
@@ -523,9 +523,9 @@ def update_group():
 
 
 def delete_group(group_id):
-    group = ExecutorGroup.query.filter_by(id=group_id).one_or_none()
+    group = AgentsGroup.query.filter_by(id=group_id).one_or_none()
     if group is None:
-        abort(404, "Executor group with id %s not found" % group_id)
+        abort(404, "Agents group with id %s not found" % group_id)
 
     group.deleted = datetime.datetime.utcnow()
     db.session.commit()

@@ -923,13 +923,13 @@ paths:
           schema:
             $ref: '#/definitions/ApiError'
 
-  /executors:
+  /agents:
     get:
-      operationId: get_executors
+      operationId: get_agents
       tags:
         - Management
-      summary: Get executors
-      description: Get executors
+      summary: Get agents
+      description: Get agents
       parameters:
         - name: unauthorized
           in: query
@@ -952,92 +952,92 @@ paths:
         "200":
           description: A paged array of logs
           schema:
-            $ref: '#/definitions/Executors'
+            $ref: '#/definitions/Agents'
         default:
           description: unexpected error
           schema:
             $ref: '#/definitions/ApiError'
     patch:
-      operationId: update_executors
+      operationId: update_agents
       tags:
         - Management
-      summary: Update executors
-      description: Update executors
+      summary: Update agents
+      description: Update agents
       parameters:
-        - name: executors
+        - name: agents
           in: body
-          description: List of modified executors
+          description: List of modified agents
           schema:
             type: array
             items:
-              $ref: '#/definitions/Executor'
+              $ref: '#/definitions/Agent'
       responses:
         "200":
           description: A paged array of logs
           schema:
-            $ref: '#/definitions/Executors'
+            $ref: '#/definitions/Agents'
         default:
           description: unexpected error
           schema:
             $ref: '#/definitions/ApiError'
-  /executors/{executor_id}:
+  /agents/{agent_id}:
     get:
-      operationId: get_executor
+      operationId: get_agent
       tags:
         - Management
-      summary: Get executor
-      description: Get executor details
+      summary: Get agent
+      description: Get agent details
       parameters:
-        - name: executor_id
+        - name: agent_id
           in: path
-          description: ID of executor
+          description: ID of agent
           required: true
           type: integer
           format: int64
       responses:
         200:
-          description: Executor details
+          description: Agent details
           schema:
-            $ref: '#/definitions/Executor'
+            $ref: '#/definitions/Agent'
     put:
-      operationId: update_executor
+      operationId: update_agent
       tags:
         - Management
-      summary: Update a executor
-      description: Update executor settings
+      summary: Update a agent
+      description: Update agent settings
       parameters:
-        - name: executor_id
+        - name: agent_id
           in: path
-          description: ID of executor
+          description: ID of agent
           required: true
           type: integer
           format: int64
         - name: data
           in: body
-          description: executor
+          description: agent
           schema:
-            $ref: '#/definitions/Executor'
+            $ref: '#/definitions/Agent'
       responses:
         200:
           description: Successfully
           schema:
-            $ref: '#/definitions/Executor'
+            $ref: '#/definitions/Agent'
     delete:
-      operationId: delete_executor
+      operationId: delete_agent
       tags:
         - Management
-      summary: Delete a executor
-      description: Delete a executor
+      summary: Delete a agent
+      description: Delete a agent
       parameters:
-        - name: executor_id
+        - name: agent_id
           in: path
-          description: ID of executor
+          description: ID of agent
           required: true
           type: integer
           format: int64
       responses:
         200:
-          description: Successfully deleted executor
+          description: Successfully deleted agent
 
   /groups:
     get:
@@ -1430,13 +1430,13 @@ definitions:
         type: array
         items:
           type: object
-      executor_group_id:
+      agents_group_id:
         type: integer
-      executor_group_name:
+      agents_group_name:
         type: string
-      executor_id:
+      agent_id:
         type: integer
-      executor_name:
+      agent_name:
         type: string
 
   Jobs:
@@ -1560,7 +1560,7 @@ definitions:
       schema_code:
         type: string
 
-  Executor:
+  Agent:
     type: object
     properties:
       id:
@@ -1587,13 +1587,13 @@ definitions:
       last_seen:
         type: string
         format: date-time
-  Executors:
+  Agents:
     type: object
     properties:
       items:
         type: array
         items:
-          $ref: '#/definitions/Executor'
+          $ref: '#/definitions/Agent'
       total:
         type: integer
         format: int64
@@ -1610,7 +1610,7 @@ definitions:
         type: string
       project_id:
         type: integer
-      executors_count:
+      agents_count:
         type: integer
   Groups:
     type: object

@@ -24,7 +24,7 @@ from sqlalchemy.orm import joinedload
 from elasticsearch import Elasticsearch
 
 from . import consts
-from .models import db, Branch, Flow, Run, Stage, Job, Step, ExecutorGroup, Tool, TestCaseResult, TestCase, Issue, Artifact
+from .models import db, Branch, Flow, Run, Stage, Job, Step, AgentsGroup, Tool, TestCaseResult, TestCase, Issue, Artifact
 
 log = logging.getLogger(__name__)
 
@@ -83,7 +83,7 @@ def trigger_jobs(run, replay=False):
     if replay:
         q = Job.query.filter_by(run=run).filter_by(covered=False)
         for j in q.all():
-            key = '%s-%s' % (j.name, j.executor_group_id)
+            key = '%s-%s' % (j.name, j.agents_group_id)
             if key not in covered_jobs:
                 covered_jobs[key] = [j]
             else:
@@ -107,15 +107,15 @@ def trigger_jobs(run, replay=False):
 
         envs = j['environments']
         for env in envs:
-            # get executor group
-            q = ExecutorGroup.query
-            q = q.filter_by(project=run.stage.branch.project, name=env['executor_group'])
-            executor_group = q.one_or_none()
+            # get agents group
+            q = AgentsGroup.query
+            q = q.filter_by(project=run.stage.branch.project, name=env['agents_group'])
+            agents_group = q.one_or_none()
 
-            if executor_group is None:
-                executor_group = ExecutorGroup.query.filter_by(name=env['executor_group']).one_or_none()
-                if executor_group is None:
-                    log.warning("cannot find executor group '%s'", env['executor_group'])
+            if agents_group is None:
+                agents_group = AgentsGroup.query.filter_by(name=env['agents_group']).one_or_none()
+                if agents_group is None:
+                    log.warning("cannot find agents group '%s'", env['agents_group'])
                     continue
 
             # get timeout
@@ -129,7 +129,7 @@ def trigger_jobs(run, replay=False):
                     timeout = 60
 
             # create job
-            job = Job(run=run, name=j['name'], executor_group=executor_group, system=env['system'], timeout=timeout)
+            job = Job(run=run, name=j['name'], agents_group=agents_group, system=env['system'], timeout=timeout)
 
             if tool_not_found:
                 job.state = consts.JOB_STATE_COMPLETED
@@ -144,7 +144,7 @@ def trigger_jobs(run, replay=False):
 
             # if this is rerun/replay then mark prev jobs as covered
             if replay:
-                key = '%s-%s' % (j['name'], executor_group.id)
+                key = '%s-%s' % (j['name'], agents_group.id)
                 if key in covered_jobs:
                     for cj in covered_jobs[key]:
                         cj.covered = True
@@ -369,8 +369,8 @@ def get_run_results(run_id, start=0, limit=10,
     q = TestCaseResult.query
     q = q.options(joinedload('test_case'),
                   joinedload('job'),
-                  joinedload('job.executor_group'),
-                  joinedload('job.executor_used'))
+                  joinedload('job.agents_group'),
+                  joinedload('job.agent_used'))
     q = q.join('job')
     q = q.filter(Job.run_id == run_id, Job.covered.is_(False))
     if statuses:
@@ -421,8 +421,8 @@ def get_run_jobs(run_id, start=0, limit=10, include_covered=False):
 def get_run_issues(run_id, start=0, limit=10, issue_types=None, location=None, message=None, symbol=None, min_age=None, max_age=None, job=None):
     q = Issue.query
     q = q.options(joinedload('job'),
-                  joinedload('job.executor_group'),
-                  joinedload('job.executor_used'))
+                  joinedload('job.agents_group'),
+                  joinedload('job.agent_used'))
     q = q.join('job')
     q = q.filter(Job.run_id == run_id, Job.covered.is_(False))
     if issue_types:
@@ -474,11 +474,11 @@ def get_result_history(test_case_result_id, start=0, limit=10):
     q = TestCaseResult.query
     q = q.options(joinedload('test_case'),
                   joinedload('job'),
-                  joinedload('job.executor_group'),
-                  joinedload('job.executor_used'))
+                  joinedload('job.agents_group'),
+                  joinedload('job.agent_used'))
     q = q.filter_by(test_case_id=tcr.test_case_id)
     q = q.join('job')
-    q = q.filter_by(executor_group_id=tcr.job.executor_group_id)
+    q = q.filter_by(agents_group_id=tcr.job.agents_group_id)
     q = q.join('job', 'run', 'flow', 'branch')
     q = q.filter(Branch.id == tcr.job.run.flow.branch_id)
     q = q.order_by(desc(Flow.created))
@@ -622,8 +622,8 @@ def cancel_job(job, note=None):
     job.completion_status = consts.JOB_CMPLT_SERVER_TIMEOUT
     if note:
         job.notes = note
-    job.executor = None
-    # TODO: add canceling the job on executor side
+    job.agent = None
+    # TODO: add canceling the job on agent side
     db.session.commit()
     t = bg_jobs.job_completed.delay(job.id)
     log.info('job %s timed out, bg processing: %s', job, t)

@@ -53,7 +53,7 @@ import { NewFlowComponent } from './new-flow/new-flow.component'
 import { NewRunComponent } from './new-run/new-run.component'
 import { LogBoxComponent } from './log-box/log-box.component'
 import { ProjectSettingsComponent } from './project-settings/project-settings.component'
-import { ExecutorsPageComponent } from './executors-page/executors-page.component'
+import { AgentsPageComponent } from './agents-page/agents-page.component'
 import { DiscoveredPageComponent } from './discovered-page/discovered-page.component'
 import { GroupsPageComponent } from './groups-page/groups-page.component';
 import { SettingsPageComponent } from './settings-page/settings-page.component'
@@ -78,7 +78,7 @@ export function cfgFactory() {
         NewRunComponent,
         LogBoxComponent,
         ProjectSettingsComponent,
-        ExecutorsPageComponent,
+        AgentsPageComponent,
         DiscoveredPageComponent,
         GroupsPageComponent,
         SettingsPageComponent,

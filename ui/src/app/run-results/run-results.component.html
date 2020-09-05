@@ -39,8 +39,8 @@
             <th style="width: 100px;">Completion Status</th>
             <th style="width: 15%;">System</th>
             <th style="width: 10%;">Config</th>
-            <th style="width: 10%; overflow-x: hidden;">Executor Group</th>
-            <th style="width: 15%; overflow-x: hidden;">Executor</th>
+            <th style="width: 10%; overflow-x: hidden;">Agent Group</th>
+            <th style="width: 15%; overflow-x: hidden;">Agent</th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-job>
@@ -53,8 +53,8 @@
             </td>
             <td>Ubuntu 18.04</td>
             <td>default</td>
-            <td>{{job.executor_group_name}}</td>
-            <td>{{job.executor_name}}</td>
+            <td>{{job.agents_group_name}}</td>
+            <td>{{job.agent_name}}</td>
           </tr>
         </ng-template>
       </p-table>
@@ -193,8 +193,8 @@
         <th style="width: 150px;">Values</th>
         <th style="width: 30%;">System</th>
         <th style="width: 10%;">Config</th>
-        <th style="width: 10%;">Executor Group</th>
-        <th style="width: 10%;">Executor</th>
+        <th style="width: 10%;">Agent Group</th>
+        <th style="width: 10%;">Agent</th>
         <th style="width: 90px;">Cmd Line</th>
       </tr>
     </ng-template>
@@ -214,8 +214,8 @@
         </td>
         <td>Ubuntu 18.04</td>
         <td>default</td>
-        <td>{{res.executor_group_name}}</td>
-        <td>{{res.executor_name}}</td>
+        <td>{{res.agents_group_name}}</td>
+        <td>{{res.agent_name}}</td>
         <td><p-button label="CmdLine" (onClick)="showCmdLine()" styleClass="cmd-line-btn"></p-button></td>
       </tr>
     </ng-template>
@@ -310,8 +310,8 @@
           <th style="width: 40px;">Age</th>
           <th style="width: 6%;">System</th>
           <th style="width: 5%;">Config</th>
-          <th style="width: 5%;">Executor Group</th>
-          <th style="width: 5%;">Executor</th>
+          <th style="width: 5%;">Agent Group</th>
+          <th style="width: 5%;">Agent</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-issue>
@@ -332,8 +332,8 @@
           <td style="cursor: pointer;" (dblclick)="filterIssuesByAge(issue.age, issuesTable)">{{ issue.age }}</td>
           <td>Ubuntu 18.04</td>
           <td>default</td>
-          <td>{{ issue.executor_group_name}}</td>
-          <td>{{ issue.executor_name}}</td>
+          <td>{{ issue.agents_group_name}}</td>
+          <td>{{ issue.agent_name}}</td>
         </tr>
       </ng-template>
       <ng-template pTemplate="paginatorright" let-state>
