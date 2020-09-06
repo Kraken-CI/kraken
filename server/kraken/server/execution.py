@@ -128,8 +128,15 @@ def trigger_jobs(run, replay=False):
                 if timeout < 60:
                     timeout = 60
 
+            # prepare system and executor
+            if 'executor' in env:
+                executor = env['executor'].lower()
+            else:
+                executor = 'local'
+            system = '%s^%s' % (executor, env['system'])
+
             # create job
-            job = Job(run=run, name=j['name'], agents_group=agents_group, system=env['system'], timeout=timeout)
+            job = Job(run=run, name=j['name'], agents_group=agents_group, system=system, timeout=timeout)
 
             if tool_not_found:
                 job.state = consts.JOB_STATE_COMPLETED
