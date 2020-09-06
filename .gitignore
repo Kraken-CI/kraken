@@ -20,6 +20,8 @@ venv
 /server/kktool
 
 /ui/src/environments/environment.prod.ts
+/ui/dist/kraken/main-es5*
+/ui/dist/kraken/main-es2015*
 
 /kraken-docker-stack-*.yaml
 /kraken-docker-compose-*.yaml
