@@ -50,6 +50,15 @@ def _create_archive(filepath, arcname=None):
     return data
 
 
+def _is_docker():
+    with open('/proc/self/cgroup', 'r') as procfile:
+        for line in procfile:
+            fields = line.strip().split('/')
+            if 'docker' in fields[1]:
+                return True
+    return False
+
+
 class Timeout(Exception):
     pass
 
@@ -71,49 +80,51 @@ class DockerExecContext:
         self.cntr = self.client.containers.run(image, 'sleep 10000', detach=True)
         log.info('docker container %s', self.cntr.id)
 
-        archive = _create_archive('kktool')
+        archive = _create_archive(os.path.realpath(os.path.join(consts.AGENT_DIR, 'kktool')), arcname='kktool')
         self.cntr.put_archive('/root', archive)
 
         deadline = time.time() + timeout
         asyncio.run(self._dkr_run('apt-get update', '/', deadline))
         asyncio.run(self._dkr_run('apt-get install -y python3', '/', deadline))
 
-        # get or create kknet
-        try:
-            self.kknet = self.client.networks.get('kknet')
-        except:
-            self.kknet = self.client.networks.create('kknet', driver='overlay', attachable=True)
+        # if agent is running inside docker then get or create kknet and use it to communicate with execution container
+        if _is_docker():
+            try:
+                self.kknet = self.client.networks.get('kknet')
+            except:
+                self.kknet = self.client.networks.create('kknet', driver='overlay', attachable=True)
 
-        # connect new container to kknet
-        try:
-            self.kknet.connect(self.cntr)
-        except:
-            log.exception('IGNORED EXCEPTION')
-            raise
+            # connect new container to kknet
+            try:
+                self.kknet.connect(self.cntr)
+            except:
+                log.exception('problems with kknet')
+                raise
 
-        # connect current container to kknet
-        try:
-            curr_cntr_id = os.environ['HOSTNAME']
-            self.curr_cntr = self.client.containers.get(curr_cntr_id)
-            if 'kknet' not in self.curr_cntr.attrs['NetworkSettings']['Networks']:
-                self.kknet.connect(self.curr_cntr)
-                self.curr_cntr.reload()
-        except:
-            log.exception('IGNORED EXCEPTION')
+            # connect current container with agent to kknet
+            try:
+                curr_cntr_id = os.environ['HOSTNAME']
+                self.curr_cntr = self.client.containers.get(curr_cntr_id)
+                if 'kknet' not in self.curr_cntr.attrs['NetworkSettings']['Networks']:
+                    self.kknet.connect(self.curr_cntr)
+                    self.curr_cntr.reload()
+            except:
+                log.exception('IGNORED EXCEPTION')
 
-        # connect logstash to kknet
-        for c in self.client.containers.list():
-            if 'logstash' in c.name:
-                if 'kknet' not in c.attrs['NetworkSettings']['Networks']:
-                    self.kknet.connect(c)
-                c.reload()
-                self.logstash_ip = c.attrs['NetworkSettings']['Networks']['kknet']['IPAddress']
+            # connect logstash to kknet
+            for c in self.client.containers.list():
+                if 'logstash' in c.name:
+                    if 'kknet' not in c.attrs['NetworkSettings']['Networks']:
+                        self.kknet.connect(c)
+                    c.reload()
+                    self.logstash_ip = c.attrs['NetworkSettings']['Networks']['kknet']['IPAddress']
 
     def get_return_ip_addr(self):
         if self.curr_cntr:
             return self.curr_cntr.attrs['NetworkSettings']['Networks']['kknet']['IPAddress']
-        # TODO: add support when agent is not run in docker
-        raise Exception('cannot find ip address')
+        # TODO: in case of running agent not in container then IP address is hardcoded;
+        # would be good to get it in runtime
+        return '172.17.0.1'
 
     def stop(self):
         try:

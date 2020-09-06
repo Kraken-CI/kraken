@@ -397,6 +397,10 @@ class Job(db.Model, DatesMixin):
     issues = relationship('Issue', back_populates="job")
 
     def get_json(self):
+        if '^' in self.system:
+            executor, system = self.system.split('^')
+        else:
+            executor, system = 'local', self.system
         return dict(id=self.id,
                     created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,
                     deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,
@@ -411,7 +415,8 @@ class Job(db.Model, DatesMixin):
                     timeout=self.timeout,
                     covered=self.covered,
                     notes=self.notes,
-                    system=self.system,
+                    system=system,
+                    executor=executor,
                     run_id=self.run_id,
                     agents_group_id=self.agents_group_id,
                     agents_group_name=self.agents_group.name,

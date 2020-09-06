@@ -289,9 +289,9 @@ def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
 
 
 def _create_exec_context(job):
-    if job['system'].startswith('docker^'):
+    if job['executor'] == 'docker':
         ctx = docker_run.DockerExecContext(job)
-    elif job['system'].startswith('lxd'):
+    elif job['executor'] == 'lxd':
         ctx = lxd_run.LxdExecContext(job)
     else:
         ctx = local_run.LocalExecContext(job)

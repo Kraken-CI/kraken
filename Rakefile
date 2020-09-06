@@ -125,12 +125,12 @@ file './agent/venv/bin/kkagent' => './agent/venv/bin/python3' do
   end
 end
 
-task :run_agent => './agent/venv/bin/kkagent' do
+task :run_agent => ['./agent/venv/bin/kkagent', :build_agent] do
   sh 'cp server/kraken/server/consts.py agent/kraken/agent/'
   sh 'cp server/kraken/server/logs.py agent/kraken/agent/'
   sh 'rm -rf /tmp/kk-jobs/ /opt/kraken/*'
-  sh 'cp agent/venv/bin/kkagent agent/venv/bin/kktool /opt/kraken'
-  sh 'LANGUAGE=en_US:en LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 ./agent/venv/bin/kkagent --no-update -d /tmp/kk-jobs -s http://localhost:8080 run'
+  sh 'cp agent/venv/bin/kkagent agent/kktool /opt/kraken'
+  sh 'LANGUAGE=en_US:en LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 KRAKEN_LOGSTASH_ADDR=192.168.0.88:5959 ./agent/venv/bin/kkagent --no-update -d /tmp/kk-jobs -s http://localhost:8080 run'
 end
 
 task :run_agent_in_docker do
@@ -401,6 +401,7 @@ task :github_release do
   upload_url = rel['upload_url'].chomp('{?name,label}')
   sh "curl -H 'Authorization: token #{gh_token}' -H 'Content-Type:text/plain' --data-binary @kraken-docker-compose-#{kk_ver}.yaml '#{upload_url}?name=kraken-docker-compose-#{kk_ver}.yaml'"
   sh "curl -H 'Authorization: token #{gh_token}' -H 'Content-Type:text/plain' --data-binary @.env '#{upload_url}?name=dot-0.87.env'"
+  sh "rm -f github-release-#{kk_ver}.json"
 end
 
 task :release_deploy do
