@@ -289,6 +289,7 @@ def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
 
 
 def _create_exec_context(job):
+    log.info('system: %s, executor: %s', job['system'], job['executor'])
     if job['executor'] == 'docker':
         ctx = docker_run.DockerExecContext(job)
     elif job['executor'] == 'lxd':

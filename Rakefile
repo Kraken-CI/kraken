@@ -27,7 +27,7 @@ end
 
 file SWAGGER_CODEGEN do
   sh "mkdir -p #{TOOLS_DIR}"
-  sh "wget http://central.maven.org/maven2/io/swagger/swagger-codegen-cli/2.4.8/swagger-codegen-cli-2.4.8.jar -O #{SWAGGER_CODEGEN}"
+  sh "wget https://oss.sonatype.org/content/repositories/releases/io/swagger/swagger-codegen-cli/2.4.8/swagger-codegen-cli-2.4.8.jar -O #{SWAGGER_CODEGEN}"
 end
 
 file NPX do
@@ -38,9 +38,9 @@ file NPX do
   end
 end
 
-file NG => NPX do
+file NG do # => NPX do
   Dir.chdir('ui') do
-    sh 'npm install'
+    sh 'NG_CLI_ANALYTICS=false npm install'
   end
 end
 

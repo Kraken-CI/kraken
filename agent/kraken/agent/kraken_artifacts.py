@@ -153,13 +153,19 @@ def run_artifacts(step, report_artifact=None):
     if not isinstance(source, list):
         source = [source]
 
-    ftp = FTP()
-    ftp.connect(host, port)
     try:
-        ftp.login(user)
+        ftp = FTP()
+        ftp.connect(host, port)
+        try:
+            ftp.login(user)
+        except:
+            # try one more time
+            ftp.login(user)
     except:
-        # try one more time
-        ftp.login(user)
+        msg = 'problem with connecting to storage at %s@%s:%s' % (user, host, port)
+        log.exception(msg)
+        return 1, msg
+
 
     if action == 'download':
         status, msg = _download_all(ftp, cwd, source, dest)

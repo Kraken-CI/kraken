@@ -34,7 +34,6 @@ export class FlowResultsComponent implements OnInit {
     totalArtifacts = 0
     loadingArtifacts = false
 
-
     constructor(
         private route: ActivatedRoute,
         private router: Router,
@@ -220,6 +219,12 @@ export class FlowResultsComponent implements OnInit {
                     this.activeTabIndex = 3
                 }, 100)
             }
+
+            // refresh data every 10secs
+            // TODO: after leaving this component the timer should be canceled
+            //setTimeout(() => {
+            //    this.refresh()
+            //}, 10000)
         })
     }
 

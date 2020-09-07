@@ -11,9 +11,12 @@
     <div class="p-col-5">
 
       <div style="margin: 0 0 10px 0; display: flex; justify-content: space-between;">
-        <p-button label="Refresh" icon="pi pi-refresh" (onClick)="refreshJobs(jobsTable)"></p-button>
+        <div style="display: flex;">
+          <p-button label="Refresh" icon="pi pi-refresh" (onClick)="refreshJobs(jobsTable)"></p-button>
+          <p-button label="Rerun All" icon="pi pi-replay" (onClick)="rerunAll()" [style]="{'margin-left': '20px'}"></p-button>
+        </div>
         <div>
-          <p-inputSwitch [(ngModel)]="includeCovered" [style]="{'vertical-align': 'middle'}" (onChange)="coveredChange()"></p-inputSwitch> Covered
+          <p-inputSwitch [(ngModel)]="includeCovered" [style]="{'vertical-align': 'middle'}" (onChange)="coveredChange(jobsTable)"></p-inputSwitch> Covered
         </div>
       </div>
 

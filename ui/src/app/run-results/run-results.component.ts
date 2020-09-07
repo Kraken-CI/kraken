@@ -3,6 +3,7 @@ import { Router, ActivatedRoute, ParamMap } from '@angular/router'
 import { Title } from '@angular/platform-browser'
 
 import { MenuItem } from 'primeng/api'
+import { MessageService } from 'primeng/api'
 
 import { ExecutionService } from '../backend/api/execution.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
@@ -70,6 +71,7 @@ export class RunResultsComponent implements OnInit {
         private router: Router,
         protected executionService: ExecutionService,
         protected breadcrumbService: BreadcrumbsService,
+        private msgSrv: MessageService,
         private titleService: Title
     ) {
         this.resultStatuses = [
@@ -273,6 +275,28 @@ export class RunResultsComponent implements OnInit {
         jobsTable.onLazyLoad.emit(jobsTable.createLazyLoadMetadata())
     }
 
+    rerunAll() {
+        this.executionService.replayRun(this.run.id).subscribe(
+            data => {
+                this.msgSrv.add({
+                    severity: 'success',
+                    summary: 'Rerun submitted',
+                    detail: 'Rerun operation submitted.',
+                })
+            },
+            err => {
+                this.msgSrv.add({
+                    severity: 'error',
+                    summary: 'Rerun erred',
+                    detail:
+                    'Rerun operation erred: ' +
+                        err.statusText,
+                    life: 10000,
+                })
+            }
+        )
+    }
+
     showCmdLine() {}
 
     jobSelected(event) {
@@ -435,7 +459,9 @@ export class RunResultsComponent implements OnInit {
         }
     }
 
-    coveredChange() {}
+    coveredChange(jobsTable) {
+        this.refreshJobs(jobsTable)
+    }
 
     getResultChangeTxt(change) {
         switch (change) {
