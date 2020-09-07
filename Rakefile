@@ -38,7 +38,7 @@ file NPX do
   end
 end
 
-file NG do # => NPX do
+file NG => NPX do
   Dir.chdir('ui') do
     sh 'NG_CLI_ANALYTICS=false npm install'
   end
