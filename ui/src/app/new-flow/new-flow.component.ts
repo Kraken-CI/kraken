@@ -95,9 +95,25 @@ export class NewFlowComponent implements OnInit {
         }
         this.executionService
             .createFlow(this.branchId, this.kind, flow)
-            .subscribe(flow2 => {
-                // console.info(flow2)
-                this.router.navigate(['/flows/' + flow2.id])
-            })
+            .subscribe(
+                data => {
+                    this.msgSrv.add({
+                        severity: 'success',
+                        summary: 'Flow started',
+                        detail: 'Starting flow succeeded.',
+                    })
+                    this.router.navigate(['/flows/' + data.id])
+                },
+                err => {
+                    this.msgSrv.add({
+                        severity: 'error',
+                        summary: 'Flow start erred',
+                        detail:
+                        'Starting flow erred: ' +
+                            err.statusText,
+                        life: 10000,
+                    })
+                }
+            )
     }
 }

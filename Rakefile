@@ -318,7 +318,7 @@ task :docker_up => :build_all do
 end
 
 task :docker_down do
-  sh "docker-compose down -v"
+  sh "docker-compose down -v --remove-orphans"
 end
 
 task :run_elk do

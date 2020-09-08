@@ -1,4 +1,4 @@
-import { Component, OnInit, SecurityContext } from '@angular/core'
+import { Component, OnInit, OnDestroy, SecurityContext } from '@angular/core'
 import { Router, ActivatedRoute, ParamMap } from '@angular/router'
 import { Title } from '@angular/platform-browser'
 
@@ -16,7 +16,7 @@ import { BreadcrumbsService } from '../breadcrumbs.service'
     templateUrl: './flow-results.component.html',
     styleUrls: ['./flow-results.component.sass'],
 })
-export class FlowResultsComponent implements OnInit {
+export class FlowResultsComponent implements OnInit, OnDestroy {
     flowId = 0
     flow = null
     runs: any[]
@@ -33,6 +33,8 @@ export class FlowResultsComponent implements OnInit {
     artifacts: any[]
     totalArtifacts = 0
     loadingArtifacts = false
+
+    refreshTimer: any = null
 
     constructor(
         private route: ActivatedRoute,
@@ -61,6 +63,13 @@ export class FlowResultsComponent implements OnInit {
 
             this.refresh()
         })
+    }
+
+    ngOnDestroy() {
+        if (this.refreshTimer) {
+            clearTimeout(this.refreshTimer)
+            this.refreshTimer = null
+        }
     }
 
     _getRunForStage(stageName) {
@@ -221,10 +230,9 @@ export class FlowResultsComponent implements OnInit {
             }
 
             // refresh data every 10secs
-            // TODO: after leaving this component the timer should be canceled
-            //setTimeout(() => {
-            //    this.refresh()
-            //}, 10000)
+            this.refreshTimer = setTimeout(() => {
+                this.refresh()
+            }, 10000)
         })
     }
 

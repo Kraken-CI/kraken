@@ -138,9 +138,9 @@ class DockerExecContext:
             # TODO: add some ignore trace here
             pass
 
-    async def _dkr_run(self, cmd, cwd, deadline, env=None):
+    async def _dkr_run(self, cmd, cwd, deadline, env=None, user=''):
         log.info('cmd %s', cmd)
-        exe = self.cntr.client.api.exec_create(self.cntr.id, cmd, workdir=cwd, environment=env)
+        exe = self.cntr.client.api.exec_create(self.cntr.id, cmd, workdir=cwd, environment=env, user=user)
         stream = self.cntr.client.api.exec_start(exe['Id'], stream=True)
         for chunk in stream:
             log.info(chunk.decode().rstrip())
@@ -175,7 +175,7 @@ class DockerExecContext:
 
         deadline = time.time() + timeout
         try:
-            await self._dkr_run(cmd, docker_cwd, deadline, env)
+            await self._dkr_run(cmd, docker_cwd, deadline, env, user='')
         except Timeout:
             # TODO: it should be better handled but needs testing
             if proc_coord.result == {}:

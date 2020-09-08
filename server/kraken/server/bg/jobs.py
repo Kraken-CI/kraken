@@ -248,6 +248,9 @@ def notify_about_completed_run(self, run_id):
                 log.error('got unknown run to notify: %s', run_id)
                 return
 
+            run.state = consts.RUN_STATE_PROCESSED
+            db.session.commit()
+
             notify.notify(run)
 
     except Exception as exc:

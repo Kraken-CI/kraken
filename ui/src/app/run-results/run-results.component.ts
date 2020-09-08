@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core'
+import { Component, OnInit, OnDestroy } from '@angular/core'
 import { Router, ActivatedRoute, ParamMap } from '@angular/router'
 import { Title } from '@angular/platform-browser'
 
@@ -15,7 +15,7 @@ import { Job, Run } from '../backend/model/models'
     templateUrl: './run-results.component.html',
     styleUrls: ['./run-results.component.sass'],
 })
-export class RunResultsComponent implements OnInit {
+export class RunResultsComponent implements OnInit, OnDestroy {
     tabs: MenuItem[]
     activeTab: MenuItem
     activeTabIdx = 0
@@ -23,6 +23,8 @@ export class RunResultsComponent implements OnInit {
 
     runId = 0
     run: Run = { tests_passed: 0 }
+
+    refreshTimer: any = null
 
     // jobs
     jobs: Job[]
@@ -194,10 +196,60 @@ export class RunResultsComponent implements OnInit {
                         },
                     ]
                     this.breadcrumbService.setCrumbs(crumbs)
+
+                    // refresh page data every 5 seconds
+                    if (this.refreshTimer === null) {
+                        this.refreshTimer = setTimeout(() => {
+                            this.refreshPage()
+                        }, 5000)
+                    }
                 })
             }
 
             this.switchToTab(tab)
+        })
+    }
+
+    ngOnDestroy() {
+        if (this.refreshTimer) {
+            clearTimeout(this.refreshTimer)
+            this.refreshTimer = null
+        }
+    }
+
+    refreshPage() {
+        switch (this.activeTabIdx) {
+        case 0:  // jobs
+            this.loadJobsLazy({ first: 0, rows: 30 })
+            break
+        case 1:  // results
+            this.loadResultsLazy({ first: 0, rows: 30 })
+            break
+        case 2:  // issues
+            this.loadIssuesLazy({ first: 0, rows: 30 })
+            break
+        case 3:  // artifacts
+            this.loadArtifactsLazy({ first: 0, rows: 30 })
+            break
+        default:
+            break
+        }
+
+        this.executionService.getRun(this.runId).subscribe(run => {
+            console.info(run)
+            this.run = run
+            this.recordsCount[0] = '' + run.jobs_total
+            this.recordsCount[1] =
+                '' + run.tests_passed + ' / ' + run.tests_total
+            this.recordsCount[2] = '' + run.issues_total
+            this.recordsCount[3] = '' + run.artifacts_total
+
+            // refresh page data every 5 seconds
+            if (run.state !== "processed") {
+                this.refreshTimer = setTimeout(() => {
+                    this.refreshPage()
+                }, 5000)
+            }
         })
     }
 
