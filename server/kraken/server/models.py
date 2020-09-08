@@ -279,7 +279,7 @@ class Run(db.Model, DatesMixin):
         jobs_error = 0
         jobs_total = 0
 
-        if self.state == consts.RUN_STATE_COMPLETED:
+        if self.state == consts.RUN_STATE_PROCESSED:
             jobs_total = self.jobs_total
             jobs_error = self.jobs_error
             duration = self.finished - self.created

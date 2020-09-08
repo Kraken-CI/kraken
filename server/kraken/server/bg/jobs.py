@@ -179,7 +179,7 @@ def analyze_results_history(self, run_id):
             if prev_run is None:
                 log.info('skip anlysis of run %s as there is no prev run', run)
                 return
-            if prev_run.state != consts.RUN_STATE_COMPLETED:
+            if prev_run.state == consts.RUN_STATE_IN_PROGRESS:
                 # prev run is not completed yet
                 log.info('postpone anlysis of run %s as prev run %s is not completed yet', run, prev_run)
                 return

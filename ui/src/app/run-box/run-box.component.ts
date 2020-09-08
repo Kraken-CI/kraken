@@ -67,7 +67,7 @@ export class RunBoxComponent implements OnInit {
             // calculate bg color for box
             if (this.run.jobs_error && this.run.jobs_error > 0) {
                 this.bgColor = 'linear-gradient(90deg, rgba(255,230,230,1) 0%, rgba(227,193,193,1) 100%)' //'#ffe6e6'  // redish
-            } else if (this.run.state === 'completed') {
+            } else if (this.run.state === 'completed' || this.run.state === 'processed') {
                 if (
                     this.run.tests_passed &&
                     this.run.tests_total &&

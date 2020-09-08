@@ -44,7 +44,7 @@ def complete_run(run, now):
     flow = run.flow
     is_completed = True
     for r in flow.runs:
-        if r.state != consts.RUN_STATE_COMPLETED:
+        if r.state == consts.RUN_STATE_IN_PROGRESS:
             is_completed = False
             break
 
