@@ -1,6 +1,8 @@
 FROM ubuntu:20.04
 WORKDIR /opt/kraken
-RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pytest git openssh-client ca-certificates sudo python3-docker
+# python3-docker is required to run docker from docker
+# python3-setuptools are required by python3-docker
+RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pytest git openssh-client ca-certificates sudo python3-docker python3-setuptools
 ARG kkver=0.0
 COPY kkagent kktool /opt/kraken/${kkver}/
 RUN ln -s /opt/kraken/${kkver}/kkagent /opt/kraken/kkagent
