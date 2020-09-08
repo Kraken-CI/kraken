@@ -14,7 +14,6 @@ services:
     deploy:
       replicas: 3
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
       - /var/snap/lxd/common/lxd/unix.socket:/var/snap/lxd/common/lxd/unix.socket
   ui:
     image: eu.gcr.io/kraken-261806/kkui:kk_ver

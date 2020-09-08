@@ -103,6 +103,8 @@ services:
       - server
     deploy:
       replicas: 3
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
 
   ui:
     image: 127.0.0.1:5000/kkui:kk_ver
