@@ -72,13 +72,13 @@ class DockerExecContext:
         self.kknet = None
         self.curr_cntr = None
         self.logstash_ip = None
-        self.swarm = None
+        self.swarm = False
 
     def start(self, timeout):
         self.client = docker.from_env()
 
         try:
-            self.swarm = self.client.swarm
+            self.swarm = self.client.swarm.id is not None
             log.info('docker swarm present')
         except:
             log.info('docker swarm not present')
