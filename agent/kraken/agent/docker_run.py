@@ -72,9 +72,16 @@ class DockerExecContext:
         self.kknet = None
         self.curr_cntr = None
         self.logstash_ip = None
+        self.swarm = None
 
     def start(self, timeout):
         self.client = docker.from_env()
+
+        try:
+            self.swarm = self.client.swarm
+            log.info('docker swarm present')
+        except:
+            log.info('docker swarm not present')
 
         image = self.job['system']
         self.cntr = self.client.containers.run(image, 'sleep 10000', detach=True)
@@ -88,7 +95,7 @@ class DockerExecContext:
         asyncio.run(self._dkr_run('apt-get install -y python3', '/', deadline))
 
         # if agent is running inside docker then get or create kknet and use it to communicate with execution container
-        if _is_docker():
+        if _is_docker() and self.swarm:
             try:
                 self.kknet = self.client.networks.get('kknet')
             except:
@@ -121,7 +128,13 @@ class DockerExecContext:
 
     def get_return_ip_addr(self):
         if self.curr_cntr:
-            return self.curr_cntr.attrs['NetworkSettings']['Networks']['kknet']['IPAddress']
+            if self.swarm:
+                return self.curr_cntr.attrs['NetworkSettings']['Networks']['kknet']['IPAddress']
+            else:
+                for net_name, net in self.curr_cntr.attrs['NetworkSettings']['Networks'].items():
+                    if net_name.endswith('lab_net'):
+                        return net['IPAddress']
+                raise Exception('cannot determine container IP address: %s' % str(self.curr_cntr.attrs['NetworkSettings']['Networks']))
         # TODO: in case of running agent not in container then IP address is hardcoded;
         # would be good to get it in runtime
         return '172.17.0.1'

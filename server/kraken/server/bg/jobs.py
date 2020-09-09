@@ -275,7 +275,7 @@ def trigger_stages(self, run_id):
             # go through next stages and trigger them if needed
             curr_stage_name = run.stage.name
             branch = run.stage.branch
-            for stage in branch.stages.filter_by(deleted=None, enabled=True):
+            for stage in branch.stages.filter_by(deleted=None):
                 if stage.schema['parent'] != curr_stage_name:
                     continue
                 if not stage.schema['triggers'].get('parent', False):
