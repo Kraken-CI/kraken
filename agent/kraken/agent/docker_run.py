@@ -69,7 +69,7 @@ class DockerExecContext:
 
         self.client = None
         self.cntr = None
-        self.kknet = None
+        self.lab_net = None
         self.curr_cntr = None
         self.logstash_ip = None
         self.swarm = False
@@ -94,57 +94,49 @@ class DockerExecContext:
         asyncio.run(self._dkr_run('apt-get update', '/', deadline))
         asyncio.run(self._dkr_run('apt-get install -y python3', '/', deadline))
 
-        # if agent is running inside docker then get or create kknet and use it to communicate with execution container
+        # if agent is running inside docker then get or create lab_net and use it to communicate with execution container
         if _is_docker():
-            if self.swarm:
-                try:
-                    self.kknet = self.client.networks.get('kknet')
-                except:
-                    self.kknet = self.client.networks.create('kknet', driver='overlay', attachable=True)
+            for net in self.client.networks.list():
+                if net.name.endswith('lab_net'):
+                    self.lab_net = net
+                    break
+            if self.lab_net is None:
+                if self.swarm:
+                    driver = 'overlay'
+                else:
+                    driver = 'bridge'
+                self.lab_net = self.client.networks.create('lab_net', driver=driver, attachable=True)
 
-                # connect new container to kknet
-                try:
-                    self.kknet.connect(self.cntr)
-                except:
-                    log.exception('problems with kknet')
-                    raise
+            # connect new container to lab_net
+            try:
+                self.lab_net.connect(self.cntr)
+            except:
+                log.exception('problems with lab_net')
+                raise
 
             # get current container with agent
             curr_cntr_id = os.environ['HOSTNAME']
             self.curr_cntr = self.client.containers.get(curr_cntr_id)
 
-            if self.swarm:
-                # connect current container with agent to kknet
-                if 'kknet' not in self.curr_cntr.attrs['NetworkSettings']['Networks']:
-                    self.kknet.connect(self.curr_cntr)
-                    self.curr_cntr.reload()
+            # connect current container with agent to kknet
+            if self.lab_net.name not in self.curr_cntr.attrs['NetworkSettings']['Networks']:
+                self.lab_net.connect(self.curr_cntr)
+                self.curr_cntr.reload()
 
-                # connect logstash to kknet
-                for c in self.client.containers.list():
-                    if 'logstash' in c.name:
-                        if 'kknet' not in c.attrs['NetworkSettings']['Networks']:
-                            self.kknet.connect(c)
-                        c.reload()
-                        self.logstash_ip = c.attrs['NetworkSettings']['Networks']['kknet']['IPAddress']
+            # connect logstash to kknet
+            for c in self.client.containers.list():
+                if 'logstash' in c.name:
+                    if self.lab_net.name not in c.attrs['NetworkSettings']['Networks']:
+                        self.lab_net.connect(c)
+                    c.reload()
+                    self.logstash_ip = c.attrs['NetworkSettings']['Networks'][self.lab_net.name]['IPAddress']
 
     def get_return_ip_addr(self):
         log.info('get_return_ip_addr')
         if self.curr_cntr:
-            log.info('get_return_ip_addr curr_cntr %s', self.curr_cntr)
-            if self.swarm:
-                log.info('get_return_ip_addr SWARM ADDR %s', self.curr_cntr.attrs['NetworkSettings']['Networks']['kknet']['IPAddress'])
-                return self.curr_cntr.attrs['NetworkSettings']['Networks']['kknet']['IPAddress']
-            else:
-                # look for address in lab_net
-                for net_name, net in self.curr_cntr.attrs['NetworkSettings']['Networks'].items():
-                    if net_name.endswith('lab_net'):
-                        log.info('get_return_ip_addr COMP ADDR %s', net['IPAddress'])
-                        return net['IPAddress']
-                # if not found then just pick first one
-                nets = list(self.curr_cntr.attrs['NetworkSettings']['Networks'].values())
-                if len(nets) > 0:
-                    return nets[0]['IPAddress']
-                raise Exception('cannot determine container IP address: %s' % str(self.curr_cntr.attrs['NetworkSettings']['Networks']))
+            addr = self.curr_cntr.attrs['NetworkSettings']['Networks'][self.lab_net.name]['IPAddress']
+            log.info('get_return_ip_addr curr_cntr %s %s', self.curr_cntr, addr)
+            return addr
         # TODO: in case of running agent not in container then IP address is hardcoded;
         # would be good to get it in runtime
         log.info('get_return_ip_addr ADDR HARDCODED')
