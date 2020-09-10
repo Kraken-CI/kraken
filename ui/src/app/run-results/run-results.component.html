@@ -14,6 +14,9 @@
         <div style="display: flex;">
           <p-button label="Refresh" icon="pi pi-refresh" (onClick)="refreshJobs(jobsTable)"></p-button>
           <p-button label="Rerun All" icon="pi pi-replay" (onClick)="rerunAll()" [style]="{'margin-left': '20px'}"></p-button>
+          <div style="margin: auto 20px;">
+            Run State: {{ run.state }}
+          </div>
         </div>
         <div>
           <p-inputSwitch [(ngModel)]="includeCovered" [style]="{'vertical-align': 'middle'}" (onChange)="coveredChange(jobsTable)"></p-inputSwitch> Covered

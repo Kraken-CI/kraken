@@ -22,7 +22,7 @@ export class RunResultsComponent implements OnInit, OnDestroy {
     recordsCount: string[] = ['0', '0', '0', '0']
 
     runId = 0
-    run: Run = { tests_passed: 0 }
+    run: Run = { state: 'in-progress', tests_passed: 0 }
 
     refreshTimer: any = null
 
@@ -335,6 +335,14 @@ export class RunResultsComponent implements OnInit, OnDestroy {
                     summary: 'Rerun submitted',
                     detail: 'Rerun operation submitted.',
                 })
+
+                if (this.refreshTimer === null) {
+                    // start timer in 10 seconds when run gets into in-progress state
+                    //setTimeout(() => {
+                    this.refreshTimer = setTimeout(() => {
+                        this.refreshPage()
+                    }, 5000)
+                }
             },
             err => {
                 this.msgSrv.add({

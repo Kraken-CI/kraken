@@ -163,6 +163,7 @@ def trigger_jobs(run, replay=False):
 
     if started_any or len(schema['jobs']) == 0:
         run.started = now
+        run.state = consts.RUN_STATE_IN_PROGRESS  # need to be set in case of replay
         db.session.commit()
 
         if len(schema['jobs']) == 0:
