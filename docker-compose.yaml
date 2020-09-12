@@ -49,13 +49,29 @@ services:
       - KRAKEN_SERVER_PORT
       - KRAKEN_SERVER_ADDR
       - KRAKEN_PLANNER_URL
-      - KRAKEN_STORAGE_DIR
-    volumes:
-      - kraken-storage:$KRAKEN_STORAGE_DIR
     networks:
       - db_net
     depends_on:
       - celery
+      - postgres
+      - logstash
+
+  storage:
+    restart: always
+    image: 127.0.0.1:5000/kkstorage:kk_ver
+    build:
+      context: server
+      target: storage
+    environment:
+      - KRAKEN_DB_URL
+      - KRAKEN_LOGSTASH_PORT
+      - KRAKEN_LOGSTASH_ADDR
+      - KRAKEN_STORAGE_DIR
+    volumes:
+      - kraken-storage:$KRAKEN_STORAGE_DIR
+    networks:
+      - lab_net
+    depends_on:
       - postgres
       - logstash
 

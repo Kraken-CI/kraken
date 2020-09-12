@@ -118,18 +118,19 @@ class DockerExecContext:
             curr_cntr_id = os.environ['HOSTNAME']
             self.curr_cntr = self.client.containers.get(curr_cntr_id)
 
-            # connect current container with agent to kknet
+            # connect current container with agent to lab_net
             if self.lab_net.name not in self.curr_cntr.attrs['NetworkSettings']['Networks']:
                 self.lab_net.connect(self.curr_cntr)
                 self.curr_cntr.reload()
 
-            # connect logstash to kknet
+            # connect logstash and storage to lab_net
             for c in self.client.containers.list():
-                if 'logstash' in c.name:
+                if 'logstash' in c.name or 'storage' in c.name:
                     if self.lab_net.name not in c.attrs['NetworkSettings']['Networks']:
                         self.lab_net.connect(c)
                     c.reload()
-                    self.logstash_ip = c.attrs['NetworkSettings']['Networks'][self.lab_net.name]['IPAddress']
+                    if 'logstash' in c.name:
+                        self.logstash_ip = c.attrs['NetworkSettings']['Networks'][self.lab_net.name]['IPAddress']
 
     def get_return_ip_addr(self):
         if self.curr_cntr:
@@ -177,14 +178,17 @@ class DockerExecContext:
         cmd = "/kktool -m %s -r %s -s %s %s" % (mod, return_addr, step_file_path, command)
         log.info("exec: '%s' in '%s', timeout %ss", cmd, docker_cwd, timeout)
 
+        env = {}
+
         # pass address to logstash via env
         if self.logstash_ip:
             logstash_addr = '%s:%s' % (self.logstash_ip, os.environ.get(
                 'KRAKEN_LOGSTASH_PORT', consts.DEFAULT_LOGSTASH_PORT))
-            env = {'KRAKEN_LOGSTASH_ADDR': logstash_addr}
+            env['KRAKEN_LOGSTASH_ADDR'] = logstash_addr
         elif 'KRAKEN_LOGSTASH_ADDR' in os.environ:
-            env = {'KRAKEN_LOGSTASH_ADDR': os.environ['KRAKEN_LOGSTASH_ADDR']}
-        else:
+            env['KRAKEN_LOGSTASH_ADDR'] = os.environ['KRAKEN_LOGSTASH_ADDR']
+
+        if not env:
             env = None
 
         if not user:

@@ -64,10 +64,16 @@ LABEL kkver=${kkver} kkname=server
 FROM base as celery
 WORKDIR /server
 RUN groupadd user && useradd --create-home --home-dir /home/user -g user user
-#COPY kkcelery /server
 USER user
 COPY --from=builder /venv /venv
-#CMD ./kkcelery
 CMD /venv/bin/python3 -m kraken.server.kkcelery
+ARG kkver=0.0
+LABEL kkver=${kkver} kkname=server
+
+
+##############################################################################################################
+FROM base as storage
+COPY --from=builder /venv /venv
+CMD /venv/bin/python3 -m kraken.server.storage
 ARG kkver=0.0
 LABEL kkver=${kkver} kkname=server
