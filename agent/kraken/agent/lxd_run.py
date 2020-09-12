@@ -104,7 +104,7 @@ class LxdExecContext:
                                    stderr_handler=self._stdout_handler)
         log.info('EXIT: %s', result.exit_code)
 
-    async def async_run(self, proc_coord, tool_path, return_addr, step_file_path, command, cwd, timeout):  # pylint: disable=unused-argument
+    async def async_run(self, proc_coord, tool_path, return_addr, step_file_path, command, cwd, timeout, user):  # pylint: disable=unused-argument
         lxd_cwd = '/root'
 
         # upload steop file

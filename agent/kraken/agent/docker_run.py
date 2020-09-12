@@ -84,15 +84,15 @@ class DockerExecContext:
             log.info('docker swarm not present')
 
         image = self.job['system']
-        self.cntr = self.client.containers.run(image, 'sleep 10000', detach=True)
+        self.cntr = self.client.containers.run(image, 'sleep %d' % int(timeout), detach=True)
         log.info('docker container %s', self.cntr.id)
 
         archive = _create_archive(os.path.realpath(os.path.join(consts.AGENT_DIR, 'kktool')), arcname='kktool')
-        self.cntr.put_archive('/root', archive)
+        self.cntr.put_archive('/', archive)
 
         deadline = time.time() + timeout
-        asyncio.run(self._dkr_run('apt-get update', '/', deadline))
-        asyncio.run(self._dkr_run('apt-get install -y python3', '/', deadline))
+        asyncio.run(self._dkr_run('apt-get update', '/', deadline, None, 'root'))
+        asyncio.run(self._dkr_run('apt-get install -y python3', '/', deadline, None, 'root'))
 
         # if agent is running inside docker then get or create lab_net and use it to communicate with execution container
         if _is_docker():
@@ -132,14 +132,12 @@ class DockerExecContext:
                     self.logstash_ip = c.attrs['NetworkSettings']['Networks'][self.lab_net.name]['IPAddress']
 
     def get_return_ip_addr(self):
-        log.info('get_return_ip_addr')
         if self.curr_cntr:
             addr = self.curr_cntr.attrs['NetworkSettings']['Networks'][self.lab_net.name]['IPAddress']
             log.info('get_return_ip_addr curr_cntr %s %s', self.curr_cntr, addr)
             return addr
         # TODO: in case of running agent not in container then IP address is hardcoded;
         # would be good to get it in runtime
-        log.info('get_return_ip_addr ADDR HARDCODED')
         return '172.17.0.1'
 
     def stop(self):
@@ -154,8 +152,8 @@ class DockerExecContext:
             # TODO: add some ignore trace here
             pass
 
-    async def _dkr_run(self, cmd, cwd, deadline, env=None, user=''):
-        log.info('cmd %s', cmd)
+    async def _dkr_run(self, cmd, cwd, deadline, env, user):
+        log.info('cmd %s, time %s, deadline %s', cmd, time.time(), deadline)
         exe = self.cntr.client.api.exec_create(self.cntr.id, cmd, workdir=cwd, environment=env, user=user)
         stream = self.cntr.client.api.exec_start(exe['Id'], stream=True)
         for chunk in stream:
@@ -169,14 +167,14 @@ class DockerExecContext:
             exit_code = self.cntr.client.api.exec_inspect(exe['Id'])['ExitCode']
         log.info('EXIT: %s', exit_code)
 
-    async def async_run(self, proc_coord, tool_path, return_addr, step_file_path, command, cwd, timeout):  # pylint: disable=unused-argument
-        docker_cwd = '/root'
+    async def async_run(self, proc_coord, tool_path, return_addr, step_file_path, command, cwd, timeout, user):  # pylint: disable=unused-argument
+        docker_cwd = None
         archive = _create_archive(step_file_path, os.path.basename(step_file_path))
-        self.cntr.put_archive(docker_cwd, archive)
+        self.cntr.put_archive('/', archive)
 
         mod = tool_path.split()[-1]
-        step_file_path = os.path.join(docker_cwd, os.path.basename(step_file_path))
-        cmd = "%s/kktool -m %s -r %s -s %s %s" % (docker_cwd, mod, return_addr, step_file_path, command)
+        step_file_path = os.path.join('/', os.path.basename(step_file_path))
+        cmd = "/kktool -m %s -r %s -s %s %s" % (mod, return_addr, step_file_path, command)
         log.info("exec: '%s' in '%s', timeout %ss", cmd, docker_cwd, timeout)
 
         # pass address to logstash via env
@@ -189,10 +187,14 @@ class DockerExecContext:
         else:
             env = None
 
+        if not user:
+            user = 'kraken'
+
         deadline = time.time() + timeout
         try:
-            await self._dkr_run(cmd, docker_cwd, deadline, env, user='')
+            await self._dkr_run(cmd, docker_cwd, deadline, env, user)
         except Timeout:
             # TODO: it should be better handled but needs testing
             if proc_coord.result == {}:
+                log.info('timout expired')
                 proc_coord.result = {'status': 'error', 'reason': 'timeout'}

@@ -124,7 +124,7 @@ def trigger_jobs(run, replay=False):
                 timeout = run.stage.timeouts[j['name']]
             else:
                 # take initial timeout from schema, or default one
-                timeout = j.get('timeout', 5 * 60)  # default job timeout is 5mins
+                timeout = j.get('timeout', const.DEFAULT_JOB_TIMEOUT)
                 if timeout < 60:
                     timeout = 60
 

@@ -151,7 +151,7 @@ async def _async_tcp_server(server):
         await server.serve_forever()
 
 
-async def _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeout, step_file_path):
+async def _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeout, user, step_file_path):
     addr = exec_ctx.get_return_ip_addr()
     handler = RequestHandler(proc_coord)
     server = await asyncio.start_server(handler.async_handle_request, addr, 0, limit=1024 * 1280)
@@ -160,7 +160,7 @@ async def _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeou
     log.info('return_addr %s', return_addr)
 
     subprocess_task = asyncio.ensure_future(exec_ctx.async_run(
-        proc_coord, tool_path, return_addr, step_file_path, command, cwd, timeout))
+        proc_coord, tool_path, return_addr, step_file_path, command, cwd, timeout, user))
     tcp_server_task = asyncio.ensure_future(_async_tcp_server(server))
     done, _ = await asyncio.wait([subprocess_task, tcp_server_task],
                                  return_when=asyncio.FIRST_COMPLETED)
@@ -172,12 +172,12 @@ async def _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeou
             pass
 
 
-def _exec_tool(kk_srv, exec_ctx, tool_path, command, cwd, timeout, step_file_path, job_id, idx):
+def _exec_tool(kk_srv, exec_ctx, tool_path, command, cwd, timeout, user, step_file_path, job_id, idx):
     if tool_path.endswith('.py'):
         tool_path = "%s %s" % (sys.executable, tool_path)
 
     proc_coord = ProcCoord(kk_srv, command, job_id, idx)
-    f = _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeout, step_file_path)
+    f = _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeout, user, step_file_path)
     if hasattr(asyncio, 'run'):
         asyncio.run(f)  # this is available since Python 3.7
     else:
@@ -197,14 +197,16 @@ def _write_step_file(job_dir, step, idx):
 
 def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
     tool_name = step['tool']
-    log.info('step %s', str(step)[:200])
+    log.info('step %s, deadline %s', str(step)[:200], deadline)
     if tool_name not in tools:
         raise Exception('No such Kraken tool: %s' % tool_name)
     tool_path = tools[tool_name]
 
+    user = step.get('user', '')
+
     step_file_path = _write_step_file(job_dir, step, idx)
 
-    result = _exec_tool(srv, exec_ctx, tool_path, 'get_commands', job_dir, 10, step_file_path, job_id, idx)
+    result = _exec_tool(srv, exec_ctx, tool_path, 'get_commands', job_dir, 10, user, step_file_path, job_id, idx)
     log.info('result for get_commands: %s', result)
     if not isinstance(result, dict) or 'commands' not in result:
         raise Exception('bad result received from tool: %s' % result)
@@ -218,7 +220,7 @@ def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
 
     if 'collect_tests' in available_commands and ('tests' not in step or step['tests'] is None or len(step['tests']) == 0):
         # collect tests from tool to execute
-        result = _exec_tool(srv, exec_ctx, tool_path, 'collect_tests', job_dir, 10, step_file_path, job_id, idx)
+        result = _exec_tool(srv, exec_ctx, tool_path, 'collect_tests', job_dir, 10, user, step_file_path, job_id, idx)
         log.info('result for collect_tests: %s', str(result)[:200])
 
         # check result
@@ -248,35 +250,39 @@ def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
     if 'run_tests' in available_commands:
         timeout = deadline - time.time()
         if timeout <= 0:
+            log.info('timout expired %s', deadline)
             return {'status': 'error', 'reason': 'timeout'}
-        result = _exec_tool(srv, exec_ctx, tool_path, 'run_tests', job_dir, timeout, step_file_path, job_id, idx)
+        result = _exec_tool(srv, exec_ctx, tool_path, 'run_tests', job_dir, timeout, user, step_file_path, job_id, idx)
         log.info('result for run_tests: %s', str(result)[:200])
         # do not srv.report_step_result, it was already done in RequestHandler.async_handle_request
 
     if 'run_analysis' in available_commands:
         timeout = deadline - time.time()
         if timeout <= 0:
+            log.info('timout expired %s', deadline)
             return {'status': 'error', 'reason': 'timeout'}
-        result = _exec_tool(srv, exec_ctx, tool_path, 'run_analysis', job_dir, timeout, step_file_path, job_id, idx)
+        result = _exec_tool(srv, exec_ctx, tool_path, 'run_analysis', job_dir, timeout, user, step_file_path, job_id, idx)
         log.info('result for run_analysis: %s', str(result)[:200])
         # do not srv.report_step_result, it was already done in RequestHandler.async_handle_request
 
     if 'run_artifacts' in available_commands:
         timeout = deadline - time.time()
         if timeout <= 0:
+            log.info('timout expired %s', deadline)
             return {'status': 'error', 'reason': 'timeout'}
-        result = _exec_tool(srv, exec_ctx, tool_path, 'run_artifacts', job_dir, timeout, step_file_path, job_id, idx)
+        result = _exec_tool(srv, exec_ctx, tool_path, 'run_artifacts', job_dir, timeout, user, step_file_path, job_id, idx)
         log.info('result for run_artifacts: %s', str(result)[:200])
         # do not srv.report_step_result, it was already done in RequestHandler.async_handle_request
 
     if 'run' in available_commands:
         timeout = deadline - time.time()
         if timeout <= 0:
+            log.info('timout expired %s', deadline)
             return {'status': 'error', 'reason': 'timeout'}
         attempts = step.get('attempts', 1)
         sleep_time_after_attempt = step.get('sleep_time_after_attempt', 0)
         for n in range(attempts):
-            result = _exec_tool(srv, exec_ctx, tool_path, 'run', job_dir, timeout, step_file_path, job_id, idx)
+            result = _exec_tool(srv, exec_ctx, tool_path, 'run', job_dir, timeout, user, step_file_path, job_id, idx)
             if result['status'] == 'done':
                 break
             log.info('command failed, it was attempt %d/%d, %s', n + 1, attempts, 'no more retries' if n + 1 == attempts else ('retrying after %ds' % sleep_time_after_attempt))

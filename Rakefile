@@ -12,6 +12,8 @@ kk_ver = ENV['kk_ver'] || '0.0'
 ENV['KRAKEN_VERSION'] = kk_ver
 KRAKEN_VERSION_FILE = File.expand_path("kraken-version-#{kk_ver}.txt")
 
+LOCALHOST_IP=ENV['LOCALHOST_IP'] || '192.168.0.89'
+
 # prepare env
 task :prepare_env do
   sh 'sudo DEBIAN_FRONTEND=noninteractive apt-get install -y default-jre python3-venv npm libpq-dev libpython3.7-dev'
@@ -27,13 +29,13 @@ end
 
 file SWAGGER_CODEGEN do
   sh "mkdir -p #{TOOLS_DIR}"
-  sh "wget https://oss.sonatype.org/content/repositories/releases/io/swagger/swagger-codegen-cli/2.4.8/swagger-codegen-cli-2.4.8.jar -O #{SWAGGER_CODEGEN}"
+  sh "wget -nv https://oss.sonatype.org/content/repositories/releases/io/swagger/swagger-codegen-cli/2.4.8/swagger-codegen-cli-2.4.8.jar -O #{SWAGGER_CODEGEN}"
 end
 
 file NPX do
   sh "mkdir -p #{TOOLS_DIR}"
   Dir.chdir(TOOLS_DIR) do
-    sh "wget https://nodejs.org/dist/v10.16.3/#{NODE_VER}.tar.xz -O #{TOOLS_DIR}/node.tar.xz"
+    sh "wget -nv https://nodejs.org/dist/v10.16.3/#{NODE_VER}.tar.xz -O #{TOOLS_DIR}/node.tar.xz"
     sh "tar -Jxf node.tar.xz"
   end
 end
@@ -108,7 +110,7 @@ end
 
 task :run_server => 'server/kraken/version.py' do
   Dir.chdir('server') do
-    sh 'KRAKEN_LOGSTASH_ADDR=192.168.0.88:5959 KRAKEN_STORAGE_ADDR=192.168.0.88:2121 ../venv/bin/poetry run python -m kraken.server.server'
+    sh "KRAKEN_LOGSTASH_ADDR=#{LOCALHOST_IP}:5959 KRAKEN_STORAGE_ADDR=#{LOCALHOST_IP}:2121 ../venv/bin/poetry run python -m kraken.server.server"
   end
 end
 
@@ -130,7 +132,7 @@ task :run_agent => ['./agent/venv/bin/kkagent', :build_agent] do
   sh 'cp server/kraken/server/logs.py agent/kraken/agent/'
   sh 'rm -rf /tmp/kk-jobs/ /opt/kraken/*'
   sh 'cp agent/venv/bin/kkagent agent/kktool /opt/kraken'
-  sh 'LANGUAGE=en_US:en LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 KRAKEN_LOGSTASH_ADDR=192.168.0.88:5959 ./agent/venv/bin/kkagent --no-update -d /tmp/kk-jobs -s http://localhost:8080 run'
+  sh "LANGUAGE=en_US:en LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 KRAKEN_LOGSTASH_ADDR=#{LOCALHOST_IP}:5959 ./agent/venv/bin/kkagent --no-update -d /tmp/kk-jobs -s http://localhost:8080 run"
 end
 
 task :run_agent_in_docker do
@@ -138,7 +140,7 @@ task :run_agent_in_docker do
   Dir.chdir('agent') do
     sh 'docker build -f docker-agent.txt -t kkagent .'
   end
-  sh 'docker run --rm -ti  -v /var/run/docker.sock:/var/run/docker.sock -v /var/snap/lxd/common/lxd/unix.socket:/var/snap/lxd/common/lxd/unix.socket -v `pwd`/agent:/agent -e KRAKEN_AGENT_SLOT=7 -e KRAKEN_SERVER_ADDR=192.168.0.89:8080  kkagent'
+  sh "docker run --rm -ti  -v /var/run/docker.sock:/var/run/docker.sock -v /var/snap/lxd/common/lxd/unix.socket:/var/snap/lxd/common/lxd/unix.socket -v `pwd`/agent:/agent -e KRAKEN_AGENT_SLOT=7 -e KRAKEN_SERVER_ADDR=#{LOCALHOST_IP}:8080  kkagent"
 end
 
 task :run_agent_in_lxd_all do
@@ -176,9 +178,9 @@ task :run_agent_in_lxd_all do
       if sys.include?('opensuse/15.2')
         sh "lxc exec #{cntr_name} -- zypper install -y curl python3 sudo system-group-wheel"
       end
-      sh "lxc exec #{cntr_name} -- curl -o agent http://192.168.0.89:8080/install/agent"
+      sh "lxc exec #{cntr_name} -- curl -o agent http://#{LOCALHOST_IP}:8080/install/agent"
       sh "lxc exec #{cntr_name} -- chmod a+x agent"
-      sh "lxc exec #{cntr_name} -- ./agent -s http://192.168.0.89:8080 install"
+      sh "lxc exec #{cntr_name} -- ./agent -s http://#{LOCALHOST_IP}:8080 install"
       sh "lxc exec #{cntr_name} -- journalctl -u kraken-agent.service"
       #sh "lxc exec #{cntr_name} -- journalctl -f -u kraken-agent.service'
     end
@@ -219,9 +221,9 @@ task :run_agent_in_lxd do
       sh "lxc exec #{cntr_name} -- apt-get update"
       sh "lxc exec #{cntr_name} -- apt-get install -y python3-docker docker.io"
 
-      sh "lxc exec #{cntr_name} -- curl -o agent http://192.168.0.89:8080/install/agent"
+      sh "lxc exec #{cntr_name} -- curl -o agent http://#{LOCALHOST_IP}:8080/install/agent"
       sh "lxc exec #{cntr_name} -- chmod a+x agent"
-      sh "lxc exec #{cntr_name} -- ./agent -s http://192.168.0.89:8080 install"
+      sh "lxc exec #{cntr_name} -- ./agent -s http://#{LOCALHOST_IP}:8080 install"
       #sh "lxc exec #{cntr_name} -- journalctl -u kraken-agent.service"
       sh "lxc exec #{cntr_name} -- journalctl -f -u kraken-agent.service"
     end
