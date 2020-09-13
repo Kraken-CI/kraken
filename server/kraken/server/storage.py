@@ -16,17 +16,16 @@
 
 import os
 import logging
+import mimetypes
+from queue import Queue, Empty
+from ftplib import FTP, error_perm
+from threading import Thread, Event
 
 from pyftpdlib.authorizers import DummyAuthorizer, AuthenticationFailed
 from pyftpdlib.handlers import FTPHandler
 from pyftpdlib.servers import FTPServer
 from pyftpdlib.filesystems import AbstractedFS
 from flask import Flask, abort, request, Response
-from ftplib import FTP, error_perm
-from threading import Thread, Event
-from queue import Queue, Empty
-from io import BytesIO
-import mimetypes
 
 from . import logs
 from .models import db, Run, Flow

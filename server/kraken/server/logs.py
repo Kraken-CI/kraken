@@ -172,7 +172,7 @@ class LogstashHandler(DatagramHandler, SocketHandler):
     """
 
     def __init__(self, host, port=5959, message_type='logstash', tags=None, fqdn=False):
-        super(LogstashHandler, self).__init__(host, port)
+        super().__init__(host, port)
         self.formatter = LogstashFormatter(message_type, tags, fqdn)
 
     def makePickle(self, record):

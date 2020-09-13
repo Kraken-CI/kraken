@@ -25,7 +25,6 @@ import traceback
 import pkg_resources
 
 from . import logs
-from . import consts
 from . import config
 from . import server
 from . import jobber
@@ -141,7 +140,7 @@ def main():
                 apply_cfg_changes(cfg_changes)
 
             if not args.no_update and version and version != kraken_version:
-                log.info('new version: %s, was: %s, updating agent' % (version, kraken_version))
+                log.info('new version: %s, was: %s, updating agent', version, kraken_version)
                 update.update_agent(version)
 
             if job:
