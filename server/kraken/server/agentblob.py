@@ -22,7 +22,7 @@ KKAGENT_DIR = os.environ.get('KKAGENT_DIR', '')
 
 def serve_agent_blob(blob):
     if blob not in ['agent', 'tool']:
-         abort(404)
+        abort(404)
 
     p = os.path.join(KKAGENT_DIR, 'kk' + blob)
     return send_file(p)

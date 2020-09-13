@@ -66,16 +66,16 @@ export class RunBoxComponent implements OnInit {
 
             // calculate bg color for box
             if (this.run.jobs_error && this.run.jobs_error > 0) {
-                this.bgColor = 'linear-gradient(90deg, rgba(255,230,230,1) 0%, rgba(227,193,193,1) 100%)' //'#ffe6e6'  // redish
+                this.bgColor = 'linear-gradient(90deg, rgba(255,230,230,1) 0%, rgba(227,193,193,1) 100%)' // redish
             } else if (this.run.state === 'completed' || this.run.state === 'processed') {
                 if (
                     this.run.tests_passed &&
                     this.run.tests_total &&
                     this.run.tests_passed < this.run.tests_total
                 ) {
-                    this.bgColor = 'linear-gradient(90deg, rgba(255,230,230,1) 0%, rgba(227,193,193,1) 100%)' //'#fff9e6'  // redish
+                    this.bgColor = 'linear-gradient(90deg, rgba(255,230,230,1) 0%, rgba(227,193,193,1) 100%)' // redish
                 } else {
-                    this.bgColor = 'linear-gradient(90deg, rgba(230,255,230,1) 0%, rgba(193,227,193,1) 100%)' //'#e6ffe6'  // greenish
+                    this.bgColor = 'linear-gradient(90deg, rgba(230,255,230,1) 0%, rgba(193,227,193,1) 100%)' // greenish
                 }
             }
         } else {

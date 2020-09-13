@@ -245,7 +245,7 @@ export class RunResultsComponent implements OnInit, OnDestroy {
             this.recordsCount[3] = '' + run.artifacts_total
 
             // refresh page data every 5 seconds
-            if (run.state !== "processed") {
+            if (run.state !== 'processed') {
                 this.refreshTimer = setTimeout(() => {
                     this.refreshPage()
                 }, 5000)
@@ -337,8 +337,6 @@ export class RunResultsComponent implements OnInit, OnDestroy {
                 })
 
                 if (this.refreshTimer === null) {
-                    // start timer in 10 seconds when run gets into in-progress state
-                    //setTimeout(() => {
                     this.refreshTimer = setTimeout(() => {
                         this.refreshPage()
                     }, 5000)

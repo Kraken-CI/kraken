@@ -1,6 +1,6 @@
 FROM nginx
 
-RUN apt-get update && apt-get install -y "wait-for-it"
+RUN apt-get update && apt-get install -y "wait-for-it" && rm -rf /var/lib/apt/lists/*
 
 COPY dist/kraken /usr/share/nginx/html
 COPY nginx.conf /tmp/nginx.conf.tpl

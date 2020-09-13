@@ -7,7 +7,7 @@ ENV \
 
 WORKDIR /server
 
-RUN apt-get update && apt-get install -y --no-install-recommends python3 libpq5
+RUN apt-get update && apt-get install -y --no-install-recommends python3 libpq5 && rm -rf /var/lib/apt/lists/*
 
 
 ##############################################################################################################
@@ -19,7 +19,7 @@ ENV \
         PIP_NO_CACHE_DIR=1 \
         POETRY_VERSION=1.0.10
 
-RUN apt-get update && apt-get install -y --no-install-recommends python3-pip python3-venv
+RUN apt-get update && apt-get install -y --no-install-recommends python3-pip python3-venv && rm -rf /var/lib/apt/lists/*
 RUN pip3 install poetry==$POETRY_VERSION
 RUN python3 -m venv /venv
 
@@ -40,7 +40,7 @@ RUN \
 
 ##############################################################################################################
 FROM base as controller
-RUN apt-get update && apt-get install -y --no-install-recommends supervisor
+RUN apt-get update && apt-get install -y --no-install-recommends supervisor && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /venv /venv
 COPY supervisor.conf /etc/supervisor.conf
 CMD /venv/bin/python3 -m kraken.migrations.apply && supervisord -c /etc/supervisor.conf
