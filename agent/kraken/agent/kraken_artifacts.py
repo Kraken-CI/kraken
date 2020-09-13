@@ -126,6 +126,7 @@ def _download_all(ftp, cwd, source, dest):
 def run_artifacts(step, report_artifact=None):
 
     storage_addr = step['storage_addr']
+    storage_addr = os.environ.get('KRAKEN_STORAGE_ADDR', storage_addr)
     action = step.get('action', 'upload')
     cwd = step.get('cwd', None)
     public = step.get('public', False)

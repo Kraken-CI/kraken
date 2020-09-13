@@ -66,6 +66,7 @@ services:
       - KRAKEN_DB_URL
       - KRAKEN_LOGSTASH_PORT
       - KRAKEN_LOGSTASH_ADDR
+      - KRAKEN_PLANNER_URL
       - KRAKEN_STORAGE_DIR
     volumes:
       - kraken-storage:$KRAKEN_STORAGE_DIR
