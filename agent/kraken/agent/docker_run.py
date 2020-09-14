@@ -84,8 +84,19 @@ class DockerExecContext:
         else:
             log.info('docker swarm not present')
 
+        # prepare list of mounts from host agent container
+        mounts = []
+        if _is_docker():
+            # get current container with agent
+            curr_cntr_id = os.environ['HOSTNAME']
+            self.curr_cntr = self.client.containers.get(curr_cntr_id)
+
+            for mnt in self.curr_cntr.attrs['Mounts']:
+                mnt2 = docker.types.Mount(target=mnt['Destination'], source=mnt['Source'], type=mnt['Type'])
+                mounts.append(mnt2)
+
         image = self.job['system']
-        self.cntr = self.client.containers.run(image, 'sleep %d' % int(timeout), detach=True)
+        self.cntr = self.client.containers.run(image, 'sleep %d' % int(timeout), detach=True, mounts=mounts)
         log.info('docker container %s', self.cntr.id)
 
         archive = _create_archive(os.path.realpath(os.path.join(consts.AGENT_DIR, 'kktool')), arcname='kktool')
@@ -114,10 +125,6 @@ class DockerExecContext:
             except:
                 log.exception('problems with lab_net')
                 raise
-
-            # get current container with agent
-            curr_cntr_id = os.environ['HOSTNAME']
-            self.curr_cntr = self.client.containers.get(curr_cntr_id)
 
             # connect current container with agent to lab_net
             if self.lab_net.name not in self.curr_cntr.attrs['NetworkSettings']['Networks']:
