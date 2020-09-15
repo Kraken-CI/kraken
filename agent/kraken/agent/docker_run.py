@@ -14,6 +14,7 @@
 
 import os
 import io
+import re
 import time
 import asyncio
 import tarfile
@@ -96,6 +97,7 @@ class DockerExecContext:
                 mounts.append(mnt2)
 
         image = self.job['system']
+        log.info('starting container %s', image)
         self.cntr = self.client.containers.run(image, 'sleep %d' % int(timeout), detach=True, mounts=mounts)
         log.info('docker container %s', self.cntr.id)
 
@@ -103,8 +105,32 @@ class DockerExecContext:
         self.cntr.put_archive('/', archive)
 
         deadline = time.time() + timeout
-        asyncio.run(self._dkr_run('apt-get update', '/', deadline, None, 'root'))
-        asyncio.run(self._dkr_run('apt-get install -y python3', '/', deadline, None, 'root'))
+        logs, exit_code = asyncio.run(self._dkr_run('cat /etc/os-release', '/', deadline, None, 'root'))
+        m = re.search('^ID="?(.*?)"?$', logs, re.M)
+        distro = m.group(1).lower()
+        #m = re.search('^VERSION_ID="(.*)"$', logs, re.M)
+        #version = m.group(1)
+        if distro in ['debian', 'ubuntu']:
+            asyncio.run(self._dkr_run('apt-get update', '/', deadline, None, 'root'))
+            asyncio.run(self._dkr_run('apt-get install -y --no-install-recommends locales openssh-client '
+                                      'ca-certificates sudo git unzip zip gnupg curl wget make net-tools '
+                                      'python3 python3-pytest python3-venv python3-docker python3-setuptools',
+                                      '/', deadline, None, 'root'))
+            asyncio.run(self._dkr_run('ln -sf /usr/share/zoneinfo/Etc/UTC /etc/localtime', '/', deadline, None, 'root'))
+            asyncio.run(self._dkr_run('locale-gen en_US.UTF-8', '/', deadline, None, 'root'))
+            asyncio.run(self._dkr_run('useradd kraken -d /opt/kraken -m -s /bin/bash -G sudo', '/', deadline, None, 'root'))
+            asyncio.run(self._dkr_run('echo "kraken ALL=NOPASSWD: ALL" > /etc/sudoers.d/kraken', '/', deadline, None, 'root'))
+            asyncio.run(self._dkr_run('echo \'Defaults    env_keep += "DEBIAN_FRONTEND"\' > /etc/sudoers.d/kraken_env_keep', '/', deadline, None, 'root'))
+        elif distro in ['centos', 'fedora']:
+            asyncio.run(self._dkr_run('yum install -y openssh-clients '
+                                      'ca-certificates sudo git unzip zip gnupg curl wget make net-tools '
+                                      'python3 python3-pytest python3-virtualenv python3-setuptools',
+                                      '/', deadline, None, 'root'))
+            asyncio.run(self._dkr_run('python3 -m pip install docker-py', '/', deadline, None, 'root'))
+            asyncio.run(self._dkr_run('useradd kraken -d /opt/kraken -m -s /bin/bash -G wheel --system', '/', deadline, None, 'root'))
+            asyncio.run(self._dkr_run('echo "kraken ALL=NOPASSWD: ALL" > /etc/sudoers.d/kraken', '/', deadline, None, 'root'))
+            asyncio.run(self._dkr_run('echo \'Defaults    env_keep += "DEBIAN_FRONTEND"\' > /etc/sudoers.d/kraken_env_keep', '/', deadline, None, 'root'))
+
 
         # if agent is running inside docker then get or create lab_net and use it to communicate with execution container
         if _is_docker():
@@ -167,8 +193,11 @@ class DockerExecContext:
         log.info('cmd %s, time %s, deadline %s', cmd, time.time(), deadline)
         exe = self.cntr.client.api.exec_create(self.cntr.id, cmd, workdir=cwd, environment=env, user=user)
         stream = self.cntr.client.api.exec_start(exe['Id'], stream=True)
+        logs = ''
         for chunk in stream:
-            log.info(chunk.decode().rstrip())
+            decoded_chunk = chunk.decode()
+            logs += decoded_chunk
+            log.info(decoded_chunk.rstrip())
             await asyncio.sleep(0)
             if time.time() > deadline:
                 raise Timeout
@@ -177,6 +206,7 @@ class DockerExecContext:
             await asyncio.sleep(0)
             exit_code = self.cntr.client.api.exec_inspect(exe['Id'])['ExitCode']
         log.info('EXIT: %s', exit_code)
+        return logs, exit_code
 
     async def async_run(self, proc_coord, tool_path, return_addr, step_file_path, command, cwd, timeout, user):  # pylint: disable=unused-argument
         docker_cwd = None

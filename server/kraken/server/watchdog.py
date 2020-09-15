@@ -71,7 +71,7 @@ def _check_jobs():
         if duration > datetime.timedelta(seconds=timeout):
             log.warning('time %ss for job %s expired, canceling', timeout, job)
             note = 'time %ss for job expired' % timeout
-            execution.cancel_job(job, note=note)
+            execution.cancel_job(job, note, consts.JOB_CMPLT_SERVER_TIMEOUT)
 
 
 def _check_runs():
@@ -94,7 +94,7 @@ def _check_runs():
         canceled_jobs_count = 0
         for job in run.jobs:
             if job.state != consts.JOB_STATE_COMPLETED:
-                execution.cancel_job(job, note=note)
+                execution.cancel_job(job, note, consts.JOB_CMPLT_SERVER_TIMEOUT)
                 canceled_jobs_count += 1
 
         # if there is no pending jobs then complete run now

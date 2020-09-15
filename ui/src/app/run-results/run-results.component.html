@@ -57,7 +57,7 @@
             <td>
               <i style="vertical-align: bottom; font-size: 1.4em;" [ngClass]="getJobStatusClass(job)"></i>{{getJobStatus(job)}}
             </td>
-            <td>Ubuntu 18.04</td>
+            <td>{{ job.system }}</td>
             <td>default</td>
             <td>{{job.agents_group_name}}</td>
             <td>{{job.agent_name}}</td>

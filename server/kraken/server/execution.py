@@ -128,38 +128,44 @@ def trigger_jobs(run, replay=False):
                 if timeout < 60:
                     timeout = 60
 
-            # prepare system and executor
-            if 'executor' in env:
-                executor = env['executor'].lower()
+            if not isinstance(env['system'], list):
+                systems = [env['system']]
             else:
-                executor = 'local'
-            system = '%s^%s' % (executor, env['system'])
+                systems = env['system']
 
-            # create job
-            job = Job(run=run, name=j['name'], agents_group=agents_group, system=system, timeout=timeout)
+            for system in systems:
+                # prepare system and executor
+                if 'executor' in env:
+                    executor = env['executor'].lower()
+                else:
+                    executor = 'local'
+                system = '%s^%s' % (executor, system)
 
-            if tool_not_found:
-                job.state = consts.JOB_STATE_COMPLETED
-                job.completion_status = consts.JOB_CMPLT_MISSING_TOOL_IN_DB
-                job.notes = "cannot find tool '%s' in database" % tool_not_found
-            else:
-                # substitute vars in steps
-                for idx, s in enumerate(j['steps']):
-                    fields = _substitute_vars(s, run.args)
-                    del fields['tool']
-                    Step(job=job, index=idx, tool=tools[idx], fields=fields)
+                # create job
+                job = Job(run=run, name=j['name'], agents_group=agents_group, system=system, timeout=timeout)
 
-            # if this is rerun/replay then mark prev jobs as covered
-            if replay:
-                key = '%s-%s' % (j['name'], agents_group.id)
-                if key in covered_jobs:
-                    for cj in covered_jobs[key]:
-                        cj.covered = True
-                        # TODO: we should cancel these jobs if they are still running
+                if tool_not_found:
+                    job.state = consts.JOB_STATE_COMPLETED
+                    job.completion_status = consts.JOB_CMPLT_MISSING_TOOL_IN_DB
+                    job.notes = "cannot find tool '%s' in database" % tool_not_found
+                else:
+                    # substitute vars in steps
+                    for idx, s in enumerate(j['steps']):
+                        fields = _substitute_vars(s, run.args)
+                        del fields['tool']
+                        Step(job=job, index=idx, tool=tools[idx], fields=fields)
 
-            db.session.commit()
-            log.info('created job %s', job.get_json())
-            started_any = True
+                # if this is rerun/replay then mark prev jobs as covered
+                if replay:
+                    key = '%s-%s' % (j['name'], agents_group.id)
+                    if key in covered_jobs:
+                        for cj in covered_jobs[key]:
+                            cj.covered = True
+                            # TODO: we should cancel these jobs if they are still running
+
+                db.session.commit()
+                log.info('created job %s', job.get_json())
+                started_any = True
 
     if started_any or len(schema['jobs']) == 0:
         run.started = now
@@ -622,12 +628,12 @@ def get_job_logs(job_id, start=0, limit=200, order=None, filters=None):
     return {'items': logs, 'total': total, 'job': job_json}, 200
 
 
-def cancel_job(job, note=None):
+def cancel_job(job, note, cmplt_status):
     from .bg import jobs as bg_jobs  # pylint: disable=import-outside-toplevel
     if job.state == consts.JOB_STATE_COMPLETED:
         return
     job.state = consts.JOB_STATE_COMPLETED
-    job.completion_status = consts.JOB_CMPLT_SERVER_TIMEOUT
+    job.completion_status = cmplt_status
     if note:
         job.notes = note
     job.agent = None

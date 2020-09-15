@@ -43,7 +43,7 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
 
         p = subprocess.Popen(cmd,
                              shell=True,
-                             text=True,
+                             universal_newlines=True,
                              start_new_session=True,
                              env=env,
                              cwd=cwd,
