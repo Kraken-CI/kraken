@@ -19,6 +19,7 @@ import time
 import asyncio
 import tarfile
 import logging
+import traceback
 
 from . import consts
 
@@ -77,6 +78,21 @@ class DockerExecContext:
         self.swarm = False
 
     def start(self, timeout):
+        try:
+            self._start(timeout)
+        except Timeout:
+            exc = traceback.format_exc()
+            log.exception('problem with starting or initializing container')
+            self.stop()
+            return {'status': 'error', 'reason': 'timeout', 'msg': exc}
+        except:
+            exc = traceback.format_exc()
+            log.exception('problem with starting or initializing container')
+            self.stop()
+            return {'status': 'error', 'reason': 'exception', 'msg': exc}
+        return None
+
+    def _start(self, timeout):
         self.client = docker.from_env()
 
         if self.client.swarm.id is not None:
@@ -98,38 +114,46 @@ class DockerExecContext:
 
         image = self.job['system']
         log.info('starting container %s', image)
-        self.cntr = self.client.containers.run(image, 'sleep %d' % int(timeout), detach=True, mounts=mounts)
+        self.cntr = self.client.containers.run(image, 'sleep %d' % (int(timeout) + 60), detach=True, mounts=mounts)
         log.info('docker container %s', self.cntr.id)
 
         archive = _create_archive(os.path.realpath(os.path.join(consts.AGENT_DIR, 'kktool')), arcname='kktool')
         self.cntr.put_archive('/', archive)
 
         deadline = time.time() + timeout
-        logs, exit_code = asyncio.run(self._dkr_run('cat /etc/os-release', '/', deadline, None, 'root'))
+        logs = self._async_run('cat /etc/os-release', '/', deadline, None, 'root')
         m = re.search('^ID="?(.*?)"?$', logs, re.M)
         distro = m.group(1).lower()
         #m = re.search('^VERSION_ID="(.*)"$', logs, re.M)
         #version = m.group(1)
         if distro in ['debian', 'ubuntu']:
-            asyncio.run(self._dkr_run('apt-get update', '/', deadline, None, 'root'))
-            asyncio.run(self._dkr_run('apt-get install -y --no-install-recommends locales openssh-client '
-                                      'ca-certificates sudo git unzip zip gnupg curl wget make net-tools '
-                                      'python3 python3-pytest python3-venv python3-docker python3-setuptools',
-                                      '/', deadline, None, 'root'))
-            asyncio.run(self._dkr_run('ln -sf /usr/share/zoneinfo/Etc/UTC /etc/localtime', '/', deadline, None, 'root'))
-            asyncio.run(self._dkr_run('locale-gen en_US.UTF-8', '/', deadline, None, 'root'))
-            asyncio.run(self._dkr_run('useradd kraken -d /opt/kraken -m -s /bin/bash -G sudo', '/', deadline, None, 'root'))
-            asyncio.run(self._dkr_run('echo "kraken ALL=NOPASSWD: ALL" > /etc/sudoers.d/kraken', '/', deadline, None, 'root'))
-            asyncio.run(self._dkr_run('echo \'Defaults    env_keep += "DEBIAN_FRONTEND"\' > /etc/sudoers.d/kraken_env_keep', '/', deadline, None, 'root'))
+            self._async_run('apt-get update', '/', deadline, None, 'root')
+            self._async_run('apt-get install -y --no-install-recommends locales openssh-client '
+                           'ca-certificates sudo git unzip zip gnupg curl wget make net-tools '
+                           'python3 python3-pytest python3-venv python3-docker python3-setuptools',
+                           '/', deadline, None, 'root')
+            self._async_run('ln -sf /usr/share/zoneinfo/Etc/UTC /etc/localtime', '/', deadline, None, 'root')
+            self._async_run('locale-gen en_US.UTF-8', '/', deadline, None, 'root')
+            try:
+                self._async_run('getent passwd kraken', '/', deadline, None, 'root')
+            except:
+                self._async_run('useradd kraken -d /opt/kraken -m -s /bin/bash -G sudo', '/', deadline, None, 'root')
+            self._async_run('echo "kraken ALL=NOPASSWD: ALL" > /etc/sudoers.d/kraken', '/', deadline, None, 'root')
+            self._async_run('echo \'Defaults    env_keep += "DEBIAN_FRONTEND"\' > /etc/sudoers.d/kraken_env_keep', '/', deadline, None, 'root')
         elif distro in ['centos', 'fedora']:
-            asyncio.run(self._dkr_run('yum install -y openssh-clients '
-                                      'ca-certificates sudo git unzip zip gnupg curl wget make net-tools '
-                                      'python3 python3-pytest python3-virtualenv python3-setuptools',
-                                      '/', deadline, None, 'root'))
-            asyncio.run(self._dkr_run('python3 -m pip install docker-py', '/', deadline, None, 'root'))
-            asyncio.run(self._dkr_run('useradd kraken -d /opt/kraken -m -s /bin/bash -G wheel --system', '/', deadline, None, 'root'))
-            asyncio.run(self._dkr_run('echo "kraken ALL=NOPASSWD: ALL" > /etc/sudoers.d/kraken', '/', deadline, None, 'root'))
-            asyncio.run(self._dkr_run('echo \'Defaults    env_keep += "DEBIAN_FRONTEND"\' > /etc/sudoers.d/kraken_env_keep', '/', deadline, None, 'root'))
+            pkgs = ('openssh-clients ca-certificates sudo git unzip zip gnupg curl wget make net-tools ' +
+                    'python3 python3-pytest python3-virtualenv python3-setuptools')
+            if distro == 'fedora':
+                pkgs += ' python3-docker'
+            self._async_run('yum install -y ' + pkgs, '/', deadline, None, 'root')
+            if distro == 'centos':
+                self._async_run('python3 -m pip install docker-py', '/', deadline, None, 'root')
+            try:
+                self._async_run('getent passwd kraken', '/', deadline, None, 'root')
+            except:
+                self._async_run('useradd kraken -d /opt/kraken -m -s /bin/bash -G wheel --system', '/', deadline, None, 'root')
+            self._async_run('echo "kraken ALL=NOPASSWD: ALL" > /etc/sudoers.d/kraken', '/', deadline, None, 'root')
+            self._async_run('echo \'Defaults    env_keep += "DEBIAN_FRONTEND"\' > /etc/sudoers.d/kraken_env_keep', '/', deadline, None, 'root')
 
 
         # if agent is running inside docker then get or create lab_net and use it to communicate with execution container
@@ -181,16 +205,28 @@ class DockerExecContext:
         try:
             self.cntr.kill()
         except:
-            # TODO: add some ignore trace here
-            pass
+            log.exception('IGNORED EXCEPTION')
         try:
             self.cntr.remove()
         except:
-            # TODO: add some ignore trace here
-            pass
+            log.exception('IGNORED EXCEPTION')
+
+    def _async_run(self, cmd, cwd, deadline, env, user):
+        logs, exit_code = asyncio.run(self._dkr_run(cmd, cwd, deadline, env, user))
+        if exit_code != 0:
+            now = time.time()
+            t0 = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(now))
+            t1 = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(deadline))
+            timeout = deadline - now
+            raise Exception("non-zero %d exit code from '%s', cwd:%s, user:%s, now:%s, deadline:%s, time: %ds" % (exit_code, cmd, str(cwd), str(user), t0, t1, timeout))
+        return logs
 
     async def _dkr_run(self, cmd, cwd, deadline, env, user):
-        log.info('cmd %s, time %s, deadline %s', cmd, time.time(), deadline)
+        now = time.time()
+        t0 = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(now))
+        t1 = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(deadline))
+        timeout = deadline - now
+        log.info("cmd '%s', now %s, deadline %s, time: %ds", cmd, t0, t1, timeout)
         exe = self.cntr.client.api.exec_create(self.cntr.id, cmd, workdir=cwd, environment=env, user=user)
         stream = self.cntr.client.api.exec_start(exe['Id'], stream=True)
         logs = ''

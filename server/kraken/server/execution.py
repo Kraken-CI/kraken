@@ -118,16 +118,6 @@ def trigger_jobs(run, replay=False):
                     log.warning("cannot find agents group '%s'", env['agents_group'])
                     continue
 
-            # get timeout
-            if run.stage.timeouts and j['name'] in run.stage.timeouts:
-                # take estimated timeout if present
-                timeout = run.stage.timeouts[j['name']]
-            else:
-                # take initial timeout from schema, or default one
-                timeout = j.get('timeout', consts.DEFAULT_JOB_TIMEOUT)
-                if timeout < 60:
-                    timeout = 60
-
             if not isinstance(env['system'], list):
                 systems = [env['system']]
             else:
@@ -140,6 +130,18 @@ def trigger_jobs(run, replay=False):
                 else:
                     executor = 'local'
                 system = '%s^%s' % (executor, system)
+
+                # get timeout
+                job_key = "%s-%s-%d" % (j['name'], system, agents_group.id)
+                if run.stage.timeouts and job_key in run.stage.timeouts:
+                    # take estimated timeout if present
+                    timeout = run.stage.timeouts[job_key]
+                else:
+                    # take initial timeout from schema, or default one
+                    timeout = int(j.get('timeout', consts.DEFAULT_JOB_TIMEOUT))
+                    if timeout < 60:
+                        timeout = 60
+
 
                 # create job
                 job = Job(run=run, name=j['name'], agents_group=agents_group, system=system, timeout=timeout)

@@ -51,7 +51,9 @@ def dispatch_job(srv, job):
         now = time.time()
         deadline = now + job['timeout']
         job['deadline'] = deadline
-        log.info('job deadline: %s', deadline)
+        t0 = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(now))
+        t1 = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(deadline))
+        log.info('job now: %s, deadline: %s, time: %ss', t0, t1, job['timeout'])
         jobber.run(srv, job)
     except KeyboardInterrupt:
         raise

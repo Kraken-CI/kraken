@@ -53,10 +53,13 @@ def _left_time(job):
     now = datetime.datetime.utcnow()
     slip = now - job.assigned
     timeout = job.timeout
-    timeout -= slip.total_seconds()
+    timeout2 = timeout - slip.total_seconds()
     # reduce slightly timeout
-    timeout = timeout * 0.9
-    return int(timeout)
+    timeout3 = timeout2 * 0.9
+    log.info('%s-%s-%s: now: %s, slip:%s, to1: %s, to2: %s, to3: %s',
+             job.name, job.system, job.agents_group_id,
+             now, slip, timeout, timeout2, timeout3)
+    return int(timeout3)
 
 
 def _handle_get_job(agent):

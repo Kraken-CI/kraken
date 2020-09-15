@@ -317,7 +317,11 @@ def run(srv, job):
 
     exec_ctx = _create_exec_context(job)
     timeout = job['deadline'] - time.time()
-    exec_ctx.start(timeout)
+    result = exec_ctx.start(timeout)
+    if result is not None:
+        srv.report_step_result(job['id'], 0, result)
+        log.info('completed job %s with status %s', job['id'], result['status'])
+        return
 
     try:
 

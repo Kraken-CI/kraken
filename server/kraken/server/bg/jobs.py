@@ -305,6 +305,8 @@ def _estimate_timeout(job):
     q = q.filter_by(completion_status=consts.JOB_CMPLT_ALL_OK)
     q = q.filter_by(covered=False)
     q = q.filter_by(agents_group=job.agents_group)
+    q = q.filter_by(system=job.system)
+    # TODO add filtering by config
     q = q.join('run')
     q = q.filter(Run.stage_id == job.run.stage_id)
     q = q.join('run', 'flow')
@@ -340,10 +342,11 @@ def _estimate_timeout(job):
     if timeout < 60:
         timeout = 60
     stage = job.run.stage
-    log.info("new timeout for job '%s' in stage '%s': %ssecs", job.name, stage.name, timeout)
+    job_key = "%s-%s-%d" % (job.name, job.system, job.agents_group_id)
+    log.info("new timeout for job '%s' in stage '%s': %ssecs", job_key, stage.name, timeout)
     if stage.timeouts is None:
         stage.timeouts = {}
-    stage.timeouts[job.name] = timeout
+    stage.timeouts[job_key] = timeout
     flag_modified(stage, 'timeouts')
     db.session.commit()
 
