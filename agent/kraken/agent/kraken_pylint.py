@@ -59,7 +59,8 @@ def run_analysis(step, report_issue=None):
 
     rcfile = step['rcfile']
     modules_or_packages = step['modules_or_packages']
-    cmd = 'pylint --exit-zero -f json --rcfile=%s %s' % (rcfile, modules_or_packages)
+    pylint_exe = step.get('pylint_exe', 'pylint')
+    cmd = '%s --exit-zero -f json --rcfile=%s %s' % (pylint_exe, rcfile, modules_or_packages)
     ret, out = utils.execute(cmd, cwd=cwd, out_prefix='', timeout=180)
     if ret != 0:
         log.error('pylint exited with non-zero retcode: %s', ret)

@@ -31,7 +31,7 @@ log = logging.getLogger(__name__)
 
 def complete_run(run, now):
     from .bg import jobs as bg_jobs  # pylint: disable=import-outside-toplevel
-    log.info('completed run %s', run)
+    log.info('completed run %s, now: %s', run, now)
     run.state = consts.RUN_STATE_COMPLETED
     run.finished = now
     db.session.commit()
