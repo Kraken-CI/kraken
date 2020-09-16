@@ -27,6 +27,7 @@ giturlparse = "^0.9.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
+pylint = "^2.6.0"
 
 [tool.poetry.scripts]
 # kkserver = 'kraken.server.server:main' # this does not work due to flask problems
