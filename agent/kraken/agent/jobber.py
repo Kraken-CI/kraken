@@ -212,7 +212,7 @@ def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
         raise Exception('bad result received from tool: %s' % result)
     available_commands = result['commands']
 
-    if ('run' not in available_commands and  # pylint: disable=bad-continuation
+    if ('run' not in available_commands and
         'run_tests' not in available_commands and
         'run_analysis' not in available_commands and
         'run_artifacts' not in available_commands):

@@ -16,8 +16,6 @@ import os
 
 from flask import send_file, abort
 
-from . import consts
-
 KKAGENT_DIR = os.environ.get('KKAGENT_DIR', '')
 
 def serve_agent_blob(blob):

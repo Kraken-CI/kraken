@@ -18,14 +18,14 @@ import os
 import logging
 import mimetypes
 from queue import Queue, Empty
-from ftplib import FTP, error_perm
+from ftplib import FTP
 from threading import Thread, Event
 
 from pyftpdlib.authorizers import DummyAuthorizer, AuthenticationFailed
 from pyftpdlib.handlers import FTPHandler
 from pyftpdlib.servers import FTPServer
 from pyftpdlib.filesystems import AbstractedFS
-from flask import Flask, abort, request, Response
+from flask import Flask, abort, Response
 
 from . import logs
 from .models import db, Run, Flow
@@ -80,7 +80,7 @@ class KrakenAuthorizer(DummyAuthorizer):
             dest, ul_dl, entity_id_txt = username.split('_')
             entity_id = int(entity_id_txt)
         except Exception as e:
-            raise AuthenticationFailed('Authentication failed: parsing username failed: %s' % str(e))
+            raise AuthenticationFailed('Authentication failed: parsing username failed: %s' % str(e)) from e
 
         if dest not in ['public', 'private', 'report']:
             raise AuthenticationFailed('Authentication failed: wrong destination: %s' % dest)
@@ -110,7 +110,7 @@ class KrakenAuthorizer(DummyAuthorizer):
                 db.session.rollback()
                 attemtps -= 1
                 if attemtps == 0:
-                    raise AuthenticationFailed('Authentication failed: problem with SQL: %s' % str(e))
+                    raise AuthenticationFailed('Authentication failed: problem with SQL: %s' % str(e)) from e
 
         if not os.path.exists(home_dir):
             os.makedirs(home_dir)
@@ -136,9 +136,6 @@ class KrakenFTPHandler(FTPHandler):
                 pass
             self.username = None
 
-    def on_file_received(self, f):
-        log.info('received %s', f)
-
 
 class KrakenFilesystem(AbstractedFS):
     def ftp2fs(self, ftppath):
@@ -157,7 +154,7 @@ class KrakenFilesystem(AbstractedFS):
 
 ##########################################
 
-class FTPDownloader(object):
+class FTPDownloader:
     def __init__(self, host, port, user, timeout=0.01):
         self.ftp = FTP()
         self.ftp.connect(host, port)
@@ -169,13 +166,16 @@ class FTPDownloader(object):
 
         self.timeout = timeout
 
-    def getBytes(self, filename):
-        print("getBytes")
+        self.bytes = Queue()
+        self.finished = Event()
+        self.worker = None
+
+    def get_bytes(self, filename):
         self.ftp.retrbinary("RETR {}".format(filename) , self.bytes.put)
         self.bytes.join()   # wait for all blocks in the queue to be marked as processed
         self.finished.set() # mark streaming as finished
 
-    def sendBytes(self):
+    def send_bytes(self):
         while not self.finished.is_set():
             try:
                 yield self.bytes.get(timeout=self.timeout)
@@ -185,11 +185,9 @@ class FTPDownloader(object):
         self.worker.join()
 
     def download(self, filename):
-        self.bytes = Queue()
-        self.finished = Event()
-        self.worker = Thread(target=self.getBytes, args=(filename,))
+        self.worker = Thread(target=self.get_bytes, args=(filename,))
         self.worker.start()
-        return self.sendBytes()
+        return self.send_bytes()
 
 
 def serve_artifact(store_type, flow_id, run_id, path):

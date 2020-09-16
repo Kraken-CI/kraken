@@ -218,7 +218,8 @@ class DockerExecContext:
             t0 = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(now))
             t1 = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(deadline))
             timeout = deadline - now
-            raise Exception("non-zero %d exit code from '%s', cwd:%s, user:%s, now:%s, deadline:%s, time: %ds" % (exit_code, cmd, str(cwd), str(user), t0, t1, timeout))
+            raise Exception("non-zero %d exit code from '%s', cwd:%s, user:%s, now:%s, deadline:%s, time: %ds" % (
+                exit_code, cmd, str(cwd), str(user), t0, t1, timeout))
         return logs
 
     async def _dkr_run(self, cmd, cwd, deadline, env, user):

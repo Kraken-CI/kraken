@@ -293,6 +293,8 @@ function-naming-style=snake_case
 
 # Good variable names which should always be accepted, separated by a comma.
 good-names=a,
+           aa,
+           ag,
            bp,
            c,
            cj,
@@ -310,6 +312,7 @@ good-names=a,
            fh,
            fp,
            ip,
+           m,
            mt,
            n,
            t,
@@ -478,7 +481,7 @@ indent-string='    '
 max-line-length=160
 
 # Maximum number of lines in a module.
-max-module-lines=1000
+max-module-lines=5000
 
 # List of optional constructs for which whitespace checking is disabled. `dict-
 # separator` is used to allow tabulation in dicts, etc.: {1  : 1,\n222: 2}.
