@@ -314,7 +314,7 @@ export class RunResultsComponent implements OnInit, OnDestroy {
                 this.jobs = data.items
                 this.totalJobs = data.total
 
-                if (this.jobs.length > 0) {
+                if (this.jobs.length > 0 && !this.selectedJobId) {
                     this.job = this.jobs[0]
                     this.selectedJobId = this.job.id
                 }
