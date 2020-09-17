@@ -227,7 +227,7 @@ class DockerExecContext:
         t0 = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(now))
         t1 = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(deadline))
         timeout = deadline - now
-        log.info("cmd '%s', now %s, deadline %s, time: %ds", cmd, t0, t1, timeout)
+        log.info("cmd '%s' in '%s', now %s, deadline %s, time: %ds, env: %s", cmd, cwd, t0, t1, timeout, env)
         exe = self.cntr.client.api.exec_create(self.cntr.id, cmd, workdir=cwd, environment=env, user=user)
         stream = self.cntr.client.api.exec_start(exe['Id'], stream=True)
         logs = ''
@@ -269,9 +269,9 @@ class DockerExecContext:
         if self.storage_ip:
             port = consts.DEFAULT_STORAGE_ADDR.split(':')[1]
             storage_addr = '%s:%s' % (self.storage_ip, port)
-            env = {'KRAKEN_STORAGE_ADDR': storage_addr}
+            env['KRAKEN_STORAGE_ADDR'] = storage_addr
         elif 'KRAKEN_STORAGE_ADDR' in os.environ:
-            env = {'KRAKEN_STORAGE_ADDR': os.environ['KRAKEN_STORAGE_ADDR']}
+            env['KRAKEN_STORAGE_ADDR'] = os.environ['KRAKEN_STORAGE_ADDR']
 
         if not env:
             env = None
