@@ -215,6 +215,8 @@ def analyze_results_history(self, run_id):
                     run.jobs_error += 1
                 db.session.commit()
 
+            run.state = consts.RUN_STATE_PROCESSED
+            db.session.commit()
             log.info('anlysis of run %s completed', run)
 
             t = notify_about_completed_run.delay(run.id)
@@ -247,9 +249,6 @@ def notify_about_completed_run(self, run_id):
             if run is None:
                 log.error('got unknown run to notify: %s', run_id)
                 return
-
-            run.state = consts.RUN_STATE_PROCESSED
-            db.session.commit()
 
             notify.notify(run)
 

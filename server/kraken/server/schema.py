@@ -31,8 +31,15 @@ def execute_schema_code(branch, schema_code):
     my_globals = {'__builtins__': limited_builtins,
                   '_getiter_': RestrictedPython.Eval.default_guarded_getiter,
                   '_iter_unpack_sequence_': RestrictedPython.Guards.guarded_iter_unpack_sequence}
+
     exec(byte_code, my_globals, my_locals)  # pylint: disable=exec-used
 
+    my_globals.update(my_locals)
     ctx = SchemaCodeContext(branch.name)
-    schema = my_locals['stage'](ctx)
+    my_globals['ctx'] = ctx
+
+    my_locals2 = {}
+    exec('schema = stage(ctx)', my_globals, my_locals2)
+    schema = my_locals2['schema']
+
     return schema
