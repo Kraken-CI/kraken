@@ -1,4 +1,4 @@
 FROM krakenci/ubuntu:20.04
 
-RUN apt-get update && apt-get install -y --no-install-recommends rake xz-utils openjdk-13-jre-headless && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends rake xz-utils openjdk-13-jre-headless docker-compose && rm -rf /var/lib/apt/lists/*
 RUN wget https://github.com/mikefarah/yq/releases/download/3.3.4/yq_linux_amd64 && mv yq_linux_amd64 /usr/bin/yq && chmod a+x /usr/bin/yq
