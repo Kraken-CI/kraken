@@ -638,8 +638,18 @@ def cancel_job(job, note, cmplt_status):
     job.completion_status = cmplt_status
     if note:
         job.notes = note
-    job.agent = None
-    # TODO: add canceling the job on agent side
+    job.agent.cancel = True
     db.session.commit()
     t = bg_jobs.job_completed.delay(job.id)
-    log.info('job %s timed out, bg processing: %s', job, t)
+    log.info('job %s timed out or canceled, bg processing: %s', job, t)
+
+
+
+def delete_job(job_id):
+    job = Job.query.filter_by(id=job_id).one_or_none()
+    if job is None:
+        abort(404, "Job not found")
+
+    cancel_job(job, 'canceled by user', consts.JOB_CMPLT_USER_CANCEL)
+
+    return {}

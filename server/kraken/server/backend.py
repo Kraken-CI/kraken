@@ -425,23 +425,26 @@ def serve_agent_request():
 
     response = {}
 
-    if msg == 'get-job':
+    if agent.cancel:
+        response['cancel'] = True
+
+    elif msg == consts.AGENT_MSG_GET_JOB:
         response = _handle_get_job(agent)
 
         logstash_addr = os.environ.get('KRAKEN_LOGSTASH_ADDR', consts.DEFAULT_LOGSTASH_ADDR)
         response['cfg'] = dict(logstash_addr=logstash_addr)
         response['version'] = version.version
 
-    elif msg == 'in-progres':
+    elif msg == consts.AGENT_MSG_IN_PROGRES:
         pass
 
-    elif msg == 'step-result':
+    elif msg == consts.AGENT_MSG_STEP_RESULT:
         response = _handle_step_result(agent, req)
 
-    elif msg == 'dispatch-tests':
+    elif msg == consts.AGENT_MSG_DISPATCH_TESTS:
         response = _handle_dispatch_tests(agent, req)
 
-    elif msg == 'sys-info':
+    elif msg == consts.AGENT_MSG_SYS_INFO:
         _handle_sys_info(agent, req)
         response = {}
 

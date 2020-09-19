@@ -17,8 +17,8 @@ paths:
       operationId: get_projects
       tags:
         - Management
-      summary: Create a job
-      description: Create a new job
+      summary: Create a project
+      description: Create a new project
       responses:
         201:
           description: Successfully created run
@@ -878,6 +878,23 @@ paths:
       responses:
         201:
           description: Successfully created run
+  /jobs/{job_id}:
+    delete:
+      operationId: delete_job
+      tags:
+        - Execution
+      summary: Cancel a job
+      description: Cancel a job
+      parameters:
+        - name: job_id
+          in: path
+          description: ID of job
+          required: true
+          type: integer
+          format: int64
+      responses:
+        200:
+          description: Successfully deleted job
   /jobs/{job_id}/logs:
     get:
       operationId: get_job_logs

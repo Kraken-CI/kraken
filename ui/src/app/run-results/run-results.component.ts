@@ -457,6 +457,8 @@ export class RunResultsComponent implements OnInit, OnDestroy {
                 return 'step timeout'
             case 7:
                 return 'timeout'
+            case 8:
+                return 'cancel'
             default:
                 return ''
         }
@@ -479,6 +481,8 @@ export class RunResultsComponent implements OnInit, OnDestroy {
             case 6:
                 return 'pi pi-exclamation-circle step-status-red'
             case 7:
+                return 'pi pi-exclamation-circle step-status-red'
+            case 8:
                 return 'pi pi-exclamation-circle step-status-red'
             default:
                 return ''
@@ -604,5 +608,14 @@ export class RunResultsComponent implements OnInit, OnDestroy {
             { code: issueType, name: this.issueTypeToTxt(issueType) },
         ]
         this.refreshIssues(issuesTable)
+    }
+
+    cancelJob() {
+        if (!this.job) {
+            return
+        }
+        this.executionService.deleteJob(this.job.id).subscribe(data => {
+            console.info('job canceled')
+        })
     }
 }

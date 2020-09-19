@@ -22,6 +22,7 @@ from urllib.parse import urljoin, urlparse
 
 from . import config
 from . import sysutils
+from . import consts
 
 log = logging.getLogger(__name__)
 
@@ -124,7 +125,7 @@ class Server():
         self._ensure_srv_address()
 
         request = {'address': self.my_addr,
-                   'msg': 'sys-info',
+                   'msg': consts.AGENT_MSG_SYS_INFO,
                    'info': sys_info}
 
         response = _send_http_request(self.srv_addr, request)
@@ -134,7 +135,7 @@ class Server():
     def get_job(self):
         self._ensure_srv_address()
 
-        request = {'address': self.my_addr, 'msg': 'get-job'}
+        request = {'address': self.my_addr, 'msg': consts.AGENT_MSG_GET_JOB}
 
         response = _send_http_request(self.srv_addr, request)
 
@@ -153,7 +154,7 @@ class Server():
 
     def report_step_result(self, job_id, step_idx, result):
         request = {'address': self.my_addr,
-                   'msg': 'step-result',
+                   'msg': consts.AGENT_MSG_STEP_RESULT,
                    'job_id': job_id,
                    'step_idx': step_idx,
                    'result': result}
@@ -163,14 +164,14 @@ class Server():
         if 'cfg' in response:
             config.merge(response['cfg'])
 
-        return {}
+        return response
 
     def in_progres(self):
         pass
 
     def dispatch_tests(self, job_id, step_idx, tests):
         request = {'address': self.my_addr,
-                   'msg': 'dispatch-tests',
+                   'msg': consts.AGENT_MSG_DISPATCH_TESTS,
                    'job_id': job_id,
                    'step_idx': step_idx,
                    'tests': tests}

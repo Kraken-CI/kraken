@@ -612,7 +612,7 @@ class Agent(db.Model, DatesMixin):
     comment = Column(Text)
     status_line = Column(Text)
     last_seen = Column(DateTime)
-    # agents_group_id = Column(Integer, ForeignKey('agents_groups.id'))  # static assignment to exactly one machines group, if NULL then not authorized
+    cancel = Column(Boolean, default=False)
     agents_groups = relationship('AgentAssignment', back_populates="agent")
     job_id = Column(Integer, ForeignKey('jobs.id'))
     job = relationship('Job', back_populates="agent", foreign_keys=[job_id])
