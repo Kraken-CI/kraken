@@ -62,10 +62,14 @@ def complete_run(run, now):
 def _substitute_vars(fields, args):
     new_fields = {}
     for f, val in fields.items():
-        if not isinstance(val, str):
+        if isinstance(val, dict):
+            new_fields[f] = _substitute_vars(val, args)
+            continue
+        elif not isinstance(val, str):
             new_fields[f] = val
             continue
-        for var in re.findall('#{[A-Z]+}', val):
+
+        for var in re.findall(r'#{[A-Za-z_ ]+}', val):
             name = var[2:-1]
             if name in args:
                 arg_val = args[name]
@@ -88,6 +92,19 @@ def trigger_jobs(run, replay=False):
                 covered_jobs[key] = [j]
             else:
                 covered_jobs[key].append(j)
+
+
+    # prepare secrets to pass them to substitute is steps
+    secrets = {}
+    for s in run.stage.branch.project.secrets:
+        if s.kind == consts.SECRET_KIND_SSH_KEY:
+            name = "KK_SECRET_USER_" + s.name
+            secrets[name] = s.data['username']
+            name = "KK_SECRET_KEY_" + s.name
+            secrets[name] = s.data['key']
+        elif s.kind == consts.SECRET_KIND_SIMPLE:
+            name = "KK_SECRET_SIMPLE_" + s.name
+            secrets[name] = s.data['secret']
 
     # trigger new jobs based on jobs defined in stage schema
     started_any = False
@@ -153,7 +170,9 @@ def trigger_jobs(run, replay=False):
                 else:
                     # substitute vars in steps
                     for idx, s in enumerate(j['steps']):
-                        fields = _substitute_vars(s, run.args)
+                        args = secrets.copy()
+                        args.update(run.args)
+                        fields = _substitute_vars(s, args)
                         del fields['tool']
                         Step(job=job, index=idx, tool=tools[idx], fields=fields)
 
@@ -634,11 +653,11 @@ def cancel_job(job, note, cmplt_status):
     from .bg import jobs as bg_jobs  # pylint: disable=import-outside-toplevel
     if job.state == consts.JOB_STATE_COMPLETED:
         return
+    job.completed = datetime.datetime.utcnow()
     job.state = consts.JOB_STATE_COMPLETED
     job.completion_status = cmplt_status
     if note:
         job.notes = note
-    job.agent.cancel = True
     db.session.commit()
     t = bg_jobs.job_completed.delay(job.id)
     log.info('job %s timed out or canceled, bg processing: %s', job, t)

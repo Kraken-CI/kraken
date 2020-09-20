@@ -39,7 +39,6 @@
                [showCurrentPageReport]="true">
         <ng-template pTemplate="header">
           <tr>
-            <th style="width: 60px;">Job ID</th>
             <th style="width: 120px;">Job Name</th>
             <th style="width: 100px;">State</th>
             <th style="width: 100px;">Completion Status</th>
@@ -51,7 +50,6 @@
         </ng-template>
         <ng-template pTemplate="body" let-job>
           <tr [pSelectableRow]="job" [ngStyle]="{'background-color': job.covered ? '#aa9' : ''}">
-            <td><a routerLink="/jobs/{{job.job_id}}">{{job.id}}</a></td>
             <td>{{job.name}}</td>
             <td>{{getJobState(job)}}<i *ngIf="job.state !== 5" class="pi pi-spin pi-spinner" style="font-size: 16px; vertical-align: text-top;"></i></td>
             <td>
@@ -83,7 +81,7 @@
           </div>
         </div>
 
-        <p-tabView>
+        <p-tabView styleClass="job-tabview">
           <p-tabPanel header="Logs">
             <app-log-box [jobId]="selectedJobId"></app-log-box>
           </p-tabPanel>

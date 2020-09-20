@@ -162,7 +162,7 @@ export class TestCaseResultComponent implements OnInit {
                 continue
             }
             const val = res.values[this.selectedValue.name]
-            if (val.value === undefined) {
+            if (val === undefined || val.value === undefined) {
                 continue
             }
             flowIds.push(res.flow_id)

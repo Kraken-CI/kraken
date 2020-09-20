@@ -612,7 +612,6 @@ class Agent(db.Model, DatesMixin):
     comment = Column(Text)
     status_line = Column(Text)
     last_seen = Column(DateTime)
-    cancel = Column(Boolean, default=False)
     agents_groups = relationship('AgentAssignment', back_populates="agent")
     job_id = Column(Integer, ForeignKey('jobs.id'))
     job = relationship('Job', back_populates="agent", foreign_keys=[job_id])
@@ -732,7 +731,7 @@ def prepare_initial_data():
 
     tool_fields = {
         'git': {'checkout': 'text', 'branch': 'text', 'destination': 'text'},
-        'shell': {'cmd': 'text'},
+        'shell': {'cmd': 'text', 'env': 'dict'},
         'pytest': {'params': 'text', 'directory': 'text'},
         'rndtest': {'count': 'text'},
         'artifacts': {'type': 'choice:file', 'upload': 'text'},

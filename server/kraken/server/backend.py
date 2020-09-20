@@ -66,6 +66,14 @@ def _handle_get_job(agent):
     if agent.job is None:
         return {'job': {}}
 
+    # handle cancel when job is already assigned but not started yet
+    if not agent.job.started and agent.job.state == consts.JOB_STATE_COMPLETED:
+        job = agent.job
+        agent.job = None
+        db.session.commit()
+        log.info("unassigned canceled job %s from %s", job, agent)
+        return {'job': {}}
+
     job = agent.job.get_json()
 
     job['timeout'] = _left_time(agent.job)
@@ -270,6 +278,15 @@ def _handle_step_result(agent, req):
     step = job.steps[step_idx]
     step.result = result
     step.status = consts.STEP_STATUS_TO_INT[status]
+
+    # handle canceling situation
+    if job.state == consts.JOB_STATE_COMPLETED:
+        agent.job = None
+        db.session.commit()
+        log.info("canceling job %s on %s", job, agent)
+        response['cancel'] = True
+        return response
+
     db.session.commit()
 
     # store test results
@@ -425,18 +442,12 @@ def serve_agent_request():
 
     response = {}
 
-    if agent.cancel:
-        response['cancel'] = True
-
-    elif msg == consts.AGENT_MSG_GET_JOB:
+    if msg == consts.AGENT_MSG_GET_JOB:
         response = _handle_get_job(agent)
 
         logstash_addr = os.environ.get('KRAKEN_LOGSTASH_ADDR', consts.DEFAULT_LOGSTASH_ADDR)
         response['cfg'] = dict(logstash_addr=logstash_addr)
         response['version'] = version.version
-
-    elif msg == consts.AGENT_MSG_IN_PROGRES:
-        pass
 
     elif msg == consts.AGENT_MSG_STEP_RESULT:
         response = _handle_step_result(agent, req)

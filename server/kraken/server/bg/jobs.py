@@ -79,6 +79,8 @@ def _analyze_job_results_history(job):
         q = q.filter_by(agents_group=job_tcr.job.agents_group)
         q = q.join('job', 'run', 'flow', 'branch')
         q = q.filter(Branch.id == job.run.flow.branch_id)
+        q = q.join('job', 'run', 'flow')
+        q = q.filter(Flow.kind == job.run.flow.kind)
         q = q.order_by(asc(Flow.created))
         q = q.limit(10)
 
@@ -118,6 +120,8 @@ def _analyze_job_results_history(job):
 def _analyze_job_issues_history(job):
     q = Run.query.filter_by(stage=job.run.stage)
     q = q.filter(Run.created < job.run.created)
+    q = q.join('flow')
+    q = q.filter(Flow.kind == job.run.flow.kind)
     q = q.order_by(desc(Run.created))
     prev_run = q.first()
     if prev_run is None:
@@ -137,6 +141,8 @@ def _analyze_job_issues_history(job):
         q = q.filter_by(agents_group=issue.job.agents_group)
         q = q.join('job', 'run')
         q = q.filter(Run.id == prev_run.id)
+        q = q.join('job', 'run', 'flow')
+        q = q.filter(Flow.kind == job.run.flow.kind)
         prev_issues = q.all()
         prev_issue = None
         dist = 1000
@@ -174,6 +180,7 @@ def analyze_results_history(self, run_id):
             q = q.filter_by(stage_id=run.stage_id)
             q = q.join('flow')
             q = q.filter(Flow.created < run.flow.created)
+            q = q.filter(Flow.kind == run.flow.kind)
             q = q.order_by(desc(Flow.created))
             prev_run = q.first()
             if prev_run is None:
@@ -227,6 +234,7 @@ def analyze_results_history(self, run_id):
             q = q.filter_by(stage_id=run.stage_id)
             q = q.join('flow')
             q = q.filter(Flow.created > run.flow.created)
+            q = q.filter(Flow.kind == run.flow.kind)
             q = q.order_by(asc(Flow.created))
             next_run = q.first()
             if next_run is not None:

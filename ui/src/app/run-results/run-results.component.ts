@@ -614,8 +614,24 @@ export class RunResultsComponent implements OnInit, OnDestroy {
         if (!this.job) {
             return
         }
-        this.executionService.deleteJob(this.job.id).subscribe(data => {
-            console.info('job canceled')
-        })
+        this.executionService.deleteJob(this.job.id).subscribe(
+            data => {
+                this.msgSrv.add({
+                    severity: 'success',
+                    summary: 'Job cancelled',
+                    detail: 'Cancelling job succeeded.',
+                })
+            },
+            err => {
+                this.msgSrv.add({
+                    severity: 'error',
+                    summary: 'Cancel erred',
+                    detail:
+                    'Cancelling job erred: ' +
+                        err.statusText,
+                    life: 10000,
+                })
+            }
+        )
     }
 }

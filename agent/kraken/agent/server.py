@@ -166,9 +166,6 @@ class Server():
 
         return response
 
-    def in_progres(self):
-        pass
-
     def dispatch_tests(self, job_id, step_idx, tests):
         request = {'address': self.my_addr,
                    'msg': consts.AGENT_MSG_DISPATCH_TESTS,

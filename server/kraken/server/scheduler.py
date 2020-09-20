@@ -74,7 +74,6 @@ def assign_jobs_to_agents():
 
         # assign job to found agent
         best_agent.job = j
-        best_agent.cancel = False
         j.agent_used = best_agent
         j.assigned = datetime.datetime.utcnow()
         db.session.commit()

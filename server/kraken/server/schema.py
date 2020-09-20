@@ -32,6 +32,7 @@ def execute_schema_code(branch, schema_code):
                   '_getiter_': RestrictedPython.Eval.default_guarded_getiter,
                   '_iter_unpack_sequence_': RestrictedPython.Guards.guarded_iter_unpack_sequence}
 
+
     exec(byte_code, my_globals, my_locals)  # pylint: disable=exec-used
 
     my_globals.update(my_locals)

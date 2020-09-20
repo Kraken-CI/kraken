@@ -366,7 +366,7 @@ def run(srv, job):
                 step['trigger_data'] = job['trigger_data']
 
             try:
-                result = _run_step(srv, exec_ctx, job_dir, job['id'], idx, step, tools, job['deadline'])
+                result, cancel = _run_step(srv, exec_ctx, job_dir, job['id'], idx, step, tools, job['deadline'])
                 last_status = result['status']
             except KeyboardInterrupt:
                 raise
@@ -377,6 +377,9 @@ def run(srv, job):
                 last_status = 'error'
 
             if last_status == 'error':
+                break
+            if cancel:
+                log.info('received job cancel')
                 break
 
     finally:
