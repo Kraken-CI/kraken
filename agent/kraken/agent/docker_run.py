@@ -285,5 +285,8 @@ class DockerExecContext:
         except Timeout:
             # TODO: it should be better handled but needs testing
             if proc_coord.result == {}:
-                log.info('timout expired')
+                now = time.time()
+                t0 = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(now))
+                t1 = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(deadline))
+                log.info('job timout expired, now: %s, daedline: %s', t0, t1)
                 proc_coord.result = {'status': 'error', 'reason': 'timeout'}

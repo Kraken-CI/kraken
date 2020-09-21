@@ -309,7 +309,7 @@ def _estimate_timeout(job):
     q = Job.query
     q = q.filter_by(name=job.name)
     q = q.filter_by(state=consts.JOB_STATE_COMPLETED)
-    q = q.filter_by(completion_status=consts.JOB_CMPLT_ALL_OK)
+    q = q.filter(Job.completion_status.in_([consts.JOB_CMPLT_ALL_OK, consts.JOB_CMPLT_JOB_TIMEOUT]))
     q = q.filter_by(covered=False)
     q = q.filter_by(agents_group=job.agents_group)
     q = q.filter_by(system=job.system)
@@ -326,15 +326,18 @@ def _estimate_timeout(job):
         log.info('not enough jobs to estimate timeout')
         return
 
+    timeout_occured = False
     max_duration = duration = job.finished - job.assigned
     prev_job_id = job.id
     for j in jobs:
-        if not job.assigned or not job.finished:
-            log.warning('job %s has None dates: %s %s', job, job.assigned, job.finished)
+        if not j.assigned or not j.finished:
+            log.warning('job %s has None dates: %s %s', j, j.assigned, j.finished)
             continue
-        if job.assigned > job.finished:
-            log.warning('job %s has wrong dates: %s %s', job, job.assigned, job.finished)
+        if j.assigned > j.finished:
+            log.warning('job %s has wrong dates: %s %s', j, j.assigned, j.finished)
             continue
+        if j.completion_status == consts.JOB_CMPLT_JOB_TIMEOUT:
+            timeout_occured = True
 
         if j.id == prev_job_id:
             duration += j.finished - j.assigned
@@ -350,9 +353,26 @@ def _estimate_timeout(job):
         timeout = 60
     stage = job.run.stage
     job_key = "%s-%s-%d" % (job.name, job.system, job.agents_group_id)
-    log.info("new timeout for job '%s' in stage '%s': %ssecs", job_key, stage.name, timeout)
+
     if stage.timeouts is None:
         stage.timeouts = {}
+
+    if timeout_occured:
+        old_timeout = stage.timeouts.get(job_key, consts.DEFAULT_JOB_TIMEOUT)
+        log.info('new: %s, old: %s', timeout, old_timeout)
+        if timeout < old_timeout:
+            timeout = old_timeout * 2
+
+        for j in stage.schema['jobs']:
+            if j['name'] == job.name:
+                user_timeout = j.get('timeout', consts.DEFAULT_JOB_TIMEOUT)
+                break
+
+        log.info('new: %s, user: %s', timeout, user_timeout)
+        if timeout < user_timeout:
+            timeout = user_timeout
+
+    log.info("new timeout for job '%s' in stage '%s': %ssecs", job_key, stage.name, timeout)
     stage.timeouts[job_key] = timeout
     flag_modified(stage, 'timeouts')
     db.session.commit()
@@ -381,7 +401,16 @@ def job_completed(self, job_id):
                 for step in job.steps:
                     log.info('%s: %s', step.index, consts.STEP_STATUS_NAME[step.status] if step.status in consts.STEP_STATUS_NAME else step.status)
                     if step.status == consts.STEP_STATUS_ERROR:
+                        # set base cmplt status error
                         job.completion_status = consts.JOB_CMPLT_AGENT_ERROR_RETURNED
+                        # set proper cmplt status based on reason
+                        if step.result and 'reason' in step.result:
+                            if step.result['reason'] == 'job-timeout':
+                                job.completion_status = consts.JOB_CMPLT_JOB_TIMEOUT
+                            if step.result['reason'] == 'step-timeout':
+                                job.completion_status = consts.JOB_CMPLT_STEP_TIMEOUT
+                            elif step.result['reason'] == 'exception':
+                                job.completion_status = consts.JOB_CMPLT_AGENT_EXCEPTION
                         break
                 db.session.commit()
 

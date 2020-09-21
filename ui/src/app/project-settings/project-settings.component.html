@@ -39,7 +39,7 @@
 
             <div *ngIf="secretForm.value.kind === 'simple'">
               <label for="secret"><span>Secret <span class="required">*</span></span>
-                <input type="text" class="input-field" name="secret" pInputText formControlName="secret"/>
+                <textarea name="secret" formControlName="secret" class="textarea-field"  rows="30" cols="65"></textarea>
               </label>
             </div>
 

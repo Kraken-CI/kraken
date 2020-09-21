@@ -148,7 +148,10 @@ def execute(sock, module, command, step_file_path):
         log.info('step tool %s, cmd %s done with retcode %s', tool_name, command, ret, tool=None)
 
         if ret != 0:
-            result.update({'status': 'error', 'reason': 'retcode', 'retcode': ret, 'msg': msg})
+            if ret == 10000:
+                result.update({'status': 'error', 'reason': 'step-timeout', 'msg': msg})
+            else:
+                result.update({'status': 'error', 'reason': 'retcode', 'retcode': ret, 'msg': msg})
 
         sock.send_json(result)
     except:

@@ -38,6 +38,8 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
         cmd_trc = cmd
     log.info("exec: '%s' in '%s'", cmd_trc, cwd)
 
+    retcode = 0
+
     with tempfile.NamedTemporaryFile(suffix=".txt", prefix="exec_") as fh:
         fname = fh.name
 
@@ -113,6 +115,7 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
     # check if there was timeout exceeded
     if t > t_end:
         log.info("cmd %s exceeded timeout (%dsecs)", cmd_trc, timeout)
+        retcode = 10000
 
     # once again at the end check if it completed, if not terminate or even kill the process
     p.poll()
@@ -145,10 +148,11 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
         raise Exception("cmd failed: %s, exitcode: %d, out: %s" % (cmd_trc, p.returncode, out))
 
     # make sure that when there is error 'if retcode' turns True
-    if p.returncode is None:
-        retcode = -1
-    else:
-        retcode = p.returncode
+    if retcode == 0:
+        if p.returncode is None:
+            retcode = -1
+        else:
+            retcode = p.returncode
 
     if output_handler is None:
         return retcode, out

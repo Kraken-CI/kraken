@@ -127,4 +127,4 @@ class LxdExecContext:
         except Timeout:
             # TODO: it should be better handled but needs testing
             if proc_coord.result == {}:
-                proc_coord.result = {'status': 'error', 'reason': 'timeout'}
+                proc_coord.result = {'status': 'error', 'reason': 'job-timeout'}

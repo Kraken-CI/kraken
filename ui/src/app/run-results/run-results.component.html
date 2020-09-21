@@ -89,7 +89,7 @@
             <div *ngFor="let step of job.steps" style="margin-bottom: 10px;">
               <div style="font-size: 1.5em; font-weight: bold">{{ step.index + 1 }}. {{ step.tool }}</div>
               Status: <i style="vertical-align: bottom; font-size: 1.4em;" [ngClass]="getStepStatusClass(step)"></i>{{ getStepStatus(step) }}
-              <div *ngIf="step.status === 3">
+              <div *ngIf="step.result && step.result['reason']">
                 Reason: {{ step.result['reason'] }}
                 <pre>{{ step.result['msg'] }}</pre>
               </div>
