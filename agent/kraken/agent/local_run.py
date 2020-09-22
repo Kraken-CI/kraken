@@ -107,5 +107,5 @@ class LocalExecContext:
 
             # TODO: it should be better handled but needs testing
             if self.proc_coord.result == {}:
-                self.proc_coord.result = {'status': 'error', 'reason': 'timeout'}
+                self.proc_coord.result = {'status': 'error', 'reason': 'job-timeout'}
             break

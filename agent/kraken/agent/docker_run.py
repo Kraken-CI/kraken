@@ -84,7 +84,7 @@ class DockerExecContext:
             exc = traceback.format_exc()
             log.exception('problem with starting or initializing container')
             self.stop()
-            return {'status': 'error', 'reason': 'timeout', 'msg': exc}
+            return {'status': 'error', 'reason': 'job-timeout', 'msg': exc}
         except:
             exc = traceback.format_exc()
             log.exception('problem with starting or initializing container')
@@ -289,4 +289,4 @@ class DockerExecContext:
                 t0 = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(now))
                 t1 = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(deadline))
                 log.info('job timout expired, now: %s, daedline: %s', t0, t1)
-                proc_coord.result = {'status': 'error', 'reason': 'timeout'}
+                proc_coord.result = {'status': 'error', 'reason': 'job-timeout'}
