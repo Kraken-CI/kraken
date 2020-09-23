@@ -35,7 +35,7 @@ export class RunBoxComponent implements OnInit {
                 {
                     label: 'Show Details',
                     icon: 'pi pi-folder-open',
-                    routerLink: '/runs/' + this.run.id,
+                    routerLink: '/runs/' + this.run.id + '/jobs',
                 },
                 {
                     label: 'Rerun',

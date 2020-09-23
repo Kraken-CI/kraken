@@ -244,7 +244,7 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
                 {
                     label: 'Show Details',
                     icon: 'pi pi-folder-open',
-                    routerLink: '/runs/' + node.data.run.id,
+                    routerLink: '/runs/' + node.data.run.id + '/jobs',
                 },
                 {
                     label: 'Rerun',
