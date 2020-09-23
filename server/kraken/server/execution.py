@@ -106,8 +106,15 @@ def trigger_jobs(run, replay=False):
             name = "KK_SECRET_SIMPLE_" + s.name
             secrets[name] = s.data['secret']
 
+    # prepare missing group
+    missing_agents_group = AgentsGroup.query.filter_by(name='missing').one_or_none()
+    if missing_agents_group is None:
+        missing_agents_group = AgentsGroup(name='missing')
+        db.session.commit()
+
     # trigger new jobs based on jobs defined in stage schema
     started_any = False
+    all_started_erred = True
     now = datetime.datetime.utcnow()
     for j in schema['jobs']:
         # check tools in steps
@@ -133,7 +140,6 @@ def trigger_jobs(run, replay=False):
                 agents_group = AgentsGroup.query.filter_by(name=env['agents_group']).one_or_none()
                 if agents_group is None:
                     log.warning("cannot find agents group '%s'", env['agents_group'])
-                    continue
 
             if not isinstance(env['system'], list):
                 systems = [env['system']]
@@ -149,25 +155,38 @@ def trigger_jobs(run, replay=False):
                 system = '%s^%s' % (executor, system)
 
                 # get timeout
-                job_key = "%s-%s-%d" % (j['name'], system, agents_group.id)
-                if run.stage.timeouts and job_key in run.stage.timeouts:
-                    # take estimated timeout if present
-                    timeout = run.stage.timeouts[job_key]
+                if agents_group is not None:
+                    job_key = "%s-%s-%d" % (j['name'], system, agents_group.id)
+                    if run.stage.timeouts and job_key in run.stage.timeouts:
+                        # take estimated timeout if present
+                        timeout = run.stage.timeouts[job_key]
+                    else:
+                        # take initial timeout from schema, or default one
+                        timeout = int(j.get('timeout', consts.DEFAULT_JOB_TIMEOUT))
+                        if timeout < 60:
+                            timeout = 60
                 else:
-                    # take initial timeout from schema, or default one
-                    timeout = int(j.get('timeout', consts.DEFAULT_JOB_TIMEOUT))
-                    if timeout < 60:
-                        timeout = 60
-
+                    timeout = consts.DEFAULT_JOB_TIMEOUT
 
                 # create job
                 job = Job(run=run, name=j['name'], agents_group=agents_group, system=system, timeout=timeout)
 
+                erred_job = False
                 if tool_not_found:
                     job.state = consts.JOB_STATE_COMPLETED
                     job.completion_status = consts.JOB_CMPLT_MISSING_TOOL_IN_DB
                     job.notes = "cannot find tool '%s' in database" % tool_not_found
-                else:
+                    erred_job = True
+                if agents_group is None:
+                    job.agents_group = missing_agents_group
+                    if job.state != consts.JOB_STATE_COMPLETED:
+                        job.state = consts.JOB_STATE_COMPLETED
+                        job.completion_status = consts.JOB_CMPLT_MISSING_AGENTS_GROUP
+                        job.notes = "cannot find agents group '%s' in database" % env['agents_group']
+                    erred_job = True
+
+                if not erred_job:
+                    all_started_erred = False
                     # substitute vars in steps
                     for idx, s in enumerate(j['steps']):
                         args = secrets.copy()
@@ -193,7 +212,7 @@ def trigger_jobs(run, replay=False):
         run.state = consts.RUN_STATE_IN_PROGRESS  # need to be set in case of replay
         db.session.commit()
 
-        if len(schema['jobs']) == 0:
+        if len(schema['jobs']) == 0 or all_started_erred:
             complete_run(run, now)
 
 

@@ -459,6 +459,8 @@ export class RunResultsComponent implements OnInit, OnDestroy {
                 return 'timeout'
             case 8:
                 return 'cancel'
+            case 9:
+                return 'missing group'
             default:
                 return ''
         }
@@ -483,6 +485,8 @@ export class RunResultsComponent implements OnInit, OnDestroy {
             case 7:
                 return 'pi pi-exclamation-circle step-status-red'
             case 8:
+                return 'pi pi-exclamation-circle step-status-red'
+            case 9:
                 return 'pi pi-exclamation-circle step-status-red'
             default:
                 return ''
