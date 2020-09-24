@@ -461,6 +461,8 @@ export class RunResultsComponent implements OnInit, OnDestroy {
                 return 'cancel'
             case 9:
                 return 'missing group'
+            case 10:
+                return 'no agents'
             default:
                 return ''
         }
@@ -487,6 +489,8 @@ export class RunResultsComponent implements OnInit, OnDestroy {
             case 8:
                 return 'pi pi-exclamation-circle step-status-red'
             case 9:
+                return 'pi pi-exclamation-circle step-status-red'
+            case 10:
                 return 'pi pi-exclamation-circle step-status-red'
             default:
                 return ''

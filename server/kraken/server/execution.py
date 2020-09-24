@@ -24,7 +24,7 @@ from sqlalchemy.orm import joinedload
 from elasticsearch import Elasticsearch
 
 from . import consts
-from .models import db, Branch, Flow, Run, Stage, Job, Step, AgentsGroup, Tool, TestCaseResult, TestCase, Issue, Artifact
+from .models import db, Branch, Flow, Run, Stage, Job, Step, AgentsGroup, Tool, TestCaseResult, TestCase, Issue, Artifact, AgentAssignment
 
 log = logging.getLogger(__name__)
 
@@ -112,6 +112,9 @@ def trigger_jobs(run, replay=False):
         missing_agents_group = AgentsGroup(name='missing')
         db.session.commit()
 
+    # count how many agents are in each group, if there is 0 for given job then return an error
+    agents_count = {}
+
     # trigger new jobs based on jobs defined in stage schema
     started_any = False
     all_started_erred = True
@@ -140,6 +143,12 @@ def trigger_jobs(run, replay=False):
                 agents_group = AgentsGroup.query.filter_by(name=env['agents_group']).one_or_none()
                 if agents_group is None:
                     log.warning("cannot find agents group '%s'", env['agents_group'])
+
+            # get count of agents in the group
+            if agents_group is not None and agents_group.name not in agents_count:
+                cnt = AgentAssignment.query.filter_by(agents_group=agents_group).count()
+                #log.info("agents group '%s' count is %d", agents_group.name, cnt)
+                agents_count[agents_group.name] = cnt
 
             if not isinstance(env['system'], list):
                 systems = [env['system']]
@@ -183,6 +192,12 @@ def trigger_jobs(run, replay=False):
                         job.state = consts.JOB_STATE_COMPLETED
                         job.completion_status = consts.JOB_CMPLT_MISSING_AGENTS_GROUP
                         job.notes = "cannot find agents group '%s' in database" % env['agents_group']
+                    erred_job = True
+                elif agents_count[agents_group.name] == 0:
+                    if job.state != consts.JOB_STATE_COMPLETED:
+                        job.state = consts.JOB_STATE_COMPLETED
+                        job.completion_status = consts.JOB_CMPLT_NO_AGENTS
+                        job.notes = "there are no agents in group '%s' - add some agents" % agents_group.name
                     erred_job = True
 
                 if not erred_job:
