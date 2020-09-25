@@ -77,14 +77,18 @@ def _check_jobs():
 def _check_runs():
     now = datetime.datetime.utcnow()
 
-    q = Run.query.filter_by(state=consts.RUN_STATE_IN_PROGRESS)
+    q = Run.query.filter_by(finished=None)
+    q = q.filter(Run.state != consts.RUN_STATE_MANUAL)  # TODO: manual runs will require timeouting as well when jobs are started
 
     for run in q.all():
-        if run.started is None:
-            continue
         timeout = run.stage.schema.get('timeout', consts.DEFAULT_RUN_TIMEOUT)
-        end_time = run.started + datetime.timedelta(seconds=timeout)
+        if run.started:
+            begin = run.started
+        else:
+            begin = run.created
+        end_time = begin + datetime.timedelta(seconds=timeout)
         if end_time > now:
+            # no timeout yet
             continue
         note = 'run %s timed out, deadline was: %s' % (str(run), str(end_time))
         log.info(note)
@@ -125,19 +129,19 @@ def main():
         t0_jobs = t0_runs = t0_agents = time.time()
 
         while True:
-            # check jobs
+            # check jobs every 5 seconds
             dt = time.time() - t0_jobs
             if dt > 5:
                 _check_jobs()
                 t0_jobs = time.time()
 
-            # check runs
+            # check runs every 30 seconds
             dt = time.time() - t0_runs
             if dt > 30:
                 _check_runs()
                 t0_runs = time.time()
 
-            # check agents
+            # check agents every 30 seconds
             dt = time.time() - t0_agents
             if dt > 30:
                 _check_agents()

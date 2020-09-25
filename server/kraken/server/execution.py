@@ -31,10 +31,10 @@ log = logging.getLogger(__name__)
 
 def complete_run(run, now):
     from .bg import jobs as bg_jobs  # pylint: disable=import-outside-toplevel
-    log.info('completed run %s, now: %s', run, now)
     run.state = consts.RUN_STATE_COMPLETED
     run.finished = now
     db.session.commit()
+    log.info('completed run %s, now: %s', run, run.finished)
 
     # trigger any following stages to currently completed run
     t = bg_jobs.trigger_stages.delay(run.id)
@@ -116,7 +116,6 @@ def trigger_jobs(run, replay=False):
     agents_count = {}
 
     # trigger new jobs based on jobs defined in stage schema
-    started_any = False
     all_started_erred = True
     now = datetime.datetime.utcnow()
     for j in schema['jobs']:
@@ -220,15 +219,13 @@ def trigger_jobs(run, replay=False):
 
                 db.session.commit()
                 log.info('created job %s', job.get_json())
-                started_any = True
 
-    if started_any or len(schema['jobs']) == 0:
-        run.started = now
-        run.state = consts.RUN_STATE_IN_PROGRESS  # need to be set in case of replay
-        db.session.commit()
+    run.started = now
+    run.state = consts.RUN_STATE_IN_PROGRESS  # need to be set in case of replay
+    db.session.commit()
 
-        if len(schema['jobs']) == 0 or all_started_erred:
-            complete_run(run, now)
+    if len(schema['jobs']) == 0 or all_started_erred:
+        complete_run(run, now)
 
 
 def start_run(stage, flow, args=None):
