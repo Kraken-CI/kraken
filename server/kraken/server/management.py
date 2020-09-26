@@ -169,7 +169,7 @@ def _check_and_correct_stage_schema(branch, stage, prev_schema_code):
         schema_code = '''def stage(ctx):
     return {
         "parent": "root",
-        "trigger": {
+        "triggers": {
             "parent": True,
         },
         "parameters": [],

@@ -770,8 +770,8 @@ paths:
           schema:
             $ref: '#/definitions/ApiError'
     put:
-      summary: Replay run, start again same jobs
-      operationId: replay_run
+      summary: Start manual run or replay existing run ie. start again same jobs
+      operationId: run_run_jobs
       tags:
         - Execution
       parameters:

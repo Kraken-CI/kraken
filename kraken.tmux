@@ -1,3 +1,5 @@
+set-option -g mouse on
+
 selectp -t 0
 
 # storage

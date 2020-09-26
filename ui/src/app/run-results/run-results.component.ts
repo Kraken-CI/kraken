@@ -328,7 +328,7 @@ export class RunResultsComponent implements OnInit, OnDestroy {
     }
 
     rerunAll() {
-        this.executionService.replayRun(this.run.id).subscribe(
+        this.executionService.runRunJobs(this.run.id).subscribe(
             data => {
                 this.msgSrv.add({
                     severity: 'success',

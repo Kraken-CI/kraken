@@ -239,13 +239,18 @@ def start_run(stage, flow, args=None):
     if run is None:
         run = Run(stage=stage, flow=flow, args=run_args)
         replay = False
+        if stage.schema['triggers'].get('manual', False):
+            run.state = consts.RUN_STATE_MANUAL
     else:
         run.state = consts.RUN_STATE_IN_PROGRESS
     db.session.commit()
 
-    # trigger jobs
-    log.info('starting run %s for stage %s of branch %s', run, stage, stage.branch)
-    trigger_jobs(run, replay=replay)
+    # trigger jobs if not manual
+    if run.state == consts.RUN_STATE_MANUAL:
+        log.info('created manual run %s for stage %s of branch %s - no jobs started yet', run, stage, stage.branch)
+    else:
+        log.info('starting run %s for stage %s of branch %s', run, stage, stage.branch)
+        trigger_jobs(run, replay=replay)
 
     return run
 
@@ -379,12 +384,17 @@ def create_run(flow_id, run):
     return data, 201
 
 
-def replay_run(run_id):
+def run_run_jobs(run_id):
     run = Run.query.filter_by(id=run_id).one_or_none()
     if run is None:
         abort(404, "Run not found")
 
-    trigger_jobs(run, replay=True)
+    if run.state == consts.RUN_STATE_MANUAL:
+        replay = False
+    else:
+        replay = True
+
+    trigger_jobs(run, replay=replay)
 
     data = run.get_json()
 

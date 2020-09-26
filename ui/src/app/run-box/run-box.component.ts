@@ -31,6 +31,7 @@ export class RunBoxComponent implements OnInit {
     ngOnInit() {
         if (this.run) {
             // prepare menu items for run box
+            const opName = this.run.state === 'manual' ? 'Start' : 'Rerun'
             this.runBoxMenuItems = [
                 {
                     label: 'Show Details',
@@ -38,23 +39,23 @@ export class RunBoxComponent implements OnInit {
                     routerLink: '/runs/' + this.run.id + '/jobs',
                 },
                 {
-                    label: 'Rerun',
-                    icon: 'pi pi-replay',
+                    label: opName,
+                    icon: this.run.state === 'manual' ? 'pi pi-caret-right' : 'pi pi-replay',
                     command: () => {
-                        this.executionService.replayRun(this.run.id).subscribe(
+                        this.executionService.runRunJobs(this.run.id).subscribe(
                             data => {
                                 this.msgSrv.add({
                                     severity: 'success',
-                                    summary: 'Replay succeeded',
-                                    detail: 'Replay operation succeeded.',
+                                    summary: opName + ' succeeded',
+                                    detail: opName + ' operation succeeded.',
                                 })
                             },
                             err => {
                                 this.msgSrv.add({
                                     severity: 'error',
-                                    summary: 'Replay erred',
+                                    summary: opName + ' erred',
                                     detail:
-                                        'Replay operation erred: ' +
+                                        opName + ' operation erred: ' +
                                         err.statusText,
                                     life: 10000,
                                 })
@@ -77,6 +78,8 @@ export class RunBoxComponent implements OnInit {
                 } else {
                     this.bgColor = 'linear-gradient(90deg, rgba(230,255,230,1) 0%, rgba(193,227,193,1) 100%)' // greenish
                 }
+            } else if (this.run.state === 'manual') {
+                    this.bgColor = 'linear-gradient(90deg, rgba(230,243,255,1) 0%, rgba(193,209,227,1) 100%)' // blueish
             }
         } else {
             // prepare menu items for stage box

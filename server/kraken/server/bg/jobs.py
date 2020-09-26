@@ -284,8 +284,11 @@ def trigger_stages(self, run_id):
             branch = run.stage.branch
             for stage in branch.stages.filter_by(deleted=None):
                 if stage.schema['parent'] != curr_stage_name:
+                    # skip stages that are not childs of completed run's stage
                     continue
-                if not stage.schema['triggers'].get('parent', False):
+                if not stage.schema['triggers'].get('parent', False) and not stage.schema['triggers'].get('manual', False):
+                    # skip stages that have parent trigger set to False
+                    # or that have no manual trigger
                     continue
 
                 if stage.enabled:
