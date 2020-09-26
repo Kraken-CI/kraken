@@ -87,6 +87,7 @@ class Branch(db.Model, DatesMixin):
     dev_flows = relationship("Flow", order_by="desc(Flow.created)",
                              primaryjoin="and_(Branch.id==Flow.branch_id, Flow.kind==1)", viewonly=True)
     stages = relationship("Stage", back_populates="branch", lazy="dynamic", order_by="Stage.name")
+    sequences = relationship("BranchSequence", back_populates="branch")
 
     #base_branch = relationship('BaseBranch', uselist=False, primaryjoin="or_(Branch.id==BaseBranch.ci_branch_id, Branch.id==BaseBranch.dev_branch_id)")
     #flows = relationship("Flow", back_populates="branch", order_by="desc(Flow.created)")
@@ -105,6 +106,24 @@ class Branch(db.Model, DatesMixin):
         if with_cfg:
             data['stages'] = [s.get_json() for s in self.stages.filter_by(deleted=None)]
         return data
+
+
+# Sequence kinds:
+# 0. KK_FLOWS_SEQ
+# 1. KK_CI_FLOWS_SEQ
+# 2. KK_DEV_FLOWS_SEQ
+# 3. KK_RUN_xxx_SEQ
+# 4. KK_CI_RUN_xxx_SEQ
+# 5. KK_DEV_RUN_xxx_SEQ
+class BranchSequence(db.Model):
+    __tablename__ = "branch_sequences"
+    id = Column(Integer, primary_key=True)
+    kind = Column(Integer, default=0)
+    branch_id = Column(Integer, ForeignKey('branches.id'), nullable=False)
+    branch = relationship('Branch', back_populates="sequences")
+    stage_id = Column(Integer, ForeignKey('stages.id'), nullable=True)
+    stage = relationship('Stage', back_populates="sequences")
+    value = Column(Integer, default=0)
 
 
 class Secret(db.Model, DatesMixin):
@@ -152,6 +171,7 @@ class Stage(db.Model, DatesMixin):
     triggers = Column(JSONB)
     timeouts = Column(JSONB)
     runs = relationship('Run', back_populates="stage")
+    sequences = relationship("BranchSequence", back_populates="stage")
     # services
 
     def get_json(self):

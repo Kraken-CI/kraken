@@ -24,7 +24,8 @@ from sqlalchemy.orm import joinedload
 from elasticsearch import Elasticsearch
 
 from . import consts
-from .models import db, Branch, Flow, Run, Stage, Job, Step, AgentsGroup, Tool, TestCaseResult, TestCase, Issue, Artifact, AgentAssignment
+from .models import db, Branch, Flow, Run, Stage, Job, Step, AgentsGroup, Tool, TestCaseResult
+from .models import TestCase, Issue, Artifact, AgentAssignment, BranchSequence
 
 log = logging.getLogger(__name__)
 
@@ -73,6 +74,8 @@ def _substitute_vars(fields, args):
             name = var[2:-1]
             if name in args:
                 arg_val = args[name]
+                if  not isinstance(arg_val, str):
+                    raise Exception("value '%s' of '%s' should have string type but has '%s'" % (str(arg_val), name, str(type(arg_val))))
                 val = val.replace(var, arg_val)
         new_fields[f] = val
     return new_fields
@@ -92,7 +95,6 @@ def trigger_jobs(run, replay=False):
                 covered_jobs[key] = [j]
             else:
                 covered_jobs[key].append(j)
-
 
     # prepare secrets to pass them to substitute is steps
     secrets = {}
@@ -229,14 +231,21 @@ def trigger_jobs(run, replay=False):
 
 
 def start_run(stage, flow, args=None):
-    run_args = stage.get_default_args()
-    if args is not None:
-        run_args.update(args)
-
     # if there was already run for this stage then replay it, otherwise create new one
     replay = True
     run = Run.query.filter_by(stage=stage, flow=flow).one_or_none()
     if run is None:
+        run_args = stage.get_default_args()
+        if flow.args:
+            run_args.update(flow.args)
+        if args is not None:
+            run_args.update(args)
+
+        # increment sequences
+        seq_vals = _increment_sequences(flow.branch, stage, flow.kind)
+        run_args.update(seq_vals)
+
+        # create run instance
         run = Run(stage=stage, flow=flow, args=run_args)
         replay = False
         if stage.schema['triggers'].get('manual', False):
@@ -253,6 +262,40 @@ def start_run(stage, flow, args=None):
         trigger_jobs(run, replay=replay)
 
     return run
+
+
+def _increment_sequences(branch, stage, kind):
+    if stage is None:
+        if kind == 0:  # CI
+            seq1_kind = consts.BRANCH_SEQ_FLOW
+            seq1_name = 'KK_FLOW_SEQ'
+            seq2_kind = consts.BRANCH_SEQ_CI_FLOW
+        else:
+            seq1_kind = consts.BRANCH_SEQ_FLOW
+            seq1_name = 'KK_FLOW_SEQ'
+            seq2_kind = consts.BRANCH_SEQ_CI_FLOW
+        seq2_name = 'KK_CI_DEV_FLOW_SEQ'
+    else:
+        if kind == 0:  # CI
+            seq1_kind = consts.BRANCH_SEQ_RUN
+            seq1_name = 'KK_RUN_SEQ'
+            seq2_kind = consts.BRANCH_SEQ_DEV_RUN
+        else:
+            seq1_kind = consts.BRANCH_SEQ_RUN
+            seq1_name = 'KK_RUN_SEQ'
+            seq2_kind = consts.BRANCH_SEQ_DEV_RUN
+        seq2_name = 'KK_CI_DEV_RUN_SEQ'
+
+    seq1 = BranchSequence.query.filter_by(branch=branch, stage=stage, kind=seq1_kind).one()
+    seq1.value = BranchSequence.value + 1
+    seq2 = BranchSequence.query.filter_by(branch=branch, stage=stage, kind=seq2_kind).one()
+    seq2.value = BranchSequence.value + 1
+    db.session.commit()
+
+    vals = {}
+    vals[seq1_name] = str(seq1.value)
+    vals[seq2_name] = str(seq2.value)
+    return vals
 
 
 def create_flow(branch_id, kind, flow, trigger_data=None):
@@ -278,6 +321,14 @@ def create_flow(branch_id, kind, flow, trigger_data=None):
     if 'BRANCH' in flow_args:
         del flow_args['BRANCH']
 
+    # increment sequences
+    seq_vals = _increment_sequences(branch, None, kind)
+    flow_args.update(seq_vals)
+
+    flow_args['KK_FLOW_TYPE'] = 'CI' if kind == 0 else 'DEV'
+    flow_args['KK_BRANCH'] = branch_name if branch_name is not None else 'master'
+
+    # create flow instance
     flow = Flow(branch=branch, kind=kind, branch_name=branch_name, args=flow_args, trigger_data=trigger_data)
     db.session.commit()
 
