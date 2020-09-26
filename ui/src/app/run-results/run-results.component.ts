@@ -642,4 +642,14 @@ export class RunResultsComponent implements OnInit, OnDestroy {
             }
         )
     }
+
+    getStepInfo(step) {
+        switch (step.tool) {
+        case 'shell':
+            return 'cmd: ' + step.cmd
+        case 'git':
+            return 'checkout: ' + step.checkout
+        }
+        return ''
+    }
 }

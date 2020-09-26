@@ -44,6 +44,9 @@ def redeploy(c, kk_ver):
     bld_dir = 'kk-%s' % kk_ver
     with c.cd(bld_dir):
         c.run('docker stack deploy --with-registry-auth -c kraken-docker-stack-%s.yaml kraken' % kk_ver)
+    # do some cleanup
+    c.run('docker container prune -f')
+    c.run('docker image prune -a -f')
 
 
 def show_state(c):
