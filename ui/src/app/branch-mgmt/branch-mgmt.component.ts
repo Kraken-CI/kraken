@@ -54,6 +54,8 @@ export class BranchMgmtComponent implements OnInit {
         schema_file: new FormControl(''),
     })
 
+    sequences = []
+
     constructor(
         private route: ActivatedRoute,
         private router: Router,
@@ -103,6 +105,9 @@ export class BranchMgmtComponent implements OnInit {
             ]
             this.breadcrumbService.setCrumbs(crumbs)
         })
+        this.managementService.getBranchSequences(this.branchId).subscribe(data => {
+            this.sequences = data.items
+        })
     }
 
     selectStage(stage) {
@@ -132,7 +137,6 @@ export class BranchMgmtComponent implements OnInit {
             .createStage(this.branchId, { name: this.stageName })
             .subscribe(
                 data => {
-                    console.info(data)
                     this.msgSrv.add({
                         severity: 'success',
                         summary: 'New stage succeeded',
@@ -142,7 +146,6 @@ export class BranchMgmtComponent implements OnInit {
                     this.refresh()
                 },
                 err => {
-                    console.info(err)
                     let msg = err.statusText
                     if (err.error && err.error.detail) {
                         msg = err.error.detail
@@ -177,12 +180,10 @@ export class BranchMgmtComponent implements OnInit {
             })
             .subscribe(
                 data => {
-                    console.info(data)
                     this.schemaCheckContent = data
                     this.schemaCheckDisplay = true
                 },
                 err => {
-                    console.info(err)
                     let msg = err.statusText
                     if (err.error && err.error.detail) {
                         msg = err.error.detail
@@ -213,7 +214,6 @@ export class BranchMgmtComponent implements OnInit {
                         this.refresh()
                     },
                     err => {
-                        console.info(err)
                         let msg = err.statusText
                         if (err.error && err.error.detail) {
                             msg = err.error.detail
@@ -257,7 +257,6 @@ export class BranchMgmtComponent implements OnInit {
                 })
             },
             err => {
-                console.info(err)
                 let msg = err.statusText
                 if (err.error && err.error.detail) {
                     msg = err.error.detail
@@ -310,5 +309,23 @@ export class BranchMgmtComponent implements OnInit {
     forkBranch() {}
 
     reloadSchema() {
+    }
+
+    getSeqTypeName(seq) {
+        switch (seq.kind) {
+        case 0:
+            return 'flow'
+        case 1:
+            return 'CI flow'
+        case 2:
+            return 'DEV flow'
+        case 3:
+            return 'run'
+        case 4:
+            return 'CI run'
+        case 5:
+            return 'DEV run'
+        }
+        return 'unknown'
     }
 }

@@ -25,7 +25,7 @@ import dateutil.parser
 
 from . import consts
 from .models import db, Branch, Stage, Agent, AgentsGroup, Secret, AgentAssignment, Setting
-from .models import Project
+from .models import Project, BranchSequence
 from .schema import execute_schema_code
 
 log = logging.getLogger(__name__)
@@ -502,8 +502,8 @@ def get_groups(start=0, limit=10):
     total = q.count()
     q = q.offset(start).limit(limit)
     groups = []
-    for eg in q.all():
-        groups.append(eg.get_json())
+    for ag in q.all():
+        groups.append(ag.get_json())
     return {'items': groups, 'total': total}, 200
 
 
@@ -569,3 +569,18 @@ def update_settings(settings):
     log.info('settings %s', groups)
 
     return groups, 200
+
+
+def get_branch_sequences(branch_id):
+    branch = Branch.query.filter_by(id=branch_id).one_or_none()
+    if branch is None:
+        abort(404, "Branch not found")
+
+    q = BranchSequence.query.filter_by(branch=branch)
+    q = q.order_by(BranchSequence.id)
+
+    seqs = []
+    for bs in q.all():
+        seqs.append(bs.get_json())
+
+    return {'items': seqs, 'total': len(seqs)}, 200

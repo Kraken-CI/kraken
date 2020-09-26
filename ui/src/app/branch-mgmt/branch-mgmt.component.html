@@ -157,6 +157,26 @@
       </div>
     </div>
   </p-tabPanel>
+  <p-tabPanel header="Sequences">
+    <table class="seqs-table">
+      <tr>
+        <th>Sequence Type</th>
+        <th>Stage</th>
+        <th>Value</th>
+      </tr>
+      <tr *ngFor="let s of sequences">
+        <td style="text-align: right;">
+          {{ getSeqTypeName(s) }}
+        </td>
+        <td>
+          {{ s.stage_name ? s.stage_name : ''  }}
+        </td>
+        <td style="text-align: right;">
+          {{ s.value }}
+        </td>
+      </tr>
+    </table>
+  </p-tabPanel>
   <p-tabPanel header="Configs">
   </p-tabPanel>
 </p-tabView>

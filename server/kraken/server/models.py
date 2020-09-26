@@ -125,6 +125,16 @@ class BranchSequence(db.Model):
     stage = relationship('Stage', back_populates="sequences")
     value = Column(Integer, default=0)
 
+    def get_json(self):
+        data = dict(id=self.id,
+                    kind=self.kind,
+                    branch_id=self.branch_id,
+                    branch_name=self.branch.name,
+                    stage_id=self.stage_id,
+                    stage_name=self.stage.name if self.stage else None,
+                    value=self.value)
+        return data
+
 
 class Secret(db.Model, DatesMixin):
     __tablename__ = "secrets"
