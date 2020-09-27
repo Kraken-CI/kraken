@@ -175,9 +175,21 @@ def _check_and_correct_stage_schema(branch, stage, prev_schema_code):
         "triggers": {
             "parent": True,
         },
+        "flow_label": "hello-#{KK_FLOW_SEQ}",
         "parameters": [],
         "configs": [],
-        "jobs": []
+        "jobs": [{
+            "name": "hello world",
+            "steps": [{
+                "tool": "shell",
+                "cmd": "echo 'hello world'"
+            }],
+            "environments": [{
+                "system": "any",
+                "agents_group": "all",
+                "config": "default"
+            }]
+        }]
     }'''
 
     # execute schema code

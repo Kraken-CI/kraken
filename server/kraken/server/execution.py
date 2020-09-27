@@ -235,6 +235,7 @@ def start_run(stage, flow, args=None):
     replay = True
     run = Run.query.filter_by(stage=stage, flow=flow).one_or_none()
     if run is None:
+        # prepare args
         run_args = stage.get_default_args()
         if flow.args:
             run_args.update(flow.args)
@@ -245,8 +246,19 @@ def start_run(stage, flow, args=None):
         seq_vals = _increment_sequences(flow.branch, stage, flow.kind)
         run_args.update(seq_vals)
 
+        # prepare flow label if needed
+        lbl_vals = {}
+        for lbl_field in ['flow_label', 'run_label']:
+            label_pattern = stage.schema.get(lbl_field, None)
+            if label_pattern:
+                lbl_vals[lbl_field] = label_pattern
+        if lbl_vals:
+            lbl_vals = _substitute_vars(lbl_vals, run_args)
+            if flow.label is None:
+                flow.label = lbl_vals.get('flow_label', None)
+
         # create run instance
-        run = Run(stage=stage, flow=flow, args=run_args)
+        run = Run(stage=stage, flow=flow, args=run_args, label=lbl_vals.get('run_label', None))
         replay = False
         if stage.schema['triggers'].get('manual', False):
             run.state = consts.RUN_STATE_MANUAL

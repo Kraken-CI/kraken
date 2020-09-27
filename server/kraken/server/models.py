@@ -109,12 +109,12 @@ class Branch(db.Model, DatesMixin):
 
 
 # Sequence kinds:
-# 0. KK_FLOWS_SEQ
-# 1. KK_CI_FLOWS_SEQ
-# 2. KK_DEV_FLOWS_SEQ
-# 3. KK_RUN_xxx_SEQ
-# 4. KK_CI_RUN_xxx_SEQ
-# 5. KK_DEV_RUN_xxx_SEQ
+# 0. KK_FLOW_SEQ
+# 1. KK_CI_FLOW_SEQ
+# 2. KK_DEV_FLOW_SEQ
+# 3. KK_RUN_SEQ
+# 4. KK_CI_RUN_SEQ
+# 5. KK_DEV_RUN_SEQ
 class BranchSequence(db.Model):
     __tablename__ = "branch_sequences"
     id = Column(Integer, primary_key=True)
@@ -233,6 +233,7 @@ class Stage(db.Model, DatesMixin):
 class Flow(db.Model, DatesMixin):
     __tablename__ = "flows"
     id = Column(Integer, primary_key=True)
+    label = Column(Unicode(200))
     finished = Column(DateTime)
     state = Column(Integer, default=consts.FLOW_STATE_IN_PROGRESS)
     kind = Column(Integer, default=0)  # 0 - CI, 1 - dev
@@ -252,10 +253,10 @@ class Flow(db.Model, DatesMixin):
             duration = datetime.datetime.utcnow() - self.created
 
         return dict(id=self.id,
+                    label=self.label if self.label else ("%d." % self.id),
                     created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,
                     finished=self.finished.strftime("%Y-%m-%dT%H:%M:%SZ") if self.finished else None,
                     deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,
-                    name=self.id,
                     state=consts.FLOW_STATES_NAME[self.state],
                     kind='ci' if self.kind == 0 else 'dev',
                     duration=duration_to_txt(duration),
@@ -273,6 +274,7 @@ class Flow(db.Model, DatesMixin):
 class Run(db.Model, DatesMixin):
     __tablename__ = "runs"
     id = Column(Integer, primary_key=True)
+    label = Column(Unicode(200))
     started = Column(DateTime)    # time when the session got a first non-deleted job
     finished = Column(DateTime)    # time when all tasks finished first time
     finished_again = Column(DateTime)    # time when all tasks finished
@@ -343,12 +345,13 @@ class Run(db.Model, DatesMixin):
                 duration = datetime.datetime.utcnow() - self.created
 
         data = dict(id=self.id,
+                    label=self.label,
                     created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,
                     deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,
                     started=self.started.strftime("%Y-%m-%dT%H:%M:%SZ") if self.started else None,
                     finished=self.finished.strftime("%Y-%m-%dT%H:%M:%SZ") if self.finished else None,
-                    name=self.stage.name,
                     state=consts.RUN_STATES_NAME[self.state],
+                    stage_name=self.stage.name,
                     stage_id=self.stage_id,
                     flow_id=self.flow_id,
                     flow_kind='ci' if self.flow.kind == 0 else 'dev',

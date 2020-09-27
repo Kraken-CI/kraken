@@ -86,7 +86,7 @@ export class BranchResultsComponent implements OnInit {
 
     _processFlowData(flow, stages) {
         for (const run of flow.runs) {
-            stages.add(run.name)
+            stages.add(run.stage_name)
         }
     }
 

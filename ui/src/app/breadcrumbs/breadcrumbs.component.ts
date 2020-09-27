@@ -180,12 +180,12 @@ export class BreadcrumbsComponent implements OnInit {
             case 'Flows':
                 const flowsKey = '' + this.currBranchId + '-' + this.currFlowKind
                 this.crumbMenuItems = this.flows[flowsKey].map(f => {
-                    return { label: f.id, routerLink: '/flows/' + f.id }
+                    return { label: f.id + ' - ' + f.label, routerLink: '/flows/' + f.id }
                 })
                 break
             case 'Stages':
                 this.crumbMenuItems = this.runs[this.currFlowId].map(r => {
-                    return { label: r.name, routerLink: '/runs/' + r.id }
+                    return { label: r.stage_name, routerLink: '/runs/' + r.id }
                 })
                 break
             default:

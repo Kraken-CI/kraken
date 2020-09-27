@@ -115,7 +115,7 @@
     <p-organizationChart [value]="runsTree">
       <ng-template let-node pTemplate="root">
         <div style="text-align: left;">
-          <div style="font-weight: bold; font-size: 1.3rem;">{{node.label}}</div>
+          <div style="font-weight: bold; font-size: 1.3rem;">{{ node.label }}</div>
           <div>{{node.data.created}}</div>
           <div>{{node.data.duration}}</div>
         </div>
@@ -124,7 +124,7 @@
         <div style="text-align: left;">
           <div *ngIf="node.data.run">
             <div style="font-weight: bold; font-size: 1.1rem; display: flex; justify-content: space-between;">
-              <div><a routerLink="/runs/{{node.data.run.id}}">{{node.label}}</a></div>
+              <div><a routerLink="/runs/{{node.data.run.id}}">{{ node.label }}</a></div>
               <div style="cursor: pointer;" (click)="showNodeMenu($event, nodeMenu, node)"><i class="pi pi-bars"></i></div>
             </div>
             <div>{{node.data.run.created}}</div>
@@ -134,7 +134,7 @@
           </div>
           <div *ngIf="!node.data.run">
             <div style="font-weight: bold; font-size: 1.1rem; display: flex; justify-content: space-between;">
-              <div>{{node.label}}</div>
+              <div>{{ node.label }}</div>
               <div style="cursor: pointer;" (click)="showNodeMenu($event, nodeMenu, node)"><i class="pi pi-bars"></i></div>
             </div>
             not run

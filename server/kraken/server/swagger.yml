@@ -1214,6 +1214,8 @@ definitions:
       id:
         type: integer
         format: int64
+      label:
+        type: string
       branch_id:
         type: integer
         format: int64
@@ -1258,7 +1260,7 @@ definitions:
       id:
         type: integer
         format: int64
-      name:
+      label:
         type: string
       project_id:
         type: integer
@@ -1276,6 +1278,8 @@ definitions:
       stage_id:
         type: integer
         format: int64
+      stage_name:
+        type: string
       args:
         type: object
       flow_kind:

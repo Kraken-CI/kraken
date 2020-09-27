@@ -74,7 +74,7 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
 
     _getRunForStage(stageName) {
         for (const run of this.flow.runs) {
-            if (run.name === stageName) {
+            if (run.stage_name === stageName) {
                 return run
             }
         }
@@ -172,7 +172,7 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
             for (const run of this.flow.runs) {
                 sectionArgs = []
                 for (const a of Object.keys(run.args)) {
-                    const param = this._getParamFromStage(run.name, a)
+                    const param = this._getParamFromStage(run.stage_name, a)
                     let description = ''
                     let defaultValue
                     if (param) {
@@ -189,7 +189,7 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
                 }
                 if (sectionArgs.length > 0) {
                     args.push({
-                        name: run.name,
+                        name: run.stage_name,
                         args: sectionArgs,
                     })
                 }

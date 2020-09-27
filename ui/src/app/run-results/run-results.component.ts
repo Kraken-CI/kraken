@@ -161,7 +161,7 @@ export class RunResultsComponent implements OnInit, OnDestroy {
                 }
 
                 this.executionService.getRun(this.runId).subscribe(run => {
-                    this.titleService.setTitle('Kraken - Run ' + run.name + ' ' + this.runId)
+                    this.titleService.setTitle('Kraken - Run ' + (run.label || run.stage_name) + ' ' + this.runId)
                     this.run = run
                     this.recordsCount[0] = '' + run.jobs_total
                     this.recordsCount[1] =
@@ -192,7 +192,7 @@ export class RunResultsComponent implements OnInit, OnDestroy {
                         {
                             label: 'Stages',
                             run_id: run.id,
-                            run_name: run.name,
+                            run_name: run.stage_name,
                         },
                     ]
                     this.breadcrumbService.setCrumbs(crumbs)
