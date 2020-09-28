@@ -78,7 +78,7 @@ def run_migrations_online():
         with context.begin_transaction():
             # if this is upgrade command and db is not yet initialized then do not do migrations,
             # planner will initialize db
-            if config.cmd_opts.cmd[0].__name__ == 'upgrade':
+            if not hasattr(config, 'stamp_head') and config.cmd_opts.cmd[0].__name__ == 'upgrade':
                 mc = context.get_context()
                 rev = mc.get_current_revision()
                 if not rev:

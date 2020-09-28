@@ -19,7 +19,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Column, Boolean, DateTime, ForeignKey, Integer, String, Text, Unicode, UnicodeText
 from sqlalchemy import event
 from sqlalchemy.orm import relationship, mapper
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import JSONB, DOUBLE_PRECISION, BYTEA
 
 from . import consts
 from .schema import execute_schema_code
@@ -46,6 +46,11 @@ def duration_to_txt(duration):
     duration_txt += "%ds" % (duration.seconds % 60)
     duration_txt = duration_txt.strip()
     return duration_txt
+
+
+class AlembicVersion(db.Model):
+    __tablename__ = "alembic_version"
+    version_num = Column(Unicode(32), nullable=False, primary_key=True)
 
 
 class DatesMixin():
@@ -589,6 +594,13 @@ class Artifact(db.Model):
                     stage=self.run.stage.name)
 
 
+class APSchedulerJob(db.Model):
+    __tablename__ = 'apscheduler_jobs'
+    id = Column(Unicode(191), autoincrement=False, nullable=False, primary_key=True)
+    next_run_time = Column(DOUBLE_PRECISION(precision=53), autoincrement=False, nullable=True, index=True, unique=False)
+    job_state = Column(BYTEA, autoincrement=False, nullable=False)
+
+
 # RESOURCES
 
 # class System(db.Model):
@@ -764,7 +776,7 @@ def _prepare_initial_preferences():
 
 
 def prepare_initial_data():
-    log.info("Preparing initial DB data")
+    print("Preparing initial DB data")
 
     tool_fields = {
         'git': {'checkout': 'text', 'branch': 'text', 'destination': 'text'},
@@ -782,41 +794,41 @@ def prepare_initial_data():
         if tool is None:
             tool = Tool(name=name, description="This is a %s tool." % name, fields=fields)
             db.session.commit()
-            log.info("   created Tool record '%s'", name)
+            print("   created Tool record '%s'", name)
         tools[name] = tool
 
     agent = Agent.query.filter_by(name="agent.7").one_or_none()
     if agent is None:
         agent = Agent(name='agent.7', address="agent.7", authorized=False)
         db.session.commit()
-        log.info("   created Agent record 'agent.7'")
+        print("   created Agent record 'agent.7'")
     else:
         agent.authorized = False
         db.session.commit()
-        log.info("   Agent 'agent.7' unauthorized")
+        print("   Agent 'agent.7' unauthorized")
 
     agents_group = AgentsGroup.query.filter_by(name="all").one_or_none()
     if agents_group is None:
         agents_group = AgentsGroup(name='all')
         db.session.commit()
-        log.info("   created AgentsGroup record 'all'")
+        print("   created AgentsGroup record 'all'")
 
         # AgentAssignment(agent=agent, agents_group=agents_group)
         # db.session.commit()
-        # log.info("   created AgentAssignment for record 'all'")
+        # print("   created AgentAssignment for record 'all'")
 
     # Project DEMO
     project = Project.query.filter_by(name="Demo").one_or_none()
     if project is None:
         project = Project(name='Demo', description="This is a demo project.")
         db.session.commit()
-        log.info("   created Project record 'Demo'")
+        print("   created Project record 'Demo'")
 
     branch = Branch.query.filter_by(name="Master", project=project).one_or_none()
     if branch is None:
         branch = Branch(name='Master', branch_name='master', project=project)
         db.session.commit()
-        log.info("   created Branch record 'master'")
+        print("   created Branch record 'master'")
 
     stage = Stage.query.filter_by(name="System Tests", branch=branch).one_or_none()
     if stage is None:
@@ -906,7 +918,7 @@ def prepare_initial_data():
         stage = Stage(name='System Tests', description="This is a stage of system tests.", branch=branch,
                       schema_code=schema_code, schema=execute_schema_code(branch, schema_code))
         db.session.commit()
-        log.info("   created Stage record 'System Tests'")
+        print("   created Stage record 'System Tests'")
 
     stage = Stage.query.filter_by(name="Unit Tests", branch=branch).one_or_none()
     if stage is None:
@@ -938,20 +950,20 @@ def prepare_initial_data():
         stage = Stage(name='Unit Tests', description="This is a stage of unit tests.", branch=branch,
                       schema_code=schema_code, schema=execute_schema_code(branch, schema_code))
         db.session.commit()
-        log.info("   created Stage record 'Unit Tests'")
+        print("   created Stage record 'Unit Tests'")
 
     # Project KRAKEN
     project = Project.query.filter_by(name="Kraken").one_or_none()
     if project is None:
         project = Project(name='Kraken', description="This is a Kraken project.")
         db.session.commit()
-        log.info("   created Project record 'Kraken'")
+        print("   created Project record 'Kraken'")
 
     branch = Branch.query.filter_by(name="Master", project=project).one_or_none()
     if branch is None:
         branch = Branch(name='Master', branch_name='master', project=project)
         db.session.commit()
-        log.info("   created Branch record 'master'")
+        print("   created Branch record 'master'")
 
     stage = Stage.query.filter_by(name="Static Analysis", branch=branch).one_or_none()
     if stage is None:
@@ -995,7 +1007,7 @@ def prepare_initial_data():
         stage = Stage(name='Static Analysis', description="This is a stage of Static Analysis.", branch=branch,
                       schema_code=schema_code, schema=execute_schema_code(branch, schema_code))
         db.session.commit()
-        log.info("   created Stage record 'System Tests'")
+        print("   created Stage record 'System Tests'")
 
     stage = Stage.query.filter_by(name="Unit Tests", branch=branch).one_or_none()
     if stage is None:
@@ -1032,6 +1044,6 @@ def prepare_initial_data():
         stage = Stage(name='Unit Tests', description="This is a stage of unit tests.", branch=branch,
                       schema_code=schema_code, schema=execute_schema_code(branch, schema_code))
         db.session.commit()
-        log.info("   created Stage record 'Unit Tests'")
+        print("   created Stage record 'Unit Tests'")
 
     _prepare_initial_preferences()

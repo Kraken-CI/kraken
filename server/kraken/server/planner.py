@@ -139,9 +139,6 @@ def _db_setup(db_url):
 
     # initialize SqlAlchemy
     models.db.init_app(app)
-    models.db.create_all(app=app)
-    with app.app_context():
-        models.prepare_initial_data()
 
 
 def main():
