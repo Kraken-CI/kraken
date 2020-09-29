@@ -12,13 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+
 from . import utils
 
 
 def run(step, **kwargs):  # pylint: disable=unused-argument
     cmd = step['cmd']
     cwd = step.get('cwd', None)
-    env = step.get('env', None)
+
+    # prepare env if needed
+    extra_env = step.get('env', None)
+    if extra_env:
+        # take copy of current env otherwise new env would be nearly empty
+        env = os.environ.copy()
+        env.update(extra_env)
+    else:
+        env = None
+
     timeout = int(step.get('timeout', 60))
     ret, _ = utils.execute(cmd, cwd=cwd, env=env, timeout=timeout, out_prefix='')
     if ret != 0:

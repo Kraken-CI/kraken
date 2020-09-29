@@ -329,8 +329,20 @@ def _estimate_timeout(job):
         log.info('not enough jobs to estimate timeout')
         return
 
+    # check job timestamps
+    if not job.assigned:
+        log.info('job %s assigned in None', job)
+    if not job.finished:
+        log.info('job %s finished in None', job)
+    if job.assigned > job.finished:
+        log.info('job %s assigned %s > finished %s', job, job.assigned, job.finished)
+    if not job.assigned or not job.finished or job.assigned > job.finished:
+        max_duration = duration = consts.DEFAULT_JOB_TIMEOUT
+    else:
+        max_duration = duration = job.finished - job.assigned
+
+    # find max duration in last 10 jobs
     timeout_occured = False
-    max_duration = duration = job.finished - job.assigned
     prev_job_id = job.id
     for j in jobs:
         if not j.assigned or not j.finished:
@@ -343,6 +355,7 @@ def _estimate_timeout(job):
             timeout_occured = True
 
         if j.id == prev_job_id:
+            # cumulate duration if this is the same job (TODO: why?)
             duration += j.finished - j.assigned
         else:
             duration = j.finished - j.assigned
@@ -351,15 +364,18 @@ def _estimate_timeout(job):
         if duration > max_duration:
             max_duration = duration
 
+    # estimate new timeout from max duration
     timeout = int(max_duration.total_seconds() * 1.7)
     if timeout < 60:
         timeout = 60
+
     stage = job.run.stage
     job_key = "%s-%s-%d" % (job.name, job.system, job.agents_group_id)
 
     if stage.timeouts is None:
         stage.timeouts = {}
 
+    # if timeout occured in last 10 jobs than make new timeout adjustment
     if timeout_occured:
         old_timeout = stage.timeouts.get(job_key, consts.DEFAULT_JOB_TIMEOUT)
         log.info('new: %s, old: %s', timeout, old_timeout)
