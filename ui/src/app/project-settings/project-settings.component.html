@@ -1,10 +1,54 @@
 <h2 style="padding-left: 7px;">{{ project.name }}</h2>
+
+<div style="float: right;">
+  <p-button label="New Branch" icon="pi pi-plus" (onClick)="newBranch(proj)"></p-button>
+</div>
+
+<p-dialog header="New Branch in {{project.name}}" [(visible)]="newBranchDlgVisible">
+  <input type="text" pInputText [(ngModel)]="branchName" (keydown)="newBranchKeyDown($event)"/>
+  <p-footer>
+    <button type="button" (click)="cancelNewBranch()" pButton icon="pi pi-times" label="Cancel"></button>
+    <button type="button" (click)="addNewBranch()" pButton icon="pi pi-check" label="Add"></button>
+  </p-footer>
+</p-dialog>
+
 <p-tabView>
-    <p-tabPanel header="Branches">
-      <div *ngFor="let b of project.branches">
-        <a routerLink="/branches/{{ b.id }}">{{ b.name }} ({{ b.branch_name }})</a>
+    <!-- RESULTS OVERVIEW -->
+    <p-tabPanel header="Results Overview">
+      <div class="p-grid">
+        <div *ngFor="let branch of project.branches" style="padding: 15px;" class="p-col-6">
+          <div style="font-weight: bold; font-size: 1.5em; margin: 0 0 10px 0;">
+            <i class="fa fa-code-fork" style="vertical-align: bottom; font-size: 1.7em; margin-right: 10px;"></i>
+            <a routerLink="/branches/{{ branch.id }}">
+              {{ branch.name }}
+            </a>
+          </div>
+
+          <div class="p-grid">
+            <div class="p-col-6" *ngFor="let flows of getFlows(branch)">
+              <b style="width: 100px; display: inline-block; font-size: 1.4em; margin: 0 0 10px 2px;">
+                <a routerLink="/branches/{{ branch.id }}/{{ flows.name.toLowerCase() }}">{{ flows.name }} flows</a>
+              </b>
+              {{ flows.flows.length === 0 ? 'no flows yet' : '' }}
+              <table *ngIf="flows.flows.length > 0">
+                <tr *ngFor="let flow of flows.flows" style="padding: 3px 6px;">
+                  <td><b><a routerLink="/flows/{{ flow.id }}">{{ flow.id }}</a>.</b><td>
+                  <td><a routerLink="/flows/{{ flow.id }}" style="color: black;">{{ flow.created | localtime:'YYYY-MM-DD HH:mm' }}</a><td>
+                  <td>
+                    <span *ngIf="flow.tests_total > 0" [ngStyle]="{'border-radius': '4px', 'background-color': flow.tests_color, 'padding': '1px 3px', 'margin-right': '2px'}">{{ flow.tests_pass_ratio }}% pass</span>
+                    <span *ngIf="flow.fix_cnt > 0" style="border-radius: 4px; background-color: #beffbe; padding: 1px 3px; margin-right: 2px;">{{ flow.fix_cnt }} fixes</span>
+                    <span *ngIf="flow.regr_cnt > 0" style="border-radius: 4px; background-color: #ffc8c8; padding: 1px 3px; margin-right: 2px;">{{ flow.regr_cnt }} regrs</span>
+                    <span *ngIf="flow.issues_new > 0" style="border-radius: 4px; background-color: #ffc8c8; padding: 1px 3px; margin-right: 2px;">{{ flow.issues_new }} new issues</span>
+                  <td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
     </p-tabPanel>
+
+    <!-- SECRETS -->
     <p-tabPanel header="Secrets">
       <p-button label="New Secret" icon="pi pi-plus" (onClick)="newSecret()"></p-button>
       <div class="p-grid">
@@ -63,6 +107,8 @@
         </div>
       </div>
     </p-tabPanel>
+
+    <!-- WEB HOOKS -->
     <p-tabPanel header="Web Hooks">
       <div style="font-size: 1.3em; font-weight: bold; margin-bottom: 8px;">GitHub</div>
       <div style="margin: 0 0 8px 3px;">

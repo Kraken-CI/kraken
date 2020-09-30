@@ -20,16 +20,15 @@
   </p-dialog>
 
   <div class="p-col-6" *ngFor="let proj of projects">
-    <p-panel>
-      <p-header>
-        <div class="ui-helper-clearfix">
-          <span style="font-size: 1.7em; display:inline-block; margin-top: 2px;">Project <b>{{proj.name}}</b></span>
-          <div style="display:inline-block; float: right;">
-            <p-button label="New Branch" icon="pi pi-plus" (onClick)="newBranch(proj)"></p-button>
-            <p-button label="Settings" icon="pi pi-cog" routerLink="/projects/{{ proj.id }}" [style]="{'margin-left': '10px'}"></p-button>
-          </div>
+    <div class="round-shadow" style="height: 100%">
+      <div>
+        <span style="font-size: 1.7em; display:inline-block; margin-top: 2px;">
+          <a routerLink="/projects/{{ proj.id }}" style="color: black;">Project <b>{{proj.name}}</b></a>
+        </span>
+        <div style="display:inline-block; float: right; margin-top: 10px;">
+          <p-button label="New Branch" icon="pi pi-plus" (onClick)="newBranch(proj)" styleClass="ui-button-secondary"></p-button>
         </div>
-      </p-header>
+      </div>
 
       <div *ngFor="let branch of proj.branches" style="margin: 15px;">
         <div style="font-weight: bold; font-size: 1.5em; margin: 0 0 10px 0;">
@@ -38,29 +37,7 @@
             {{ branch.name }}
           </a>
         </div>
-
-        <div class="p-grid">
-          <div class="p-col-6" *ngFor="let flows of getFlows(branch)">
-            <b style="width: 100px; display: inline-block; font-size: 1.4em; margin: 0 0 10px 2px;">
-              <a routerLink="/branches/{{ branch.id }}/{{ flows.name.toLowerCase() }}">{{ flows.name }} flows</a>
-            </b>
-            {{ flows.flows.length === 0 ? 'no flows yet' : '' }}
-            <table *ngIf="flows.flows.length > 0">
-              <tr *ngFor="let flow of flows.flows" style="padding: 3px 6px;">
-                <td><b><a routerLink="/flows/{{ flow.id }}">{{ flow.id }}</a>.</b><td>
-                <td><a routerLink="/flows/{{ flow.id }}" style="color: black;">{{ flow.created | localtime:'YYYY-MM-DD HH:mm' }}</a><td>
-                <td>
-                  <span *ngIf="flow.tests_total > 0" [ngStyle]="{'border-radius': '4px', 'background-color': flow.tests_color, 'padding': '1px 3px', 'margin-right': '2px'}">{{ flow.tests_pass_ratio }}% pass</span>
-                  <span *ngIf="flow.fix_cnt > 0" style="border-radius: 4px; background-color: #beffbe; padding: 1px 3px; margin-right: 2px;">{{ flow.fix_cnt }} fixes</span>
-                  <span *ngIf="flow.regr_cnt > 0" style="border-radius: 4px; background-color: #ffc8c8; padding: 1px 3px; margin-right: 2px;">{{ flow.regr_cnt }} regrs</span>
-                  <span *ngIf="flow.issues_new > 0" style="border-radius: 4px; background-color: #ffc8c8; padding: 1px 3px; margin-right: 2px;">{{ flow.issues_new }} new issues</span>
-                <td>
-              </tr>
-            </table>
-          </div>
-        </div>
       </div>
-
-    </p-panel>
+    </div>
   </div>
 </div>

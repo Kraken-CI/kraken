@@ -23,6 +23,9 @@ export class ProjectSettingsComponent implements OnInit {
         webhooks: { github_enabled: false },
     }
 
+    newBranchDlgVisible = false
+    branchName = ''
+
     // secret form
     secretMode = 0
     secretForm = new FormGroup({
@@ -48,28 +51,114 @@ export class ProjectSettingsComponent implements OnInit {
     ngOnInit() {
         this.route.paramMap.subscribe(params => {
             this.projectId = parseInt(params.get('id'), 10)
-
-            this.managementService
-                .getProject(this.projectId)
-                .subscribe(project => {
-                    this.project = project
-                    this.titleService.setTitle('Kraken - Project Settings ' + this.project.name)
-
-                    this.breadcrumbService.setCrumbs([
-                        {
-                            label: 'Projects',
-                            project_id: this.projectId,
-                            project_name: this.project.name,
-                        },
-                    ])
-
-                    if (this.project.secrets.length === 0) {
-                        this.secretMode = 1
-                    } else {
-                        this.selectSecret(this.project.secrets[0])
-                    }
-                })
+            this.refresh()
         })
+    }
+
+    refresh() {
+        this.managementService
+            .getProject(this.projectId)
+            .subscribe(project => {
+                this.project = project
+                this.titleService.setTitle('Kraken - Project Settings ' + this.project.name)
+
+                this.breadcrumbService.setCrumbs([
+                    {
+                        label: 'Projects',
+                        project_id: this.projectId,
+                        project_name: this.project.name,
+                    },
+                ])
+
+                if (this.project.secrets.length === 0) {
+                    this.secretMode = 1
+                } else {
+                    this.selectSecret(this.project.secrets[0])
+                }
+
+                // calculate results per flow from runs
+                for (const branch of this.project.branches) {
+                    for (const flow of branch.ci_flows) {
+                        this.calculateFlowStats(flow)
+                    }
+                    for (const flow of branch.dev_flows) {
+                        this.calculateFlowStats(flow)
+                    }
+                }
+            })
+    }
+
+    calculateFlowStats(flow) {
+        flow.tests_total = 0
+        flow.tests_passed = 0
+        flow.fix_cnt = 0
+        flow.regr_cnt = 0
+        flow.issues_new = 0
+        for (const run of flow.runs) {
+            flow.tests_total += run.tests_total
+            flow.tests_passed += run.tests_passed
+            flow.fix_cnt += run.fix_cnt
+            flow.regr_cnt += run.regr_cnt
+            flow.issues_new += run.issues_new
+        }
+        if (flow.tests_total > 0) {
+            flow.tests_pass_ratio = (100 * flow.tests_passed) / flow.tests_total
+            flow.tests_pass_ratio = flow.tests_pass_ratio.toFixed(1)
+            if (flow.tests_total === flow.tests_passed) {
+                flow.tests_color = '#beffbe'
+            } else if (flow.tests_pass_ratio > 50) {
+                flow.tests_color = '#fff089'
+            } else {
+                flow.tests_color = '#ffc8c8'
+            }
+        } else {
+            flow.tests_color = 'white'
+        }
+    }
+
+    newBranch() {
+        this.newBranchDlgVisible = true
+    }
+
+    cancelNewBranch() {
+        this.newBranchDlgVisible = false
+    }
+
+    newBranchKeyDown(event) {
+        if (event.key === 'Enter') {
+            this.addNewBranch()
+        }
+    }
+
+    addNewBranch() {
+        this.managementService
+            .createBranch(this.project.id, { name: this.branchName })
+            .subscribe(
+                data => {
+                    console.info(data)
+                    this.msgSrv.add({
+                        severity: 'success',
+                        summary: 'New branch succeeded',
+                        detail: 'New branch operation succeeded.',
+                    })
+                    this.newBranchDlgVisible = false
+                    this.refresh()
+                },
+                err => {
+                    console.info(err)
+                    let msg = err.statusText
+                    if (err.error && err.error.detail) {
+                        msg = err.error.detail
+                    }
+                    this.msgSrv.add({
+                        severity: 'error',
+                        summary: 'New branch erred',
+                        detail: 'New branch operation erred: ' + msg,
+                        life: 10000,
+                    })
+                    this.newBranchDlgVisible = false
+                }
+            )
     }
 
     newSecret() {
@@ -256,5 +345,12 @@ export class ProjectSettingsComponent implements OnInit {
                     })
                 }
             )
+    }
+
+    getFlows(branch) {
+        return [
+            { name: 'CI', flows: branch.ci_flows },
+            { name: 'Dev', flows: branch.dev_flows },
+        ]
     }
 }

@@ -62,14 +62,14 @@ def get_project(project_id):
     if project is None:
         abort(400, "Project with id %s does not exist" % project_id)
 
-    return project.get_json(), 200
+    return project.get_json(with_results=True), 200
 
 
 def get_projects():
     q = Project.query
     projects = []
     for p in q.all():
-        projects.append(p.get_json())
+        projects.append(p.get_json(with_results=False))
     return {'items': projects, 'total': len(projects)}, 200
 
 
