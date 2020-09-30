@@ -86,9 +86,9 @@ def create_branch(project_id, branch):
         abort(404, "Project not found")
 
     new_branch = Branch(project=project, name=branch['name'])
-    bs1 = BranchSequences(branch=new_branch, kind=consts.BRANCH_SEQ_FLOW, value=0)
-    bs2 = BranchSequences(branch=new_branch, kind=consts.BRANCH_SEQ_CI_FLOW, value=0)
-    bs3 = BranchSequences(branch=new_branch, kind=consts.BRANCH_SEQ_DEV_FLOW, value=0)
+    BranchSequence(branch=new_branch, kind=consts.BRANCH_SEQ_FLOW, value=0)
+    BranchSequence(branch=new_branch, kind=consts.BRANCH_SEQ_CI_FLOW, value=0)
+    BranchSequence(branch=new_branch, kind=consts.BRANCH_SEQ_DEV_FLOW, value=0)
     db.session.commit()
 
     return new_branch.get_json(), 201
@@ -315,9 +315,9 @@ def create_stage(branch_id, stage):
 
     # create record
     new_stage = Stage(branch=branch, name=stage['name'], schema=schema, schema_code=schema_code)
-    bs1 = BranchSequences(branch=branch, stage=new_stage, kind=consts.BRANCH_SEQ_RUN, value=0)
-    bs2 = BranchSequences(branch=branch, stage=new_stage, kind=consts.BRANCH_SEQ_CI_RUN, value=0)
-    bs3 = BranchSequences(branch=branch, stage=new_stage, kind=consts.BRANCH_SEQ_DEV_RUN, value=0)
+    BranchSequence(branch=branch, stage=new_stage, kind=consts.BRANCH_SEQ_RUN, value=0)
+    BranchSequence(branch=branch, stage=new_stage, kind=consts.BRANCH_SEQ_CI_RUN, value=0)
+    BranchSequence(branch=branch, stage=new_stage, kind=consts.BRANCH_SEQ_DEV_RUN, value=0)
     db.session.flush()
 
     triggers = {}

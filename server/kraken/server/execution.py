@@ -66,7 +66,7 @@ def _substitute_vars(fields, args):
         if isinstance(val, dict):
             new_fields[f] = _substitute_vars(val, args)
             continue
-        elif not isinstance(val, str):
+        if not isinstance(val, str):
             new_fields[f] = val
             continue
 
