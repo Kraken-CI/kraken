@@ -346,14 +346,8 @@ task :build_docker_deploy do
   sh 'docker-compose -f docker-compose-swarm.yaml config > docker-compose-swarm-deploy.yaml'
 end
 
-task :docker_release do
-  # for lab.kraken.ci
-  Rake::Task["compose_to_swarm"].invoke
-  sh "docker-compose -f docker-compose-swarm.yaml config > kraken-docker-stack-#{kk_ver}.yaml"
-  sh 'rm docker-compose-swarm.yaml'
-  sh "sed -i -e s/kk_ver/#{kk_ver}/g kraken-docker-stack-#{kk_ver}.yaml"
-
-  # for installing under the desk and for pushing images to docker images repository
+task :publish_docker do
+  # generate docker-compose config for installing kraken under the desk and for pushing images to docker images repository
   sh "cp docker-compose.yaml kraken-docker-compose-#{kk_ver}-tmp.yaml"
   sh "sed -i -e s/kk_ver/#{kk_ver}/g kraken-docker-compose-#{kk_ver}-tmp.yaml"
   sh "sed -i -e 's#127.0.0.1:5000#eu.gcr.io/kraken-261806#g' kraken-docker-compose-#{kk_ver}-tmp.yaml"
@@ -399,6 +393,13 @@ task :run_portainer do
 end
 
 task :deploy_lab do
+  # prepare docker stack config
+  Rake::Task["compose_to_swarm"].invoke
+  sh "docker-compose -f docker-compose-swarm.yaml config > kraken-docker-stack-#{kk_ver}.yaml"
+  sh 'rm docker-compose-swarm.yaml'
+  sh "sed -i -e s/kk_ver/#{kk_ver}/g kraken-docker-stack-#{kk_ver}.yaml"
+
+  # deploy to lab.kraken.ci
   sh "./venv/bin/fab -e -H lab.kraken.ci upgrade --kk-ver #{kk_ver}"
 end
 
@@ -415,7 +416,7 @@ end
 
 task :release_deploy do
   Rake::Task["build_all"].invoke
-  Rake::Task["docker_release"].invoke
+  Rake::Task["publish_docker"].invoke
   Rake::Task["github_release"].invoke
   Rake::Task["deploy_lab"].invoke
 end
