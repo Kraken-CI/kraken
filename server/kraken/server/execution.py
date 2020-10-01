@@ -99,6 +99,8 @@ def trigger_jobs(run, replay=False):
     # prepare secrets to pass them to substitute is steps
     secrets = {}
     for s in run.stage.branch.project.secrets:
+        if s.deleted:
+            continue
         if s.kind == consts.SECRET_KIND_SSH_KEY:
             name = "KK_SECRET_USER_" + s.name
             secrets[name] = s.data['username']

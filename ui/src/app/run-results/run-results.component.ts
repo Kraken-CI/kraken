@@ -314,9 +314,27 @@ export class RunResultsComponent implements OnInit, OnDestroy {
                 this.jobs = data.items
                 this.totalJobs = data.total
 
-                if (this.jobs.length > 0 && !this.selectedJobId) {
-                    this.job = this.jobs[0]
-                    this.selectedJobId = this.job.id
+                // if there are any jobs fetched from the server
+                if (this.jobs.length > 0) {
+                    // if job was already selected and assign selected job
+                    if (this.selectedJobId) {
+                        let foundJob = false
+                        for (let job of this.jobs) {
+                            if (job.id === this.selectedJobId) {
+                                this.job = job
+                                foundJob = true
+                            }
+                        }
+                        // if selected job was not found in fetched jobs then select the first job
+                        if (!foundJob) {
+                            this.job = this.jobs[0]
+                            this.selectedJobId = this.job.id
+                        }
+                    } else {
+                        // job was not selected yet so select the first job
+                        this.job = this.jobs[0]
+                        this.selectedJobId = this.job.id
+                    }
                 }
 
                 this.loadingJobs = false
