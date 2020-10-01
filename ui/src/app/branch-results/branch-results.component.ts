@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core'
+import { Component, OnInit, OnDestroy } from '@angular/core'
 import { Router, ActivatedRoute, ParamMap } from '@angular/router'
 import { Title } from '@angular/platform-browser'
 import { Observable } from 'rxjs'
@@ -16,10 +16,13 @@ import { datetimeToLocal, humanBytes } from '../utils'
     templateUrl: './branch-results.component.html',
     styleUrls: ['./branch-results.component.sass'],
 })
-export class BranchResultsComponent implements OnInit {
+export class BranchResultsComponent implements OnInit, OnDestroy {
     branchId = 0
     branch: any
     kind: string
+    start = 0
+    limit = 10
+    refreshTimer: any = null
 
     flows: any[]
 
@@ -56,8 +59,17 @@ export class BranchResultsComponent implements OnInit {
             this.branchId = parseInt(params.get('id'), 10)
             this.kind = params.get('kind')
             this.updateBreadcrumb()
-            this.refresh(0, 10)
+            this.start = 0
+            this.limit = 10
+            this.refresh()
         })
+    }
+
+    ngOnDestroy() {
+        if (this.refreshTimer) {
+            clearTimeout(this.refreshTimer)
+            this.refreshTimer = null
+        }
     }
 
     updateBreadcrumb() {
@@ -90,15 +102,15 @@ export class BranchResultsComponent implements OnInit {
         }
     }
 
-    refresh(start, limit) {
+    refresh() {
         this.route.paramMap
             .pipe(
                 switchMap((params: ParamMap) =>
                     this.executionService.getFlows(
                         parseInt(params.get('id'), 10),
                         this.kind,
-                        start,
-                        limit
+                        this.start,
+                        this.limit
                     )
                 )
             )
@@ -116,11 +128,18 @@ export class BranchResultsComponent implements OnInit {
                     newStages.push({ name: st })
                 }
                 this.stagesAvailable = newStages
+
+                // refresh again in 10 seconds
+                this.refreshTimer = setTimeout(() => {
+                    this.refresh()
+                }, 10000)
             })
     }
 
     paginateFlows(event) {
-        this.refresh(event.first, event.rows)
+        this.start = event.first
+        this.limit = event.rows
+        this.refresh()
     }
 
     filterStages(event) {
