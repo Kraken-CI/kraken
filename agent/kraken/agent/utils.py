@@ -82,7 +82,9 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
                 out_size = s
                 if ds > 0:
                     out_fragment = f.read(ds)
-                if len(out_fragment) > 0:
+                if len(out_fragment) == 0:
+                    time.sleep(0.01)
+                else:
                     if output_handler:
                         output_handler(out_fragment)
                     else:

@@ -66,8 +66,8 @@ def _handle_get_job(agent):
     if agent.job is None:
         return {'job': {}}
 
-    # handle cancel when job is already assigned but not started yet
-    if not agent.job.started and agent.job.state == consts.JOB_STATE_COMPLETED:
+    # handle canceling situation
+    if agent.job.state == consts.JOB_STATE_COMPLETED:
         job = agent.job
         agent.job = None
         db.session.commit()
@@ -357,6 +357,13 @@ def _handle_dispatch_tests(agent, req):
 
     job = agent.job
 
+    # handle canceling situation
+    if job.state == consts.JOB_STATE_COMPLETED:
+        agent.job = None
+        db.session.commit()
+        log.info("canceling job %s on %s", job, agent)
+        return {'cancel': True}
+
     try:
         tests = req['tests']
         step_idx = req['step_idx']
@@ -406,6 +413,19 @@ def _handle_dispatch_tests(agent, req):
 
 def _handle_sys_info(agent, req):  # pylint: disable=unused-argument
     pass
+
+
+def _handle_keep_alive(agent, req):
+    job = agent.job
+
+    # handle canceling situation
+    if job and job.state == consts.JOB_STATE_COMPLETED:
+        agent.job = None
+        db.session.commit()
+        log.info("canceling job %s on %s", job, agent)
+        return {'cancel': True}
+
+    return {}
 
 
 def _handle_unknown_agent(address, ip_address):
@@ -458,6 +478,9 @@ def serve_agent_request():
     elif msg == consts.AGENT_MSG_SYS_INFO:
         _handle_sys_info(agent, req)
         response = {}
+
+    elif msg == consts.AGENT_MSG_KEEP_ALIVE:
+        response = _handle_keep_alive(agent, req)
 
     else:
         log.warning('unknown msg: %s', msg)

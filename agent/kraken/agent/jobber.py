@@ -115,7 +115,14 @@ class ProcCoord():
         self.idx = idx
 
         self.result = {}
-        self.cancel = False
+        self.is_canceled = False
+
+        self.subprocess_task = None
+
+    def cancel(self):
+        self.is_canceled = True
+        if self.subprocess_task:
+            self.subprocess_task.cancel()
 
 
 class RequestHandler():
@@ -145,7 +152,8 @@ class RequestHandler():
                 rsp = srv.report_step_result(self.proc_coord.job_id,
                                              self.proc_coord.idx,
                                              self.proc_coord.result)
-                self.proc_coord.cancel = rsp.get('cancel', False)
+                if rsp.get('cancel', False):
+                    self.proc_coord.cancel()
 
 
 async def _async_tcp_server(server):
@@ -153,7 +161,17 @@ async def _async_tcp_server(server):
         await server.serve_forever()
 
 
+async def _send_keep_alive_to_server(proc_coord):
+    srv = proc_coord.kk_srv
+    while True:
+        await asyncio.sleep(10)
+        rsp = srv.keep_alive(proc_coord.job_id)
+        if rsp.get('cancel', False):
+            proc_coord.cancel()
+
+
 async def _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeout, user, step_file_path):
+    # prepare internal http server for receiving messages from tool subprocess
     addr = exec_ctx.get_return_ip_addr()
     handler = RequestHandler(proc_coord)
     server = await asyncio.start_server(handler.async_handle_request, addr, 0, limit=1024 * 1280)
@@ -161,11 +179,22 @@ async def _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeou
     return_addr = "%s:%s" % addr
     log.info('return_addr %s', return_addr)
 
+    # async task with tool subprocess
     subprocess_task = asyncio.ensure_future(exec_ctx.async_run(
         proc_coord, tool_path, return_addr, step_file_path, command, cwd, timeout, user))
+    proc_coord.subprocess_task = subprocess_task
+
+    # async task with internal http server
     tcp_server_task = asyncio.ensure_future(_async_tcp_server(server))
-    done, _ = await asyncio.wait([subprocess_task, tcp_server_task],
+
+    # async task for sending keep alive messages to kraken server
+    keep_alive_task = asyncio.ensure_future(_send_keep_alive_to_server(proc_coord))
+
+    # wait for any task to complete
+    done, _ = await asyncio.wait([subprocess_task, tcp_server_task, keep_alive_task],
                                  return_when=asyncio.FIRST_COMPLETED)
+
+    # stop internal http server if not stopped yet
     if tcp_server_task not in done:
         tcp_server_task.cancel()
         try:
@@ -186,7 +215,7 @@ def _exec_tool(kk_srv, exec_ctx, tool_path, command, cwd, timeout, user, step_fi
         loop = asyncio.get_event_loop()
         loop.run_until_complete(f)
         loop.close()
-    return proc_coord.result, proc_coord.cancel
+    return proc_coord.result, proc_coord.is_canceled
 
 
 def _write_step_file(job_dir, step, idx):

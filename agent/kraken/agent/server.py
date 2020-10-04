@@ -179,3 +179,15 @@ class Server():
             config.merge(response['cfg'])
 
         return response
+
+    def keep_alive(self, job_id=None):
+        request = {'address': self.my_addr,
+                   'msg': consts.AGENT_MSG_KEEP_ALIVE,
+                   'job_id': job_id}
+
+        response = _send_http_request(self.srv_addr, request)
+
+        if 'cfg' in response:
+            config.merge(response['cfg'])
+
+        return response

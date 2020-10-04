@@ -16,6 +16,7 @@ import os
 import io
 import re
 import time
+import struct
 import asyncio
 import tarfile
 import logging
@@ -202,17 +203,19 @@ class DockerExecContext:
         return '172.17.0.1'
 
     def stop(self):
-        try:
-            self.cntr.kill()
-        except:
-            log.exception('IGNORED EXCEPTION')
-        try:
-            self.cntr.remove()
-        except:
-            log.exception('IGNORED EXCEPTION')
+        log.info('stopping container %s', self.cntr)
+        if self.cntr:
+            try:
+                self.cntr.kill()
+            except:
+                log.exception('IGNORED EXCEPTION')
+            try:
+                self.cntr.remove()
+            except:
+                log.exception('IGNORED EXCEPTION')
 
     def _async_run(self, cmd, cwd, deadline, env, user):
-        logs, exit_code = asyncio.run(self._dkr_run(cmd, cwd, deadline, env, user))
+        logs, exit_code = asyncio.run(self._dkr_run(None, cmd, cwd, deadline, env, user))
         if exit_code != 0:
             now = time.time()
             t0 = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(now))
@@ -222,27 +225,77 @@ class DockerExecContext:
                 exit_code, cmd, str(cwd), str(user), t0, t1, timeout))
         return logs
 
-    async def _dkr_run(self, cmd, cwd, deadline, env, user):
+    async def _dkr_run(self, proc_coord, cmd, cwd, deadline, env, user):
         now = time.time()
         t0 = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(now))
         t1 = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(deadline))
         timeout = deadline - now
         log.info("cmd '%s' in '%s', now %s, deadline %s, time: %ds, env: %s", cmd, cwd, t0, t1, timeout, env)
+
         exe = self.cntr.client.api.exec_create(self.cntr.id, cmd, workdir=cwd, environment=env, user=user)
-        stream = self.cntr.client.api.exec_start(exe['Id'], stream=True)
+        sock = self.cntr.client.api.exec_start(exe['Id'], socket=True)
+
         logs = ''
-        for chunk in stream:
-            decoded_chunk = chunk.decode()
-            logs += decoded_chunk
-            log.info(decoded_chunk.rstrip())
-            await asyncio.sleep(0)
+        logs_to_print = ''
+
+        # Read output from command from docker. Stream returned from docker needs
+        # to be parsed according to its format: https://docs.docker.com/engine/api/v1.39/#operation/ContainerAttach
+        reader, writer = await asyncio.open_unix_connection(sock=sock._sock)
+        buff = b''
+        eof = False
+        while not eof:
+            while len(buff) < 8:
+                buff_frag = await reader.read(8 - len(buff))
+                if not buff_frag:
+                    eof = True
+                    break
+                buff += buff_frag
+            if eof:
+                break
+            header = buff[:8]
+            buff = buff[8:]
+            # parse docker header
+            stream, size = struct.unpack('>BxxxL', header)
+            if size <= 0:
+                break
+            chunk = buff[:size]
+            buff = buff[size:]
+            needed_size = size - len(chunk)
+            while needed_size > 0:
+                buff_frag = await reader.read(needed_size)
+                if not buff_frag:
+                    eof = True
+                    break
+                buff += buff_frag
+                frag = buff[:needed_size]
+                chunk += frag
+                buff = buff[len(frag):]
+                needed_size = size - len(chunk)
+            log_frag = chunk.decode()
+
+            logs += log_frag
+            # print read lines, any reminder leave in logs_to_print for next iteration
+            logs_to_print += log_frag
+            lines = logs_to_print.splitlines(keepends=True)
+            for l in lines:
+                if l.endswith('\n'):
+                    log.info(l.rstrip())
+                else:
+                    logs_to_print = l
             if time.time() > deadline:
                 raise Timeout
-        exit_code = self.cntr.client.api.exec_inspect(exe['Id'])['ExitCode']
-        while exit_code is None:
-            await asyncio.sleep(0)
+            if proc_coord and proc_coord.is_canceled:
+                break
+
+        if proc_coord and proc_coord.is_canceled:
+            exit_code = 10001
+            log.info('CANCELED')
+        else:
             exit_code = self.cntr.client.api.exec_inspect(exe['Id'])['ExitCode']
-        log.info('EXIT: %s', exit_code)
+            while exit_code is None:
+                await asyncio.sleep(0)
+                exit_code = self.cntr.client.api.exec_inspect(exe['Id'])['ExitCode']
+            log.info('EXIT: %s', exit_code)
         return logs, exit_code
 
     async def async_run(self, proc_coord, tool_path, return_addr, step_file_path, command, cwd, timeout, user):  # pylint: disable=unused-argument
@@ -281,9 +334,8 @@ class DockerExecContext:
 
         deadline = time.time() + timeout
         try:
-            await self._dkr_run(cmd, docker_cwd, deadline, env, user)
+            await self._dkr_run(proc_coord, cmd, docker_cwd, deadline, env, user)
         except Timeout:
-            # TODO: it should be better handled but needs testing
             if proc_coord.result == {}:
                 now = time.time()
                 t0 = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(now))

@@ -149,6 +149,7 @@ AGENT_MSG_GET_JOB = 'get-job'
 AGENT_MSG_STEP_RESULT = 'step-result'
 AGENT_MSG_DISPATCH_TESTS = 'dispatch-tests'
 AGENT_MSG_SYS_INFO = 'sys-info'
+AGENT_MSG_KEEP_ALIVE = 'keep-alive'
 
 
 BRANCH_SEQ_FLOW = 0

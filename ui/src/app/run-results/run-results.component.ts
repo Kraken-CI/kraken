@@ -200,6 +200,7 @@ export class RunResultsComponent implements OnInit, OnDestroy {
                     // refresh page data every 5 seconds
                     if (this.refreshTimer === null) {
                         this.refreshTimer = setTimeout(() => {
+                            this.refreshTimer = null
                             this.refreshPage()
                         }, 5000)
                     }
@@ -236,7 +237,6 @@ export class RunResultsComponent implements OnInit, OnDestroy {
         }
 
         this.executionService.getRun(this.runId).subscribe(run => {
-            console.info(run)
             this.run = run
             this.recordsCount[0] = '' + run.jobs_total
             this.recordsCount[1] =
@@ -247,6 +247,7 @@ export class RunResultsComponent implements OnInit, OnDestroy {
             // refresh page data every 5 seconds
             if (run.state !== 'processed') {
                 this.refreshTimer = setTimeout(() => {
+                    this.refreshTimer = null
                     this.refreshPage()
                 }, 5000)
             }
@@ -356,6 +357,7 @@ export class RunResultsComponent implements OnInit, OnDestroy {
 
                 if (this.refreshTimer === null) {
                     this.refreshTimer = setTimeout(() => {
+                        this.refreshTimer = null
                         this.refreshPage()
                     }, 5000)
                 }
