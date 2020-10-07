@@ -24,18 +24,18 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
     isNearBottom = true
 
     logFragments: any[]
-    skippedAngLoadedLogs = 0
     lastAttempts = 0
     fontSize = 1.0
 
-    timer1 = null
-    timer2 = null
-    timer3 = null
+    timer1 = null  // wait for next logs for 3 seconds, only first time
+    timer2 = null  // nothing loaded but wait for another 3 seconds
+    timer3 = null  // wait for next logs for 3 seconds, the following attempts
 
     prvJobId: number
     @Input()
     set jobId(id) {
         this.prvJobId = id
+        // console.info('changed job to', id)
 
         if (id !== 0) {
             this.loadJobLogs(id)
@@ -49,7 +49,7 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
 
     ngOnInit() {}
 
-    _prepareLogs(logs, job) {
+    _showLogs(logs, job) {
         let fragment
         if (this.logFragments.length > 0) {
             // remove last entry with ... running ...
@@ -125,13 +125,18 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     _addStepStatusEntryToLogs(job, stepIdx) {
-        if (
-            this.logFragments.length > 0 &&
-            this.logFragments[this.logFragments.length - 1].stepStatus
-        ) {
-            // if last frag is already step status then do not add another one
-            return
+        if (this.logFragments.length > 0) {
+            if (this.logFragments[this.logFragments.length - 1].stepStatus) {
+                // if last frag is already step status then do not add another one
+                return
+            }
+
+            // remove last entry with ... running ... if it is there
+            if (this.logFragments[this.logFragments.length - 1].loading) {
+                this.logFragments.splice(this.logFragments.length - 1, 1)
+            }
         }
+
         let msg = ''
         let cls = ''
         for (const step of job.steps) {
@@ -175,7 +180,7 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
                 ],
             })
         }
-        this._prepareLogs(data.items.reverse(), data.job)
+        this._showLogs(data.items.reverse(), data.job)
 
         if (data.job.state !== 5 && this.lastAttempts < 4) {
             // completed
@@ -183,13 +188,12 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
         }
     }
 
-    _processNextLogs(jobId, data) {
+    _processNextLogs(jobId, data, prevBookmark) {
         if (jobId !== this.prvJobId) {
             // console.info('!!!! job switch - stop processing in processNextLogs', jobId)
             return
         }
         // console.info('loaded next ' + data.items.length + ' of ' + data.total, jobId)
-        this.skippedAngLoadedLogs += data.items.length
 
         if (data.items.length === 0) {
             if (data.job.state === 5 && this.lastAttempts === 4) {
@@ -203,7 +207,7 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
                     this.lastAttempts += 1
                 }
                 // nothing loaded but still running then wait 3 seconds and then load more
-                // console.info('nothing loaded but still running then wait 3 seconds and then load more', jobId)
+                // console.info('nothing loaded but still running then wait 3 seconds and then load more, attempt', this.lastAttempts)
                 this.timer2 = setTimeout(() => {
                     // console.info('timer2 fired ', jobId, this.timer2)
                     this.timer2 = null
@@ -211,34 +215,43 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
                         // console.info('!!!! job switch - stop processing in timer2 ', jobId, this.timer2)
                         return
                     }
+                    let bookmark = prevBookmark
+                    if (data.bookmarks) {
+                        bookmark = data.bookmarks.last
+                    }
                     this.executionService
                         .getJobLogs(
                             jobId,
-                            this.skippedAngLoadedLogs,
                             200,
-                            'asc'
+                            'asc',
+                            null,
+                            bookmark
                         )
                         .subscribe(data2 => {
-                            this._processNextLogs(jobId, data2)
+                            this._processNextLogs(jobId, data2, bookmark)
                         })
                 }, 3000)
-                return
             }
+            return
         }
 
-        this._prepareLogs(data.items, data.job)
+        this._showLogs(data.items, data.job)
 
-        if (this.skippedAngLoadedLogs < data.total) {
-            // load the rest immediatelly
-            let num = data.total - this.skippedAngLoadedLogs
-            if (num > 1000) {
-                num = 1000
+        if (data.items.length === 200) {
+            // loaded full 200 so probably there is more logs so load the rest immediatelly
+            // console.info('load the rest immediatelly', jobId)
+            let bookmark = prevBookmark
+            if (data.bookmarks) {
+                bookmark = data.bookmarks.last
             }
-            // console.info('load the rest ' + num + ' immediatelly', jobId)
             this.executionService
-                .getJobLogs(jobId, this.skippedAngLoadedLogs, num, 'asc')
+                .getJobLogs(jobId,
+                            200,
+                            'asc',
+                            null,
+                            bookmark)
                 .subscribe(data2 => {
-                    this._processNextLogs(jobId, data2)
+                    this._processNextLogs(jobId, data2, bookmark)
                 })
         } else if (data.job.state !== 5 || this.lastAttempts < 4) {
             if (data.job.state === 5) {
@@ -254,10 +267,18 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
                     // console.info('!!!! job switch - stop processing in timer3 ', jobId, this.timer3)
                     return
                 }
+                let bookmark = prevBookmark
+                if (data.bookmarks) {
+                    bookmark = data.bookmarks.last
+                }
                 this.executionService
-                    .getJobLogs(jobId, this.skippedAngLoadedLogs, 200, 'asc')
+                    .getJobLogs(jobId,
+                                200,
+                                'asc',
+                                null,
+                                bookmark)
                     .subscribe(data2 => {
-                        this._processNextLogs(jobId, data2)
+                        this._processNextLogs(jobId, data2, bookmark)
                     })
             }, 3000)
             return
@@ -269,33 +290,18 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
 
     loadJobLogs(jobId) {
         // console.info('loading logs for ', jobId)
+        this.resetLogging()
 
-        if (this.timer1 !== null) {
-            // console.info('!!!! canceled timer1 ', jobId, this.timer1)
-            clearTimeout(this.timer1)
-            this.timer1 = null
-        }
-        if (this.timer2 !== null) {
-            // console.info('!!!! canceled timer2 ', jobId, this.timer2)
-            clearTimeout(this.timer2)
-            this.timer2 = null
-        }
-        if (this.timer3 !== null) {
-            // console.info('!!!! canceled timer3 ', jobId, this.timer3)
-            clearTimeout(this.timer3)
-            this.timer3 = null
-        }
-
-        this.logFragments = []
         this.executionService
-            .getJobLogs(jobId, 0, 200, 'desc')
+            .getJobLogs(jobId,
+                        200,
+                        'desc')
             .subscribe(data => {
                 if (jobId !== this.prvJobId) {
                     // console.info('!!!! job switch - stop processing getJobLogs', jobId)
                     return
                 }
                 // console.info('loaded first ' + data.items.length + ' of ' + data.total, jobId)
-                this.skippedAngLoadedLogs = data.total
 
                 this._processNewLogs(data, data.total - 200)
 
@@ -313,15 +319,20 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
                             // console.info('!!!! job switch - stop processing in timer1 ', jobId, this.timer1)
                             return
                         }
+                        let bookmark = null
+                        if (data.bookmarks) {
+                            bookmark = data.bookmarks.first
+                        }
                         this.executionService
                             .getJobLogs(
                                 jobId,
-                                this.skippedAngLoadedLogs,
                                 200,
-                                'asc'
+                                'asc',
+                                null,
+                                bookmark
                             )
                             .subscribe(data2 => {
-                                this._processNextLogs(jobId, data2)
+                                this._processNextLogs(jobId, data2, bookmark)
                             })
                     }, 3000)
                 } else {
@@ -339,7 +350,7 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
         this.logFrags.changes.subscribe(_ => this.onLogFragsChanged())
     }
 
-    ngOnDestroy() {
+    resetLogging() {
         if (this.timer1 !== null) {
             // console.info('!!!! canceled timer1 on destroy ', this.timer1)
             clearTimeout(this.timer1)
@@ -355,6 +366,13 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
             clearTimeout(this.timer3)
             this.timer3 = null
         }
+
+        this.lastAttempts = 0
+        this.logFragments = []
+    }
+
+    ngOnDestroy() {
+        this.resetLogging()
     }
 
     onLogFragsChanged() {

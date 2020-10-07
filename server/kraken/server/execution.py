@@ -653,7 +653,7 @@ def get_branch(branch_id):
     return branch.get_json(with_results=True), 200
 
 
-def get_job_logs(job_id, start=0, limit=200, order=None, filters=None):
+def get_job_logs(job_id, limit=200, order=None, filters=None, search_after=None):
     job = Job.query.filter_by(id=job_id).one()
     job_json = job.get_json()
 
@@ -721,14 +721,18 @@ def get_job_logs(job_id, start=0, limit=200, order=None, filters=None):
 
         query["query"]["bool"]["must"].extend([{"match": {k: v}} for k, v in filters.items()])
 
-    query["from"] = start
     query["size"] = limit
     if order is None:
-        query["sort"] = {"@timestamp": {"order": "asc"}}  # , "ignore_unmapped": True}}
+        query["sort"] = [{"@timestamp": {"order": "asc"}}]  # , "ignore_unmapped": True}}
     elif order in ['asc', 'desc']:
-        query["sort"] = {"@timestamp": {"order": order}}
+        query["sort"] = [{"@timestamp": {"order": order}}]
     else:
-        query["sort"] = order
+        query["sort"] = [order]
+    query["sort"].append({"_id": "desc"})
+
+    if search_after:
+        ts, _id = search_after.split(',')
+        query['search_after'] = [int(ts), _id]
 
     log.info(query)
     try:
@@ -752,7 +756,13 @@ def get_job_logs(job_id, start=0, limit=200, order=None, filters=None):
         logs.append(entry)
 
     total = res['hits']['total']['value']
-    return {'items': logs, 'total': total, 'job': job_json}, 200
+    bookmarks = None
+    if len(res['hits']['hits']) > 0:
+        bookmarks = {
+            'first': [res['hits']['hits'][0]['sort'][0], res['hits']['hits'][0]['sort'][1]],
+            'last': [res['hits']['hits'][-1]['sort'][0], res['hits']['hits'][-1]['sort'][1]]
+        }
+    return {'items': logs, 'total': total, 'job': job_json, 'bookmarks': bookmarks}, 200
 
 
 def cancel_job(job, note, cmplt_status):

@@ -63,6 +63,8 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
         text = []
         out_size = 0
         completed = False
+        out_fragment = ""
+        t0_frag = time.time()
         with open(fname) as f:
             while t < t_end and not completed:
                 t = time.time()
@@ -76,23 +78,34 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
                         break
 
                 # handle output from subprocess
-                out_fragment = ""
                 s = _get_size(fname)
                 ds = s - out_size
                 out_size = s
+                frag = ''
                 if ds > 0:
-                    out_fragment = f.read(ds)
-                if len(out_fragment) == 0:
+                    frag = f.read(ds)
+                if len(frag) == 0:
                     time.sleep(0.01)
                 else:
-                    if output_handler:
-                        output_handler(out_fragment)
-                    else:
-                        text.append(out_fragment)
-                    if tracing:
-                        if mask:
-                            out_fragment = out_fragment.rstrip().replace(mask, '******')
-                        log.info("%s%s", out_prefix, out_fragment.rstrip())
+                    out_fragment += frag
+                    t1_frag = time.time()
+                    # do not print too frequently, only every 128B or every 0.5s
+                    if len(out_fragment) > 128 or t1_frag - t0_frag > 0.5:
+                        lines = out_fragment.rsplit('\n', 1)
+                        if len(lines) == 2:
+                            frag_to_print_now = lines[0]
+                            out_fragment = lines[1]
+                        else:
+                            out_fragment = lines[0]
+
+                        if output_handler:
+                            output_handler(frag_to_print_now)
+                        else:
+                            text.append(frag_to_print_now)
+                        if tracing:
+                            if mask:
+                                frag_to_print_now = frag_to_print_now.rstrip().replace(mask, '******')
+                            log.info("%s%s", out_prefix, frag_to_print_now)
 
                 # one trace for minute
                 dt = t - t_trace
@@ -103,7 +116,7 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
                 completed = p.poll() is not None
 
             # read the rest of output
-            out_fragment = f.read()
+            out_fragment += f.read()
             if len(out_fragment) > 0:
                 if output_handler:
                     output_handler(out_fragment)

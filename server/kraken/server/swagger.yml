@@ -930,11 +930,6 @@ paths:
           description: ID of pet to return
           required: true
           type: integer
-        - name: start
-          in: query
-          description: ID of pet to return
-          required: true
-          type: integer
         - name: limit
           in: query
           description: ID of pet to return
@@ -947,6 +942,10 @@ paths:
         - name: filters
           in: query
           description: ID of pet to return
+          type: string
+        - name: search_after
+          in: query
+          description: ID of starting document for searching
           type: string
       responses:
         "200":
@@ -1442,6 +1441,8 @@ definitions:
       total:
         type: integer
         format: int64
+      bookmarks:
+        type: object
       job:
         $ref: '#/definitions/Job'
 

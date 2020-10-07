@@ -243,6 +243,7 @@ class DockerExecContext:
         reader, writer = await asyncio.open_unix_connection(sock=sock._sock)
         buff = b''
         eof = False
+        t0 = time.time()
         while not eof:
             while len(buff) < 8:
                 buff_frag = await reader.read(8 - len(buff))
@@ -274,16 +275,25 @@ class DockerExecContext:
             log_frag = chunk.decode()
 
             logs += log_frag
-            # print read lines, any reminder leave in logs_to_print for next iteration
             logs_to_print += log_frag
-            lines = logs_to_print.splitlines(keepends=True)
-            for l in lines:
-                if l.endswith('\n'):
-                    log.info(l.rstrip())
+
+            # send logs if they are bigger than 1k or every 3 seconds
+            t1 = time.time()
+            if len(logs_to_print) > 1024 or t1 - t0 > 3:
+                t0 = t1
+                # print read lines, any reminder leave in logs_to_print for next iteration
+                lines = logs_to_print.rsplit('\n', 1)
+                if len(lines) == 2:
+                    log.info(lines[0])
+                    logs_to_print = lines[1]
                 else:
-                    logs_to_print = l
+                    logs_to_print = lines[0]
+
+            # check deadline
             if time.time() > deadline:
                 raise Timeout
+
+            # check cancel
             if proc_coord and proc_coord.is_canceled:
                 break
 
