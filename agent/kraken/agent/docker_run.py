@@ -240,7 +240,7 @@ class DockerExecContext:
 
         # Read output from command from docker. Stream returned from docker needs
         # to be parsed according to its format: https://docs.docker.com/engine/api/v1.39/#operation/ContainerAttach
-        reader, writer = await asyncio.open_unix_connection(sock=sock._sock)
+        reader, _ = await asyncio.open_unix_connection(sock=sock._sock)
         buff = b''
         eof = False
         t0 = time.time()
@@ -256,7 +256,7 @@ class DockerExecContext:
             header = buff[:8]
             buff = buff[8:]
             # parse docker header
-            stream, size = struct.unpack('>BxxxL', header)
+            _, size = struct.unpack('>BxxxL', header)
             if size <= 0:
                 break
             chunk = buff[:size]

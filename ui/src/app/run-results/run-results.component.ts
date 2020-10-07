@@ -320,7 +320,7 @@ export class RunResultsComponent implements OnInit, OnDestroy {
                     // if job was already selected and assign selected job
                     if (this.selectedJobId) {
                         let foundJob = false
-                        for (let job of this.jobs) {
+                        for (const job of this.jobs) {
                             if (job.id === this.selectedJobId) {
                                 this.job = job
                                 foundJob = true
