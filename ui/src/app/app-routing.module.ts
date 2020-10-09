@@ -15,6 +15,8 @@ import { AgentsPageComponent } from './agents-page/agents-page.component'
 import { DiscoveredPageComponent } from './discovered-page/discovered-page.component'
 import { GroupsPageComponent } from './groups-page/groups-page.component'
 import { SettingsPageComponent } from './settings-page/settings-page.component'
+import { DiagsPageComponent } from './diags-page/diags-page.component'
+
 
 const routes: Routes = [
     {
@@ -88,6 +90,10 @@ const routes: Routes = [
     {
         path: 'settings',
         component: SettingsPageComponent,
+    },
+    {
+        path: 'diagnostics',
+        component: DiagsPageComponent,
     },
 
     // otherwise redirect to home

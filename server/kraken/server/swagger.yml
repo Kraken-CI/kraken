@@ -1205,6 +1205,18 @@ paths:
           schema:
             $ref: '#/definitions/Settings'
 
+  /diagnostics:
+    get:
+      operationId: get_diagnostics
+      tags:
+        - Management
+      summary: Get health status of Kraken services.
+      description: Get health status of Kraken services.
+      responses:
+        200:
+          description: Successfully
+          schema:
+            $ref: '#/definitions/Diagnostics'
 
 definitions:
   Flow:
@@ -1701,12 +1713,15 @@ definitions:
         format: int64
 
   Settings:
-    type: "object"
+    type: object
     properties:
       general:
         type: object
       notification:
         type: object
+
+  Diagnostics:
+    type: object
 
   ApiError:
     type: "object"

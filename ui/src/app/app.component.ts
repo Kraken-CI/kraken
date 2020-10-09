@@ -48,6 +48,11 @@ export class AppComponent implements OnInit {
                 ],
             },
             {
+                label: 'Diagnostics',
+                icon: 'fa fa-thermometer-three-quarters',
+                routerLink: '/diagnostics',
+            },
+            {
                 label: 'Settings',
                 icon: 'fa fa-wrench',
                 routerLink: '/settings',

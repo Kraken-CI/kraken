@@ -30,6 +30,11 @@ def _is_service_open(addr, port, sock_type):
         s.close()
 
 
+def is_addr_open(url, default_port=None):
+    o = urlparse(url)
+    return _is_service_open(o.hostname, o.port or default_port, socket.SOCK_STREAM)
+
+
 def check_tcp_service(name, addr, port):
     attempt = 1
     trace = "checking TCP service %s on %s:%d..." % (name, addr, port)

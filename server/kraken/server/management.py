@@ -22,8 +22,9 @@ from flask import abort
 from sqlalchemy.orm.attributes import flag_modified
 import pytimeparse
 import dateutil.parser
+from elasticsearch import Elasticsearch
 
-from . import consts
+from . import consts, srvcheck
 from .models import db, Branch, Stage, Agent, AgentsGroup, Secret, AgentAssignment, Setting
 from .models import Project, BranchSequence
 from .schema import execute_schema_code
@@ -596,3 +597,59 @@ def get_branch_sequences(branch_id):
         seqs.append(bs.get_json())
 
     return {'items': seqs, 'total': len(seqs)}, 200
+
+
+def get_diagnostics():
+    diags = {}
+
+    # check elasticsearch
+    diags['elasticsearch'] = {'name': 'ElasticSearch'}
+    es_addr = os.environ.get('KRAKEN_ELASTICSEARCH_URL', consts.DEFAULT_ELASTICSEARCH_URL)
+    es_open = srvcheck.is_addr_open(es_addr)
+    diags['elasticsearch']['address'] = es_addr
+    diags['elasticsearch']['open'] = es_open
+    if es_open:
+        es = Elasticsearch(es_addr)
+        alloc = es.cat.allocation(format='json')
+        health = es.cat.health(format='json')
+        indices = es.cat.indices('logs*', format='json')
+        diags['elasticsearch']['allocation'] = alloc
+        diags['elasticsearch']['health'] = health
+        diags['elasticsearch']['indicies'] = indices
+
+    # check postgresql
+    pgsql_addr = os.environ.get('KRAKEN_DB_URL', consts.DEFAULT_DB_URL)
+    pgsql_open = srvcheck.is_addr_open(pgsql_addr)
+    diags['postgresql'] = {
+        'name': 'PostgreSQL',
+        'address': pgsql_addr,
+        'open': pgsql_open
+    }
+
+    # check redis
+    rds_addr = os.environ.get('KRAKEN_REDIS_ADDR', consts.DEFAULT_REDIS_ADDR)
+    rds_open = srvcheck.is_addr_open(rds_addr, 6379)
+    diags['redis'] = {
+        'name': 'Redis',
+        'open': rds_open
+    }
+
+    # check planner
+    plnr_addr = os.environ.get('KRAKEN_PLANNER_URL', consts.DEFAULT_PLANNER_URL)
+    plnr_open = srvcheck.is_addr_open(plnr_addr)
+    diags['planner'] = {
+        'name': 'Kraken Planner',
+        'address': plnr_addr,
+        'open': plnr_open
+    }
+
+    # check storage
+    strg_addr = os.environ.get('KRAKEN_STORAGE_ADDR', consts.DEFAULT_STORAGE_ADDR)
+    strg_open = srvcheck.is_addr_open(strg_addr)
+    diags['storage'] = {
+        'name': 'Kraken Storage',
+        'address': strg_addr,
+        'open': strg_open
+    }
+
+    return diags

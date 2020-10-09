@@ -56,7 +56,8 @@ import { ProjectSettingsComponent } from './project-settings/project-settings.co
 import { AgentsPageComponent } from './agents-page/agents-page.component'
 import { DiscoveredPageComponent } from './discovered-page/discovered-page.component'
 import { GroupsPageComponent } from './groups-page/groups-page.component';
-import { SettingsPageComponent } from './settings-page/settings-page.component'
+import { SettingsPageComponent } from './settings-page/settings-page.component';
+import { DiagsPageComponent } from './diags-page/diags-page.component'
 
 export function cfgFactory() {
     return new Configuration()
@@ -82,6 +83,7 @@ export function cfgFactory() {
         DiscoveredPageComponent,
         GroupsPageComponent,
         SettingsPageComponent,
+        DiagsPageComponent,
     ],
     imports: [
         BrowserModule,
