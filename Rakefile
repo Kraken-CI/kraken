@@ -1,9 +1,9 @@
 require 'json'
 
 TOOLS_DIR = File.expand_path('tools')
-NODE_VER = 'node-v10.16.3-linux-x64'
-ENV['PATH'] = "#{TOOLS_DIR}/#{NODE_VER}/bin:#{ENV['PATH']}"
-NPX = "#{TOOLS_DIR}/#{NODE_VER}/bin/npx"
+NODE_VER = 'v12.19.0'
+ENV['PATH'] = "#{TOOLS_DIR}/node-#{NODE_VER}-linux-x64/bin:#{ENV['PATH']}"
+NPX = "#{TOOLS_DIR}/node-#{NODE_VER}-linux-x64/bin/npx"
 NG = File.expand_path('webui/node_modules/.bin/ng')
 SWAGGER_CODEGEN = "#{TOOLS_DIR}/swagger-codegen-cli-2.4.8.jar"
 SWAGGER_FILE = File.expand_path("server/kraken/server/swagger.yml")
@@ -35,7 +35,7 @@ end
 file NPX do
   sh "mkdir -p #{TOOLS_DIR}"
   Dir.chdir(TOOLS_DIR) do
-    sh "wget -nv https://nodejs.org/dist/v10.16.3/#{NODE_VER}.tar.xz -O #{TOOLS_DIR}/node.tar.xz"
+    sh "wget -nv https://nodejs.org/dist/#{NODE_VER}/node-#{NODE_VER}-linux-x64.tar.xz -O #{TOOLS_DIR}/node.tar.xz"
     sh "tar -Jxf node.tar.xz"
   end
 end
