@@ -2,11 +2,10 @@
   background-color: #007ad9
   border-width: 0px
 
-:host ::ng-deep .menubar .ui-menuitem-link
+// make top level menu white
+:host ::ng-deep .menubar.p-menubar .p-menubar-root-list > .p-menuitem > .p-menuitem-link .p-menuitem-icon
   color: white
-
-:host ::ng-deep .menubar .ui-menuitem-link .ui-menuitem-text
+:host ::ng-deep .menubar.p-menubar .p-menubar-root-list > .p-menuitem > .p-menuitem-link .p-menuitem-text
   color: white
-
-:host ::ng-deep .menubar .ui-submenu .ui-menuitem-link .ui-menuitem-text
-  color: black
+:host ::ng-deep .menubar.p-menubar .p-menubar-root-list > .p-menuitem > .p-menuitem-link .p-submenu-icon
+  color: white
