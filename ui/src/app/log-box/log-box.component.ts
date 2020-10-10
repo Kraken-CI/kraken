@@ -18,7 +18,7 @@ import { ExecutionService } from '../backend/api/execution.service'
     styleUrls: ['./log-box.component.sass'],
 })
 export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
-    @ViewChild('logBox', { static: false }) logBox: ElementRef
+    @ViewChild('logBox') logBox: ElementRef
     @ViewChildren('logFrag') logFrags: QueryList<any>
     logBoxEl: any
     isNearBottom = true
