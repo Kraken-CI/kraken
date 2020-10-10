@@ -162,34 +162,41 @@ export class BreadcrumbsComponent implements OnInit {
 
     showCrumbMenu(event, crumbMenu, breadcrumb) {
         switch (breadcrumb.label) {
-            case 'Projects':
-                this.crumbMenuItems = this.projects.map(p => {
-                    return { label: p.name, routerLink: '/projects/' + p.id }
-                })
-                break
-            case 'Branches':
-                this.crumbMenuItems = this.branches[this.currProjectId].map(
-                    b => {
-                        return {
-                            label: b.name,
-                            routerLink: '/branches/' + b.id,
-                        }
+        case 'Projects':
+            this.crumbMenuItems = this.projects.map(p => {
+                return { label: p.name, routerLink: '/projects/' + p.id }
+            })
+            break
+        case 'Branches':
+            this.crumbMenuItems = this.branches[this.currProjectId].map(
+                b => {
+                    return {
+                        label: b.name,
+                        routerLink: '/branches/' + b.id,
                     }
-                )
-                break
-            case 'Flows':
-                const flowsKey = '' + this.currBranchId + '-' + this.currFlowKind
-                this.crumbMenuItems = this.flows[flowsKey].map(f => {
-                    return { label: f.id + ' - ' + f.label, routerLink: '/flows/' + f.id }
-                })
-                break
-            case 'Stages':
-                this.crumbMenuItems = this.runs[this.currFlowId].map(r => {
-                    return { label: r.stage_name, routerLink: '/runs/' + r.id }
-                })
-                break
-            default:
+                }
+            )
+            break
+        case 'Flows':
+            const flowsKey = '' + this.currBranchId + '-' + this.currFlowKind
+            this.crumbMenuItems = this.flows[flowsKey].map(f => {
+                return { label: f.id + ' - ' + f.label, routerLink: '/flows/' + f.id }
+            })
+            break
+        case 'Stages':
+            this.crumbMenuItems = this.runs[this.currFlowId].map(r => {
+                return { label: r.stage_name, routerLink: '/runs/' + r.id }
+            })
+            break
+        case 'Home':
+            this.router.navigate(['/'])
+            return
+        default:
+            if (breadcrumb.menuItems) {
                 this.crumbMenuItems = breadcrumb.menuItems
+            } else {
+                this.crumbMenuItems = []
+            }
         }
 
         if (this.crumbMenuItems.length > 0) {
