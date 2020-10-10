@@ -81,7 +81,7 @@ export class NewFlowComponent implements OnInit {
                 })
                 args[s.name] = {}
                 for (const p of s.schema.parameters) {
-                    args[s.name][p.name] = p.default
+                    args[s.name][p.name] = p._default
                 }
             }
             this.params = params

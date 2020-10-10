@@ -646,13 +646,6 @@ def get_run(run_id):
     return run.get_json(), 200
 
 
-def get_branch(branch_id):
-    branch = Branch.query.filter_by(id=branch_id).one_or_none()
-    if branch is None:
-        abort(404, "Branch not found")
-    return branch.get_json(with_results=True), 200
-
-
 def get_job_logs(job_id, limit=200, order=None, filters=None, search_after=None):
     job = Job.query.filter_by(id=job_id).one()
     job_json = job.get_json()

@@ -6,6 +6,7 @@ import { switchMap } from 'rxjs/operators'
 
 import { MessageService } from 'primeng/api'
 
+import { ManagementService } from '../backend/api/management.service'
 import { ExecutionService } from '../backend/api/execution.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
 import { Run } from '../backend/model/run'
@@ -36,6 +37,7 @@ export class BranchResultsComponent implements OnInit, OnDestroy {
     constructor(
         private route: ActivatedRoute,
         private router: Router,
+        protected managementService: ManagementService,
         protected executionService: ExecutionService,
         protected breadcrumbService: BreadcrumbsService,
         private msgSrv: MessageService,
@@ -49,7 +51,7 @@ export class BranchResultsComponent implements OnInit, OnDestroy {
         this.selectedStage = null
         this.stagesAvailable = [{ name: 'All' }]
 
-        this.executionService.getBranch(this.branchId).subscribe(branch => {
+        this.managementService.getBranch(this.branchId).subscribe(branch => {
             this.titleService.setTitle('Kraken - Branch Results - ' + branch.name + ' ' + this.kind)
             this.branch = branch
             this.updateBreadcrumb()

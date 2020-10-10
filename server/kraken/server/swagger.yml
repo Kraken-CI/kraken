@@ -215,32 +215,6 @@ paths:
           description: unexpected error
           schema:
             $ref: '#/definitions/ApiError'
-  /branches/{branch_id}:
-    get:
-      summary: List all results
-      operationId: get_branch
-      tags:
-        - Execution
-      parameters:
-        - name: branch_id
-          in: path
-          description: ID of pet to return
-          required: true
-          type: integer
-          format: int64
-      responses:
-        "200":
-          description: A paged array of runs
-          headers:
-            x-next:
-              type: string
-              description: A link to the next page of responses
-          schema:
-            $ref: '#/definitions/Branch'
-        default:
-          description: unexpected error
-          schema:
-            $ref: '#/definitions/ApiError'
   /branches/{branch_id}/flows/{kind}:
     post:
       operationId: create_flow
@@ -390,6 +364,27 @@ paths:
           description: unexpected error
           schema:
             $ref: '#/definitions/ApiError'
+    post:
+      operationId: create_run
+      tags:
+        - Execution
+      summary: Create a run
+      description: Create a new run
+      parameters:
+        - name: flow_id
+          in: path
+          description: ID of pet to return
+          required: true
+          type: integer
+          format: int64
+        - name: run
+          in: body
+          description: run
+          schema:
+            $ref: '#/definitions/Run'
+      responses:
+        201:
+          description: Successfully created run
   /flows/{flow_id}/artifacts:
     get:
       summary: List artifacts of given flow
@@ -486,29 +481,6 @@ paths:
           description: unexpected error
           schema:
             $ref: '#/definitions/ApiError'
-
-  /flows/{flow_id}/runs:
-    post:
-      operationId: create_run
-      tags:
-        - Execution
-      summary: Create a run
-      description: Create a new run
-      parameters:
-        - name: flow_id
-          in: path
-          description: ID of pet to return
-          required: true
-          type: integer
-          format: int64
-        - name: run
-          in: body
-          description: run
-          schema:
-            $ref: '#/definitions/Run'
-      responses:
-        201:
-          description: Successfully created run
 
   /stages/{stage_id}/runs:
     get:
@@ -1238,9 +1210,6 @@ definitions:
         format: int64
       project_name:
         type: string
-      branch_id:
-        type: integer
-        format: int64
       base_branch_name:
         type: string
       branch_name:
@@ -1248,13 +1217,22 @@ definitions:
       runs:
         type: object
       stages:
-        type: object
+        type: array
+        items:
+          $ref: '#/definitions/Stage'
       args:
         type: object
       kind:
         type: string
       artifacts:
         type: object
+        properties:
+          public:
+            type: object
+            properties:
+              count:
+                type: integer
+                format: int64
   Flows:
     type: object
     properties:
@@ -1455,6 +1433,11 @@ definitions:
         format: int64
       bookmarks:
         type: object
+        properties:
+          first:
+            type: string
+          last:
+            type: string
       job:
         $ref: '#/definitions/Job'
 
@@ -1569,7 +1552,9 @@ definitions:
       project_name:
         type: string
       stages:
-        type: object
+        type: array
+        items:
+          $ref: '#/definitions/Stage'
       flows:
         type: object
 
@@ -1623,6 +1608,23 @@ definitions:
         type: string
       schema:
         type: object
+        properties:
+          parent:
+            type: string
+          triggers:
+            type: object
+            properties:
+              parent:
+                type: boolean
+          parameters:
+            type: array
+            items:
+              type: object
+              properties:
+                name:
+                  type: string
+                default:
+                  type: string
       schema_code:
         type: string
       enabled:

@@ -223,7 +223,7 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
             // console.info('flatTree', this.flatTree);
 
             const tab = this.route.snapshot.queryParamMap.get('tab');
-            if (tab === 'artifacts' && flow.artifacts && flow.artifacts.public && flow.artifacts.public.count > 0) {
+            if (tab === 'artifacts' && flow.artifacts && flow.artifacts._public && flow.artifacts._public.count > 0) {
                 setTimeout(() => {
                     this.activeTabIndex = 3
                 }, 100)

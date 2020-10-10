@@ -5,7 +5,8 @@ NODE_VER = 'v12.19.0'
 ENV['PATH'] = "#{TOOLS_DIR}/node-#{NODE_VER}-linux-x64/bin:#{ENV['PATH']}"
 NPX = "#{TOOLS_DIR}/node-#{NODE_VER}-linux-x64/bin/npx"
 NG = File.expand_path('webui/node_modules/.bin/ng')
-SWAGGER_CODEGEN = "#{TOOLS_DIR}/swagger-codegen-cli-2.4.8.jar"
+OPENAPI_GENERATOR_VER = '5.0.0-beta2'
+OPENAPI_GENERATOR = "#{TOOLS_DIR}/swagger-codegen-cli-#{OPENAPI_GENERATOR_VER}.jar"
 SWAGGER_FILE = File.expand_path("server/kraken/server/swagger.yml")
 
 kk_ver = ENV['kk_ver'] || '0.0'
@@ -21,15 +22,15 @@ task :prepare_env do
 end
 
 # UI
-task :gen_client => [SWAGGER_CODEGEN, SWAGGER_FILE] do
+task :gen_client => [OPENAPI_GENERATOR, SWAGGER_FILE] do
   Dir.chdir('ui') do
-    sh "java -jar #{SWAGGER_CODEGEN} generate  -l typescript-angular -i #{SWAGGER_FILE} -o src/app/backend --additional-properties snapshot=true,ngVersion=8.2.8,modelPropertyNaming=snake_case"
+    sh "java -jar #{OPENAPI_GENERATOR} generate  -g typescript-angular -i #{SWAGGER_FILE} -o src/app/backend --additional-properties snapshot=true,ngVersion=10.1.5,modelPropertyNaming=snake_case"
   end
 end
 
-file SWAGGER_CODEGEN do
+file OPENAPI_GENERATOR do
   sh "mkdir -p #{TOOLS_DIR}"
-  sh "wget -nv https://oss.sonatype.org/content/repositories/releases/io/swagger/swagger-codegen-cli/2.4.8/swagger-codegen-cli-2.4.8.jar -O #{SWAGGER_CODEGEN}"
+  sh "wget -nv https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/#{OPENAPI_GENERATOR_VER}/openapi-generator-cli-#{OPENAPI_GENERATOR_VER}.jar -O #{OPENAPI_GENERATOR}"
 end
 
 file NPX do
