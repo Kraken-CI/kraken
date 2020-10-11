@@ -219,6 +219,9 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
                     if (data.bookmarks) {
                         bookmark = data.bookmarks.last
                     }
+                    if (bookmark) {
+                        bookmark = `${bookmark[0]},${bookmark[1]}`
+                    }
                     this.executionService
                         .getJobLogs(
                             jobId,
@@ -243,6 +246,9 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
             let bookmark = prevBookmark
             if (data.bookmarks) {
                 bookmark = data.bookmarks.last
+            }
+            if (bookmark) {
+                bookmark = `${bookmark[0]},${bookmark[1]}`
             }
             this.executionService
                 .getJobLogs(jobId,
@@ -270,6 +276,9 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
                 let bookmark = prevBookmark
                 if (data.bookmarks) {
                     bookmark = data.bookmarks.last
+                }
+                if (bookmark) {
+                    bookmark = `${bookmark[0]},${bookmark[1]}`
                 }
                 this.executionService
                     .getJobLogs(jobId,
@@ -322,6 +331,9 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
                         let bookmark = null
                         if (data.bookmarks) {
                             bookmark = data.bookmarks.first
+                        }
+                        if (bookmark) {
+                            bookmark = `${bookmark[0]},${bookmark[1]}`
                         }
                         this.executionService
                             .getJobLogs(
