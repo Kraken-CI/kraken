@@ -4,7 +4,7 @@ def stage(ctx):
         "triggers": {
             "parent": True,
         },
-        "flow_label": "hello-#{KK_FLOW_SEQ}",
+        "flow_label": "helo-#{KK_FLOW_SEQ}",
         "parameters": [],
         "configs": [],
         "jobs": [{
