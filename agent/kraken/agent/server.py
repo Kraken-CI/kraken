@@ -121,12 +121,12 @@ class Server():
     def _establish_connection(self):
         raise NotImplementedError
 
-    def report_sys_info(self, sys_info):
+    def report_host_info(self, host_info):
         self._ensure_srv_address()
 
         request = {'address': self.my_addr,
-                   'msg': consts.AGENT_MSG_SYS_INFO,
-                   'info': sys_info}
+                   'msg': consts.AGENT_MSG_HOST_INFO,
+                   'info': host_info}
 
         response = _send_http_request(self.srv_addr, request)
 

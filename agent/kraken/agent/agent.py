@@ -23,6 +23,7 @@ import platform
 import traceback
 
 import pkg_resources
+import distro
 
 from . import logs
 from . import config
@@ -70,16 +71,16 @@ def apply_cfg_changes(changes):
         os.environ['KRAKEN_LOGSTASH_ADDR'] = logstash_addr
 
 
-def collect_sys_info():
-    sys_info = {}
+def collect_host_info():
+    host_info = {}
     s = platform.system().lower()
-    sys_info['system'] = s
-    # if s == 'linux':
-    #     distr = platform.linux_distribution(full_distribution_name=False)  # pylint: disable=deprecated-method
-    #     sys_info['distro_name'] = distr[0].lower()
-    #     sys_info['distro_version'] = distr[1]
+    host_info['system_type'] = s
+    if s == 'linux':
+        host_info['system'] = '%s-%s' % (distro.id(), distro.version())
+        host_info['distro_name'] = distro.id()
+        host_info['distro_version'] = distro.version()
 
-    return sys_info
+    return host_info
 
 
 def check_integrity():
@@ -131,8 +132,8 @@ def main():
 
     srv = server.Server()
 
-    sys_info = collect_sys_info()
-    srv.report_sys_info(sys_info)
+    host_info = collect_host_info()
+    srv.report_host_info(host_info)
 
     while True:
         try:

@@ -370,7 +370,7 @@ def _estimate_timeout(job):
         timeout = 60
 
     stage = job.run.stage
-    job_key = "%s-%s-%d" % (job.name, job.system, job.agents_group_id)
+    job_key = "%s-%d-%d" % (job.name, job.system_id, job.agents_group_id)
 
     if stage.timeouts is None:
         stage.timeouts = {}

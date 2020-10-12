@@ -25,7 +25,7 @@ from elasticsearch import Elasticsearch
 
 from . import consts
 from .models import db, Branch, Flow, Run, Stage, Job, Step, AgentsGroup, Tool, TestCaseResult
-from .models import TestCase, Issue, Artifact, AgentAssignment, BranchSequence
+from .models import TestCase, Issue, Artifact, AgentAssignment, BranchSequence, System
 
 log = logging.getLogger(__name__)
 
@@ -158,17 +158,20 @@ def trigger_jobs(run, replay=False):
             else:
                 systems = env['system']
 
-            for system in systems:
+            for system_name in systems:
                 # prepare system and executor
                 if 'executor' in env:
                     executor = env['executor'].lower()
                 else:
                     executor = 'local'
-                system = '%s^%s' % (executor, system)
+                system = System.query.filter_by(name=system_name, executor=executor).one_or_none()
+                if system is None:
+                    system = System(name=system_name, executor=executor)
+                    db.session.flush()
 
                 # get timeout
                 if agents_group is not None:
-                    job_key = "%s-%s-%d" % (j['name'], system, agents_group.id)
+                    job_key = "%s-%d-%d" % (j['name'], system.id, agents_group.id)
                     if run.stage.timeouts and job_key in run.stage.timeouts:
                         # take estimated timeout if present
                         timeout = run.stage.timeouts[job_key]

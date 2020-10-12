@@ -17,7 +17,7 @@ import logging
 
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Column, Boolean, DateTime, ForeignKey, Integer, String, Text, Unicode, UnicodeText
-from sqlalchemy import event
+from sqlalchemy import event, UniqueConstraint
 from sqlalchemy.orm import relationship, mapper
 from sqlalchemy.dialects.postgresql import JSONB, DOUBLE_PRECISION, BYTEA
 
@@ -428,7 +428,8 @@ class Job(db.Model, DatesMixin):
     timeout = Column(Integer)
     covered = Column(Boolean, default=False)
     notes = Column(Unicode(2048))
-    system = Column(Unicode(200))
+    system_id = Column(Integer, ForeignKey('systems.id'), nullable=False)
+    system = relationship('System', back_populates="jobs")
     agent = relationship('Agent', uselist=False, back_populates="job",
                             foreign_keys="Agent.job_id", post_update=True)
     agents_group_id = Column(Integer, ForeignKey('agents_groups.id'), nullable=False)
@@ -439,10 +440,6 @@ class Job(db.Model, DatesMixin):
     issues = relationship('Issue', back_populates="job")
 
     def get_json(self):
-        if '^' in self.system:
-            executor, system = self.system.split('^')
-        else:
-            executor, system = 'local', self.system
         return dict(id=self.id,
                     created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,
                     deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,
@@ -457,8 +454,9 @@ class Job(db.Model, DatesMixin):
                     timeout=self.timeout,
                     covered=self.covered,
                     notes=self.notes,
-                    system=system,
-                    executor=executor,
+                    system_id=self.system_id,
+                    system=self.system.name,
+                    executor=self.system.executor,
                     run_id=self.run_id,
                     agents_group_id=self.agents_group_id,
                     agents_group_name=self.agents_group.name,
@@ -603,10 +601,13 @@ class APSchedulerJob(db.Model):
 
 # RESOURCES
 
-# class System(db.Model):
-#     __tablename__ = "systems"
-#     id = Column(Integer, primary_key=True)
-#     name = Column(Unicode(150))
+class System(db.Model):
+    __tablename__ = "systems"
+    id = Column(Integer, primary_key=True)
+    name = Column(Unicode(150), unique=True)
+    executor = Column(Unicode(20), unique=True)
+    jobs = relationship('Job', back_populates="system")
+    UniqueConstraint('name', 'executor', name='uq_system_name_executor')
 
 
 class Tool(db.Model, DatesMixin):
@@ -661,6 +662,8 @@ class Agent(db.Model, DatesMixin):
     comment = Column(Text)
     status_line = Column(Text)
     last_seen = Column(DateTime)
+    host_info = Column(JSONB)
+    user_attrs = Column(JSONB)
     agents_groups = relationship('AgentAssignment', back_populates="agent")
     job_id = Column(Integer, ForeignKey('jobs.id'))
     job = relationship('Job', back_populates="agent", foreign_keys=[job_id])
@@ -681,6 +684,8 @@ class Agent(db.Model, DatesMixin):
                     disabled=self.disabled,
                     comment=self.comment,
                     status_line=self.status_line,
+                    host_info=self.host_info,
+                    user_attrs=self.user_attrs,
                     groups=[dict(id=a.agents_group.id, name=a.agents_group.name) for a in self.agents_groups],
                     job=self.job.get_json() if self.job else None)
 

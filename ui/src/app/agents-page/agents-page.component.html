@@ -48,6 +48,8 @@
         <th style="width: 120px;">Disabled</th>
         <th style="width: 120px;">Last Seen</th>
         <th style="width: 10%;">Groups</th>
+        <th style="width: 15%;">Host Info</th>
+        <th style="width: 10%;">User Attrs</th>
         <th style="width: 10%;">Job</th>
         <th style="width: 4rem;">Action</th>
       </tr>
@@ -58,14 +60,20 @@
         <td>{{agent.address}}</td>
         <td><a routerLink="/agents/{{agent.id}}">{{agent.name}}</a></td>
         <td>{{agent.ip_address}}</td>
-        <td>{{agent.state}}</td>
-        <td>{{agent.disabled}}</td>
+        <td>{{ agent.state }}</td>
+        <td>{{ agent.disabled }}</td>
         <td>{{ agent.last_seen ? (agent.last_seen | localtime) : '' }}</td>
         <td>
           <span *ngFor="let g of agent.groups" style="padding-right: 5px;">
             <a routerLink="/agents-groups/{{ g.id }}">{{ g.name }}</a>
           </span>
         </td>
+        <td>
+          <div *ngFor="let hi of agent.host_info | keyvalue">
+            <span style="color: #888;">{{ hi.key }}</span>: {{ hi.value }}
+          </div>
+        </td>
+        <td>{{ agent.user_attrs }}</td>
         <td><a *ngIf="agent.job" routerLink="/runs/{{ agent.job.run_id }}/jobs">{{ agent.job.id }}</a></td>
         <td>
           <button

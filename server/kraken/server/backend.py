@@ -25,6 +25,7 @@ from sqlalchemy.orm.attributes import flag_modified
 import giturlparse
 
 from .models import db, Job, Step, Agent, TestCase, TestCaseResult, Issue, Secret, Artifact, File
+from .models import System
 from . import consts
 from .bg import jobs as bg_jobs
 from .. import version
@@ -411,8 +412,18 @@ def _handle_dispatch_tests(agent, req):
     return {'tests': part1}
 
 
-def _handle_sys_info(agent, req):  # pylint: disable=unused-argument
-    pass
+def _handle_host_info(agent, req):  # pylint: disable=unused-argument
+    log.info('HOST INFO %s', req['info'])
+    agent.host_info = req['info']
+    db.session.commit()
+
+    system = req['info']['system']
+    try:
+        System(name=system, executor='local')
+        db.session.commit()
+    except:
+        # if it exists then exeption is raise but ignore it
+        log.exception('IGNORED')
 
 
 def _handle_keep_alive(agent, req):
@@ -475,8 +486,8 @@ def serve_agent_request():
     elif msg == consts.AGENT_MSG_DISPATCH_TESTS:
         response = _handle_dispatch_tests(agent, req)
 
-    elif msg == consts.AGENT_MSG_SYS_INFO:
-        _handle_sys_info(agent, req)
+    elif msg == consts.AGENT_MSG_HOST_INFO:
+        _handle_host_info(agent, req)
         response = {}
 
     elif msg == consts.AGENT_MSG_KEEP_ALIVE:

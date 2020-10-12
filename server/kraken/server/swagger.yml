@@ -1678,6 +1678,10 @@ definitions:
       last_seen:
         type: string
         format: date-time
+      host_info:
+        type: object
+      user_attrs:
+        type: object
   Agents:
     type: object
     properties:

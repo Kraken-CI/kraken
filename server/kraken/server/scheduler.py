@@ -39,14 +39,21 @@ def assign_jobs_to_agents():
     if agents_count == 0:
         return 0
     idle_agents_by_group = {}
-    for e in all_idle_agents:
+    idle_agents_by_sys_group = {}
+    for ag in all_idle_agents:
         # log.info('idle agent: %s', e)
-        for asm in e.agents_groups:
+        for asm in ag.agents_groups:
             grp_id = asm.agents_group_id
             # log.info('  grp: %s', grp_id)
             if grp_id not in idle_agents_by_group:
                 idle_agents_by_group[grp_id] = []
-            idle_agents_by_group[grp_id].append(e)
+            idle_agents_by_group[grp_id].append(ag)
+
+            sys_grp_key = (asm.agents_group_id,
+                           ag.host_info['system'] if ag.host_info and 'system' in ag.host_info else 'fake')
+            if sys_grp_key not in idle_agents_by_sys_group:
+                idle_agents_by_sys_group[sys_grp_key] = []
+            idle_agents_by_sys_group[sys_grp_key].append(ag)
 
     q = Job.query.filter_by(state=consts.JOB_STATE_QUEUED, agent_used=None)
     q = q.join('run')
@@ -58,7 +65,12 @@ def assign_jobs_to_agents():
         log.info('job %s', j)
         # find idle agent from given agents group
         best_agent = None
-        idle_agents = idle_agents_by_group.get(j.agents_group_id, [])
+        if j.system.executor == 'local' and j.system.name != 'any':
+            key = (j.agents_group_id, j.system.name)
+            idle_agents = idle_agents_by_sys_group.get(key, [])
+        else:
+            idle_agents = idle_agents_by_group.get(j.agents_group_id, [])
+
         while best_agent is None:
             if len(idle_agents) == 0:
                 log.info('no avail agents for job %s', j)
