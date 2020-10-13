@@ -48,13 +48,93 @@ class BaseTask(Task):  # pylint: disable=abstract-method
         log.info('PROBLEMS')
 
 
+def _trigger_stages(run):
+    """Trigger the following stages after just completed run_id stage."""
+    log.info('starting triggering stages after run %s', run.id)
+
+    # go through next stages and trigger them if needed
+    curr_stage_name = run.stage.name
+    branch = run.stage.branch
+    for stage in branch.stages.filter_by(deleted=None):
+        if stage.schema['parent'] != curr_stage_name:
+            # skip stages that are not childs of completed run's stage
+            continue
+        if not stage.schema['triggers'].get('parent', False) and not stage.schema['triggers'].get('manual', False):
+            # skip stages that have parent trigger set to False
+            # or that have no manual trigger
+            continue
+
+        if stage.enabled:
+            execution.start_run(stage, run.flow)
+        else:
+            log.info('stage %s not started because it is disabled', stage.name)
+
+
+@clry_app.task(base=BaseTask, bind=True)
+def analyze_run(self, run_id):
+    try:
+        app = _create_app()
+
+        with app.app_context():
+            log.info('starting analysis of run %s', run_id)
+            run = Run.query.filter_by(id=run_id).one_or_none()
+            if run is None:
+                log.error('got unknown run to analyze: %s', run_id)
+                return
+
+            # calculate run stats
+            run.tests_total = run.tests_passed = run.tests_not_run = 0
+            run.jobs_error = run.jobs_total = 0
+            run.issues_total = 0
+            non_covered_jobs = Job.query.filter_by(run=run).filter_by(covered=False).all()
+            for job in non_covered_jobs:
+                # calculate job tests stats
+                for job_tcr in job.results:
+                    run.tests_total += 1
+                    if job_tcr.result == consts.TC_RESULT_PASSED:
+                        run.tests_passed += 1
+                    elif job_tcr.result == consts.TC_RESULT_NOT_RUN:
+                        run.tests_not_run += 1
+
+                # calculate issues stats
+                for issue in job.issues:
+                    run.issues_total += 1
+
+                # calculate jobs stats
+                run.jobs_total += 1
+                if job.completion_status not in [consts.JOB_CMPLT_ALL_OK, None]:
+                    run.jobs_error += 1
+                db.session.commit()
+
+            # trigger any following stages to currently completed run if there was no errors
+            if run.jobs_error == 0:
+                _trigger_stages(run)
+
+            # establish new state for flow
+            flow = run.flow
+            is_completed = True
+            for r in flow.runs:
+                if r.state == consts.RUN_STATE_IN_PROGRESS:
+                    is_completed = False
+                    break
+
+            if is_completed:
+                log.info('completed flow %s', flow)
+                now = datetime.datetime.utcnow()
+                flow.finished = now
+                flow.state = consts.FLOW_STATE_COMPLETED
+                db.session.commit()
+
+            t = analyze_results_history.delay(run.id)
+            log.info('run %s analysis completed, started analyze results history: %s', run, t)
+
+    except Exception as exc:
+        log.exception('will retry')
+        raise self.retry(exc=exc)
+
+
 def _analyze_job_results_history(job):
     # TODO: if branch is forked from another base branch take base branch results into account
-
-    # simple stats
-    tests_total = 0
-    tests_passed = 0
-    tests_not_run = 0
 
     # history stats
     new_cnt = 0
@@ -63,13 +143,6 @@ def _analyze_job_results_history(job):
     fix_cnt = 0
 
     for job_tcr in job.results:
-        # simple results stats
-        tests_total += 1
-        if job_tcr.result == consts.TC_RESULT_PASSED:
-            tests_passed += 1
-        elif job_tcr.result == consts.TC_RESULT_NOT_RUN:
-            tests_not_run += 1
-
         # analyze history, get previous 10 results for each TCR
         log.info('Analyze result %s %s', job_tcr, job_tcr.test_case.name)
         q = TestCaseResult.query
@@ -114,7 +187,7 @@ def _analyze_job_results_history(job):
 
         db.session.commit()
 
-    return tests_total, tests_passed, tests_not_run, new_cnt, no_change_cnt, regr_cnt, fix_cnt
+    return new_cnt, no_change_cnt, regr_cnt, fix_cnt
 
 
 def _analyze_job_issues_history(job):
@@ -125,14 +198,11 @@ def _analyze_job_issues_history(job):
     q = q.order_by(desc(Run.created))
     prev_run = q.first()
     if prev_run is None:
-        return 0, 0
+        return 0
 
-    issues_total = 0
     issues_new = 0
 
     for issue in job.issues:
-        issues_total += 1
-
         log.info('Analyze issue %s', issue)
         q = Issue.query
         q = q.filter_by(path=issue.path, issue_type=issue.issue_type, symbol=issue.symbol)
@@ -160,7 +230,7 @@ def _analyze_job_issues_history(job):
             issues_new += 1
     db.session.commit()
 
-    return issues_total, issues_new
+    return issues_new
 
 
 @clry_app.task(base=BaseTask, bind=True)
@@ -193,38 +263,26 @@ def analyze_results_history(self, run_id):
 
             # analyze jobs of this run
             run.new_cnt = run.no_change_cnt = run.regr_cnt = run.fix_cnt = 0
-            run.tests_total = run.tests_passed = run.tests_not_run = 0
-            run.jobs_error = run.jobs_total = 0
-            run.issues_total = run.issues_new = 0
+            run.issues_new = 0
             non_covered_jobs = Job.query.filter_by(run=run).filter_by(covered=False).all()
             for job in non_covered_jobs:
                 # analyze results history
                 counts = _analyze_job_results_history(job)
-                tests_total, tests_passed, tests_not_run, new_cnt, no_change_cnt, regr_cnt, fix_cnt = counts
+                new_cnt, no_change_cnt, regr_cnt, fix_cnt = counts
                 run.new_cnt += new_cnt
                 run.no_change_cnt += no_change_cnt
                 run.regr_cnt += regr_cnt
                 run.fix_cnt += fix_cnt
-                run.tests_total += tests_total
-                run.tests_passed += tests_passed
-                run.tests_not_run += tests_not_run
                 db.session.commit()
 
                 # analyze issues history
-                issues_total, issues_new = _analyze_job_issues_history(job)
-                run.issues_total += issues_total
+                issues_new = _analyze_job_issues_history(job)
                 run.issues_new += issues_new
-                db.session.commit()
-
-                # compute jobs stats
-                run.jobs_total += 1
-                if job.completion_status not in [consts.JOB_CMPLT_ALL_OK, None]:
-                    run.jobs_error += 1
                 db.session.commit()
 
             run.state = consts.RUN_STATE_PROCESSED
             db.session.commit()
-            log.info('anlysis of run %s completed', run)
+            log.info('history anlysis of run %s completed', run)
 
             t = notify_about_completed_run.delay(run.id)
             log.info('enqueued notification about completion of run %s, bg processing: %s', run, t)
@@ -259,42 +317,6 @@ def notify_about_completed_run(self, run_id):
                 return
 
             notify.notify(run)
-
-    except Exception as exc:
-        log.exception('will retry')
-        raise self.retry(exc=exc)
-
-
-@clry_app.task(base=BaseTask, bind=True)
-def trigger_stages(self, run_id):
-    """Trigger the following stages after just completed run_id stage."""
-    try:
-        app = _create_app()
-
-        with app.app_context():
-            # find completed parent run
-            log.info('starting triggering stages after run %s', run_id)
-            run = Run.query.filter_by(id=run_id).one_or_none()
-            if run is None:
-                log.error('got unknown run: %s', run_id)
-                return
-
-            # go through next stages and trigger them if needed
-            curr_stage_name = run.stage.name
-            branch = run.stage.branch
-            for stage in branch.stages.filter_by(deleted=None):
-                if stage.schema['parent'] != curr_stage_name:
-                    # skip stages that are not childs of completed run's stage
-                    continue
-                if not stage.schema['triggers'].get('parent', False) and not stage.schema['triggers'].get('manual', False):
-                    # skip stages that have parent trigger set to False
-                    # or that have no manual trigger
-                    continue
-
-                if stage.enabled:
-                    execution.start_run(stage, run.flow)
-                else:
-                    log.info('stage %s not started because it is disabled', stage.name)
 
     except Exception as exc:
         log.exception('will retry')

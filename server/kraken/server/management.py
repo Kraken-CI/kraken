@@ -178,7 +178,6 @@ def _check_and_correct_stage_schema(branch, stage, prev_schema_code):
         "triggers": {
             "parent": True,
         },
-        "flow_label": "hello-#{KK_FLOW_SEQ}",
         "parameters": [],
         "configs": [],
         "jobs": [{

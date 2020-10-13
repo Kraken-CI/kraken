@@ -37,27 +37,9 @@ def complete_run(run, now):
     db.session.commit()
     log.info('completed run %s, now: %s', run, run.finished)
 
-    # trigger any following stages to currently completed run
-    t = bg_jobs.trigger_stages.delay(run.id)
-    log.info('run %s completed, trigger the following stages: %s', run, t)
-
-    # establish new state for flow
-    flow = run.flow
-    is_completed = True
-    for r in flow.runs:
-        if r.state == consts.RUN_STATE_IN_PROGRESS:
-            is_completed = False
-            break
-
-    if is_completed:
-        log.info('completed flow %s', flow)
-        flow.state = consts.FLOW_STATE_COMPLETED
-        flow.finished = now
-        db.session.commit()
-
-    # trigger results history analysis
-    t = bg_jobs.analyze_results_history.delay(run.id)
-    log.info('run %s completed, analyze results history: %s', run, t)
+    # trigger run analysis
+    t = bg_jobs.analyze_run.delay(run.id)
+    log.info('run %s completed, analyze run: %s', run, t)
 
 
 def _substitute_vars(fields, args):
@@ -276,6 +258,7 @@ def start_run(stage, flow, args=None):
         log.info('created manual run %s for stage %s of branch %s - no jobs started yet', run, stage, stage.branch)
     else:
         log.info('starting run %s for stage %s of branch %s', run, stage, stage.branch)
+        # TODO: move triggering jobs to background tasks
         trigger_jobs(run, replay=replay)
 
     return run
