@@ -104,8 +104,11 @@
                 </span>
               </p-inplace>
             </div>
-            <div class="p-col-3" style="margin-top: 25px;">
+            <div class="p-col-1" style="margin-top: 25px;">
               <p-checkbox [(ngModel)]="stage.enabled" binary="true" label="Enabled"></p-checkbox>
+            </div>
+            <div class="p-col-2" style="margin-top: 25px;">
+              <p-checkbox [(ngModel)]="stage.schema_from_repo_enabled" binary="true" label="Schema from Repo"></p-checkbox>
             </div>
           </div>
 
@@ -122,9 +125,6 @@
             <p-tabPanel header="Schema from Repository">
               <div class="form-style-2">
                 <form [formGroup]="schemaFromRepoForm">
-                  <label for="schema_from_repo_enabled"><span>Enabled</span>
-                    <p-checkbox binary="true" formControlName="schema_from_repo_enabled"></p-checkbox>
-                  </label>
                   <label for="repo_url"><span>Repo URL</span>
                     <input type="text" class="input-field" name="repo_url" pInputText formControlName="repo_url"/>
                   </label>

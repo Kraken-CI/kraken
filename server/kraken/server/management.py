@@ -16,6 +16,8 @@ import os
 import json
 import logging
 import datetime
+import tempfile
+import subprocess
 import xmlrpc.client
 
 from flask import abort
@@ -330,6 +332,27 @@ def create_stage(branch_id, stage):
     return new_stage.get_json(), 201
 
 
+def _get_schema_from_repo(repo_url, repo_branch, repo_access_token, schema_file):
+    print(repo_url)
+    with  tempfile.TemporaryDirectory(prefix='kraken-git-') as tmpdir:
+        # clone repo
+        cmd = "git clone '%s' repo" % repo_url
+        subprocess.run(cmd, shell=True, check=True, cwd=tmpdir)
+
+        # checkout branch if needed
+        if repo_branch and repo_branch != 'master':
+            repo_dir = os.path.join(tmpdir, 'repo')
+            cmd = 'git checkout %s' % repo_branch
+            subprocess.run(cmd, shell=True, check=True, cwd=repo_dir)
+
+        # read schema code
+        schema_path = os.path.join(repo_dir, schema_file)
+        with open(schema_path, 'r') as f:
+            schema_code = f.read()
+
+    return schema_code
+
+
 def update_stage(stage_id, data):
     stage = Stage.query.filter_by(id=stage_id).one_or_none()
     if stage is None:
@@ -348,17 +371,7 @@ def update_stage(stage_id, data):
         schema_from_repo_enabled = data['schema_from_repo_enabled']
     else:
         schema_from_repo_enabled = stage.schema_from_repo_enabled
-
-    if not schema_from_repo_enabled and 'schema_code' in data:
-        _, schema = _check_and_correct_stage_schema(stage.branch, data, stage.schema_code)
-        stage.schema = schema
-        stage.schema_code = data['schema_code']
-        flag_modified(stage, 'schema')
-        if stage.triggers is None:
-            stage.triggers = {}
-        _prepare_new_planner_triggers(stage.id, schema['triggers'], stage.schema['triggers'], stage.triggers)
-        flag_modified(stage, 'triggers')
-        log.info('new schema: %s', stage.schema)
+    stage.schema_from_repo_enabled = schema_from_repo_enabled
 
     if schema_from_repo_enabled:
         if 'repo_url' in data:
@@ -369,6 +382,19 @@ def update_stage(stage_id, data):
             stage.repo_access_token = data['repo_access_token']
         if 'schema_file' in data:
             stage.schema_file = data['schema_file']
+
+        schema_code = _get_schema_from_repo(stage.repo_url, stage.repo_branch, stage.repo_access_token, stage.schema_file)
+        data['schema_code'] = schema_code
+
+    _, schema = _check_and_correct_stage_schema(stage.branch, data, stage.schema_code)
+    stage.schema = schema
+    stage.schema_code = data['schema_code']
+    flag_modified(stage, 'schema')
+    if stage.triggers is None:
+        stage.triggers = {}
+    _prepare_new_planner_triggers(stage.id, schema['triggers'], stage.schema['triggers'], stage.triggers)
+    flag_modified(stage, 'triggers')
+    log.info('new schema: %s', stage.schema)
 
     db.session.commit()
 

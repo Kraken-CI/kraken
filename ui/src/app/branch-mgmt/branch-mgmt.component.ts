@@ -47,7 +47,6 @@ export class BranchMgmtComponent implements OnInit {
     schemaCheckContent: any
 
     schemaFromRepoForm = new FormGroup({
-        schema_from_repo_enabled: new FormControl(''),
         repo_url: new FormControl(''),
         repo_branch: new FormControl(''),
         repo_access_token: new FormControl(''),
@@ -116,6 +115,14 @@ export class BranchMgmtComponent implements OnInit {
         }
         this.stage = stage
         this.stage.selectedClass = 'selectedClass'
+
+        const val = {
+            repo_url: stage.repo_url,
+            repo_branch: stage.repo_branch,
+            repo_access_token: stage.repo_access_token,
+            schema_file: stage.schema_file,
+        }
+        this.schemaFromRepoForm.setValue(val)
     }
 
     newStage() {
@@ -168,6 +175,7 @@ export class BranchMgmtComponent implements OnInit {
             name: this.stage.name,
             schema_code: this.stage.schema_code,
             enabled: this.stage.enabled,
+            schema_from_repo_enabled: this.stage.schema_from_repo_enabled,
         }
         stage = Object.assign(stage, this.schemaFromRepoForm.value)
         this.doSaveStage(stage)
