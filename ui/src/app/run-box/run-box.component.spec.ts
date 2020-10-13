@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing'
+import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing'
 
 import { RunBoxComponent } from './run-box.component'
 
@@ -6,7 +6,7 @@ describe('RunBoxComponent', () => {
     let component: RunBoxComponent
     let fixture: ComponentFixture<RunBoxComponent>
 
-    beforeEach(async(() => {
+    beforeEach(waitForAsync(() => {
         TestBed.configureTestingModule({
             declarations: [RunBoxComponent],
         }).compileComponents()
