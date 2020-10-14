@@ -32,7 +32,7 @@ def detect_capabilities():
     try:
         client = pylxd.Client()
         info = client.host_info
-        return {'lxd': info['server_version']}
+        return {'lxd': info['environment']['server_version']}
     except:
         return {}
 

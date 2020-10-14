@@ -189,7 +189,7 @@ task :run_agent_in_lxd_all do
 end
 
 task :run_agent_in_lxd do
-#  Rake::Task["build_agent"].invoke
+  Rake::Task["build_agent"].invoke
   Dir.chdir('agent') do
     systems = [
       ['ubuntu:20.04', 'u20'],

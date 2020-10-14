@@ -53,7 +53,7 @@
             <td>{{job.name}}</td>
             <td>{{getJobState(job)}} <i *ngIf="job.state !== 5" class="pi pi-spin pi-spinner" style="font-size: 16px; vertical-align: text-top;"></i></td>
             <td>
-              <i style="vertical-align: bottom; font-size: 1.4em;" [ngClass]="getJobStatusClass(job)"></i>{{getJobStatus(job)}}
+              <i style="vertical-align: bottom; font-size: 1.4em;" [ngClass]="getJobStatusClass(job)"></i> {{getJobStatus(job)}}
             </td>
             <td style="overflow-wrap: anywhere;">{{ job.system }}</td>
             <td>default</td>

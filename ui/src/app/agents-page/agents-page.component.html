@@ -41,16 +41,18 @@
     <ng-template pTemplate="header">
       <tr>
         <th style="width: 60px;">ID</th>
-        <th style="width: 100px;">Address</th>
+        <th style="width: 120px;">Address</th>
         <th style="width: 120px;">Name</th>
         <th style="width: 120px;">IP Address</th>
-        <th style="width: 120px;">State</th>
-        <th style="width: 120px;">Disabled</th>
+        <th style="width: 60px;">State</th>
+        <th style="width: 80px;">Disabled</th>
         <th style="width: 120px;">Last Seen</th>
         <th style="width: 10%;">Groups</th>
-        <th style="width: 15%;">Host Info</th>
+        <th style="width: 10%;">System</th>
+        <th style="width: 10%;">Isolation</th>
+        <th style="width: 10%;">Host Info</th>
         <th style="width: 10%;">User Attrs</th>
-        <th style="width: 10%;">Job</th>
+        <th style="width: 80px;">Job</th>
         <th style="width: 4rem;">Action</th>
       </tr>
     </ng-template>
@@ -69,7 +71,15 @@
           </span>
         </td>
         <td>
-          <div *ngFor="let hi of agent.host_info | keyvalue">
+          {{ agent.host_info['system_type'] }} /
+          {{ agent.host_info['system'] }}
+        </td>
+        <td>
+          {{ agent.host_info['isolation_type'] }}
+          {{ agent.host_info['isolation'] === 'bare-metal' ? '' : ' / ' + agent.host_info['isolation'] }}
+        </td>
+        <td>
+          <div *ngFor="let hi of filterHostInfo(agent.host_info)">
             <span style="color: #888;">{{ hi.key }}</span>: {{ hi.value }}
           </div>
         </td>

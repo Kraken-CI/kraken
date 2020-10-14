@@ -21,6 +21,10 @@ from . import sysutils
 log = logging.getLogger(__name__)
 
 
+def detect_capabilities():
+    return {}
+
+
 class LocalExecContext:
     def __init__(self, job):
         self.job = job

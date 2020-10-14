@@ -469,7 +469,7 @@ def serve_agent_request():
 
     if not agent.authorized:
         log.warning('unauthorized agent %s from %s', address, request.remote_addr)
-        return json.dumps({})
+        return json.dumps({'unauthorized': True})
 
     response = {}
 

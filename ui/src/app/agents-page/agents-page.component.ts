@@ -277,4 +277,16 @@ export class AgentsPageComponent implements OnInit {
             this.saveAgent(agentTab)
         }
     }
+
+    filterHostInfo(hostInfo) {
+        const ignoredAttrs = new Set(['system', 'system_type', 'distro_name', 'distro_version', 'isolation', 'isolation_type'])
+        const res = []
+        for (const [key, value] of Object.entries(hostInfo)) {
+            if (ignoredAttrs.has(key)) {
+                continue
+            }
+            res.push({key: key, value:value})
+        }
+        return res
+    }
 }

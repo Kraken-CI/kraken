@@ -22,7 +22,7 @@ import tarfile
 import logging
 import traceback
 
-from . import consts
+from . import consts, utils
 
 try:
     import docker
@@ -51,15 +51,6 @@ def _create_archive(filepath, arcname=None):
         archive.add(filepath, arcname=arcname)
     data.seek(0)
     return data
-
-
-def _is_docker():
-    with open('/proc/self/cgroup', 'r') as procfile:
-        for line in procfile:
-            fields = line.strip().split('/')
-            if 'docker' in fields[1]:
-                return True
-    return False
 
 
 class Timeout(Exception):
@@ -104,7 +95,7 @@ class DockerExecContext:
 
         # prepare list of mounts from host agent container
         mounts = []
-        if _is_docker():
+        if utils.is_in_docker():
             # get current container with agent
             curr_cntr_id = os.environ['HOSTNAME']
             self.curr_cntr = self.client.containers.get(curr_cntr_id)
@@ -158,7 +149,7 @@ class DockerExecContext:
 
 
         # if agent is running inside docker then get or create lab_net and use it to communicate with execution container
-        if _is_docker():
+        if utils.is_in_docker():
             for net in self.client.networks.list():
                 if net.name.endswith('lab_net'):
                     self.lab_net = net

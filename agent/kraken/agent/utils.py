@@ -174,3 +174,27 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
     if output_handler is None:
         return retcode, out
     return retcode
+
+
+def is_in_docker():
+    try:
+        with open('/proc/self/cgroup', 'r') as procfile:
+            for line in procfile:
+                fields = line.strip().split('/')
+                if 'docker' in fields[1]:
+                    return True
+    except:
+        log.exception('IGNORED')
+    return False
+
+
+def is_in_lxc():
+    try:
+        with open('/proc/self/cgroup', 'r') as procfile:
+            for line in procfile:
+                fields = line.strip().split('/')
+                if '.lxc' in fields[1]:
+                    return True
+    except:
+        log.exception('IGNORED')
+    return False

@@ -26,11 +26,15 @@ import pkg_resources
 import distro
 
 from . import logs
+from . import utils
 from . import config
 from . import server
 from . import jobber
 from . import update
 from . import install
+from . import local_run
+from . import docker_run
+from . import lxd_run
 
 log = logging.getLogger('agent')
 
@@ -73,12 +77,29 @@ def apply_cfg_changes(changes):
 
 def collect_host_info():
     host_info = {}
+
+    # collect basic host and its system information
     s = platform.system().lower()
     host_info['system_type'] = s
     if s == 'linux':
         host_info['system'] = '%s-%s' % (distro.id(), distro.version())
         host_info['distro_name'] = distro.id()
         host_info['distro_version'] = distro.version()
+
+    # detect isolation
+    host_info['isolation_type'] = 'bare-metal'
+    host_info['isolation'] = 'bare-metal'
+    if utils.is_in_docker():
+        host_info['isolation_type'] = 'container'
+        host_info['isolation'] = 'docker'
+    elif utils.is_in_lxc():
+        host_info['isolation_type'] = 'container'
+        host_info['isolation'] = 'lxc'
+
+    # check executors capabilities
+    for mod in [local_run, docker_run, lxd_run]:
+        caps = mod.detect_capabilities()
+        host_info.update(caps)
 
     return host_info
 
@@ -133,7 +154,13 @@ def main():
     srv = server.Server()
 
     host_info = collect_host_info()
-    srv.report_host_info(host_info)
+    while True:
+        resp = srv.report_host_info(host_info)
+        log.info('RESP %s', resp)
+        if 'unauthorized' not in resp:
+            break
+        log.warning('agent is not authorized, sleeping for 10s')
+        time.sleep(10)
 
     while True:
         try:
