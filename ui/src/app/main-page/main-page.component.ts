@@ -39,6 +39,12 @@ export class MainPageComponent implements OnInit {
 
     ngOnInit() {
         this.titleService.setTitle('Kraken - Main')
+        this.breadcrumbService.setCrumbs([
+            {
+                label: 'Home',
+            },
+        ])
+
         this.refresh()
     }
 
