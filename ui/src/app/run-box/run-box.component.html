@@ -14,7 +14,7 @@
       <div *ngIf="run.state == 'manual'">waiting for manual trigger
       </div>
     </div>
-    <span style="float:right; cursor: pointer;" aria-hidden="true" class="ui-button-icon-left ui-clickable pi pi-bars" (click)="showRunMenu($event, runBoxMenu, run)"></span>
+    <span style="float:right; cursor: pointer; padding-right: 8px;" aria-hidden="true" class="pi pi-bars" (click)="showRunMenu($event, runBoxMenu, run)"></span>
   </div>
   <!--- details -->
   <div *ngIf="run" class="job-detal-items">

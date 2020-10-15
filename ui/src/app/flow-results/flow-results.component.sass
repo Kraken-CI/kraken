@@ -19,11 +19,6 @@
 .level9
   width: 55%
 
-
-::ng-deep .ui-paginator .ui-paginator-right-content
-  display: inline-block
-  float: unset
-  color: #848484
-  padding-left: 20px
-  line-height: 2.286em
-  height: 2.286em
+// fix right content in paginator so it does not move all elemets to left and right content to right
+::ng-deep .p-paginator .p-paginator-right-content
+  margin-left: 20px

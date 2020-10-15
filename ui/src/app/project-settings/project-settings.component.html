@@ -100,7 +100,7 @@
             <label><span> </span>
               <p-button *ngIf="secretMode === 1" label="Add" icon="pi pi-plus" (onClick)="secretAdd()"></p-button>
               <p-button *ngIf="secretMode === 2" label="Save" icon="pi pi-plus" (onClick)="secretSave()"></p-button>
-              <p-button *ngIf="secretMode === 2" label="Delete" icon="pi pi-trash" [style]="{'margin-left': '20px'}" styleClass="ui-button-danger" (onClick)="secretDelete()"></p-button>
+              <p-button *ngIf="secretMode === 2" label="Delete" icon="pi pi-trash" [style]="{'margin-left': '20px'}" styleClass="p-button-danger" (onClick)="secretDelete()"></p-button>
             </label>
           </form>
 

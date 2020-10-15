@@ -14,8 +14,9 @@
 #results td
   padding: 2px 4px
 
-::ng-deep body .cmd-line-btn.ui-button.ui-button-text-only .ui-button-text
-  padding: 0.2em 0.5em
+// make cmd-line button in tests results table smaller to avoid increasing height of rows in the table
+::ng-deep body .cmd-line-btn.p-button
+  padding: 0.2rem 0.5rem
 
 .step-status-red
   color: #FF0000
@@ -36,16 +37,12 @@
   color: #5095ff
   font-weight: bold
 
-::ng-deep .ui-paginator .ui-paginator-right-content
-  display: inline-block
-  float: unset
-  color: #848484
-  padding-left: 20px
-  line-height: 2.286em
-  height: 2.286em
+// fix right content in paginator so it does not move all elemets to left and right content to right
+::ng-deep .p-paginator .p-paginator-right-content
+  margin-left: 20px
 
 // TODO: it seems that it does not work
-::ng-deep body .job-tabview .ui-tabview .ui-tabview-panels .ui-tabview-panel
+::ng-deep body .job-tabview .p-tabview .p-tabview-panels .p-tabview-panel
   overflow-x: scroll
 
 // location column in issues table
@@ -57,3 +54,8 @@
 
 .location:hover
   overflow: visible
+
+
+// reduce padding around log box
+::ng-deep body .job-tabview.p-tabview .p-tabview-panels
+  padding: 1rem 1rem 0 1rem

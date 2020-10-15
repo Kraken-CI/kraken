@@ -19,13 +19,14 @@
 <p-tabMenu [model]="tabs">
     <ng-template pTemplate="item" let-item let-i="index">
         <div style="display: flex; justify-content: space-between;">
-            <div class="ui-menuitem-icon" [ngClass]="item.icon" *ngIf="item.icon" style="font-size: 2em"></div>
-            <div class="ui-menuitem-text">
+            <div class="p-menuitem-icon" [ngClass]="item.icon" *ngIf="item.icon" style="font-size: 2em"></div>
+            <div class="p-menuitem-text">
                 <b>{{ item.label }}</b>
             </div>
+            &nbsp;
             <div
-                class="ui-menuitem-icon pi pi-times"
-                style="font-size: 1.3rem"
+                class="p-menuitem-icon pi pi-times"
+                style="font-size: 1rem"
                 (click)="closeTab($event, i)"
                 *ngIf="i !== 0"
             ></div>
@@ -106,7 +107,7 @@
 </div>
 
 <!-- Single group tab -->
-<div *ngIf="activeTabIdx != 0" class="ui-widget">
+<div *ngIf="activeTabIdx != 0" class="p-component">
   <table style="margin-top: 10px;">
     <tr>
       <th style="width: 8rem;"></th>

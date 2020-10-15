@@ -1,12 +1,12 @@
 <div style="display: flex; justify-content: flex-end; margin: -5px 20px 5px 0;">
-  <p-button icon="pi pi-download" [style]="{'margin-right': '7px'}" styleClass="ui-button-rounded" (click)="logDownload()"></p-button>
-  <p-button icon="pi pi-plus" [style]="{'margin-right': '7px'}" styleClass="ui-button-rounded" (click)="logZoomIn()"></p-button>
-  <p-button icon="pi pi-minus" [style]="{'margin-right': '7px'}" styleClass="ui-button-rounded" (click)="logZoomOut()"></p-button>
-  <p-button icon="pi pi-arrow-up" [style]="{'margin-right': '7px'}" styleClass="ui-button-rounded" (click)="logScrollUp()"></p-button>
-  <p-button icon="pi pi-arrow-down" styleClass="ui-button-rounded" (click)="logScrollDown()"></p-button>
+  <p-button icon="pi pi-download" [style]="{'margin-right': '7px'}" (click)="logDownload()"></p-button>
+  <p-button icon="pi pi-plus" [style]="{'margin-right': '7px'}" (click)="logZoomIn()"></p-button>
+  <p-button icon="pi pi-minus" [style]="{'margin-right': '7px'}" (click)="logZoomOut()"></p-button>
+  <p-button icon="pi pi-arrow-up" [style]="{'margin-right': '7px'}" (click)="logScrollUp()"></p-button>
+  <p-button icon="pi pi-arrow-down" (click)="logScrollDown()"></p-button>
 </div>
 
-<div style="background-color: black; color: #ccc; padding: 10px; height: 70vh; font-family: Menlo, DejaVu Sans Mono, Liberation Mono, Consolas, Ubuntu Mono, Courier New, andale mono, lucida console, monospace; font-size: 12px; overflow-y: auto;" #logBox  (scroll)="scrolled($event)">
+<div style="background-color: black; color: #ccc; padding: 10px; height: calc(100vh - 340px); font-family: Menlo, DejaVu Sans Mono, Liberation Mono, Consolas, Ubuntu Mono, Courier New, andale mono, lucida console, monospace; font-size: 12px; overflow-y: auto;" #logBox  (scroll)="scrolled($event)">
   <div *ngFor="let frag of logFragments" #logFrag>
     <div *ngIf="frag.title" style="font-size: 1.2em; font-weight: bold; color: lawngreen; cursor: pointer;" (click)="frag.expanded = !frag.expanded">
       <i *ngIf="!frag.expanded" class="pi pi-caret-right" style="vertical-align: bottom;"></i>

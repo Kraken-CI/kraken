@@ -385,15 +385,16 @@ def update_stage(stage_id, data):
         schema_code = _get_schema_from_repo(stage.repo_url, stage.repo_branch, stage.repo_access_token, stage.schema_file)
         data['schema_code'] = schema_code
 
-    _, schema = _check_and_correct_stage_schema(stage.branch, data, stage.schema_code)
-    stage.schema = schema
-    stage.schema_code = data['schema_code']
-    flag_modified(stage, 'schema')
-    if stage.triggers is None:
-        stage.triggers = {}
-    _prepare_new_planner_triggers(stage.id, schema['triggers'], stage.schema['triggers'], stage.triggers)
-    flag_modified(stage, 'triggers')
-    log.info('new schema: %s', stage.schema)
+    if 'schema_code' in data:
+        _, schema = _check_and_correct_stage_schema(stage.branch, data, stage.schema_code)
+        stage.schema = schema
+        stage.schema_code = data['schema_code']
+        flag_modified(stage, 'schema')
+        if stage.triggers is None:
+            stage.triggers = {}
+        _prepare_new_planner_triggers(stage.id, schema['triggers'], stage.schema['triggers'], stage.triggers)
+        flag_modified(stage, 'triggers')
+        log.info('new schema: %s', stage.schema)
 
     db.session.commit()
 

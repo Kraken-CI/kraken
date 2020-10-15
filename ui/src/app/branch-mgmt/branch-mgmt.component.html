@@ -26,7 +26,7 @@
       <i class="pi pi-exclamation-triangle" style="vertical-align: text-bottom;"></i>
       Error in schema code
     </div>
-    <button type="button" pButton icon="pi pi-close" (click)="schemaCheckDisplay=false" label="Close" class="ui-button-secondary"></button>
+    <button type="button" pButton icon="pi pi-close" (click)="schemaCheckDisplay=false" label="Close"></button>
   </p-footer>
 </p-dialog>
 
@@ -52,7 +52,9 @@
     <button type="button" pButton icon="pi pi-caret-right" label="Run Dev Flow"></button>
   </a>
 
+<!--
   <button type="button" (click)="forkBranch()" pButton icon="fa fa-code-fork" label="Fork Branch" style="margin: 0 10px 0 100px;"></button>
+-->
 </div>
 
 <p-tabView>
@@ -114,7 +116,7 @@
 
           <p-tabView>
             <p-tabPanel header="Schema">
-              <div style="height: calc(100vh - 450px); padding: 5px 0 10px 0;">
+              <div style="height: calc(100vh - 520px); padding: 5px 0 10px 0;">
                 <ngx-codemirror
                   id="ngx-cm"
                   [(ngModel)]="stage.schema_code"
@@ -150,7 +152,7 @@
           </p-tabView>
         </div>
         <button type="button" (click)="saveStage()" pButton icon="pi pi-check" label="Save Stage" style="margin: 0 50px 0 0.25em;"></button>
-        <button type="button" (click)="deleteStage()" pButton icon="pi pi-trash" class="ui-button-danger" label="Delete Stage"></button>
+        <button type="button" (click)="deleteStage()" pButton icon="pi pi-trash" class="p-button-danger" label="Delete Stage"></button>
         <span *ngIf="saveErrorMsg.length > 0">
           <p-message severity="error" [text]="saveErrorMsg" style="margin-left: 40px;"></p-message>
         </span>

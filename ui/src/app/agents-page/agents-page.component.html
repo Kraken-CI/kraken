@@ -1,13 +1,14 @@
 <p-tabMenu [model]="tabs">
     <ng-template pTemplate="item" let-item let-i="index">
         <div style="display: flex; justify-content: space-between;">
-            <div class="ui-menuitem-icon" [ngClass]="item.icon" *ngIf="item.icon" style="font-size: 2em"></div>
-            <div class="ui-menuitem-text">
+            <div class="p-menuitem-icon" [ngClass]="item.icon" *ngIf="item.icon" style="font-size: 2em"></div>
+            <div class="p-menuitem-text">
                 <b>{{ item.label }}</b>
             </div>
+            &nbsp;
             <div
-                class="ui-menuitem-icon pi pi-times"
-                style="font-size: 1.3rem"
+                class="p-menuitem-icon pi pi-times"
+                style="font-size: 1rem"
                 (click)="closeTab($event, i)"
                 *ngIf="i !== 0"
             ></div>
@@ -99,66 +100,87 @@
 </div>
 
 <!-- Single agent tab -->
-<div *ngIf="activeTabIdx != 0" class="ui-widget">
-  <table style="margin-top: 10px;">
-    <tr>
-      <th style="width: 8rem;"></th>
-      <th style="width: 12rem;"></th>
-    </tr>
+<div *ngIf="activeTabIdx != 0" class="p-component">
+  <div class="p-grid"  style="margin-top: 10px;">
+    <div class="p-col-4">
+      <table>
+        <tr>
+          <th style="width: 8rem;"></th>
+          <th style="width: 12rem;"></th>
+        </tr>
 
-    <tr>
-      <td style="text-align: right; padding-right: 10px;">
-        Agent Name
-      </td>
-      <td>
-        {{ agentTab.agent.name }}
-      </td>
-    </tr>
+        <tr>
+          <td style="text-align: right; padding-right: 10px;">
+            Agent Name
+          </td>
+          <td>
+            {{ agentTab.agent.name }}
+          </td>
+        </tr>
 
-    <tr>
-      <td style="text-align: right; padding-right: 10px;">
-        Address
-      </td>
-      <td>
-        {{ agentTab.agent.address }}
-      </td>
-    </tr>
+        <tr>
+          <td style="text-align: right; padding-right: 10px;">
+            Address
+          </td>
+          <td>
+            {{ agentTab.agent.address }}
+          </td>
+        </tr>
 
-    <tr>
-      <td style="text-align: right; padding-right: 10px;">
-        IP Address
-      </td>
-      <td>
-        {{ agentTab.agent.ip_address }}
-      </td>
-    </tr>
+        <tr>
+          <td style="text-align: right; padding-right: 10px;">
+            IP Address
+          </td>
+          <td>
+            {{ agentTab.agent.ip_address }}
+          </td>
+        </tr>
 
-    <tr>
-      <td style="text-align: right; padding-right: 10px;">
-        State
-      </td>
-      <td>
-        {{ agentTab.agent.state }}
-      </td>
-    </tr>
+        <tr>
+          <td style="text-align: right; padding-right: 10px;">
+            State
+          </td>
+          <td>
+            {{ agentTab.agent.state }}
+          </td>
+        </tr>
 
-    <tr>
-      <td style="text-align: right; padding-right: 10px;">
-        Disabled
-      </td>
-      <td>
-        {{ agentTab.agent.disabled }}
-      </td>
-    </tr>
+        <tr>
+          <td style="text-align: right; padding-right: 10px;">
+            Disabled
+          </td>
+          <td>
+            {{ agentTab.agent.disabled }}
+          </td>
+        </tr>
 
-    <tr>
-      <td style="text-align: right; padding-right: 10px;">
-        Groups
-      </td>
-      <td>
-        <p-multiSelect [options]="agentGroups" optionLabel="name" [(ngModel)]="agentTab.agent.groups" [panelStyle]="{minWidth:'12em'}"></p-multiSelect>
-      </td>
-    </tr>
-  </table>
-  <p-button label="Save" icon="pi pi-check" (onClick)="saveAgent(agentsTable)"></p-button>
+        <tr>
+          <td style="text-align: right; padding-right: 10px;">
+            Groups
+          </td>
+          <td>
+            <p-multiSelect [options]="agentGroups" optionLabel="name" [(ngModel)]="agentTab.agent.groups" [panelStyle]="{minWidth:'12em'}"></p-multiSelect>
+          </td>
+        </tr>
+      </table>
+      <p-button label="Save" icon="pi pi-check" (onClick)="saveAgent(agentsTable)"></p-button>
+    </div>
+    <div class="p-col-4">
+      <table>
+        <tr>
+          <th style="width: 8rem;"></th>
+          <th style="width: 12rem;"></th>
+        </tr>
+
+        <tr *ngFor="let hi of agentTab.agent.host_info | keyvalue">
+          <td style="text-align: right; padding-right: 10px;">
+            {{ hi.key }}
+          </td>
+          <td>
+            {{ hi.value }}
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
 </div>
