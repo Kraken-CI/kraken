@@ -295,7 +295,7 @@ def analyze_results_history(self, run_id):
             q = q.filter(Flow.kind == run.flow.kind)
             q = q.order_by(asc(Flow.created))
             next_run = q.first()
-            if next_run is not None:
+            if next_run is not None and next_run.state in [consts.RUN_STATE_COMPLETED, consts.RUN_STATE_PROCESSED]:
                 t = analyze_results_history.delay(next_run.id)
                 log.info('enqueued anlysis of run %s, bg processing: %s', next_run, t)
 
