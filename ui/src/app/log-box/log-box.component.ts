@@ -418,7 +418,9 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
         this.isNearBottom = this.isScrollNearBottom()
     }
 
-    logDownload() {}
+    logDownload() {
+        window.open('/job_log/' + this.prvJobId)
+    }
 
     logZoomIn() {
         this.fontSize += 0.05

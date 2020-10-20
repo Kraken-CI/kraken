@@ -28,6 +28,7 @@ from . import srvcheck
 from . import webhooks
 from . import agentblob
 from . import storage
+from . import job_log
 from .. import version
 
 log = logging.getLogger('server')
@@ -82,9 +83,12 @@ def create_app():
     # serve agent files for agent update
     connex_app.add_url_rule("/install/<blob>", view_func=agentblob.serve_agent_blob, methods=['GET'])
 
-    # server build artifacts
+    # serve build artifacts
     connex_app.add_url_rule("/artifacts/<store_type>/f/<flow_id>/<path:path>", view_func=storage.serve_flow_artifact, methods=['GET'])
     connex_app.add_url_rule("/artifacts/<store_type>/r/<run_id>/<path:path>", view_func=storage.serve_run_artifact, methods=['GET'])
+
+    # serve job log
+    connex_app.add_url_rule("/job_log/<job_id>", view_func=job_log.serve_job_log, methods=['GET'])
 
     # install webhooks
     webhooks_bp = webhooks.create_blueprint()
