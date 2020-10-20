@@ -50,6 +50,7 @@ LABEL kkver=${kkver} kkname=server
 
 ##############################################################################################################
 FROM base as server
+RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates && rm -rf /var/lib/apt/lists/*
 WORKDIR /server
 COPY --from=builder /venv /venv
 COPY kkagent /server

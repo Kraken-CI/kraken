@@ -337,10 +337,10 @@ def _get_schema_from_repo(repo_url, repo_branch, repo_access_token, schema_file)
         # clone repo
         cmd = "git clone '%s' repo" % repo_url
         subprocess.run(cmd, shell=True, check=True, cwd=tmpdir)
+        repo_dir = os.path.join(tmpdir, 'repo')
 
         # checkout branch if needed
         if repo_branch and repo_branch != 'master':
-            repo_dir = os.path.join(tmpdir, 'repo')
             cmd = 'git checkout %s' % repo_branch
             subprocess.run(cmd, shell=True, check=True, cwd=repo_dir)
 
