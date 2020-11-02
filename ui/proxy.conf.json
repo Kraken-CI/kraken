@@ -14,5 +14,9 @@
     "/job_log/*": {
         "target": "http://localhost:8080",
         "secure": false
+    },
+    "/install/*": {
+        "target": "http://localhost:8080",
+        "secure": false
     }
 }

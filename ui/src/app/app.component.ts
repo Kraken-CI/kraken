@@ -45,6 +45,10 @@ export class AppComponent implements OnInit {
                         label: 'Discovered',
                         routerLink: '/discovered-agents',
                     },
+                    {
+                        label: 'Download',
+                        url: '/install/kraken-agent-install.sh',
+                    },
                 ],
             },
             {

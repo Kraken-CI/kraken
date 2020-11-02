@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+import pwd
 import tempfile
 import platform
 import subprocess
@@ -52,14 +54,17 @@ def install_linux():
         run('sudo bash -c \'echo "Set disable_coredump false" >> /etc/sudo.conf\'')
 
     # create kraken user
-    if dstr in ['ubuntu', 'debian']:
-        run('sudo useradd kraken -d %s -m -s /bin/bash -G sudo' % consts.AGENT_DIR)
-    elif dstr in ['fedora', 'centos']:
-        run('sudo useradd kraken -d %s -m -s /bin/bash -G wheel --system' % consts.AGENT_DIR)
-    elif 'suse' in dstr:
-        run('sudo useradd kraken -d %s -m -s /bin/bash -G wheel --system -U' % consts.AGENT_DIR)
-    else:
-        raise Exception('distro %s is not supported yet' % dstr)
+    try:
+        pwd.getpwnam('kraken')
+    except:
+        if dstr in ['ubuntu', 'debian']:
+            run('sudo useradd kraken -d %s -m -s /bin/bash -G sudo' % consts.AGENT_DIR)
+        elif dstr in ['fedora', 'centos']:
+            run('sudo useradd kraken -d %s -m -s /bin/bash -G wheel --system' % consts.AGENT_DIR)
+        elif 'suse' in dstr:
+            run('sudo useradd kraken -d %s -m -s /bin/bash -G wheel --system -U' % consts.AGENT_DIR)
+        else:
+            raise Exception('distro %s is not supported yet' % dstr)
 
     # install bin files
     kraken_version = pkg_resources.get_distribution('kraken-agent').version
@@ -73,8 +78,15 @@ def install_linux():
     tmp_dir = Path(tempfile.gettempdir())
     agent_path, tool_path = update.get_blobs(tmp_dir)
     run('sudo mv %s %s %s' % (agent_path, tool_path, dest_dir))
+
+    if os.path.exists('/opt/kraken/kkagent'):
+        os.unlink('/opt/kraken/kkagent')
     run('sudo ln -s %s/kkagent /opt/kraken/kkagent' % dest_dir)
+
+    if os.path.exists('/opt/kraken/kktool'):
+        os.unlink('/opt/kraken/kktool')
     run('sudo ln -s %s/kktool /opt/kraken/kktool' % dest_dir)
+
     run('sudo chown kraken:kraken %s/* /opt/kraken/*' % dest_dir)
 
     # setup kraken agent service in systemd

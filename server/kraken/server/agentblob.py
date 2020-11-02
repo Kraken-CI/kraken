@@ -14,13 +14,63 @@
 
 import os
 
-from flask import send_file, abort
+from flask import send_file, abort, request, make_response
 
 KKAGENT_DIR = os.environ.get('KKAGENT_DIR', '')
 
+
+INSTALL_SCRIPT = '''#!/bin/bash
+set -x
+
+KRAKEN_URL={url}
+
+# check sudo
+sudo -n true
+if [ $? -ne 0 ]; then
+    echo "error: sudo with no password is required"
+    exit 1
+fi
+
+# check curl and wget
+DL_TOOL=
+which curl
+if [ $? -ne 0 ]; then
+    which wget
+    if [ $? -ne 0 ]; then
+        echo "error: missing curl and wget, install any of them"
+        exit 1
+    else
+        DL_TOOL=wget
+    fi
+else
+    DL_TOOL=curl
+fi
+
+set -e
+
+if [ "$DL_TOOL" == "wget" ]; then
+    wget -O /tmp/kkagent ${KRAKEN_URL}install/agent
+else
+    curl -o /tmp/kkagent ${KRAKEN_URL}install/agent
+fi
+chmod a+x /tmp/kkagent
+/tmp/kkagent install -s ${KRAKEN_URL}
+rm -f /tmp/kkagent
+echo 'Kraken Agent installed'
+'''
+
+
 def serve_agent_blob(blob):
-    if blob not in ['agent', 'tool']:
+    if blob not in ['agent', 'tool', 'kraken-agent-install.sh']:
         abort(404)
+
+    if blob == 'kraken-agent-install.sh':
+        url = request.host_url
+        script = INSTALL_SCRIPT.replace('{url}', url)
+        resp = make_response(script)
+        # add a filename
+        resp.headers.set("Content-Disposition", "attachment", filename="kraken-agent-install.sh")
+        return resp
 
     p = os.path.join(KKAGENT_DIR, 'kk' + blob)
     return send_file(p)
