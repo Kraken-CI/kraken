@@ -31,6 +31,13 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+# check python3
+python3 --version
+if [ $? -ne 0 ]; then
+    echo "error: missing python3, it is required to run Kraken agent"
+    exit 1
+fi
+
 # check curl and wget
 DL_TOOL=
 which curl
