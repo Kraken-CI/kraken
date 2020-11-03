@@ -1,5 +1,5 @@
 <div style="display: flex; justify-content: flex-end; margin: -5px 20px 5px 0;">
-  <p-button icon="pi pi-download" [style]="{'margin-right': '7px'}" (click)="logDownload()"></p-button>
+  <a pButton icon="pi pi-download" [style]="{'margin-right': '7px', 'color': 'white'}" [href]="'/job_log/' + prvJobId"></a>
   <p-button icon="pi pi-plus" [style]="{'margin-right': '7px'}" (click)="logZoomIn()"></p-button>
   <p-button icon="pi pi-minus" [style]="{'margin-right': '7px'}" (click)="logZoomOut()"></p-button>
   <p-button icon="pi pi-arrow-up" [style]="{'margin-right': '7px'}" (click)="logScrollUp()"></p-button>
