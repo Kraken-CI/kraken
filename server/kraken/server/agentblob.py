@@ -13,8 +13,14 @@
 # limitations under the License.
 
 import os
+import logging
 
 from flask import send_file, abort, request, make_response
+
+from .models import get_setting
+
+log = logging.getLogger(__name__)
+
 
 KKAGENT_DIR = os.environ.get('KKAGENT_DIR', '')
 
@@ -22,7 +28,7 @@ KKAGENT_DIR = os.environ.get('KKAGENT_DIR', '')
 INSTALL_SCRIPT = '''#!/bin/bash
 set -x
 
-KRAKEN_URL={url}
+KRAKEN_URL="{url}"
 
 # check sudo
 sudo -n true
@@ -72,10 +78,13 @@ def serve_agent_blob(blob):
         abort(404)
 
     if blob == 'kraken-agent-install.sh':
-        url = request.host_url
+        url = get_setting('general', 'server_url')
+        if not url:
+            raise abort(500, 'Cannot get server URL and put it in Kraken agent install script. The URL should be defined in Kraken Settings first.')
         script = INSTALL_SCRIPT.replace('{url}', url)
         resp = make_response(script)
         # add a filename
+        resp.headers.set("Content-Type", "application/x-sh")
         resp.headers.set("Content-Disposition", "attachment", filename="kraken-agent-install.sh")
         return resp
 

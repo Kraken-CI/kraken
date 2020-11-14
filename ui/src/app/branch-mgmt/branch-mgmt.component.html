@@ -96,13 +96,12 @@
                 </span>
               </p-inplace>
 
-              Description:
               <p-inplace #stageDescrInplace (onActivate)="stageDescrInplaceActivated()">
                 <span pInplaceDisplay>
                   {{stage.description || '(empty)'}}
                 </span>
                 <span pInplaceContent>
-                  <textarea pInputTextarea [(ngModel)]="newStageDescr" (keydown)="stageDescrKeyDown($event, stageDescrInplace)"  [rows]="5" [cols]="60"></textarea>
+                  <textarea pInputTextarea [(ngModel)]="newStageDescr" (keydown)="stageDescrKeyDown($event, stageDescrInplace)"  [rows]="5" [cols]="40"></textarea>
                 </span>
               </p-inplace>
             </div>
@@ -122,6 +121,7 @@
                   [(ngModel)]="stage.schema_code"
                   [options]="codeMirrorOpts"></ngx-codemirror>
               </div>
+              <a pButton label="Schema Help" href="https://kraken.ci/docs/schema" class="p-button-text" target="blank" icon="pi pi-question-circle" style="margin-right: 10px;"></a>
               <button type="button" (click)="checkStageSchema()" pButton icon="pi pi-eye" label="Check Schema"></button>
             </p-tabPanel>
             <p-tabPanel header="Schema from Repository">
