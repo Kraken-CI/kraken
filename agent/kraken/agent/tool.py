@@ -22,7 +22,6 @@ import argparse
 import importlib
 import traceback
 
-from . import logs
 from . import consts
 
 log = logging.getLogger('tool')

@@ -63,7 +63,6 @@ class LxdExecContext:
                 self.lab_net = net
                 break
         if self.lab_net is None:
-            driver = 'bridge'
             self.lab_net = self.client.networks.create('lab_net')
 
         # prepare container definition
