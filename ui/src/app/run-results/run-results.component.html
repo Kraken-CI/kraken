@@ -1,7 +1,7 @@
 <p-tabMenu [model]="tabs" [activeItem]="activeTab">
   <ng-template pTemplate="item" let-item let-i="index">
     <span style="font-size: 1.1em; font-weight: bold; margin-right: 5px;">{{item.label}}</span>
-    <span style="background-color: #628ed0; border-radius: 15px; padding: 1px 8px 2px; color: white; font-weight: bold;">{{ recordsCount[i] }}</span>
+    <span style="background-color: #9cbae6; border-radius: 15px; padding: 1px 8px 2px; color: white; font-weight: bold;">{{ recordsCount[i] }}</span>
   </ng-template>
 </p-tabMenu>
 
@@ -127,59 +127,61 @@
     </div>
   </div>
 
-  <div style="display: flex; margin: 15px 5px;">
-    <strong style="margin: 2px 30px 0 0; font-size: 1.5em; width: 3em;">Filters</strong>
+  <!-- tests filters -->
+  <div style="margin: 15px 5px;" class="p-grid p-fluid">
+    <strong style="margin: 2px 20px 0 0; font-size: 1.5em; width: 3em;">Filters</strong>
 
-    <div style="margin-right: 30px;">
-      Result Status:
+    <div class="p-field p-mr-3">
+      <label>Result Status:</label>
       <p-multiSelect
         [options]="resultStatuses" [(ngModel)]="filterStatuses" optionLabel="name"
-        [filter]="false" [scrollHeight]="500" (onChange)="refreshResults(resultsTable)"
-        [style]="{'vertical-align': 'middle'}"></p-multiSelect>
+        [filter]="false" [scrollHeight]="500" (onChange)="refreshResults(resultsTable)"></p-multiSelect>
     </div>
 
-    <div style="margin-right: 30px;">
-      Result Change:
+    <div class="p-field p-mr-3">
+      <label>Result Change:</label>
       <p-multiSelect
         [options]="resultChanges" [(ngModel)]="filterChanges" optionLabel="name"
         [filter]="false" [scrollHeight]="500" (onChange)="refreshResults(resultsTable)"
         [style]="{'vertical-align': 'middle'}"></p-multiSelect>
     </div>
 
-    <div style="margin-right: 30px;">
-      Age:
-      <p-spinner [(ngModel)]="filterMinAge" [min]="0" [max]="filterMaxAge" size="2"
-                 (onChange)="refreshResults(resultsTable)"
-                 [style]="{'vertical-align': 'middle'}"></p-spinner>
-      -
-      <p-spinner [(ngModel)]="filterMaxAge" [min]="filterMinAge" size="2"
-                 (onChange)="refreshResults(resultsTable)"
-                 [style]="{'vertical-align': 'middle'}"></p-spinner>
+    <div class="p-field p-mr-3">
+      <label>Age:</label>
+      <div style="display: flex; align-items: center;">
+        <p-inputNumber [showButtons]="true" [(ngModel)]="filterMinAge" [min]="0" [max]="filterMaxAge" size="2"
+                       (onChange)="refreshResults(resultsTable)"></p-inputNumber>
+        <div style="width: 1em; text-align: center;"> - </div>
+        <p-inputNumber [showButtons]="true" [(ngModel)]="filterMaxAge" [min]="filterMinAge" size="2"
+                       (onChange)="refreshResults(resultsTable)"></p-inputNumber>
+      </div>
     </div>
 
-    <div style="margin-right: 30px;">
-      Instability:
-      <p-spinner [(ngModel)]="filterMinInstability" [min]="0" [max]="filterMaxInstability" size="2"
-                 (onChange)="refreshResults(resultsTable)"
-                 [style]="{'vertical-align': 'middle'}"></p-spinner>
-      -
-      <p-spinner [(ngModel)]="filterMaxInstability" [min]="filterMinInstability" [max]="10" size="2"
-                 (onChange)="refreshResults(resultsTable)"
-                 [style]="{'vertical-align': 'middle'}"></p-spinner>
+    <div class="p-field p-mr-3">
+      <label>Instability:</label>
+      <div style="display: flex; align-items: center;">
+        <p-inputNumber [showButtons]="true" [(ngModel)]="filterMinInstability" [min]="0" [max]="filterMaxInstability" size="2"
+                       (onChange)="refreshResults(resultsTable)"></p-inputNumber>
+        <div style="width: 1em; text-align: center;"> - </div>
+        <p-inputNumber [showButtons]="true" [(ngModel)]="filterMaxInstability" [min]="filterMinInstability" [max]="10" size="2"
+                       (onChange)="refreshResults(resultsTable)"></p-inputNumber>
+      </div>
     </div>
 
-    <div style="margin-right: 30px;">
-      Test Case:
+    <div class="p-field p-mr-3">
+      <label>Test Case:</label>
       <input type="text" pInputText [(ngModel)]="filterTestCaseText" (keydown)="filterResultsKeyDown($event, resultsTable)"/>
     </div>
 
-    <div>
-      Job:
+    <div class="p-field p-mr-3">
+      <label>Job:</label>
       <input type="text" pInputText [(ngModel)]="filterResultJob" (keydown)="filterResultsKeyDown($event, resultsTable)"/>
     </div>
 
-    <p-button label="Refresh" icon="pi pi-refresh" (onClick)="refreshResults(resultsTable)" [style]="{'margin': '0 20px 0 60px'}"></p-button>
-    <p-button label="Reset" icon="pi pi-undo" (onClick)="resetResultsFilter(resultsTable)"></p-button>
+    <div style="display: flex; align-self: flex-end;" class="p-field">
+      <p-button label="Refresh" icon="pi pi-refresh" (onClick)="refreshResults(resultsTable)" class="p-ml-1 p-mr-2"></p-button>
+      <p-button label="Reset" icon="pi pi-times-circle" (onClick)="resetResultsFilter(resultsTable)"></p-button>
+    </div>
 
   </div>
 
@@ -253,50 +255,53 @@
     </div>
   </div>
 
-  <div style="display: flex; margin: 15px 5px;">
-    <strong style="margin: 2px 30px 0 0; font-size: 1.5em; width: 3em;">Filters</strong>
+  <!-- issues filters -->
+  <div style="margin: 15px 5px;" class="p-grid p-fluid">
+    <strong style="margin: 2px 20px 0 0; font-size: 1.5em; width: 3em;">Filters</strong>
 
-    <div style="margin-right: 30px;">
-      Type:
+    <div style="margin-right: 20px;" class="p-field">
+      <label>Type:</label>
       <p-multiSelect
         [options]="issueTypes" [(ngModel)]="filterIssueTypes" optionLabel="name"
         [filter]="false" [scrollHeight]="500" (onChange)="refreshIssues(issuesTable)"
         [style]="{'vertical-align': 'middle'}"></p-multiSelect>
     </div>
 
-    <div style="margin-right: 30px;">
-      Location:
+    <div style="margin-right: 20px;" class="p-field">
+      <label>Location:</label>
       <input type="text" pInputText [(ngModel)]="filterIssueLocation" (keydown)="filterIssuesKeyDown($event, issuesTable)"/>
     </div>
 
-    <div style="margin-right: 30px;">
-      Message:
+    <div style="margin-right: 20px;" class="p-field">
+      <label>Message:</label>
       <input type="text" pInputText [(ngModel)]="filterIssueMessage" (keydown)="filterIssuesKeyDown($event, issuesTable)"/>
     </div>
 
-    <div style="margin-right: 30px;">
-      Symbol:
-      <input type="text" pInputText [(ngModel)]="filterIssueSymbol" (keydown)="filterIssuesKeyDown($event, issuesTable)"/>
+    <div style="margin-right: 20px;" class="p-field">
+      <label>Symbol:</label>
+      <input type="text" size="8" pInputText [(ngModel)]="filterIssueSymbol" (keydown)="filterIssuesKeyDown($event, issuesTable)"/>
     </div>
 
-    <div style="margin-right: 30px;">
-      Age:
-      <p-spinner [(ngModel)]="filterIssueMinAge" [min]="0" [max]="filterIssueMaxAge" size="2"
-                 (onChange)="refreshIssues(issuesTable)"
-                 [style]="{'vertical-align': 'middle'}"></p-spinner>
-      -
-      <p-spinner [(ngModel)]="filterIssueMaxAge" [min]="filterIssueMinAge" size="2"
-                 (onChange)="refreshIssues(issuesTable)"
-                 [style]="{'vertical-align': 'middle'}"></p-spinner>
+    <div style="margin-right: 20px;" class="p-field">
+      <label>Age:</label>
+      <div style="display: flex; align-items: center;">
+        <p-inputNumber [showButtons]="true" [(ngModel)]="filterIssueMinAge" [min]="0" [max]="filterIssueMaxAge" size="2"
+                       (onChange)="refreshIssues(issuesTable)"></p-inputNumber>
+        <div style="width: 1em; text-align: center;"> - </div>
+        <p-inputNumber [showButtons]="true" [(ngModel)]="filterIssueMaxAge" [min]="filterIssueMinAge" size="2"
+                       (onChange)="refreshIssues(issuesTable)"></p-inputNumber>
+      </div>
     </div>
 
-    <div>
-      Job:
+    <div class="p-field">
+      <label>Job:</label>
       <input type="text" pInputText [(ngModel)]="filterIssueJob" (keydown)="filterIssuesKeyDown($event, issuesTable)"/>
     </div>
 
-    <p-button label="Refresh" icon="pi pi-refresh" (onClick)="refreshIssues(issuesTable)" [style]="{'margin': '0 20px 0 60px'}"></p-button>
-    <p-button label="Reset" icon="pi pi-undo" (onClick)="resetIssuesFilter(issuesTable)"></p-button>
+    <div style="display: flex; align-self: flex-end;" class="p-field">
+      <p-button label="Refresh" icon="pi pi-refresh" (onClick)="refreshIssues(issuesTable)" class="p-ml-4 p-mr-2"></p-button>
+      <p-button label="Reset" icon="pi pi-times-circle" (onClick)="resetIssuesFilter(issuesTable)"></p-button>
+    </div>
 
   </div>
 

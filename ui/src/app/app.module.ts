@@ -32,7 +32,7 @@ import { TabMenuModule } from 'primeng/tabmenu'
 import { CheckboxModule } from 'primeng/checkbox'
 import { MenubarModule } from 'primeng/menubar'
 import { InputSwitchModule } from 'primeng/inputswitch'
-import { SpinnerModule } from 'primeng/spinner'
+import { InputNumberModule } from 'primeng/inputnumber';
 import { PasswordModule } from 'primeng/password'
 import { TooltipModule } from 'primeng/tooltip';
 
@@ -120,7 +120,7 @@ export function cfgFactory() {
         CheckboxModule,
         MenubarModule,
         InputSwitchModule,
-        SpinnerModule,
+        InputNumberModule,
         PasswordModule,
         TooltipModule,
     ],
