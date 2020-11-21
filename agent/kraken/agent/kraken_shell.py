@@ -31,7 +31,7 @@ def run(step, **kwargs):  # pylint: disable=unused-argument
         env = None
 
     timeout = int(step.get('timeout', 60))
-    ret, _ = utils.execute(cmd, cwd=cwd, env=env, timeout=timeout, out_prefix='')
+    ret = utils.execute(cmd, cwd=cwd, env=env, timeout=timeout, out_prefix='', ignore_output=True)
     if ret != 0:
         return ret, 'cmd exited with non-zero retcode: %s' % ret
     return 0, ''

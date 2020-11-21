@@ -27,8 +27,48 @@ def _get_size(fname):
         return f.tell()
 
 
+def _trace_log_text2(log_text, output_handler, text, tracing, mask, out_prefix, trace_all):
+    if trace_all and not log_text.endswith('\n'):
+        log_text += '\n'
+
+    lines = log_text.rsplit('\n', 1)
+    if len(lines) == 1:
+        # no new lines so nothing new to print
+        log_text_left = lines[0]
+    else:
+        # some new line, so print all to last \n and the rest leave for the next iteration
+        frag_to_print_now = lines[0]
+        log_text_left = lines[1]
+
+        if output_handler:
+            output_handler(frag_to_print_now)
+        elif text is not None:
+            text.append(frag_to_print_now)
+        if tracing:
+            if mask:
+                frag_to_print_now = frag_to_print_now.rstrip().replace(mask, '******')
+            log.info("%s%s", out_prefix, frag_to_print_now)
+
+    return log_text_left
+
+
+def _trace_log_text(log_text, output_handler, text, tracing, mask, out_prefix, trace_all=False):
+    text_left = ''
+    # cut log to chunk to not get over log.info msg limit
+    for i in range(0, len(log_text), 2048):
+        chunk = log_text[i:i + 2048]
+
+        # only the last chunk can have trace_all = True
+        trace_all2 = False
+        if trace_all and i + 2048 >= len(log_text):
+            trace_all2 = True
+
+        text_left = _trace_log_text2(text_left + chunk, output_handler, text, tracing, mask, out_prefix, trace_all2)
+    return text_left
+
+
 def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=subprocess.STDOUT, tracing=True, raise_on_error=False,
-            callback=None, cb_period=5, mask=None, out_prefix='output: '):
+            callback=None, cb_period=5, mask=None, out_prefix='output: ', ignore_output=False):
     # pylint: disable=too-many-statements,too-many-branches,too-many-locals
     if cwd is None:
         cwd = os.getcwd()
@@ -60,7 +100,10 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
         t_trace = t = time.time()
         t_cb = t - cb_period - 1  # force callback on first loop iteration
         t_end = t + timeout
-        text = []
+        if ignore_output:
+            text = None
+        else:
+            text = []
         out_size = 0
         completed = False
         out_fragment = ""
@@ -91,23 +134,7 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
                     t1_frag = time.time()
                     # do not print too frequently, only every 128B or every 0.5s
                     if len(out_fragment) > 128 or t1_frag - t0_frag > 0.5:
-                        lines = out_fragment.rsplit('\n', 1)
-                        if len(lines) == 1:
-                            # no new lines so nothing new to print
-                            out_fragment = lines[0]
-                        else:
-                            # some new line, so print all to last \n and the rest leave for the next iteration
-                            frag_to_print_now = lines[0]
-                            out_fragment = lines[1]
-
-                            if output_handler:
-                                output_handler(frag_to_print_now)
-                            else:
-                                text.append(frag_to_print_now)
-                            if tracing:
-                                if mask:
-                                    frag_to_print_now = frag_to_print_now.rstrip().replace(mask, '******')
-                                log.info("%s%s", out_prefix, frag_to_print_now)
+                        out_fragment = _trace_log_text(out_fragment, output_handler, text, tracing, mask, out_prefix)
 
                 # one trace for minute
                 dt = t - t_trace
@@ -120,14 +147,7 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
             # read the rest of output
             out_fragment += f.read()
             if len(out_fragment) > 0:
-                if output_handler:
-                    output_handler(out_fragment)
-                else:
-                    text.append(out_fragment)
-                if tracing:
-                    if mask:
-                        out_fragment = out_fragment.rstrip().replace(mask, '******')
-                    log.info("%s%s", out_prefix, out_fragment.rstrip())
+                _trace_log_text(out_fragment, output_handler, text, tracing, mask, out_prefix, trace_all=True)
 
     # check if there was timeout exceeded
     if t > t_end:
@@ -158,7 +178,8 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
     if callback:
         callback(False)
 
-    if output_handler is None:
+    out = ''
+    if output_handler is None and not ignore_output:
         out = "".join(text)
 
     if raise_on_error and p.returncode != 0:
@@ -171,7 +192,7 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
         else:
             retcode = p.returncode
 
-    if output_handler is None:
+    if output_handler is None and not ignore_output:
         return retcode, out
     return retcode
 

@@ -23,6 +23,7 @@ import importlib
 import traceback
 
 from . import logs
+from . import consts
 
 log = logging.getLogger('tool')
 
@@ -92,15 +93,13 @@ class ArtifactsCollector():
 
 def execute(sock, module, command, step_file_path):
     try:
-        logs.setup_logging('tool')
+        logging.basicConfig(format=consts.TOOL_LOG_FMT, level=logging.INFO)
 
         with open(step_file_path) as f:
             data = f.read()
         step = json.loads(data)
 
         tool_name = step['tool']
-
-        log.set_ctx(job=step['job_id'], step=step['index'], tool=tool_name)
 
         # log.info('started tool for step', tool=None)
 
@@ -163,7 +162,11 @@ def execute(sock, module, command, step_file_path):
 class JsonSocket(socket.socket):
     def __init__(self, address):
         socket.socket.__init__(self, socket.AF_INET, socket.SOCK_STREAM)
-        self.connect((address[0], int(address[1])))
+        try:
+            self.connect((address[0], int(address[1])))
+        except:
+            log.error('problem with connecting to %s:%s', address[0], address[1])
+            raise
 
     def send_json(self, data):
         data = json.dumps(data) + '\n'

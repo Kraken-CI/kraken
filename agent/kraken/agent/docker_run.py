@@ -16,6 +16,7 @@ import os
 import io
 import re
 import time
+import json
 import struct
 import asyncio
 import tarfile
@@ -187,7 +188,6 @@ class DockerExecContext:
     def get_return_ip_addr(self):
         if self.curr_cntr:
             addr = self.curr_cntr.attrs['NetworkSettings']['Networks'][self.lab_net.name]['IPAddress']
-            log.info('get_return_ip_addr curr_cntr %s %s', self.curr_cntr, addr)
             return addr
         # TODO: in case of running agent not in container then IP address is hardcoded;
         # would be good to get it in runtime
@@ -216,12 +216,15 @@ class DockerExecContext:
                 exit_code, cmd, str(cwd), str(user), t0, t1, timeout))
         return logs
 
-    async def _dkr_run(self, proc_coord, cmd, cwd, deadline, env, user):
+    async def _dkr_run(self, proc_coord, cmd, cwd, deadline, env, user, log_ctx=None):
         now = time.time()
         t0 = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(now))
         t1 = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(deadline))
         timeout = deadline - now
         log.info("cmd '%s' in '%s', now %s, deadline %s, time: %ds, env: %s", cmd, cwd, t0, t1, timeout, env)
+
+        if log_ctx:
+            log.set_ctx(**log_ctx)
 
         exe = self.cntr.client.api.exec_create(self.cntr.id, cmd, workdir=cwd, environment=env, user=user)
         sock = self.cntr.client.api.exec_start(exe['Id'], socket=True)
@@ -288,6 +291,9 @@ class DockerExecContext:
             if proc_coord and proc_coord.is_canceled:
                 break
 
+        if log_ctx:
+            log.reset_ctx()
+
         if proc_coord and proc_coord.is_canceled:
             exit_code = 10001
             log.info('CANCELED')
@@ -305,19 +311,11 @@ class DockerExecContext:
         self.cntr.put_archive('/', archive)
 
         mod = tool_path.split()[-1]
-        step_file_path = os.path.join('/', os.path.basename(step_file_path))
-        cmd = "/kktool -m %s -r %s -s %s %s" % (mod, return_addr, step_file_path, command)
+        step_file_path2 = os.path.join('/', os.path.basename(step_file_path))
+        cmd = "/kktool -m %s -r %s -s %s %s" % (mod, return_addr, step_file_path2, command)
         log.info("exec: '%s' in '%s', timeout %ss", cmd, docker_cwd, timeout)
 
         env = {}
-
-        # pass address to logstash via env
-        if self.logstash_ip:
-            logstash_addr = '%s:%s' % (self.logstash_ip, os.environ.get(
-                'KRAKEN_LOGSTASH_PORT', consts.DEFAULT_LOGSTASH_PORT))
-            env['KRAKEN_LOGSTASH_ADDR'] = logstash_addr
-        elif 'KRAKEN_LOGSTASH_ADDR' in os.environ:
-            env['KRAKEN_LOGSTASH_ADDR'] = os.environ['KRAKEN_LOGSTASH_ADDR']
 
         # pass address to storage via env
         if self.storage_ip:
@@ -333,9 +331,16 @@ class DockerExecContext:
         if not user:
             user = 'kraken'
 
+        # setup log context
+        with open(step_file_path) as f:
+            data = f.read()
+        step = json.loads(data)
+        log_ctx = dict(job=step['job_id'], step=step['index'], tool=step['tool'])
+
+        # run tool
         deadline = time.time() + timeout
         try:
-            await self._dkr_run(proc_coord, cmd, docker_cwd, deadline, env, user)
+            await self._dkr_run(proc_coord, cmd, docker_cwd, deadline, env, user, log_ctx)
         except Timeout:
             if proc_coord.result == {}:
                 now = time.time()
@@ -343,3 +348,5 @@ class DockerExecContext:
                 t1 = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(deadline))
                 log.info('job timout expired, now: %s, daedline: %s', t0, t1)
                 proc_coord.result = {'status': 'error', 'reason': 'job-timeout'}
+
+        log.reset_ctx()

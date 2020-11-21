@@ -173,6 +173,7 @@ async def _send_keep_alive_to_server(proc_coord):
 async def _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeout, user, step_file_path):
     # prepare internal http server for receiving messages from tool subprocess
     addr = exec_ctx.get_return_ip_addr()
+    log.info('return ip addr %s', addr)
     handler = RequestHandler(proc_coord)
     server = await asyncio.start_server(handler.async_handle_request, addr, 0, limit=1024 * 1280)
     addr = server.sockets[0].getsockname()

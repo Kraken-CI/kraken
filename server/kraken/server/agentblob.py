@@ -15,7 +15,7 @@
 import os
 import logging
 
-from flask import send_file, abort, request, make_response
+from flask import send_file, abort, make_response
 
 from .models import get_setting
 

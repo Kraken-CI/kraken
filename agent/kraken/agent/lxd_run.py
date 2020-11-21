@@ -13,14 +13,18 @@
 # limitations under the License.
 
 import os
+import json
 import time
 import shlex
 import asyncio
 import logging
+import traceback
 try:
     import pylxd
 except ImportError:
     pylxd = None
+
+from . import consts
 
 
 log = logging.getLogger(__name__)
@@ -46,20 +50,42 @@ class LxdExecContext:
         self.job = job
 
         self.client = None
+        self.lab_net = None
         self.cntr = None
+        self.log_ctx = None
 
-    def start(self, timeout):
+    def _start(self, timeout):
         self.client = pylxd.Client()
 
-        image = self.job['system']  # 'bionic/amd64'
-        config = {'name': 'kktool', 'source': {'type': 'image',
-                                               "mode": "pull",
-                                               "server": "https://cloud-images.ubuntu.com/daily",
-                                               "protocol": "simplestreams",
-                                               'alias': image}}
+        # prepare network for container
+        for net in self.client.networks.all():
+            if net.name.endswith('lab_net'):
+                self.lab_net = net
+                break
+        if self.lab_net is None:
+            driver = 'bridge'
+            self.lab_net = self.client.networks.create('lab_net')
+
+        # prepare container definition
+        image = self.job['system']
+        config = {'name': 'kktool-%d' % self.job['id'],
+                  'source': {'type': 'image',
+                             "mode": "pull",
+                             #"server": "https://cloud-images.ubuntu.com/daily",
+                             "server": "https://images.linuxcontainers.org:8443", # https://images.linuxcontainers.org/
+                             "protocol": "simplestreams",
+                             'alias': image},
+                  "devices": {
+		      "lab_net": {
+			  "nictype": "bridged",
+			  "parent": "lab_net",
+			  "type": "nic"
+		      }
+		  },
+        }
         log.info('lxd container config: %s', config)
         self.cntr = self.client.containers.create(config, wait=True)
-        self.cntr.start()
+        self.cntr.start(wait=True)
         log.info('lxd container %s', self.cntr.name)
         for _ in range(100):
             if self.cntr.status != 'Running':
@@ -70,7 +96,8 @@ class LxdExecContext:
             self.stop()
             raise Exception('cannot start container')
 
-        with open('kktool', 'rb') as f:
+        kktool_path = os.path.realpath(os.path.join(consts.AGENT_DIR, 'kktool'))
+        with open(kktool_path, 'rb') as f:
             filedata = f.read()
         self.cntr.files.put('/root/kktool', filedata)
 
@@ -79,23 +106,47 @@ class LxdExecContext:
         asyncio.run(self._lxd_run('apt-get update', '/', deadline))
         asyncio.run(self._lxd_run('apt-get install -y python3', '/', deadline))
 
+    def start(self, timeout):
+        try:
+            self._start(timeout)
+        except Timeout:
+            exc = traceback.format_exc()
+            log.exception('problem with starting or initializing container')
+            self.stop()
+            return {'status': 'error', 'reason': 'job-timeout', 'msg': exc}
+        except:
+            exc = traceback.format_exc()
+            log.exception('problem with starting or initializing container')
+            self.stop()
+            return {'status': 'error', 'reason': 'exception', 'msg': exc}
+        return None
+
     def stop(self):
-        try:
-            self.cntr.stop()
-        except:
-            # TODO: add some ignore trace here
-            pass
-        try:
-            self.cntr.delete()
-        except:
-            # TODO: add some ignore trace here
-            pass
+        log.info('stopping container %s', self.cntr)
+        if self.cntr:
+            try:
+                self.cntr.stop(wait=True)
+            except:
+                log.exception('IGNORED EXCEPTION')
+            try:
+                self.cntr.delete(wait=True)
+            except:
+                log.exception('IGNORED EXCEPTION')
 
     def get_return_ip_addr(self):
-        return '0.0.0.0'
+        return self.lab_net.config['ipv4.address'].split('/')[0]
 
     def _stdout_handler(self, chunk):
-        log.info(chunk.decode().rstrip())
+        if not isinstance(chunk, str):
+            chunk = chunk.decode()
+
+        if self.log_ctx:
+            log.set_ctx(**self.log_ctx)
+
+        log.info(chunk.rstrip())
+
+        if self.log_ctx:
+            log.reset_ctx()
 
     async def _lxd_run(self, cmd, cwd, deadline, env=None):  # pylint: disable=unused-argument
         log.info('cmd %s', cmd)
@@ -117,14 +168,18 @@ class LxdExecContext:
         cmd = "%s/kktool -m %s -r %s -s %s %s" % (lxd_cwd, mod, return_addr, dest_step_file_path, command)
         log.info("exec: '%s' in '%s', timeout %ss", cmd, lxd_cwd, timeout)
 
+        # setup log context
+        with open(step_file_path) as f:
+            data = f.read()
+        step = json.loads(data)
+        self.log_ctx = dict(job=step['job_id'], step=step['index'], tool=step['tool'])
+
         deadline = time.time() + timeout
-        if 'KRAKEN_LOGSTASH_ADDR' in os.environ:
-            env = {'KRAKEN_LOGSTASH_ADDR': os.environ['KRAKEN_LOGSTASH_ADDR']}
-        else:
-            env = None
         try:
-            await self._lxd_run(cmd, lxd_cwd, deadline, env)
+            await self._lxd_run(cmd, lxd_cwd, deadline)
         except Timeout:
             # TODO: it should be better handled but needs testing
             if proc_coord.result == {}:
                 proc_coord.result = {'status': 'error', 'reason': 'job-timeout'}
+
+        self.log_ctx = None

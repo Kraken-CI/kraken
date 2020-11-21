@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import asyncio
 import logging
 import datetime
@@ -41,7 +42,6 @@ class LocalExecContext:
 
     def get_return_ip_addr(self):  # pylint: disable=no-self-use
         for iface, ip_addr in sysutils.get_ifaces():
-            log.info('adr: %s', ip_addr)
             if iface == 'lo':
                 continue
             return ip_addr
@@ -50,6 +50,12 @@ class LocalExecContext:
     async def async_run(self, proc_coord, tool_path, return_addr, step_file_path, command, cwd, timeout, user):
         cmd = "%s -r %s -s %s %s" % (tool_path, return_addr, step_file_path, command)
         log.info("exec: '%s' in '%s', timeout %ss", cmd, cwd, timeout)
+
+        # setup log context
+        with open(step_file_path) as f:
+            data = f.read()
+        step = json.loads(data)
+        log_ctx = dict(job=step['job_id'], step=step['index'], tool=step['tool'])
 
         self.proc_coord = proc_coord
         self.cmd = cmd
@@ -63,7 +69,7 @@ class LocalExecContext:
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.STDOUT)
 
-        await self._async_pump_output(proc.stdout)
+        await self._async_pump_output(proc.stdout, log_ctx)
 
         await asyncio.wait([proc.wait(), self._async_monitor_proc(proc, timeout * 0.95)],
                            timeout=timeout)
@@ -71,7 +77,7 @@ class LocalExecContext:
         #log.info('pending %s', pending)
         #proc_coord.proc_retcode = proc.returncode
 
-    async def _async_pump_output(self, stream):
+    async def _async_pump_output(self, stream, log_ctx):
         while True:
             try:
                 line = await stream.readline()
@@ -80,7 +86,9 @@ class LocalExecContext:
                 continue
             if line:
                 line = line.decode().rstrip()
+                log.set_ctx(**log_ctx)
                 log.info(line)
+                log.reset_ctx()
             else:
                 break
 

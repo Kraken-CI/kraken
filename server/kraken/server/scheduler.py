@@ -41,10 +41,10 @@ def assign_jobs_to_agents():
     idle_agents_by_group = {}
     idle_agents_by_sys_group = {}
     for ag in all_idle_agents:
-        # log.info('idle agent: %s', e)
+        log.info('idle agent: %s', ag)
         for asm in ag.agents_groups:
             grp_id = asm.agents_group_id
-            # log.info('  grp: %s', grp_id)
+            log.info('  grp: %s', grp_id)
             if grp_id not in idle_agents_by_group:
                 idle_agents_by_group[grp_id] = []
             idle_agents_by_group[grp_id].append(ag)
@@ -62,7 +62,7 @@ def assign_jobs_to_agents():
         log.info('idle agents: %s, waiting jobs %s', agents_count, waiting_jobs)
 
     for j in waiting_jobs:
-        log.info('job %s', j)
+        log.info('job %s, executor %s', j, j.system.executor)
         # find idle agent from given agents group
         best_agent = None
         if j.system.executor == 'local' and j.system.name != 'any':

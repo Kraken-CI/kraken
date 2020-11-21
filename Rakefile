@@ -148,7 +148,7 @@ task :run_agent_in_lxd_all do
 #  Rake::Task["build_agent"].invoke
   Dir.chdir('agent') do
     systems = [
-      ['ubuntu:20.04', 'u20'],
+      ['ubuntu:20.04', 'u20'],  # images:ubuntu/focal/amd64
       ['images:fedora/32/amd64', 'f32'],
 #      ['images:centos/7/amd64', 'c7'],
       ['images:centos/8/amd64', 'c8'],
