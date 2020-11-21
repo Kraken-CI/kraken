@@ -15,6 +15,8 @@
 import json
 import logging
 
+import giturlparse
+
 from . import utils
 from . import tool
 
@@ -27,9 +29,8 @@ def _get_git_url(cwd):
     if ret == 0:
         # prepare url for getting file
         git_url = out.strip()
-        if '@' in git_url:
-            git_url = git_url.split('@')[1]
-        git_url = git_url.replace(':', '/')
+        git_url = giturlparse.parse(git_url)
+        git_url = git_url.url2https
         if git_url.endswith('.git'):
             git_url = git_url[:-4]
 
@@ -45,7 +46,7 @@ def _get_git_url(cwd):
                     continue
                 branch = l.split('/')[1]
                 break
-    git_url = 'https://%s/blob/%s' % (git_url, branch)
+    git_url = '%s/blob/%s' % (git_url, branch)
     return git_url
 
 
