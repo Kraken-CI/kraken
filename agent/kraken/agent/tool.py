@@ -100,12 +100,10 @@ def execute(sock, module, command, step_file_path):
 
         tool_name = step['tool']
 
-        # log.info('started tool for step', tool=None)
-
         #tool = sys.modules['__main__']
         tool = importlib.import_module(module)
 
-        log.info('run step tool %s, cmd %s', tool_name, command, tool=None)
+        log.info('run step tool %s, cmd %s', tool_name, command)
 
         result = {'status': 'done'}
         ret = 0
@@ -143,7 +141,7 @@ def execute(sock, module, command, step_file_path):
         else:
             raise Exception('unknown command %s' % command)
 
-        log.info('step tool %s, cmd %s done with retcode %s', tool_name, command, ret, tool=None)
+        log.info('step tool %s, cmd %s done with retcode %s', tool_name, command, ret)
 
         if ret != 0:
             if ret == 10000:
@@ -169,14 +167,14 @@ class JsonSocket(socket.socket):
 
     def send_json(self, data):
         data = json.dumps(data) + '\n'
-        log.info('tool response: %s', data[:200], tool=None)
+        # log.info('tool response: %s', data[:200])
         self.sendall(bytes(data, "utf-8"))
 
 
 class StdoutSock:
     def send_json(self, data):
         data = json.dumps(data) + '\n'
-        log.info('tool response: %s', data[:200], tool=None)
+        # log.info('tool response: %s', data[:200], tool=None)
 
 
 def check_integrity():
