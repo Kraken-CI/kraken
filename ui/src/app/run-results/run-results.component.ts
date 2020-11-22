@@ -302,6 +302,12 @@ export class RunResultsComponent implements OnInit, OnDestroy {
         resultsTable.onLazyLoad.emit(resultsTable.createLazyLoadMetadata())
     }
 
+    showLastTestChanges(resultsTable) {
+        this.filterMinAge = 0
+        this.filterMaxAge = 0
+        this.refreshResults(resultsTable)
+    }
+
     loadJobsLazy(event) {
         this.loadingJobs = true
         this.executionService
@@ -424,6 +430,12 @@ export class RunResultsComponent implements OnInit, OnDestroy {
 
     refreshIssues(issuesTable) {
         issuesTable.onLazyLoad.emit(issuesTable.createLazyLoadMetadata())
+    }
+
+    showLastIssuesChanges(issuesTable) {
+        this.filterIssueMinAge = 0
+        this.filterIssueMaxAge = 0
+        this.refreshIssues(issuesTable)
     }
 
     issueTypeToClass(issueType) {

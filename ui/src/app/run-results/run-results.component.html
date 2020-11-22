@@ -150,21 +150,25 @@
       <label>Age:</label>
       <div style="display: flex; align-items: center;">
         <p-inputNumber [showButtons]="true" [(ngModel)]="filterMinAge" [min]="0" [max]="filterMaxAge" size="2"
-                       (onChange)="refreshResults(resultsTable)"></p-inputNumber>
+                       (onInput)="refreshResults(resultsTable)"></p-inputNumber>
         <div style="width: 1em; text-align: center;"> - </div>
         <p-inputNumber [showButtons]="true" [(ngModel)]="filterMaxAge" [min]="filterMinAge" size="2"
-                       (onChange)="refreshResults(resultsTable)"></p-inputNumber>
+                       (onInput)="refreshResults(resultsTable)"></p-inputNumber>
       </div>
+    </div>
+
+    <div style="align-self: flex-end;" class="p-field p-mr-3">
+      <p-button label="Last" (onClick)="showLastTestChanges(resultsTable)" class="p-ml-1 p-mr-2" pTooltip="Show changes that happened in the last run"></p-button>
     </div>
 
     <div class="p-field p-mr-3">
       <label>Instability:</label>
       <div style="display: flex; align-items: center;">
         <p-inputNumber [showButtons]="true" [(ngModel)]="filterMinInstability" [min]="0" [max]="filterMaxInstability" size="2"
-                       (onChange)="refreshResults(resultsTable)"></p-inputNumber>
+                       (onInput)="refreshResults(resultsTable)"></p-inputNumber>
         <div style="width: 1em; text-align: center;"> - </div>
         <p-inputNumber [showButtons]="true" [(ngModel)]="filterMaxInstability" [min]="filterMinInstability" [max]="10" size="2"
-                       (onChange)="refreshResults(resultsTable)"></p-inputNumber>
+                       (onInput)="refreshResults(resultsTable)"></p-inputNumber>
       </div>
     </div>
 
@@ -286,11 +290,15 @@
       <label>Age:</label>
       <div style="display: flex; align-items: center;">
         <p-inputNumber [showButtons]="true" [(ngModel)]="filterIssueMinAge" [min]="0" [max]="filterIssueMaxAge" size="2"
-                       (onChange)="refreshIssues(issuesTable)"></p-inputNumber>
+                       (onInput)="refreshIssues(issuesTable)"></p-inputNumber>
         <div style="width: 1em; text-align: center;"> - </div>
         <p-inputNumber [showButtons]="true" [(ngModel)]="filterIssueMaxAge" [min]="filterIssueMinAge" size="2"
-                       (onChange)="refreshIssues(issuesTable)"></p-inputNumber>
+                       (onInput)="refreshIssues(issuesTable)"></p-inputNumber>
       </div>
+    </div>
+
+    <div style="align-self: flex-end;" class="p-field p-mr-3">
+      <p-button label="Last" (onClick)="showLastIssuesChanges(issuesTable)" class="p-ml-1 p-mr-2" pTooltip="Show changes that happened in the last run"></p-button>
     </div>
 
     <div class="p-field">
