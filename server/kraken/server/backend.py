@@ -22,6 +22,8 @@ from flask import request
 from sqlalchemy import or_
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.attributes import flag_modified
+from sqlalchemy.exc import IntegrityError
+from psycopg2.errors import UniqueViolation
 import giturlparse
 
 from .models import db, Job, Step, Agent, TestCase, TestCaseResult, Issue, Secret, Artifact, File
@@ -421,9 +423,9 @@ def _handle_host_info(agent, req):  # pylint: disable=unused-argument
     try:
         System(name=system, executor='local')
         db.session.commit()
-    except:
-        # if it exists then exeption is raise but ignore it
-        log.exception('IGNORED')
+    except IntegrityError as e:
+        if not isinstance(e.orig, UniqueViolation):
+            log.exception('IGNORED')
 
 
 def _handle_keep_alive(agent, req):
