@@ -376,6 +376,10 @@ task :compose_to_swarm do
   sh "yq d -i docker-compose-swarm-tmp.yaml 'services.elasticsearch.ports'"
   sh 'yq m docker-compose-swarm-patch.yaml docker-compose-swarm-tmp.yaml > docker-compose-swarm.yaml'
   sh 'rm docker-compose-swarm-tmp.yaml'
+  sh "docker-compose -f docker-compose-swarm.yaml config > kraken-docker-stack-#{kk_ver}.yaml"
+  sh 'rm docker-compose-swarm.yaml'
+  sh "sed -i -e s/kk_ver/#{kk_ver}/g kraken-docker-stack-#{kk_ver}.yaml"
+  sh "yq w -i kraken-docker-stack-#{kk_ver}.yaml 'services.*.environment.KRAKEN_LOGSTASH_ADDR' lab.kraken.ci:5959"
 end
 
 task :prepare_swarm do
@@ -397,9 +401,6 @@ end
 task :deploy_lab do
   # prepare docker stack config
   Rake::Task["compose_to_swarm"].invoke
-  sh "docker-compose -f docker-compose-swarm.yaml config > kraken-docker-stack-#{kk_ver}.yaml"
-  sh 'rm docker-compose-swarm.yaml'
-  sh "sed -i -e s/kk_ver/#{kk_ver}/g kraken-docker-stack-#{kk_ver}.yaml"
 
   # deploy to lab.kraken.ci
   sh "./venv/bin/fab -e -H lab.kraken.ci upgrade --kk-ver #{kk_ver}"

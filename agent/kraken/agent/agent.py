@@ -72,7 +72,6 @@ def apply_cfg_changes(changes):
     if 'logstash_addr' in changes:
         logstash_addr = changes['logstash_addr']
         logs.setup_logging('agent', logstash_addr)
-        os.environ['KRAKEN_LOGSTASH_ADDR'] = logstash_addr
 
 
 def collect_host_info():
