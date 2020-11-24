@@ -268,8 +268,8 @@ task :build_agent => './venv/bin/shiv' do
     sh '../venv/bin/pip install --target dist-agent --upgrade .'
     sh "../venv/bin/shiv --site-packages dist-agent --compressed -p '/usr/bin/env python3' -o kkagent -c kkagent"
     sh 'rm -rf dist-tool'
+    sh '../venv/bin/pip install --target dist-tool -r reqs-tool.txt'
     sh '../venv/bin/pip install --target dist-tool --upgrade .'
-    sh '../venv/bin/pip install --target dist-agent -r reqs-tool.txt'
     sh "../venv/bin/shiv --site-packages dist-tool --compressed -p '/usr/bin/env python3' -o kktool -c kktool"
   end
   sh "cp agent/kkagent agent/kktool server/"
