@@ -10,11 +10,11 @@ def stage(ctx):
             "name": "pylint agent",
             "steps": [{
                 "tool": "shell",
-                "cmd": "apt update && apt-get install -y --no-install-recommends python3-setuptools python3-wheel python3-pip gcc python3-dev || ps axf",
+                "cmd": "sudo apt update && sudo apt-get install -y --no-install-recommends python3-setuptools python3-wheel python3-pip gcc python3-dev || ps axf",
                 "timeout": 300
             }, {
                 "tool": "shell",
-                "cmd": "pip3 install pylint"
+                "cmd": "sudo pip3 install pylint"
             }, {
                 "tool": "artifacts",
                 "action": "download",
@@ -24,7 +24,7 @@ def stage(ctx):
                 "cmd": "tar -zxf kraken.tar.gz"
             }, {
                 "tool": "shell",
-                "cmd": "pip3 install -r requirements.txt",
+                "cmd": "sudo pip3 install -r requirements.txt",
                 "cwd": "kraken/agent"
             }, {
                 "tool": "shell",
@@ -46,11 +46,11 @@ def stage(ctx):
             "name": "pylint server",
             "steps": [{
                 "tool": "shell",
-                "cmd": "apt update && apt-get install -y --no-install-recommends python3-setuptools python3-wheel python3-pip gcc python3-dev libpq-dev python3-venv || ps axf",
+                "cmd": "sudo apt update && sudo apt-get install -y --no-install-recommends python3-setuptools python3-wheel python3-pip gcc python3-dev libpq-dev python3-venv || ps axf",
                 "timeout": 300
             }, {
                 "tool": "shell",
-                "cmd": "pip3 install poetry"
+                "cmd": "sudo pip3 install poetry"
             }, {
                 "tool": "artifacts",
                 "action": "download",
@@ -88,7 +88,7 @@ def stage(ctx):
             "name": "ng lint",
             "steps": [{
                 "tool": "shell",
-                "cmd": "apt update && DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends git nodejs npm || ps axf",
+                "cmd": "sudo apt update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends git nodejs npm || ps axf",
                 "timeout": 300
             }, {
                 "tool": "artifacts",
@@ -116,7 +116,7 @@ def stage(ctx):
             "name": "cloc",
             "steps": [{
                 "tool": "shell",
-                "cmd": "apt update && apt-get install -y --no-install-recommends cloc || ps axf",
+                "cmd": "sudo apt update && sudo apt-get install -y --no-install-recommends cloc || ps axf",
                 "timeout": 300
             }, {
                 "tool": "artifacts",

@@ -10,11 +10,11 @@ def stage(ctx):
             "name": "pytest",
             "steps": [{
                 "tool": "shell",
-                "cmd": "apt update && apt-get install -y python3-pip || ps axf",
+                "cmd": "sudo apt update && sudo apt-get install -y python3-pip || ps axf",
                 "timeout": 300
             }, {
                 "tool": "shell",
-                "cmd": "pip3 install pytest"
+                "cmd": "sudo pip3 install pytest"
             }, {
                 "tool": "artifacts",
                 "action": "download",
@@ -24,7 +24,7 @@ def stage(ctx):
                 "cmd": "tar -zxf kraken.tar.gz"
             }, {
                 "tool": "shell",
-                "cmd": "pip3 install -r requirements.txt",
+                "cmd": "sudo pip3 install -r requirements.txt",
                 "cwd": "kraken/agent"
             }, {
                 "tool": "shell",
@@ -36,8 +36,9 @@ def stage(ctx):
                 "cwd": "kraken/agent"
             }],
             "environments": [{
-                "system": "any",
-                "agents_group": "all",
+                "system": "krakenci/ubuntu:20.04",
+                "agents_group": "docker",
+                "executor": "docker",
                 "config": "default"
             }]
         }],
