@@ -37,8 +37,9 @@ def stage(ctx):
                 "cwd": "kraken"
             }],
             "environments": [{
-                "system": "any",
-                "agents_group": "all",
+                "system": "krakenci/ubuntu:20.04",
+                "agents_group": "docker",
+                "executor": "docker",
                 "config": "c1"
             }]
         }, {
@@ -78,8 +79,9 @@ def stage(ctx):
                 "cwd": "kraken/server"
             }],
             "environments": [{
-                "system": "any",
-                "agents_group": "all",
+                "system": "krakenci/ubuntu:20.04",
+                "agents_group": "docker",
+                "executor": "docker",
                 "config": "c1"
             }]
         }, {
@@ -105,8 +107,9 @@ def stage(ctx):
                 "cwd": "kraken/ui"
             }],
             "environments": [{
-                "system": "any",
-                "agents_group": "all",
+                "system": "krakenci/ubuntu:20.04",
+                "agents_group": "docker",
+                "executor": "docker",
                 "config": "c1"
             }]
         }, {
@@ -129,8 +132,9 @@ def stage(ctx):
                 "cwd": "kraken"
             }],
             "environments": [{
-                "system": "any",
-                "agents_group": "all",
+                "system": "krakenci/ubuntu:20.04",
+                "agents_group": "docker",
+                "executor": "docker",
                 "config": "c1"
             }]
         }],
