@@ -380,6 +380,7 @@ task :compose_to_swarm do
   sh 'rm docker-compose-swarm.yaml'
   sh "sed -i -e s/kk_ver/#{kk_ver}/g kraken-docker-stack-#{kk_ver}.yaml"
   sh "yq w -i kraken-docker-stack-#{kk_ver}.yaml 'services.*.environment.KRAKEN_LOGSTASH_ADDR' lab.kraken.ci:5959"
+  sh "yq w -i kraken-docker-stack-#{kk_ver}.yaml 'services.*.environment.KRAKEN_STORAGE_ADDR' lab.kraken.ci:2121"
 end
 
 task :prepare_swarm do
