@@ -20,7 +20,7 @@ selectp -t 3
 
 # ELK
 splitw -h -p 50
-send-keys 'rake run_elk' Enter
+send-keys 'rake run_ch' Enter
 
 selectp -t 0
 

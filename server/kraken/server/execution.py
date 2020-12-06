@@ -16,12 +16,13 @@ import os
 import re
 import logging
 import datetime
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 from flask import abort
 from sqlalchemy.sql.expression import asc, desc
 from sqlalchemy.orm import joinedload
 from elasticsearch import Elasticsearch
+import clickhouse_driver
 
 from . import consts
 from .models import db, Branch, Flow, Run, Stage, Job, Step, AgentsGroup, Tool, TestCaseResult
@@ -632,7 +633,7 @@ def get_run(run_id):
     return run.get_json(), 200
 
 
-def get_job_logs(job_id, limit=200, order=None, filters=None, search_after=None):
+def _get_job_logs_from_es(job_id, limit=200, order=None, filters=None, search_after=None):
     job = Job.query.filter_by(id=job_id).one()
     job_json = job.get_json()
 
@@ -742,6 +743,43 @@ def get_job_logs(job_id, limit=200, order=None, filters=None, search_after=None)
             'last': [res['hits']['hits'][-1]['sort'][0], res['hits']['hits'][-1]['sort'][1]]
         }
     return {'items': logs, 'total': total, 'job': job_json, 'bookmarks': bookmarks}, 200
+
+
+def _get_job_logs_from_ch(job_id, start=0, limit=200, order=None, filters=None):
+    job = Job.query.filter_by(id=job_id).one()
+    job_json = job.get_json()
+
+    ch_url = os.environ.get('KRAKEN_CLICKHOUSE_URL', consts.DEFAULT_CLICKHOUSE_URL)
+    o = urlparse(ch_url)
+    ch = clickhouse_driver.Client(host=o.hostname)
+
+    query = "select count(*) from logs where job = %d" % job_id
+    resp = ch.execute(query)
+    total = resp[0][0]
+
+    query = "select time,message,service,host,level,job,tool,step from logs where job = %d and tool != '' order by time limit %d, %d"
+    query %= (job_id, start, limit)
+
+    rows = ch.execute(query)
+
+    logs = []
+    for r in rows:
+        entry = dict(time=r[0],
+                     message=r[1],
+                     service=r[2],
+                     host=r[3],
+                     level=r[4].lower()[:4],
+                     job=r[5],
+                     tool=r[6],
+                     step=r[7])
+        logs.append(entry)
+
+    return {'items': logs, 'total': total, 'job': job_json}, 200
+
+
+# def get_job_logs(job_id, limit=200, order=None, filters=None, search_after=None):
+def get_job_logs(job_id, start=0, limit=200, order=None, filters=None):
+    return _get_job_logs_from_ch(job_id, start, limit, order, filters)
 
 
 def cancel_job(job, note, cmplt_status):

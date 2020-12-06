@@ -46,13 +46,14 @@ def create_app():
     # addresses
     db_url = os.environ.get('KRAKEN_DB_URL', consts.DEFAULT_DB_URL)
     redis_addr = os.environ.get('KRAKEN_REDIS_ADDR', consts.DEFAULT_REDIS_ADDR)
-    elasticsearch_url = os.environ.get('KRAKEN_ELASTICSEARCH_URL', consts.DEFAULT_ELASTICSEARCH_URL)
+    # elasticsearch_url = os.environ.get('KRAKEN_ELASTICSEARCH_URL', consts.DEFAULT_ELASTICSEARCH_URL)
+    clickhouse_url = os.environ.get('KRAKEN_CLICKHOUSE_URL', consts.DEFAULT_CLICKHOUSE_URL)
     planner_url = os.environ.get('KRAKEN_PLANNER_URL', consts.DEFAULT_PLANNER_URL)
     server_addr = os.environ.get('KRAKEN_SERVER_ADDR', consts.DEFAULT_SERVER_ADDR)
 
     srvcheck.check_postgresql(db_url)
     srvcheck.check_tcp_service('redis', redis_addr, 6379)
-    srvcheck.check_url('elasticsearch', elasticsearch_url, 9200)
+    srvcheck.check_url('clickhouse', clickhouse_url, 8123)
     srvcheck.check_url('planner', planner_url, 7997)
 
     logs.setup_logging('server')

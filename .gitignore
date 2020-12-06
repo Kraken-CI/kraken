@@ -27,3 +27,5 @@ venv
 /kraken-docker-compose-*.yaml
 
 /.vagrant
+
+/clickhouse-proxy/target

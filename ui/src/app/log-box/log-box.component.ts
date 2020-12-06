@@ -74,7 +74,6 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
                 this.logFragments.push(fragment)
             } else {
                 if (l.step !== fragment.step) {
-                    console.info(l)
                     this._addStepStatusEntryToLogs(job, fragment.step)
                     let title = ''
                     if (l.step !== undefined) {
@@ -188,7 +187,7 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
         }
     }
 
-    _processNextLogs(jobId, data, prevBookmark) {
+    _processNextLogs(jobId, data, start) {
         if (jobId !== this.prvJobId) {
             // console.info('!!!! job switch - stop processing in processNextLogs', jobId)
             return
@@ -215,23 +214,16 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
                         // console.info('!!!! job switch - stop processing in timer2 ', jobId, this.timer2)
                         return
                     }
-                    let bookmark = prevBookmark
-                    if (data.bookmarks) {
-                        bookmark = data.bookmarks.last
-                    }
-                    if (bookmark) {
-                        bookmark = `${bookmark[0]},${bookmark[1]}`
-                    }
                     this.executionService
                         .getJobLogs(
                             jobId,
+                            start,
                             200,
                             'asc',
-                            null,
-                            bookmark
+                            null
                         )
                         .subscribe(data2 => {
-                            this._processNextLogs(jobId, data2, bookmark)
+                            this._processNextLogs(jobId, data2, start)
                         })
                 }, 3000)
             }
@@ -243,21 +235,15 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
         if (data.items.length === 200) {
             // loaded full 200 so probably there is more logs so load the rest immediatelly
             // console.info('load the rest immediatelly', jobId)
-            let bookmark = prevBookmark
-            if (data.bookmarks) {
-                bookmark = data.bookmarks.last
-            }
-            if (bookmark) {
-                bookmark = `${bookmark[0]},${bookmark[1]}`
-            }
+            start = start + 200
             this.executionService
                 .getJobLogs(jobId,
+                            start,
                             200,
                             'asc',
-                            null,
-                            bookmark)
+                            null)
                 .subscribe(data2 => {
-                    this._processNextLogs(jobId, data2, bookmark)
+                    this._processNextLogs(jobId, data2, start)
                 })
         } else if (data.job.state !== 5 || this.lastAttempts < 4) {
             if (data.job.state === 5) {
@@ -273,21 +259,15 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
                     // console.info('!!!! job switch - stop processing in timer3 ', jobId, this.timer3)
                     return
                 }
-                let bookmark = prevBookmark
-                if (data.bookmarks) {
-                    bookmark = data.bookmarks.last
-                }
-                if (bookmark) {
-                    bookmark = `${bookmark[0]},${bookmark[1]}`
-                }
+                start = start + data.items.length
                 this.executionService
                     .getJobLogs(jobId,
+                                start,
                                 200,
                                 'asc',
-                                null,
-                                bookmark)
+                                null)
                     .subscribe(data2 => {
-                        this._processNextLogs(jobId, data2, bookmark)
+                        this._processNextLogs(jobId, data2, start)
                     })
             }, 3000)
             return
@@ -303,9 +283,12 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
 
         this.executionService
             .getJobLogs(jobId,
+                        0,
                         200,
                         'desc')
             .subscribe(data => {
+                // the first list of logs is descending so it needs to be reversed
+                data.items.reverse()
                 if (jobId !== this.prvJobId) {
                     // console.info('!!!! job switch - stop processing getJobLogs', jobId)
                     return
@@ -328,23 +311,16 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
                             // console.info('!!!! job switch - stop processing in timer1 ', jobId, this.timer1)
                             return
                         }
-                        let bookmark = null
-                        if (data.bookmarks) {
-                            bookmark = data.bookmarks.first
-                        }
-                        if (bookmark) {
-                            bookmark = `${bookmark[0]},${bookmark[1]}`
-                        }
                         this.executionService
                             .getJobLogs(
                                 jobId,
+                                data.total,
                                 200,
                                 'asc',
-                                null,
-                                bookmark
+                                null
                             )
                             .subscribe(data2 => {
-                                this._processNextLogs(jobId, data2, bookmark)
+                                this._processNextLogs(jobId, data2, data.total)
                             })
                     }, 3000)
                 } else {

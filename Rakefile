@@ -14,6 +14,7 @@ ENV['KRAKEN_VERSION'] = kk_ver
 KRAKEN_VERSION_FILE = File.expand_path("kraken-version-#{kk_ver}.txt")
 
 LOCALHOST_IP=ENV['LOCALHOST_IP'] || '192.168.0.89'
+LOGSTASH_ADDR="#{LOCALHOST_IP}:9001"
 
 # prepare env
 task :prepare_env do
@@ -111,13 +112,13 @@ end
 
 task :run_server => 'server/kraken/version.py' do
   Dir.chdir('server') do
-    sh "KRAKEN_LOGSTASH_ADDR=#{LOCALHOST_IP}:5959 KRAKEN_STORAGE_ADDR=#{LOCALHOST_IP}:2121 ../venv/bin/poetry run python -m kraken.server.server"
+    sh "KRAKEN_LOGSTASH_ADDR=#{LOGSTASH_ADDR} KRAKEN_STORAGE_ADDR=#{LOCALHOST_IP}:2121 ../venv/bin/poetry run python -m kraken.server.server"
   end
 end
 
 task :run_scheduler => 'server/kraken/version.py' do
   Dir.chdir('server') do
-    sh '../venv/bin/poetry run kkscheduler'
+    sh "KRAKEN_LOGSTASH_ADDR=#{LOGSTASH_ADDR} ../venv/bin/poetry run kkscheduler"
   end
 end
 
@@ -133,7 +134,7 @@ task :run_agent => ['./agent/venv/bin/kkagent', :build_agent] do
   sh 'cp server/kraken/server/logs.py agent/kraken/agent/'
   sh 'rm -rf /tmp/kk-jobs/ /opt/kraken/*'
   sh 'cp agent/venv/bin/kkagent agent/kktool /opt/kraken'
-  sh "LANGUAGE=en_US:en LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 KRAKEN_LOGSTASH_ADDR=#{LOCALHOST_IP}:5959 ./agent/venv/bin/kkagent --no-update -d /tmp/kk-jobs -s http://localhost:8080 run"
+  sh "LANGUAGE=en_US:en LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 KRAKEN_LOGSTASH_ADDR=#{LOGSTASH_ADDR} ./agent/venv/bin/kkagent --no-update -d /tmp/kk-jobs -s http://localhost:8080 run"
 end
 
 task :run_agent_in_docker do
@@ -233,25 +234,25 @@ end
 
 task :run_celery => './server/kraken/version.py' do
   Dir.chdir('server') do
-    sh '../venv/bin/poetry run kkcelery'
+    sh "KRAKEN_LOGSTASH_ADDR=#{LOGSTASH_ADDR} ../venv/bin/poetry run kkcelery"
   end
 end
 
 task :run_planner => 'server/kraken/version.py' do
   Dir.chdir('server') do
-    sh '../venv/bin/poetry run kkplanner'
+    sh "KRAKEN_LOGSTASH_ADDR=#{LOGSTASH_ADDR} ../venv/bin/poetry run kkplanner"
   end
 end
 
 task :run_watchdog => 'server/kraken/version.py' do
   Dir.chdir('server') do
-    sh '../venv/bin/poetry run kkwatchdog'
+    sh "KRAKEN_LOGSTASH_ADDR=#{LOGSTASH_ADDR} ../venv/bin/poetry run kkwatchdog"
   end
 end
 
 task :run_storage => 'server/kraken/version.py' do
   Dir.chdir('server') do
-    sh '../venv/bin/poetry run kkstorage'
+    sh "KRAKEN_LOGSTASH_ADDR=#{LOGSTASH_ADDR} ../venv/bin/poetry run kkstorage"
   end
 end
 
@@ -336,6 +337,14 @@ task :run_elk do
   sh 'docker-compose up kibana logstash elasticsearch'
 end
 
+task :run_ch do
+  sh 'docker-compose up clickhouse clickhouse-proxy'
+end
+
+task :run_chcli do
+  sh 'docker run -it --rm --network kraken_db_net --link kraken_clickhouse_1:clickhouse-server yandex/clickhouse-client --host clickhouse-server'
+end
+
 task :run_pgsql do
   sh 'docker run --rm -p 5433:5432 -e POSTGRES_USER=kraken -e POSTGRES_PASSWORD=kk123 -e POSTGRES_DB=kraken postgres:11'
 end
@@ -379,8 +388,8 @@ task :compose_to_swarm do
   sh "docker-compose -f docker-compose-swarm.yaml config > kraken-docker-stack-#{kk_ver}.yaml"
   sh 'rm docker-compose-swarm.yaml'
   sh "sed -i -e s/kk_ver/#{kk_ver}/g kraken-docker-stack-#{kk_ver}.yaml"
-  sh "yq w -i kraken-docker-stack-#{kk_ver}.yaml 'services.*.environment.KRAKEN_LOGSTASH_ADDR' lab.kraken.ci:5959"
-  sh "yq w -i kraken-docker-stack-#{kk_ver}.yaml 'services.*.environment.KRAKEN_STORAGE_ADDR' lab.kraken.ci:2121"
+#  sh "yq w -i kraken-docker-stack-#{kk_ver}.yaml 'services.*.environment.KRAKEN_LOGSTASH_ADDR' lab.kraken.ci:5959"
+#  sh "yq w -i kraken-docker-stack-#{kk_ver}.yaml 'services.*.environment.KRAKEN_STORAGE_ADDR' lab.kraken.ci:2121"
 end
 
 task :prepare_swarm do
@@ -421,6 +430,6 @@ end
 task :release_deploy do
   Rake::Task["build_all"].invoke
   Rake::Task["publish_docker"].invoke
-  Rake::Task["github_release"].invoke
+#  Rake::Task["github_release"].invoke
   Rake::Task["deploy_lab"].invoke
 end

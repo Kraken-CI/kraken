@@ -18,8 +18,7 @@ services:
       - KRAKEN_SERVER_ADDR
       - KRAKEN_PLANNER_URL
       - KRAKEN_STORAGE_ADDR
-    expose:
-      - $KRAKEN_SERVER_PORT
+      - KRAKEN_CLICKHOUSE_URL
     ports:
       - $KRAKEN_SERVER_PORT:$KRAKEN_SERVER_PORT
     networks:
@@ -216,12 +215,36 @@ services:
     depends_on:
       - elasticsearch
 
+# clickhouse & co.
+  clickhouse:
+    image: yandex/clickhouse-server:20.11.4.13
+    #--ulimit nofile=262144:262144
+    volumes:
+      - clickhouse:/var/lib/clickhouse
+    ports:
+      - "9000:9000"
+      - "8123:8123"
+    networks:
+      - db_net
+
+  clickhouse-proxy:
+    image: 127.0.0.1:5000/kkchproxy:kk_ver
+    build:
+      context: clickhouse-proxy
+      dockerfile: Dockerfile
+    environment:
+      - KRAKEN_CLICKHOUSE_URL
+    ports:
+      - "9001:9001/udp"
+    networks:
+      - db_net
 
 
 volumes:
   db-data:
   elasticsearch:
   kraken-storage:
+  clickhouse:
 
 networks:
   db_net:

@@ -902,6 +902,11 @@ paths:
           description: ID of pet to return
           required: true
           type: integer
+        - name: start
+          in: query
+          description: ID of pet to return
+          required: true
+          type: integer
         - name: limit
           in: query
           description: ID of pet to return
@@ -914,10 +919,6 @@ paths:
         - name: filters
           in: query
           description: ID of pet to return
-          type: string
-        - name: search_after
-          in: query
-          description: ID of starting document for searching
           type: string
       responses:
         "200":
@@ -1407,20 +1408,16 @@ definitions:
         type: string
       service:
         type: string
-      origin:
-        type: string
       host:
         type: string
       level:
         type: string
-      run:
-        type: integer
       job:
-        type: integer
-      step:
         type: integer
       tool:
         type: string
+      step:
+        type: integer
   Logs:
     type: object
     properties:
