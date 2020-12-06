@@ -13,8 +13,7 @@ def _get_logs_batch_from_es():
     query["size"] = 10000
     query["sort"] = [{"@timestamp": {"order": "asc"}}, {"_id": "desc"}]
 
-    count = 1
-    search_after = None
+    search_after = []
     while True:
         if search_after:
             ts, _id = search_after
