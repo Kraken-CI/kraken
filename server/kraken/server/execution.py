@@ -746,6 +746,9 @@ def _get_job_logs_from_es(job_id, limit=200, order=None, filters=None, search_af
 
 
 def _get_job_logs_from_ch(job_id, start=0, limit=200, order=None, filters=None):
+    if order not in [None, 'asc', 'desc']:
+        abort(400, "incorrect order value: %s" % str(order))
+
     job = Job.query.filter_by(id=job_id).one()
     job_json = job.get_json()
 
@@ -757,8 +760,11 @@ def _get_job_logs_from_ch(job_id, start=0, limit=200, order=None, filters=None):
     resp = ch.execute(query)
     total = resp[0][0]
 
-    query = "select time,message,service,host,level,job,tool,step from logs where job = %d and tool != '' order by time limit %d, %d"
-    query %= (job_id, start, limit)
+    if order is None:
+        order = 'asc'
+
+    query = "select time,message,service,host,level,job,tool,step from logs where job = %d and tool != '' order by time %s limit %d, %d"
+    query %= (job_id, order, start, limit)
 
     rows = ch.execute(query)
 

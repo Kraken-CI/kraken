@@ -165,55 +165,55 @@ services:
       - db_net
 
 # ELK
-  elasticsearch:
-    image: elasticsearch:7.5.0
-    environment:
-      ELASTIC_PASSWORD: $ELASTIC_PASSWORD
-      ES_JAVA_OPTS: "-Xmx512m -Xms512m"
-      cluster.name: kraken-cluster
-      network.host: 0.0.0.0
-      discovery.type: single-node
-    # ulimits:
-    #   memlock: -1
-    #   nofile:
-    #     hard: 65536
-    #     soft: 65536
-    #   nproc: 65538
-    volumes:
-      - type: volume
-        source: elasticsearch
-        target: /usr/share/elasticsearch/data
-    ports:
-      - $KRAKEN_ELASTICSEARCH_PORT:$KRAKEN_ELASTICSEARCH_PORT
-      - 9300:9300
-    networks:
-      - db_net
+  # elasticsearch:
+  #   image: elasticsearch:7.5.0
+  #   environment:
+  #     ELASTIC_PASSWORD: $ELASTIC_PASSWORD
+  #     ES_JAVA_OPTS: "-Xmx512m -Xms512m"
+  #     cluster.name: kraken-cluster
+  #     network.host: 0.0.0.0
+  #     discovery.type: single-node
+  #   # ulimits:
+  #   #   memlock: -1
+  #   #   nofile:
+  #   #     hard: 65536
+  #   #     soft: 65536
+  #   #   nproc: 65538
+  #   volumes:
+  #     - type: volume
+  #       source: elasticsearch
+  #       target: /usr/share/elasticsearch/data
+  #   ports:
+  #     - $KRAKEN_ELASTICSEARCH_PORT:$KRAKEN_ELASTICSEARCH_PORT
+  #     - 9300:9300
+  #   networks:
+  #     - db_net
 
-  logstash:
-    image: logstash:7.5.0
-    command: sh -c "logstash -e 'input { udp { codec => json port => 5959 } } output { elasticsearch { codec => json hosts => \"elasticsearch:9200\" user => \"elastic\" password => \"changeme\" } }'"
-    ports:
-      - $KRAKEN_LOGSTASH_PORT:$KRAKEN_LOGSTASH_PORT/udp
-      - 9600:9600
-    environment:
-      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
-    networks:
-      - db_net
-      - lab_net
-    depends_on:
-      - elasticsearch
+  # logstash:
+  #   image: logstash:7.5.0
+  #   command: sh -c "logstash -e 'input { udp { codec => json port => 5959 } } output { elasticsearch { codec => json hosts => \"elasticsearch:9200\" user => \"elastic\" password => \"changeme\" } }'"
+  #   ports:
+  #     - $KRAKEN_LOGSTASH_PORT:$KRAKEN_LOGSTASH_PORT/udp
+  #     - 9600:9600
+  #   environment:
+  #     LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+  #   networks:
+  #     - db_net
+  #     - lab_net
+  #   depends_on:
+  #     - elasticsearch
 
-  kibana:
-    image: kibana:7.5.0
-    environment:
-      SERVER_NAME: kibana
-      ELASTICSEARCH_URL: $KRAKEN_ELASTICSEARCH_URL
-    ports:
-      - "5601:5601"
-    networks:
-      - db_net
-    depends_on:
-      - elasticsearch
+  # kibana:
+  #   image: kibana:7.5.0
+  #   environment:
+  #     SERVER_NAME: kibana
+  #     ELASTICSEARCH_URL: $KRAKEN_ELASTICSEARCH_URL
+  #   ports:
+  #     - "5601:5601"
+  #   networks:
+  #     - db_net
+  #   depends_on:
+  #     - elasticsearch
 
 # clickhouse & co.
   clickhouse:

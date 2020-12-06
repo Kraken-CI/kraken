@@ -288,7 +288,7 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
                         'desc')
             .subscribe(data => {
                 // the first list of logs is descending so it needs to be reversed
-                data.items.reverse()
+
                 if (jobId !== this.prvJobId) {
                     // console.info('!!!! job switch - stop processing getJobLogs', jobId)
                     return
