@@ -43,7 +43,7 @@ struct LogEntryOut {
 async fn read_and_parse_log(buf: [u8; 1024], len: usize, mut tx: Sender<LogEntryOut>) {
     let res = serde_json::from_slice(&buf[..len]);
     if res.is_err() {
-        println!("problem with parsing log: {:?}", res.unwrap_err());
+        println!("problem with parsing log '{:?}': {:?}", buf, res.unwrap_err());
         return
     }
     let le_in: Value = res.unwrap();
