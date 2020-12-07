@@ -29,7 +29,7 @@ services:
       - postgres
       - controller
       - celery
-      - elasticsearch
+      - clickhouse-proxy
       - logstash
 
   controller:
