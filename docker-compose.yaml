@@ -222,7 +222,6 @@ services:
     volumes:
       - clickhouse:/var/lib/clickhouse
     ports:
-      - "9000:9000"
       - "8123:8123"
     networks:
       - db_net
