@@ -20,8 +20,8 @@ services:
       - /var/snap/lxd/common/lxd/unix.socket:/var/snap/lxd/common/lxd/unix.socket
   ui:
     image: eu.gcr.io/kraken-261806/kkui:kk_ver
-  elasticsearch:
-    deploy:
-      mode: replicated
-      replicas: 1
-      endpoint_mode: dnsrr
+  # elasticsearch:
+  #   deploy:
+  #     mode: replicated
+  #     replicas: 1
+  #     endpoint_mode: dnsrr
