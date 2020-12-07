@@ -392,13 +392,6 @@ task :compose_to_swarm do
 #  sh "yq w -i kraken-docker-stack-#{kk_ver}.yaml 'services.*.environment.KRAKEN_STORAGE_ADDR' lab.kraken.ci:2121"
 end
 
-task :prepare_swarm do
-  sh 'sudo DEBIAN_FRONTEND=noninteractive apt-get install -y docker.io docker-compose gnupg2 pass'
-  sh 'docker swarm init || true'
-  sh 'docker login --username=godfryd --password=donotchange cloud.canister.io:5000'
-
-end
-
 task :run_swarm => :build_docker_deploy do
   sh 'docker stack deploy --with-registry-auth -c docker-compose-swarm-deploy.yaml kraken'
 end
