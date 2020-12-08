@@ -217,7 +217,11 @@ services:
 
 # clickhouse & co.
   clickhouse:
-    image: yandex/clickhouse-server:20.11.4.13
+    # image: yandex/clickhouse-server:20.11.4.13
+    image: 127.0.0.1:5000/clickhouse-server:20.11.4.13.kk_ver
+    build:
+      context: clickhouse
+      dockerfile: Dockerfile
     #--ulimit nofile=262144:262144
     volumes:
       - clickhouse:/var/lib/clickhouse
