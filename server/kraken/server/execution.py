@@ -453,6 +453,25 @@ def run_run_jobs(run_id):
     return data, 200
 
 
+def job_rerun(job_id):
+    job = Job.query.filter_by(id=job_id).one_or_none()
+    if job is None:
+        abort(404, "Job not found")
+
+    # TODO rerun
+    job2 = Job(run=job.run, name=job.name, agents_group=job.agents_group, system=job.system, timeout=job.timeout)
+
+    for s in job.steps:
+        Step(job=job2, index=s.index, tool=s.tool, fields=s.fields)
+
+    job.covered = True
+    job2.run.state = consts.RUN_STATE_IN_PROGRESS  # need to be set in case of replay
+    db.session.commit()
+
+    data = job2.get_json()
+    return data, 200
+
+
 def create_job(job):
     """
     This function creates a new person in the people structure

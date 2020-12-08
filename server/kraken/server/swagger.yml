@@ -873,6 +873,31 @@ paths:
         201:
           description: Successfully created run
   /jobs/{job_id}:
+    put:
+      summary: Rerun a job
+      operationId: job_rerun
+      tags:
+        - Execution
+      parameters:
+        - name: job_id
+          in: path
+          description: ID of pet to return
+          required: true
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: A paged array of runs
+          headers:
+            x-next:
+              type: string
+              description: A link to the next page of responses
+          schema:
+            $ref: '#/definitions/Job'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/ApiError'
     delete:
       operationId: delete_job
       tags:

@@ -675,6 +675,35 @@ export class RunResultsComponent implements OnInit, OnDestroy {
         )
     }
 
+    rerunJob() {
+        this.executionService.jobRerun(this.job.id).subscribe(
+            data => {
+                this.msgSrv.add({
+                    severity: 'success',
+                    summary: 'Job rerun submitted',
+                    detail: 'Job rerun operation submitted.',
+                })
+
+                if (this.refreshTimer === null) {
+                    this.refreshTimer = setTimeout(() => {
+                        this.refreshTimer = null
+                        this.refreshPage()
+                    }, 5000)
+                }
+            },
+            err => {
+                this.msgSrv.add({
+                    severity: 'error',
+                    summary: 'Job rerun erred',
+                    detail:
+                    'Job rerun operation erred: ' +
+                        err.statusText,
+                    life: 10000,
+                })
+            }
+        )
+    }
+
     getStepInfo(step) {
         switch (step.tool) {
         case 'shell':
