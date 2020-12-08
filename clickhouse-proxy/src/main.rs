@@ -40,7 +40,7 @@ struct LogEntryOut {
     step: i8
 }
 
-async fn read_and_parse_log(buf: [u8; 1024], len: usize, mut tx: Sender<LogEntryOut>) {
+async fn read_and_parse_log(buf: [u8; 8192], len: usize, mut tx: Sender<LogEntryOut>) {
     let res = serde_json::from_slice(&buf[..len]);
     if res.is_err() {
         println!("problem with parsing log '{:?}': {:?}", buf, res.unwrap_err());
@@ -172,7 +172,7 @@ async fn main() -> io::Result<()> {
 
     let mut sock = UdpSocket::bind("0.0.0.0:9001").await?;
     loop {
-        let mut buf = [0; 1024];
+        let mut buf = [0; 8192];
         let (len, _addr) = sock.recv_from(&mut buf).await?;
 
         let tx2 = tx.clone();
