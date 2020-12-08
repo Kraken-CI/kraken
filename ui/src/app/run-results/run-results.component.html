@@ -77,7 +77,7 @@
           </div>
           <div style="margin: auto 0;">
             <button *ngIf="job.state !== 5" type="button" pButton label="Cancel Job" icon="pi pi-times" (click)="cancelJob()"></button>
-            <button type="button" pButton label="Rerun Job" icon="pi pi-replay" (click)="rerunJob()" style="margin-left: 10px;"></button>
+            <button *ngIf="job.state === 5" type="button" pButton label="Rerun Job" icon="pi pi-replay" (click)="rerunJob()"></button>
           </div>
         </div>
 
