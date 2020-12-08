@@ -42,28 +42,20 @@ export class RunBoxComponent implements OnInit {
                     label: opName,
                     icon: this.run.state === 'manual' ? 'pi pi-caret-right' : 'pi pi-replay',
                     command: () => {
-                        this.executionService.runRunJobs(this.run.id).subscribe(
-                            data => {
-                                this.msgSrv.add({
-                                    severity: 'success',
-                                    summary: opName + ' succeeded',
-                                    detail: opName + ' operation succeeded.',
-                                })
-                            },
-                            err => {
-                                this.msgSrv.add({
-                                    severity: 'error',
-                                    summary: opName + ' erred',
-                                    detail:
-                                        opName + ' operation erred: ' +
-                                        err.statusText,
-                                    life: 10000,
-                                })
-                            }
-                        )
+                        this.runRunJobs(opName)
                     },
                 },
             ]
+
+            if (this.run.state === 'in-progress') {
+                this.runBoxMenuItems.push({
+                    label: 'Cancel',
+                    icon: 'pi pi-times',
+                    command: () => {
+                        this.cancelRun()
+                    },
+                })
+            }
 
             // calculate bg color for box
             if (this.run.jobs_error && this.run.jobs_error > 0) {
@@ -130,5 +122,48 @@ export class RunBoxComponent implements OnInit {
 
     showRunMenu($event, runMenu, run) {
         runMenu.toggle($event)
+    }
+
+    runRunJobs(opName) {
+        this.executionService.runRunJobs(this.run.id).subscribe(
+            data => {
+                this.msgSrv.add({
+                    severity: 'success',
+                    summary: opName + ' succeeded',
+                    detail: opName + ' operation succeeded.',
+                })
+            },
+            err => {
+                this.msgSrv.add({
+                    severity: 'error',
+                    summary: opName + ' erred',
+                    detail:
+                    opName + ' operation erred: ' +
+                        err.statusText,
+                    life: 10000,
+                })
+            }
+        )
+    }
+
+    cancelRun() {
+        this.executionService.cancelRun(this.run.id).subscribe(
+            data => {
+                this.msgSrv.add({
+                    severity: 'success',
+                    summary: ' succeeded',
+                    detail: 'Cancel operation succeeded.',
+                })
+            },
+            err => {
+                this.msgSrv.add({
+                    severity: 'error',
+                    summary: 'Cancel erred',
+                    detail: 'Cancel operation erred: ' +
+                        err.statusText,
+                    life: 10000,
+                })
+            }
+        )
     }
 }

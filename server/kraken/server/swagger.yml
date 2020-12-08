@@ -788,6 +788,22 @@ paths:
           description: unexpected error
           schema:
             $ref: '#/definitions/ApiError'
+    delete:
+      operationId: cancel_run
+      tags:
+        - Execution
+      summary: Cancel a run
+      description: Cancel a run
+      parameters:
+        - name: run_id
+          in: path
+          description: ID of run
+          required: true
+          type: integer
+          format: int64
+      responses:
+        200:
+          description: Successfully deleted job
   /test_case_results/{test_case_result_id}:
     get:
       summary: List all results

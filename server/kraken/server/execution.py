@@ -821,6 +821,16 @@ def cancel_job(job, note, cmplt_status):
     log.info('job %s timed out or canceled, bg processing: %s', job, t)
 
 
+def cancel_run(run_id):
+    run = Run.query.filter_by(id=run_id).one_or_none()
+    if run is None:
+        abort(404, "Run not found")
+
+    for job in run.jobs:
+        cancel_job(job, 'canceled by user', consts.JOB_CMPLT_USER_CANCEL)
+
+    return {}
+
 
 def delete_job(job_id):
     job = Job.query.filter_by(id=job_id).one_or_none()
