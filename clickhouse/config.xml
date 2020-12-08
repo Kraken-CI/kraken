@@ -5,9 +5,12 @@
   You can either move the settings to the right place inside "users.xml" file
    or add <skip_check_for_incorrect_settings>1</skip_check_for_incorrect_settings> here.
 -->
+
+<!-- TODO: calm down query logging: https://theorangeone.net/posts/calming-down-clickhouse/ -->
+
 <yandex>
   <logger>
-       <level>trace</level>
+       <level>information</level>
        <console>1</console>
 
        <!-- Possible levels: https://github.com/pocoproject/poco/blob/poco-1.9.4-release/Foundation/include/Poco/Logger.h#L105 -->
