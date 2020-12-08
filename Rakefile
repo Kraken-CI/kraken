@@ -382,6 +382,9 @@ task :compose_to_swarm do
   sh "yq d -i docker-compose-swarm-tmp.yaml 'networks'"
   sh "yq d -i docker-compose-swarm-tmp.yaml 'services.ui.ports'"
   sh "yq w -i docker-compose-swarm-tmp.yaml 'services.ui.ports[+]' 80:80"
+  # remove port map 9000:9000 from clickhouse by override; it is needed only in local composer, in demo it collides with portainer
+  sh "yq d -i docker-compose-swarm-tmp.yaml 'services.clickhouse.ports'"
+  sh "yq w -i docker-compose-swarm-tmp.yaml 'services.clickhouse.ports[+]' 8123:8123"
   sh "yq d -i docker-compose-swarm-tmp.yaml 'services.elasticsearch.ports'"
   sh 'yq m docker-compose-swarm-patch.yaml docker-compose-swarm-tmp.yaml > docker-compose-swarm.yaml'
   sh 'rm docker-compose-swarm-tmp.yaml'
