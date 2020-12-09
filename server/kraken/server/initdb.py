@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from .models import db, Branch, Stage, Agent, AgentsGroup, Setting
+from .models import db, Branch, Stage, Agent, AgentsGroup, Setting, Tool, Project
 from .schema import execute_schema_code
 
 INITIAL_SETTINGS = {

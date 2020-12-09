@@ -97,8 +97,7 @@ def analyze_run(self, run_id):
                         run.tests_not_run += 1
 
                 # calculate issues stats
-                for issue in job.issues:
-                    run.issues_total += 1
+                run.issues_total += len(job.issues)
 
                 # calculate jobs stats
                 run.jobs_total += 1

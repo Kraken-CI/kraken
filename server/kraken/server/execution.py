@@ -91,14 +91,13 @@ def _reeval_schema(run):
 
 def _find_covered_jobs(run):
     covered_jobs = {}
-    if replay:
-        q = Job.query.filter_by(run=run).filter_by(covered=False)
-        for j in q.all():
-            key = '%s-%s' % (j.name, j.agents_group_id)
-            if key not in covered_jobs:
-                covered_jobs[key] = [j]
-            else:
-                covered_jobs[key].append(j)
+    q = Job.query.filter_by(run=run).filter_by(covered=False)
+    for j in q.all():
+        key = '%s-%s' % (j.name, j.agents_group_id)
+        if key not in covered_jobs:
+            covered_jobs[key] = [j]
+        else:
+            covered_jobs[key].append(j)
 
     return covered_jobs
 
@@ -146,7 +145,8 @@ def trigger_jobs(run, replay=False):
     schema = run.stage.schema
 
     # find any prev jobs that will be covered by jobs triggered here in this function
-    covered_jobs = _find_covered_jobs(run)
+    if replay:
+        covered_jobs = _find_covered_jobs(run)
 
     # prepare secrets to pass them to substitute is steps
     secrets = _prepare_secrets(run)

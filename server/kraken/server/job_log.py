@@ -21,7 +21,7 @@ from flask import abort, Response
 from elasticsearch import Elasticsearch
 
 from . import consts
-from .models import db, Job
+from .models import Job
 
 
 log = logging.getLogger(__name__)

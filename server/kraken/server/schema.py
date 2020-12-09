@@ -24,7 +24,8 @@ from .models import Secret
 log = logging.getLogger(__name__)
 
 
-class SchemaError(Exception): pass
+class SchemaError(Exception):
+    pass
 
 
 class SchemaCodeContext:
@@ -58,7 +59,7 @@ def execute_schema_code(branch, schema_code, context=None):
     my_globals['ctx'] = ctx
 
     my_locals2 = {}
-    exec('schema = stage(ctx)', my_globals, my_locals2)
+    exec('schema = stage(ctx)', my_globals, my_locals2)  # pylint: disable=exec-used
     schema = my_locals2['schema']
 
     return schema
@@ -127,8 +128,8 @@ def check_and_correct_stage_schema(branch, stage_name, schema_code, context=None
         # check names
         if job['name'] in job_names:
             raise SchemaError("Two jobs with the same name '%s'" % job['name'])
-        else:
-            job_names.add(job['name'])
+
+        job_names.add(job['name'])
 
         # check secrets
         for step in job['steps']:
