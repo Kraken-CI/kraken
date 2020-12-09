@@ -6,7 +6,7 @@ from flask import Flask
 import sqlalchemy
 import psycopg2.errors
 
-from kraken.server import models, consts
+from kraken.server import models, initdb, consts
 
 def _get_db_version(app):
     with app.app_context():
@@ -62,7 +62,7 @@ def main():
         print('alembic migration completed')
 
     with app.app_context():
-        models.prepare_initial_data()
+        initdb.prepare_initial_data()
 
     db_version = _get_db_version(app)
     print('DB version: %s' % str(db_version))

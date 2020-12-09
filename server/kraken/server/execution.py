@@ -21,12 +21,14 @@ from urllib.parse import urljoin, urlparse
 from flask import abort
 from sqlalchemy.sql.expression import asc, desc
 from sqlalchemy.orm import joinedload
+from sqlalchemy.orm.attributes import flag_modified
 from elasticsearch import Elasticsearch
 import clickhouse_driver
 
 from . import consts
 from .models import db, Branch, Flow, Run, Stage, Job, Step, AgentsGroup, Tool, TestCaseResult
 from .models import TestCase, Issue, Artifact, AgentAssignment, BranchSequence, System
+from .schema import check_and_correct_stage_schema
 
 log = logging.getLogger(__name__)
 
@@ -64,8 +66,30 @@ def _substitute_vars(fields, args):
     return new_fields
 
 
+def _setup_schema_context(run):
+    ctx = {
+        'is_ci': run.flow.kind == 0,
+        'is_dev': run.flow.kind == 1,
+        'run_label': run.label,
+        'flow_label': run.flow.label,
+    }
+    return ctx
+
 def trigger_jobs(run, replay=False):
     log.info('triggering jobs for run %s', run)
+
+    context = _setup_schema_context(run)
+
+    # reevaluate schema code
+    try:
+        schema_code, schema = check_and_correct_stage_schema(run.stage.branch, run.stage.name, run.stage.schema_code, context)
+    except SchemaError as e:
+        abort(400, str(e))
+    run.stage.schema = schema
+    run.stage.schema_code = schema_code
+    flag_modified(run.stage, 'schema')
+    db.session.commit()
+
     schema = run.stage.schema
 
     # find any prev jobs that will be covered by jobs triggered here in this function

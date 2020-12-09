@@ -29,7 +29,7 @@ from elasticsearch import Elasticsearch
 from . import consts, srvcheck
 from .models import db, Branch, Stage, Agent, AgentsGroup, Secret, AgentAssignment, Setting
 from .models import Project, BranchSequence
-from .schema import execute_schema_code
+from .schema import check_and_correct_stage_schema, SchemaError, execute_schema_code
 
 log = logging.getLogger(__name__)
 
@@ -164,89 +164,6 @@ def delete_secret(secret_id):
     return {}, 200
 
 
-def _check_and_correct_stage_schema(branch, stage, prev_schema_code):
-    if 'schema_code' in stage:
-        schema_code = stage['schema_code']
-        log.info('new schema_code %s', schema_code)
-    elif prev_schema_code:
-        schema_code = prev_schema_code
-        log.info('prev schema_code %s', schema_code)
-    else:
-        schema_code = '''def stage(ctx):
-    return {
-        "parent": "root",
-        "triggers": {
-            "parent": True,
-        },
-        "parameters": [],
-        "configs": [],
-        "jobs": [{
-            "name": "hello world",
-            "steps": [{
-                "tool": "shell",
-                "cmd": "echo 'hello world'"
-            }],
-            "environments": [{
-                "system": "any",
-                "agents_group": "all",
-                "config": "default"
-            }]
-        }]
-    }'''
-
-    # execute schema code
-    try:
-        schema = execute_schema_code(branch, schema_code)
-    except Exception as e:
-        abort(400, "Problem with executing stage schema code: %s" % e)
-
-    # fill missing parts in schema
-    if 'jobs' not in schema:
-        schema['jobs'] = []
-
-    if 'configs' not in schema:
-        schema['configs'] = []
-
-    if 'parent' not in schema or schema['parent'] == '':
-        schema['parent'] = 'root'
-
-    if 'triggers' not in schema or schema['triggers'] == {}:
-        schema['triggers'] = {'parent': True}
-
-    if 'parameters' not in schema:
-        schema['parameters'] = []
-
-    # check parent in schema
-    if schema['parent'] != 'root':
-        found = False
-        for s in branch.stages.filter_by(deleted=None):
-            if schema['parent'] == s.name and stage['name'] != s.name:
-                found = True
-                break
-        if not found:
-            abort(400, 'Cannot find parent stage %s' % schema['parent'])
-
-    # check job_names and secrets
-    job_names = set()
-    for job in schema['jobs']:
-        # check names
-        if job['name'] in job_names:
-            abort(400, "Two jobs with the same name '%s'" % job['name'])
-        else:
-            job_names.add(job['name'])
-
-        # check secrets
-        for step in job['steps']:
-            for field, value in step.items():
-                if field in ['access-token', 'ssh-key']:
-                    secret = Secret.query.filter_by(project=branch.project, name=value).one_or_none()
-                    if secret is None:
-                        abort(400, "Secret '%s' does not exists" % value)
-
-    # TODO: check if git url is valid according to giturlparse
-    return schema_code, schema
-
-
 def _prepare_new_planner_triggers(stage_id, new_triggers, prev_triggers, triggers):
     planner_url = os.environ.get('KRAKEN_PLANNER_URL', consts.DEFAULT_PLANNER_URL)
     planner = xmlrpc.client.ServerProxy(planner_url, allow_none=True)
@@ -313,7 +230,14 @@ def create_stage(branch_id, stage):
     if branch is None:
         abort(404, "Branch not found")
 
-    schema_code, schema = _check_and_correct_stage_schema(branch, stage, None)
+    schema_code = None
+    if 'schema_code' in stage:
+        schema_code = stage['schema_code']
+
+    try:
+        schema_code, schema = check_and_correct_stage_schema(branch, stage['name'], schema_code)
+    except SchemaError as e:
+        abort(400, str(e))
 
     # create record
     new_stage = Stage(branch=branch, name=stage['name'], schema=schema, schema_code=schema_code)
@@ -386,9 +310,12 @@ def update_stage(stage_id, data):
         data['schema_code'] = schema_code
 
     if 'schema_code' in data:
-        _, schema = _check_and_correct_stage_schema(stage.branch, data, stage.schema_code)
+        try:
+            schema_code, schema = check_and_correct_stage_schema(stage.branch, data['name'], data['schema_code'])
+        except SchemaError as e:
+            abort(400, str(e))
         stage.schema = schema
-        stage.schema_code = data['schema_code']
+        stage.schema_code = schema_code
         flag_modified(stage, 'schema')
         if stage.triggers is None:
             stage.triggers = {}
