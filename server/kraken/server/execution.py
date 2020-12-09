@@ -28,7 +28,7 @@ import clickhouse_driver
 from . import consts
 from .models import db, Branch, Flow, Run, Stage, Job, Step, AgentsGroup, Tool, TestCaseResult
 from .models import TestCase, Issue, Artifact, AgentAssignment, BranchSequence, System
-from .schema import check_and_correct_stage_schema
+from .schema import check_and_correct_stage_schema, SchemaError
 
 log = logging.getLogger(__name__)
 
@@ -75,12 +75,10 @@ def _setup_schema_context(run):
     }
     return ctx
 
-def trigger_jobs(run, replay=False):
-    log.info('triggering jobs for run %s', run)
 
+def _reeval_schema(run):
     context = _setup_schema_context(run)
 
-    # reevaluate schema code
     try:
         schema_code, schema = check_and_correct_stage_schema(run.stage.branch, run.stage.name, run.stage.schema_code, context)
     except SchemaError as e:
@@ -90,9 +88,8 @@ def trigger_jobs(run, replay=False):
     flag_modified(run.stage, 'schema')
     db.session.commit()
 
-    schema = run.stage.schema
 
-    # find any prev jobs that will be covered by jobs triggered here in this function
+def _find_covered_jobs(run):
     covered_jobs = {}
     if replay:
         q = Job.query.filter_by(run=run).filter_by(covered=False)
@@ -103,7 +100,10 @@ def trigger_jobs(run, replay=False):
             else:
                 covered_jobs[key].append(j)
 
-    # prepare secrets to pass them to substitute is steps
+    return covered_jobs
+
+
+def _prepare_secrets(run):
     secrets = {}
     for s in run.stage.branch.project.secrets:
         if s.deleted:
@@ -116,6 +116,40 @@ def trigger_jobs(run, replay=False):
         elif s.kind == consts.SECRET_KIND_SIMPLE:
             name = "KK_SECRET_SIMPLE_" + s.name
             secrets[name] = s.data['secret']
+
+    return secrets
+
+
+def _establish_timeout_for_job(j, run, system, agents_group):
+    if agents_group is not None:
+        job_key = "%s-%d-%d" % (j['name'], system.id, agents_group.id)
+        if run.stage.timeouts and job_key in run.stage.timeouts:
+            # take estimated timeout if present
+            timeout = run.stage.timeouts[job_key]
+        else:
+            # take initial timeout from schema, or default one
+            timeout = int(j.get('timeout', consts.DEFAULT_JOB_TIMEOUT))
+            if timeout < 60:
+                timeout = 60
+    else:
+        timeout = consts.DEFAULT_JOB_TIMEOUT
+
+    return timeout
+
+
+def trigger_jobs(run, replay=False):
+    log.info('triggering jobs for run %s', run)
+
+    # reevaluate schema code
+    _reeval_schema(run)
+
+    schema = run.stage.schema
+
+    # find any prev jobs that will be covered by jobs triggered here in this function
+    covered_jobs = _find_covered_jobs(run)
+
+    # prepare secrets to pass them to substitute is steps
+    secrets = _prepare_secrets(run)
 
     # prepare missing group
     missing_agents_group = AgentsGroup.query.filter_by(name='missing').one_or_none()
@@ -177,18 +211,7 @@ def trigger_jobs(run, replay=False):
                     db.session.flush()
 
                 # get timeout
-                if agents_group is not None:
-                    job_key = "%s-%d-%d" % (j['name'], system.id, agents_group.id)
-                    if run.stage.timeouts and job_key in run.stage.timeouts:
-                        # take estimated timeout if present
-                        timeout = run.stage.timeouts[job_key]
-                    else:
-                        # take initial timeout from schema, or default one
-                        timeout = int(j.get('timeout', consts.DEFAULT_JOB_TIMEOUT))
-                        if timeout < 60:
-                            timeout = 60
-                else:
-                    timeout = consts.DEFAULT_JOB_TIMEOUT
+                timeout = _establish_timeout_for_job(j, run, system, agents_group)
 
                 # create job
                 job = Job(run=run, name=j['name'], agents_group=agents_group, system=system, timeout=timeout)
