@@ -64,7 +64,6 @@ def handle_github_webhook(project_id):
     req = request.get_json()
     # if event == 'push':
 
-
     # trigger running the project flow via celery
     trigger_data = dict(trigger='github-' + event,
                         ref=req['ref'],
