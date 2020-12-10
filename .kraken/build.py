@@ -1,11 +1,8 @@
 def stage(ctx):
-    jobs = [{
-        "name": "build",
-        "timeout": 5000,
-        "steps": [{
+    steps = [{
             "tool": "artifacts",
             "action": "download",
-        "source": "kraken.tar.gz",
+            "source": "kraken.tar.gz",
         }, {
             "tool": "shell",
             "cmd": "tar -zxf kraken.tar.gz",
@@ -29,7 +26,7 @@ def stage(ctx):
         rake_cmd = "rake publish_docker"
     else:
         rake_cmd = "rake build_docker"
-    jobs.append({
+    steps.append({
         "tool": "shell",
         "cmd": rake_cmd,
         "cwd": "kraken",
@@ -40,7 +37,7 @@ def stage(ctx):
     })
 
     if ctx.is_ci:
-        jobs.append({
+        steps.append({
             "tool": "artifacts",
             "source": [
                 "kraken-docker-compose-*.yaml",
@@ -57,7 +54,10 @@ def stage(ctx):
         },
         "parameters": [],
         "configs": [],
-        "jobs": jobs,
+        "jobs": [{
+            "name": "build",
+            "timeout": 5000,
+            "steps": steps,
             "environments": [{
                 "system": "krakenci/bld-kraken",
                 "executor": "docker",

@@ -29,11 +29,11 @@ def stage(ctx):
                     "GITHUB_TOKEN": "#{KK_SECRET_SIMPLE_github_token}"
                 }
             }],
-        	"environments": [{
+            "environments": [{
                 "system": "krakenci/bld-kraken",
                 "executor": "docker",
             	"agents_group": "all",
-            	"config": "default"
-        	}]
+                "config": "default"
+            }]
         }]
     }
