@@ -9,7 +9,7 @@ services:
     image: eu.gcr.io/kraken-261806/kkstorage:kk_ver
   celery:
     image: eu.gcr.io/kraken-261806/kkcelery:kk_ver
-  clickhouse-proxy:
+  clickhouse:
     image: eu.gcr.io/kraken-261806/clickhouse-server:20.11.4.13.kk_ver
   clickhouse-proxy:
     image: eu.gcr.io/kraken-261806/kkchproxy:kk_ver
