@@ -363,13 +363,21 @@ task :build_docker_deploy do
   sh 'docker-compose -f docker-compose-swarm.yaml config > docker-compose-swarm-deploy.yaml'
 end
 
-task :publish_docker do
+task :build_docker do
   # generate docker-compose config for installing kraken under the desk and for pushing images to docker images repository
   sh "cp docker-compose.yaml kraken-docker-compose-#{kk_ver}-tmp.yaml"
   sh "sed -i -e s/kk_ver/#{kk_ver}/g kraken-docker-compose-#{kk_ver}-tmp.yaml"
   sh "sed -i -e 's#127.0.0.1:5000#eu.gcr.io/kraken-261806#g' kraken-docker-compose-#{kk_ver}-tmp.yaml"
   sh "cp agent/kkagent agent/kktool server/"
+
+  # build images, in case of server everything is build in containers
   sh "docker-compose -f kraken-docker-compose-#{kk_ver}-tmp.yaml build --force-rm --no-cache --pull --build-arg kkver=#{kk_ver}"
+end
+
+task :publish_docker do
+  Rake::Task["build_docker"].invoke
+
+  # push built images
   sh "docker-compose -f kraken-docker-compose-#{kk_ver}-tmp.yaml push"
   # strip build: section - release docker-compose file should use build images directly
   sh "yq d -i kraken-docker-compose-#{kk_ver}-tmp.yaml 'services.*.build'"
