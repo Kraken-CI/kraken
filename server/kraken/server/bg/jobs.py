@@ -548,23 +548,28 @@ def trigger_flow(self, project_id, trigger_data=None):
                 log.error('got unknown project: %s', project_id)
                 return
 
-            branch_name = trigger_data['ref'].split('/')[-1]
+            if trigger_data['trigger'] == 'github-push':
+                branch_name = trigger_data['ref'].split('/')[-1]
+                flow_kind = 'ci'
+                flow_kind_no = 0
+            elif trigger_data['trigger'] == 'github-pull_request':
+                branch_name = trigger_data['pull_request']['base']['ref']
+                flow_kind = 'dev'
+                flow_kind_no = 1
             branch = Branch.query.filter_by(project=project, branch_name=branch_name).one_or_none()
             if branch is None:
                 log.error('cannot find branch by branch_name: %s', branch_name)
                 return
 
-            if not trigger_data:
-                execution.create_flow(branch.id, 'ci', {})
-                return
-
             q = Flow.query
             q = q.filter_by(branch=branch)
+            q = q.filter_by(kind=flow_kind_no)
             q = q.order_by(desc(Flow.created))
             last_flow = q.first()
 
+            # handle the case when this is the first flow in the branch
             if last_flow is None:
-                execution.create_flow(branch.id, 'ci', {})
+                execution.create_flow(branch.id, flow_kind, {})
                 return
 
             trigger_git_url = giturlparse.parse(trigger_data['repo'])
@@ -615,7 +620,7 @@ def trigger_flow(self, project_id, trigger_data=None):
                 started_something = True
 
             if not started_something:
-                execution.create_flow(branch.id, 'ci', {}, trigger_data)
+                execution.create_flow(branch.id, flow_kind, {}, trigger_data)
 
     except Exception as exc:
         log.exception('will retry')

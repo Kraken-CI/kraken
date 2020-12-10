@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import hmac
 import hashlib
 import logging
@@ -32,6 +33,9 @@ def handle_github_webhook(project_id):
         log.warning('missing github event type in request header')
         abort(400, "missing github event type in request header")
     log.info('EVENT %s', event)
+    if event not in ['push', 'pull_request']:
+        log.info('unsupported event')
+        return "", 204
 
     # check project
     project = Project.query.filter_by(id=project_id).one_or_none()
@@ -59,19 +63,31 @@ def handle_github_webhook(project_id):
 
         if len(github_digest_parts) < 2 or github_digest_parts[0] != "sha1" or not hmac.compare_digest(github_digest_parts[1], my_digest):
             log.warning('bad signature %s vs %s, secret %s', github_sig, my_digest, my_secret)
-            abort(400, "Invalid signature")
+            #abort(400, "Invalid signature")
 
-    req = request.get_json()
-    # if event == 'push':
+    req = json.loads(payload)
 
     # trigger running the project flow via celery
-    trigger_data = dict(trigger='github-' + event,
-                        ref=req['ref'],
-                        before=req['before'],
-                        after=req['after'],
-                        repo=req['repository']['clone_url'],
-                        pusher=req['pusher'],
-                        commits=req['commits'])
+    if event == 'push':
+        trigger_data = dict(trigger='github-' + event,
+                            ref=req['ref'],
+                            before=req['before'],
+                            after=req['after'],
+                            repo=req['repository']['clone_url'],
+                            pusher=req['pusher'],
+                            commits=req['commits'])
+    elif event == 'pull_request':
+        if req['action'] != 'synchronize':
+            log.info('unsupported action %s', req['action'])
+            return "", 204
+
+        trigger_data = dict(trigger='github-' + event,
+                            action=req['action'],
+                            pull_request=req['pull_request'],
+                            before=req['before'],
+                            after=req['after'],
+                            repo=req['repository']['clone_url'],
+                            sender=req['sender'])
     t = bg_jobs.trigger_flow.delay(project.id, trigger_data)
     log.info('triggering run for project %s, bg processing: %s', project_id, t)
     return "", 204
