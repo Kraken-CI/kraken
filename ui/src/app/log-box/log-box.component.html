@@ -11,10 +11,13 @@
     <div *ngIf="frag.title" style="font-size: 1.2em; font-weight: bold; color: lawngreen; cursor: pointer;" (click)="frag.expanded = !frag.expanded">
       <i *ngIf="!frag.expanded" class="pi pi-caret-right" style="vertical-align: bottom;"></i>
       <i *ngIf="frag.expanded" class="pi pi-caret-down" style="vertical-align: bottom;"></i>
-      {{frag.title}}
+      {{ frag.title }}
     </div>
     <div *ngIf="frag.expanded" [ngStyle]="{'font-size': '' + fontSize + 'em'}">
-      <div *ngFor="let log of frag.logs" [ngClass]="['log-entry-base', log.cls]" [innerHTML]="log.message"></div>
+      <div *ngFor="let log of frag.logs" style="display: flex;">
+        <div style="width: 3em; color: #888; text-align: right; margin-right: 0.5em;">{{ log.idx }}</div>
+        <div [ngClass]="['log-entry-base', log.cls]" [innerHTML]="log.message"></div>
+      </div>
     </div>
   </div>
 </div>

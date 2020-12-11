@@ -49,7 +49,7 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
 
     ngOnInit() {}
 
-    _showLogs(logs, job) {
+    _showLogs(logs, job, startIdx) {
         let fragment
         if (this.logFragments.length > 0) {
             // remove last entry with ... running ...
@@ -59,7 +59,9 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
             // get last fragment
             fragment = this.logFragments[this.logFragments.length - 1]
         }
-        for (const l of logs) {
+        for (const [idx, l] of logs.entries()) {
+            l.idx = startIdx + idx
+
             if (fragment === undefined) {
                 let title = ''
                 if (l.step !== undefined) {
@@ -154,19 +156,19 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
                 title: '',
                 expanded: true,
                 stepStatus: true,
-                logs: [
-                    {
-                        message: msg,
-                        cls,
-                    },
-                ],
+                logs: [{
+                    message: msg,
+                    cls,
+                }],
             })
         }
     }
 
     _processNewLogs(data, skippedLogsCount) {
         // console.info('process new logs', data)
+        let startIdx = 1
         if (skippedLogsCount > 0) {
+            startIdx = skippedLogsCount + 1
             this.logFragments.push({
                 title: '',
                 expanded: true,
@@ -179,7 +181,7 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
                 ],
             })
         }
-        this._showLogs(data.items.reverse(), data.job)
+        this._showLogs(data.items.reverse(), data.job, startIdx)
 
         if (data.job.state !== 5 && this.lastAttempts < 4) {
             // completed
@@ -230,7 +232,7 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
             return
         }
 
-        this._showLogs(data.items, data.job)
+        this._showLogs(data.items, data.job, start)
 
         if (data.items.length === 200) {
             // loaded full 200 so probably there is more logs so load the rest immediatelly
