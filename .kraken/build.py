@@ -25,7 +25,7 @@ def stage(ctx):
     if ctx.is_ci:
         rake_cmd = "rake publish_docker"
     else:
-        rake_cmd = "rake build_docker"
+        rake_cmd = "rake build_docker reuse=true"
     steps.append({
         "tool": "shell",
         "cmd": rake_cmd,

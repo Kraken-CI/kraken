@@ -371,7 +371,12 @@ task :build_docker do
   sh "cp agent/kkagent agent/kktool server/"
 
   # build images, in case of server everything is build in containers
-  sh "docker-compose -f kraken-docker-compose-#{kk_ver}-tmp.yaml build --force-rm --no-cache --pull --build-arg kkver=#{kk_ver}"
+  if ENV['reuse'] == 'true'
+    flags = ''
+  else
+    flags = '--force-rm --no-cache --pull'
+  end
+  sh "docker-compose -f kraken-docker-compose-#{kk_ver}-tmp.yaml build #{flags} --build-arg kkver=#{kk_ver}"
 end
 
 task :publish_docker do
