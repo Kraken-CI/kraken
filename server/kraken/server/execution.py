@@ -822,7 +822,7 @@ def _get_job_logs_from_ch(job_id, start=0, limit=200, order=None, filters=None):
     o = urlparse(ch_url)
     ch = clickhouse_driver.Client(host=o.hostname)
 
-    query = "select count(*) from logs where job = %d" % job_id
+    query = "select count(*) from logs where job = %d and tool != ''" % job_id
     resp = ch.execute(query)
     total = resp[0][0]
 
@@ -831,6 +831,8 @@ def _get_job_logs_from_ch(job_id, start=0, limit=200, order=None, filters=None):
 
     query = "select time,message,service,host,level,job,tool,step from logs where job = %d and tool != '' order by time %s limit %d, %d"
     query %= (job_id, order, start, limit)
+
+    log.info(query)
 
     rows = ch.execute(query)
 
