@@ -36,6 +36,11 @@
                  tooltipStyleClass="artifacts-tooltip" [escape]="false"></i>
             </a>
           </div>
+          <div style="margin: 10px 0 0 6px;" *ngIf="hasFlowCommits(flow)">
+            <i class="fa fa-code-fork" style="font-size: 1.6em;"
+               [pTooltip]="getFlowCommits(flow)" hideDelay="1000000000" life="1000000000"
+               tooltipStyleClass="commits-tooltip" [escape]="false"></i>
+          </div>
         </div>
     </div>
     <div class="p-col" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr)); gap: 6px;">

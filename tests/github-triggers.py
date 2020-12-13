@@ -4,7 +4,262 @@ import json
 import urllib.request
 
 
-def main():
+def do_push():
+    payload = {
+      "ref": "refs/heads/master",
+      "before": "c172e165cd0982046b3578afe2b01efa901f5b4f",
+      "after": "6ce92756d435d9a73171ea935572b71b82d0c141",
+      "repository": {
+        "id": 280832057,
+        "node_id": "MDEwOlJlcG9zaXRvcnkyODA4MzIwNTc=",
+        "name": "kraken",
+        "full_name": "Kraken-CI/kraken",
+        "private": False,
+        "owner": {
+          "name": "Kraken-CI",
+          "email": None,
+          "login": "Kraken-CI",
+          "id": 68497961,
+          "node_id": "MDEyOk9yZ2FuaXphdGlvbjY4NDk3OTYx",
+          "avatar_url": "https://avatars3.githubusercontent.com/u/68497961?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/Kraken-CI",
+          "html_url": "https://github.com/Kraken-CI",
+          "followers_url": "https://api.github.com/users/Kraken-CI/followers",
+          "following_url": "https://api.github.com/users/Kraken-CI/following{/other_user}",
+          "gists_url": "https://api.github.com/users/Kraken-CI/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/Kraken-CI/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/Kraken-CI/subscriptions",
+          "organizations_url": "https://api.github.com/users/Kraken-CI/orgs",
+          "repos_url": "https://api.github.com/users/Kraken-CI/repos",
+          "events_url": "https://api.github.com/users/Kraken-CI/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/Kraken-CI/received_events",
+          "type": "Organization",
+          "site_admin": False
+        },
+        "html_url": "https://github.com/Kraken-CI/kraken",
+        "description": "Kraken CI is a continuous integration and testing system.",
+        "fork": False,
+        "url": "https://github.com/Kraken-CI/kraken",
+        "forks_url": "https://api.github.com/repos/Kraken-CI/kraken/forks",
+        "keys_url": "https://api.github.com/repos/Kraken-CI/kraken/keys{/key_id}",
+        "collaborators_url": "https://api.github.com/repos/Kraken-CI/kraken/collaborators{/collaborator}",
+        "teams_url": "https://api.github.com/repos/Kraken-CI/kraken/teams",
+        "hooks_url": "https://api.github.com/repos/Kraken-CI/kraken/hooks",
+        "issue_events_url": "https://api.github.com/repos/Kraken-CI/kraken/issues/events{/number}",
+        "events_url": "https://api.github.com/repos/Kraken-CI/kraken/events",
+        "assignees_url": "https://api.github.com/repos/Kraken-CI/kraken/assignees{/user}",
+        "branches_url": "https://api.github.com/repos/Kraken-CI/kraken/branches{/branch}",
+        "tags_url": "https://api.github.com/repos/Kraken-CI/kraken/tags",
+        "blobs_url": "https://api.github.com/repos/Kraken-CI/kraken/git/blobs{/sha}",
+        "git_tags_url": "https://api.github.com/repos/Kraken-CI/kraken/git/tags{/sha}",
+        "git_refs_url": "https://api.github.com/repos/Kraken-CI/kraken/git/refs{/sha}",
+        "trees_url": "https://api.github.com/repos/Kraken-CI/kraken/git/trees{/sha}",
+        "statuses_url": "https://api.github.com/repos/Kraken-CI/kraken/statuses/{sha}",
+        "languages_url": "https://api.github.com/repos/Kraken-CI/kraken/languages",
+        "stargazers_url": "https://api.github.com/repos/Kraken-CI/kraken/stargazers",
+        "contributors_url": "https://api.github.com/repos/Kraken-CI/kraken/contributors",
+        "subscribers_url": "https://api.github.com/repos/Kraken-CI/kraken/subscribers",
+        "subscription_url": "https://api.github.com/repos/Kraken-CI/kraken/subscription",
+        "commits_url": "https://api.github.com/repos/Kraken-CI/kraken/commits{/sha}",
+        "git_commits_url": "https://api.github.com/repos/Kraken-CI/kraken/git/commits{/sha}",
+        "comments_url": "https://api.github.com/repos/Kraken-CI/kraken/comments{/number}",
+        "issue_comment_url": "https://api.github.com/repos/Kraken-CI/kraken/issues/comments{/number}",
+        "contents_url": "https://api.github.com/repos/Kraken-CI/kraken/contents/{+path}",
+        "compare_url": "https://api.github.com/repos/Kraken-CI/kraken/compare/{base}...{head}",
+        "merges_url": "https://api.github.com/repos/Kraken-CI/kraken/merges",
+        "archive_url": "https://api.github.com/repos/Kraken-CI/kraken/{archive_format}{/ref}",
+        "downloads_url": "https://api.github.com/repos/Kraken-CI/kraken/downloads",
+        "issues_url": "https://api.github.com/repos/Kraken-CI/kraken/issues{/number}",
+        "pulls_url": "https://api.github.com/repos/Kraken-CI/kraken/pulls{/number}",
+        "milestones_url": "https://api.github.com/repos/Kraken-CI/kraken/milestones{/number}",
+        "notifications_url": "https://api.github.com/repos/Kraken-CI/kraken/notifications{?since,all,participating}",
+        "labels_url": "https://api.github.com/repos/Kraken-CI/kraken/labels{/name}",
+        "releases_url": "https://api.github.com/repos/Kraken-CI/kraken/releases{/id}",
+        "deployments_url": "https://api.github.com/repos/Kraken-CI/kraken/deployments",
+        "created_at": 1595150557,
+        "updated_at": "2020-12-11T05:56:50Z",
+        "pushed_at": 1607691099,
+        "git_url": "git://github.com/Kraken-CI/kraken.git",
+        "ssh_url": "git@github.com:Kraken-CI/kraken.git",
+        "clone_url": "https://github.com/Kraken-CI/kraken.git",
+        "svn_url": "https://github.com/Kraken-CI/kraken",
+        "homepage": "https://kraken.ci/",
+        "size": 1189,
+        "stargazers_count": 3,
+        "watchers_count": 3,
+        "language": "Python",
+        "has_issues": True,
+        "has_projects": True,
+        "has_downloads": True,
+        "has_wiki": True,
+        "has_pages": False,
+        "forks_count": 0,
+        "mirror_url": None,
+        "archived": False,
+        "disabled": False,
+        "open_issues_count": 32,
+        "license": {
+          "key": "apache-2.0",
+          "name": "Apache License 2.0",
+          "spdx_id": "Apache-2.0",
+          "url": "https://api.github.com/licenses/apache-2.0",
+          "node_id": "MDc6TGljZW5zZTI="
+        },
+        "forks": 0,
+        "open_issues": 32,
+        "watchers": 3,
+        "default_branch": "master",
+        "stargazers": 3,
+        "master_branch": "master",
+        "organization": "Kraken-CI"
+      },
+      "pusher": {
+        "name": "godfryd",
+        "email": "godfryd@gmail.com"
+      },
+      "organization": {
+        "login": "Kraken-CI",
+        "id": 68497961,
+        "node_id": "MDEyOk9yZ2FuaXphdGlvbjY4NDk3OTYx",
+        "url": "https://api.github.com/orgs/Kraken-CI",
+        "repos_url": "https://api.github.com/orgs/Kraken-CI/repos",
+        "events_url": "https://api.github.com/orgs/Kraken-CI/events",
+        "hooks_url": "https://api.github.com/orgs/Kraken-CI/hooks",
+        "issues_url": "https://api.github.com/orgs/Kraken-CI/issues",
+        "members_url": "https://api.github.com/orgs/Kraken-CI/members{/member}",
+        "public_members_url": "https://api.github.com/orgs/Kraken-CI/public_members{/member}",
+        "avatar_url": "https://avatars3.githubusercontent.com/u/68497961?v=4",
+        "description": None
+      },
+      "sender": {
+        "login": "godfryd",
+        "id": 176567,
+        "node_id": "MDQ6VXNlcjE3NjU2Nw==",
+        "avatar_url": "https://avatars1.githubusercontent.com/u/176567?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/godfryd",
+        "html_url": "https://github.com/godfryd",
+        "followers_url": "https://api.github.com/users/godfryd/followers",
+        "following_url": "https://api.github.com/users/godfryd/following{/other_user}",
+        "gists_url": "https://api.github.com/users/godfryd/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/godfryd/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/godfryd/subscriptions",
+        "organizations_url": "https://api.github.com/users/godfryd/orgs",
+        "repos_url": "https://api.github.com/users/godfryd/repos",
+        "events_url": "https://api.github.com/users/godfryd/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/godfryd/received_events",
+        "type": "User",
+        "site_admin": False
+      },
+      "created": False,
+      "deleted": False,
+      "forced": False,
+      "base_ref": None,
+      "compare": "https://github.com/Kraken-CI/kraken/compare/c172e165cd09...6ce92756d435",
+      "commits": [
+        {
+          "id": "4b264a8beb10d8086c4c8540b614e633d9957d75",
+          "tree_id": "74ba51832f9e203bbaf19292ac8479f4db9e5222",
+          "distinct": True,
+          "message": "added line numbering in job log on run-results page",
+          "timestamp": "2020-12-11T13:51:37+01:00",
+          "url": "https://github.com/Kraken-CI/kraken/commit/4b264a8beb10d8086c4c8540b614e633d9957d75",
+          "author": {
+            "name": "Michal Nowikowski",
+            "email": "godfryd@gmail.com",
+            "username": "godfryd"
+          },
+          "committer": {
+            "name": "Michal Nowikowski",
+            "email": "godfryd@gmail.com",
+            "username": "godfryd"
+          },
+          "added": [
+
+          ],
+          "removed": [
+
+          ],
+          "modified": [
+            "ui/src/app/log-box/log-box.component.html",
+            "ui/src/app/log-box/log-box.component.ts"
+          ]
+        },
+        {
+          "id": "6ce92756d435d9a73171ea935572b71b82d0c141",
+          "tree_id": "c76a9f82e471d7234868ff62105cbdec4a6894c5",
+          "distinct": True,
+          "message": "added paging logs backward and forward",
+          "timestamp": "2020-12-11T13:51:37+01:00",
+          "url": "https://github.com/Kraken-CI/kraken/commit/6ce92756d435d9a73171ea935572b71b82d0c141",
+          "author": {
+            "name": "Michal Nowikowski",
+            "email": "godfryd@gmail.com",
+            "username": "godfryd"
+          },
+          "committer": {
+            "name": "Michal Nowikowski",
+            "email": "godfryd@gmail.com",
+            "username": "godfryd"
+          },
+          "added": [
+
+          ],
+          "removed": [
+
+          ],
+          "modified": [
+            "server/kraken/server/execution.py",
+            "ui/src/app/log-box/log-box.component.html",
+            "ui/src/app/log-box/log-box.component.ts"
+          ]
+        }
+      ],
+      "head_commit": {
+        "id": "6ce92756d435d9a73171ea935572b71b82d0c141",
+        "tree_id": "c76a9f82e471d7234868ff62105cbdec4a6894c5",
+        "distinct": True,
+        "message": "added paging logs backward and forward",
+        "timestamp": "2020-12-11T13:51:37+01:00",
+        "url": "https://github.com/Kraken-CI/kraken/commit/6ce92756d435d9a73171ea935572b71b82d0c141",
+        "author": {
+          "name": "Michal Nowikowski",
+          "email": "godfryd@gmail.com",
+          "username": "godfryd"
+        },
+        "committer": {
+          "name": "Michal Nowikowski",
+          "email": "godfryd@gmail.com",
+          "username": "godfryd"
+        },
+
+        "added": [
+
+        ],
+        "removed": [
+
+        ],
+        "modified": [
+          "server/kraken/server/execution.py",
+          "ui/src/app/log-box/log-box.component.html",
+          "ui/src/app/log-box/log-box.component.ts"
+        ]
+      }
+    }
+
+    data = json.dumps(payload)
+
+    req = urllib.request.Request("http://localhost:8080/webhooks/2/github", data.encode('utf-8'))
+
+    req.add_header('X-GitHub-Event', 'push')
+    req.add_header('X-Hub-Signature', 'sha1=a8074cb2a006aefd9363396c0391b068b0e5f320')
+
+    with urllib.request.urlopen(req) as f:
+        print(f.read())
+
+
+def do_pull_request():
     payload = {
         "action": "synchronize",
           "number": 59,
@@ -523,6 +778,10 @@ def main():
     with urllib.request.urlopen(req) as f:
         print(f.read())
 
+
+def main():
+    #do_pull_request()
+    do_push()
 
 if __name__ == '__main__':
     main()

@@ -256,6 +256,10 @@ class Flow(db.Model, DatesMixin):
         else:
             duration = datetime.datetime.utcnow() - self.created
 
+        trigger = None
+        if self.trigger_data:
+            trigger = self.trigger_data
+
         return dict(id=self.id,
                     label=self.label if self.label else ("%d." % self.id),
                     created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,
@@ -272,6 +276,7 @@ class Flow(db.Model, DatesMixin):
                     args=self.args,
                     stages=[s.get_json() for s in self.branch.stages.filter_by(deleted=None)],
                     runs=[r.get_json() for r in self.runs],
+                    trigger=trigger,
                     artifacts=self.artifacts)
 
 

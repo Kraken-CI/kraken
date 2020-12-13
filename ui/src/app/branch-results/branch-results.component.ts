@@ -67,11 +67,15 @@ export class BranchResultsComponent implements OnInit, OnDestroy {
         })
     }
 
-    ngOnDestroy() {
+    cancelRefreshTimer() {
         if (this.refreshTimer) {
             clearTimeout(this.refreshTimer)
             this.refreshTimer = null
         }
+    }
+
+    ngOnDestroy() {
+        this.cancelRefreshTimer()
     }
 
     updateBreadcrumb() {
@@ -105,6 +109,8 @@ export class BranchResultsComponent implements OnInit, OnDestroy {
     }
 
     refresh() {
+        this.cancelRefreshTimer()
+
         this.route.paramMap
             .pipe(
                 switchMap((params: ParamMap) =>
@@ -152,5 +158,74 @@ export class BranchResultsComponent implements OnInit, OnDestroy {
 
     humanFileSize(bytes) {
         return humanBytes(bytes, false)
+    }
+
+    hasFlowCommits(flow) {
+        if (flow.trigger && (flow.trigger.commits || flow.trigger.pull_request)) {
+            return true
+        }
+        return false
+    }
+
+    getFlowCommits(flow) {
+        let repoUrl = flow.trigger.repo
+        if (repoUrl.endsWith('.git')) {
+            repoUrl = repoUrl.slice(0, -4)
+        }
+        let html = `<p>`
+        html += `<a href="${repoUrl}" target="blank" style="font-size: 1.5em; font-weight: bold;">${repoUrl}</a>`
+        let startCommit = ''
+        if (flow.trigger.commits) {
+            startCommit = flow.trigger.before
+        }
+        if (flow.trigger.pull_request) {
+            startCommit = flow.trigger.pull_request.base.sha
+        }
+        let diffUrl = `${repoUrl}/compare/${startCommit}...${flow.trigger.after}`
+        html += `<a href="${diffUrl}" target="blank" style="margin-left: 20px;">diff</a><br>`
+        html += `</p>`
+
+        if (flow.trigger.commits) {
+            for (const c of flow.trigger.commits) {
+                html += `<p>`
+                html += `<a href="${c.url}" target="blank"><b>${c.id.slice(0, 8)}</b></a>`
+                html += ` by <a href="mailto:${c.author.email}">${c.author.name}</a>`
+                const ts = datetimeToLocal(c.timestamp, null)
+                html += ` at ${ts}<br>`
+                html += `${c.message}<br>`
+                let files = []
+                if (c.modified) {
+                    files.push(`modified ${c.modified.length}`)
+                }
+                if (c.added) {
+                    files.push(`added ${c.added.length}`)
+                }
+                if (c.removed) {
+                    files.push(`removed ${c.removed.length}`)
+                }
+                if (files.length > 0) {
+                    html += '<span style="font-size: 0.8em">'
+                    html += files.join(', ') + ' files'
+                    html += '</span>'
+                }
+                html += `</p>`
+            }
+        }
+
+        if (flow.trigger.pull_request) {
+            let pr = flow.trigger.pull_request
+            html += `<p>`
+            html += `Pull Request `
+            html += ` <a href="${pr.html_url}" target="blank">#${pr.number}</a> `
+            html += ` by <a href="${pr.user.html_url}" target="blank">${pr.user.login}</a> `
+            const ts = datetimeToLocal(pr.updated_at, null)
+            html += ` at ${ts}<br>`
+            html += `${pr.title}<br>`
+            html += `branch: ${pr.head.ref}<br>`
+            html += `commits: ${pr.commits}`
+            html += `</p>`
+        }
+
+        return html
     }
 }
