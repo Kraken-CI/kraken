@@ -77,8 +77,12 @@ def handle_github_webhook(project_id):
                             pusher=req['pusher'],
                             commits=req['commits'])
     elif event == 'pull_request':
-        if req['action'] != 'synchronize':
+        if req['action'] not in ['opened', 'synchronize']:
             log.info('unsupported action %s', req['action'])
+            return "", 204
+
+        if req['action'] == 'opened' and req['pull_request']['commits'] == 0:
+            log.info('pull request with no commits, dropped')
             return "", 204
 
         trigger_data = dict(trigger='github-' + event,
