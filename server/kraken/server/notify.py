@@ -163,6 +163,10 @@ def _notify_email(run, email):
     log.info('email sent')
 
 
+def _notify_github(run, gh):
+    pass
+
+
 def notify(run):
     notification = run.stage.schema.get('notification', None)
     if notification is None:
