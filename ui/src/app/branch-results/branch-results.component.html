@@ -18,8 +18,8 @@
           <a routerLink="/flows/{{flow.id}}" style="color: unset; display: block;">
             <b style="font-size: 1.2rem;">{{ flow.label }}</b>
             <div style="font-size: 0.7rem;">
-              <div *ngIf="flow.branch_name">
-                {{ flow.branch_name }}
+              <div *ngIf="flow.trigger && flow.trigger.pull_request && flow.trigger.pull_request.head && flow.trigger.pull_request.head.ref">
+                {{ flow.trigger.pull_request.head.ref }}
               </div>
               <div>{{flow.created | localtime}}</div>
               <div>{{flow.duration}}
