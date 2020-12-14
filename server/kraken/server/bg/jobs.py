@@ -304,6 +304,25 @@ def analyze_results_history(self, run_id):
 
 
 @clry_app.task(base=BaseTask, bind=True)
+def notify_about_started_run(self, run_id):
+    try:
+        app = _create_app()
+
+        with app.app_context():
+            log.info('starting notification about started run %s', run_id)
+            run = Run.query.filter_by(id=run_id).one_or_none()
+            if run is None:
+                log.error('got unknown run to notify: %s', run_id)
+                return
+
+            notify.notify(run, 'start')
+
+    except Exception as exc:
+        log.exception('will retry')
+        raise self.retry(exc=exc)
+
+
+@clry_app.task(base=BaseTask, bind=True)
 def notify_about_completed_run(self, run_id):
     try:
         app = _create_app()
@@ -315,7 +334,7 @@ def notify_about_completed_run(self, run_id):
                 log.error('got unknown run to notify: %s', run_id)
                 return
 
-            notify.notify(run)
+            notify.notify(run, 'end')
 
     except Exception as exc:
         log.exception('will retry')
