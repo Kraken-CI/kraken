@@ -256,7 +256,6 @@ def create_stage(branch_id, stage):
 
 
 def _get_schema_from_repo(repo_url, repo_branch, repo_access_token, schema_file):
-    print(repo_url)
     with  tempfile.TemporaryDirectory(prefix='kraken-git-') as tmpdir:
         # clone repo
         cmd = "git clone '%s' repo" % repo_url
