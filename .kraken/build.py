@@ -64,5 +64,10 @@ def stage(ctx):
                 "agents_group": "all",
                 "config": "c1"
             }]
-        }]
+        }],
+        "notification": {
+            "slack": {"channel": "kk-results"},
+            "email": "godfryd@gmail.com"
+            "github": {"credentials": "#{KK_SECRET_SIMPLE_gh_status_creds}"},
+        }
     }

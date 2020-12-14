@@ -309,6 +309,11 @@ def start_run(stage, flow, args=None):
         # TODO: move triggering jobs to background tasks
         trigger_jobs(run, replay=replay)
 
+    # notify
+    from .bg import jobs as bg_jobs  # pylint: disable=import-outside-toplevel
+    t = bg_jobs.notify_about_started_run.delay(run.id)
+    log.info('enqueued notification about start of run %s, bg processing: %s', run, t)
+
     return run
 
 

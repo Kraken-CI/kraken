@@ -29,7 +29,16 @@ log = logging.getLogger(__name__)
 SLACK_URL = 'https://slack.com/api/chat.postMessage'
 
 
-def _notify_slack(run, slack):
+def _get_srv_url():
+    server_url = get_setting('general', 'server_url')
+    if server_url is None:
+        server_url = 'http://localhost:4200'
+    return server_url
+
+
+def _notify_slack(run, event, slack):
+    if event == 'start':
+        return
     if slack is None:
         return
 
@@ -41,9 +50,7 @@ def _notify_slack(run, slack):
     if slack_token is None:
         return
 
-    server_url = get_setting('general', 'server_url')
-    if server_url is None:
-        server_url = 'http://localhost:4200'
+    server_url = _get_srv_url()
 
     text = 'Project <%s|%s>, branch <%s|%s> <%s|%s>, flow <%s|%s>, run <%s|%s %s>'
     text = text % (urljoin(server_url, '/projects/%d' % run.flow.branch.project.id),
@@ -70,10 +77,12 @@ def _notify_slack(run, slack):
     # sending post to slack
     r = requests.post(SLACK_URL, data=data)
 
-    log.info('slack resp: %s', r)
+    log.info('slack resp: %s, %s', r, r.text)
 
 
-def _notify_email(run, email):
+def _notify_email(run, event, email):
+    if event == 'start':
+        return
     if email is None:
         return
     recipients = email
@@ -94,9 +103,7 @@ def _notify_email(run, email):
         smtp_from = 'kraken@kraken'
     smtp_tls = get_setting('notification', 'smtp_tls')
 
-    server_url = get_setting('general', 'server_url')
-    if server_url is None:
-        server_url = 'http://localhost:4200'
+    server_url = _get_srv_url()
 
     html = 'Project <a href="%s">%s</a>, branch <a href="%s">%s</a> <a href="%s">%s</a>, flow <a href="%s">%s</a>, run <a href="%s">%s %s</a>'
     html = html % (urljoin(server_url, '/projects/%d' % run.flow.branch.project.id),
@@ -163,25 +170,89 @@ def _notify_email(run, email):
     log.info('email sent')
 
 
-def _notify_github(run, gh):
-    pass
+def _notify_github(run, event, gh):
+    if gh is None:
+        return
+    if not run.flow.trigger_data:
+        return
+
+    # prepare github credentials
+    creds = gh.get('credentials', None)
+    if creds is None:
+        log.error('no github credentials')
+        return
+    creds = creds.split(':')
+    if len(creds) != 2:
+        log.error('github credentials should have user:token form')
+        return
+
+    # prepare data for github status
+    context = 'kraken / %s [%s]' % (run.stage.name, run.label)
+
+    if event == 'start':
+        state = 'pending'
+        descr = 'waiting for results'
+    elif event == 'end':
+        state = 'success'
+        descr = []
+        if run.regr_cnt > 0:
+            descr.append('regressions: %d' % run.regr_cnt)
+            state = 'failure'
+        if run.fix_cnt > 0:
+            descr.append('fixes: %d' % run.fix_cnt)
+        if run.issues_new > 0:
+            descr.append('new issues: %d' % run.issues_new)
+            state = 'failure'
+        descr = ', '.join(descr)
+    else:
+        log.error('unsupported event %s', event)
+        return
+
+    server_url = _get_srv_url()
+    run_url = urljoin(server_url, '/runs/%d' % run.id)
+
+    head = run.flow.trigger_data['after']
+    repo_parts = run.flow.trigger_data.repo.split('/')
+    org = repo_parts[-2]
+    repo_name = repo_parts[-1]
+    if repo_name.endswith('.git'):
+        repo_name = repo_name[:-4]
+    url = 'https://api.github.com/repos/%s/%s/statuses/%s' % (org, repo_name, head)
+
+    data = {
+        'state': state,
+        'context': context,
+        'target_url': run_url,
+        'description': descr
+    }
+
+    r = requests.post(url, data=json.dumps(data), auth=creds)
+
+    log.info('github resp: %s, %s', r, r.text)
 
 
-def notify(run):
+def notify(run, event):
     notification = run.stage.schema.get('notification', None)
     if notification is None:
         return
 
-    changes = notification.get('changes', None)
-    if changes is not None:
-        slack = changes.get('slack', None)
-        try:
-            _notify_slack(run, slack)
-        except:
-            log.exception('IGNORED EXCEPTION')
+    # slack
+    slack = notification.get('slack', None)
+    try:
+        _notify_slack(run, event, slack)
+    except:
+        log.exception('IGNORED EXCEPTION')
 
-        email = changes.get('email', None)
-        try:
-            _notify_email(run, email)
-        except:
-            log.exception('IGNORED EXCEPTION')
+    # email
+    email = notification.get('email', None)
+    try:
+        _notify_email(run, event, email)
+    except:
+        log.exception('IGNORED EXCEPTION')
+
+    # github
+    github = notification.get('github', None)
+    try:
+        _notify_github(run, event, github)
+    except:
+        log.exception('IGNORED EXCEPTION')
