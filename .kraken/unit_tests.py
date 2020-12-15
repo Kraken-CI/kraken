@@ -41,6 +41,40 @@ def stage(ctx):
                 "executor": "docker",
                 "config": "default"
             }]
+        }, {
+            "name": "pytest",
+            "steps": [{
+                "tool": "shell",
+                "cmd": "sudo apt update && sudo apt-get install -y python3-pip || ps axf",
+                "timeout": 300
+            }, {
+                "tool": "shell",
+                "cmd": "sudo pip3 install pytest"
+            }, {
+                "tool": "artifacts",
+                "action": "download",
+                "source": "kraken.tar.gz"
+            }, {
+                "tool": "shell",
+                "cmd": "tar -zxf kraken.tar.gz"
+            }, {
+                "tool": "shell",
+                "cmd": "sudo pip3 install poetry",
+            }, {
+                "tool": "shell",
+                "cmd": "poetry install",
+                "cwd": "kraken/server"
+            }, {
+                "tool": "poetry run pytest",
+                "params": "-vv",
+                "cwd": "kraken/server"
+            }],
+            "environments": [{
+                "system": "krakenci/ubuntu:20.04",
+                "agents_group": "docker",
+                "executor": "docker",
+                "config": "default"
+            }]
         }],
         "notification": {
             "slack": {"channel": "kk-results"},
