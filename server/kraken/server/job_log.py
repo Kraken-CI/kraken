@@ -18,7 +18,6 @@ from queue import Queue, Empty
 from threading import Thread, Event
 
 from flask import abort, Response
-from elasticsearch import Elasticsearch
 
 from . import consts
 from .models import Job
@@ -26,7 +25,7 @@ from .models import Job
 
 log = logging.getLogger(__name__)
 
-
+# TODO: rewrite it to Clickhouse, issue: #57
 class JobLogDownloader:
     def __init__(self, job_id, timeout=0.01):
 

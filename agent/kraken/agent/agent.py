@@ -69,9 +69,9 @@ def dispatch_job(srv, job):
 
 
 def apply_cfg_changes(changes):
-    if 'logstash_addr' in changes:
-        logstash_addr = changes['logstash_addr']
-        logs.setup_logging('agent', logstash_addr)
+    if 'clickhouse_addr' in changes:
+        clickhouse_addr = changes['clickhouse_addr']
+        logs.setup_logging('agent', clickhouse_addr)
 
 
 def collect_host_info():

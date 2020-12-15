@@ -232,21 +232,6 @@ tests = ["decorator", "pytest", "pytest-cov", "testfixtures", "flask (>=1.0.4)",
 
 [[package]]
 category = "main"
-description = "Python client for Elasticsearch"
-name = "elasticsearch"
-optional = false
-python-versions = "*"
-version = "7.0.5"
-
-[package.dependencies]
-urllib3 = ">=1.21.1"
-
-[package.extras]
-develop = ["requests (>=2.0.0,<3.0.0)", "nose", "coverage", "mock", "pyaml", "nosexcover", "sphinx (<1.7)", "sphinx-rtd-theme"]
-requests = ["requests (>=2.4.0,<3.0.0)"]
-
-[[package]]
-category = "main"
 description = "A simple framework for building complex web applications."
 name = "flask"
 optional = false
@@ -824,7 +809,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["pytest (>=3.5,<3.7.3 || >3.7.3)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pytest-cov", "jaraco.test (>=3.2.0)", "jaraco.itertools", "func-timeout", "pytest-black (>=0.3.7)", "pytest-mypy"]
 
 [metadata]
-content-hash = "8ed3ad5a029f346bf7c0984a369a7e0ea53e497df24c26c63184bb63ff0397e0"
+content-hash = "5033dfddfd2d5bdc6f56ec89fd6391f3047e99fdd3622e4d94c2845fc9d228bd"
 lock-version = "1.0"
 python-versions = "^3.7"
 
@@ -924,10 +909,6 @@ colorama = [
 connexion = [
     {file = "connexion-2.7.0-py2.py3-none-any.whl", hash = "sha256:5439e9659a89c4380d93a07acfbf3380d70be4130574de8881e5f0dfec7ad0e2"},
     {file = "connexion-2.7.0.tar.gz", hash = "sha256:1ccfac57d4bb7adf4295ba6f5e48f5a1f66057df6a0713417766c9b5235182ee"},
-]
-elasticsearch = [
-    {file = "elasticsearch-7.0.5-py2.py3-none-any.whl", hash = "sha256:7644fa0a9ae524344185bda561826a781a5c6bd4d3eb98a24515c567aab88327"},
-    {file = "elasticsearch-7.0.5.tar.gz", hash = "sha256:693935914d59a517dfffdaab547ff906712a386d9e25027517464960221cbd4c"},
 ]
 flask = [
     {file = "Flask-1.1.2-py2.py3-none-any.whl", hash = "sha256:8a4fdd8936eba2512e9c85df320a37e694c93945b33ef33c89946a340a238557"},

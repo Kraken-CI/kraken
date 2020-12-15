@@ -56,14 +56,13 @@ logging.Logger.manager.root = root_logger
 
 log = logging.getLogger(__name__)
 
-g_logstash_handler = None
+g_clickhouse_handler = None
 g_basic_logger_done = False
 
 
-class LogstashFormatter(logging.Formatter):
-    def __init__(self, message_type='Logstash', tags=None, fqdn=False):
+class ClickhouseFormatter(logging.Formatter):
+    def __init__(self, tags=None, fqdn=False):
         super().__init__()
-        self.message_type = message_type
         self.tags = tags if tags is not None else []
 
         if fqdn:
@@ -145,7 +144,6 @@ class LogstashFormatter(logging.Formatter):
             'path': record.pathname,
             'lineno': record.lineno,
             'tags': self.tags,
-            'type': self.message_type,
 
             # Extra Fields
             'level': record.levelname,
@@ -162,25 +160,24 @@ class LogstashFormatter(logging.Formatter):
         return self.serialize(message)
 
 
-class LogstashHandler(DatagramHandler, SocketHandler):
-    """Python logging handler for Logstash. Sends events over TCP.
-    :param host: The host of the logstash server.
-    :param port: The port of the logstash server (default 5959).
-    :param message_type: The type of the message (default logstash).
+class ClickhouseHandler(DatagramHandler, SocketHandler):
+    """Python logging handler for Clickhouse. Sends events over TCP.
+    :param host: The host of the Clickhouse server.
+    :param port: The port of the Clickhouse server (default 9001).
     :param fqdn; Indicates whether to show fully qualified domain name or not (default False).
     :param tags: list of tags for a logger (default is None).
     """
 
-    def __init__(self, host, port=5959, message_type='logstash', tags=None, fqdn=False):
+    def __init__(self, host, port=9001, tags=None, fqdn=False):
         super().__init__(host, port)
-        self.formatter = LogstashFormatter(message_type, tags, fqdn)
+        self.formatter = ClickhouseFormatter(tags, fqdn)
 
     def makePickle(self, record):
         return self.formatter.format(record)
 
 
-def setup_logging(service, logstash_addr=None):
-    global g_logstash_handler, g_basic_logger_done  # pylint: disable=global-statement
+def setup_logging(service, clickhouse_addr=None):
+    global g_clickhouse_handler, g_basic_logger_done  # pylint: disable=global-statement
 
     if not g_basic_logger_done:
         logging.basicConfig(format=consts.LOG_FMT, level=logging.INFO)
@@ -188,14 +185,14 @@ def setup_logging(service, logstash_addr=None):
 
     l = logging.getLogger()
 
-    if g_logstash_handler:
-        l.removeHandler(g_logstash_handler)
-        g_logstash_handler = None
+    if g_clickhouse_handler:
+        l.removeHandler(g_clickhouse_handler)
+        g_clickhouse_handler = None
 
-    if logstash_addr is None:
-        logstash_addr = os.environ.get('KRAKEN_LOGSTASH_ADDR', consts.DEFAULT_LOGSTASH_ADDR)
-    host, port = logstash_addr.split(':')
-    g_logstash_handler = LogstashHandler(host, int(port), fqdn=True)
+    if clickhouse_addr is None:
+        clickhouse_addr = os.environ.get('KRAKEN_CLICKHOUSE_ADDR', consts.DEFAULT_CLICKHOUSE_ADDR)
+    host, port = clickhouse_addr.split(':')
+    g_clickhouse_handler = ClickhouseHandler(host, int(port), fqdn=True)
     l.set_initial_ctx(service=service)
-    l.addHandler(g_logstash_handler)
-    log.info('setup logging on %s to logstash: %s', service, logstash_addr)
+    l.addHandler(g_clickhouse_handler)
+    log.info('setup logging on %s to clickhouse: %s', service, clickhouse_addr)

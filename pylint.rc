@@ -343,7 +343,7 @@ good-names=a,
            Run,
            _,
            log,
-           g_logstash_handler,
+           g_clickhouse_handler,
            g_basic_logger_done
 
 # Include a hint for the correct naming format with invalid-name.

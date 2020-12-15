@@ -18,7 +18,7 @@ send-keys 'rake run_watchdog' Enter
 
 selectp -t 3
 
-# ELK
+# clickhouse
 splitw -h -p 50
 send-keys 'rake run_ch' Enter
 
