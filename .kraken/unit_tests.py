@@ -65,7 +65,7 @@ def stage(ctx):
                 "cmd": "poetry install",
                 "cwd": "kraken/server"
             }, {
-                "tool": "poetry run pytest",
+                "tool": "pytest",
                 "params": "-vv",
                 "cwd": "kraken/server"
             }],
