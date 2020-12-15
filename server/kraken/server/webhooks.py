@@ -85,11 +85,21 @@ def handle_github_webhook(project_id):
             log.info('pull request with no commits, dropped')
             return "", 204
 
+        if 'before' in req:
+            before = req['before']
+        else:
+            before = req['pull_request']['base']['sha']
+
+        if 'after' in req:
+            after = req['after']
+        else:
+            after = req['pull_request']['head']['sha']
+
         trigger_data = dict(trigger='github-' + event,
                             action=req['action'],
                             pull_request=req['pull_request'],
-                            before=req['before'],
-                            after=req['after'],
+                            before=before,
+                            after=after,
                             repo=req['repository']['clone_url'],
                             sender=req['sender'])
     t = bg_jobs.trigger_flow.delay(project.id, trigger_data)
