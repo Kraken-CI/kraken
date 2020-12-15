@@ -144,10 +144,10 @@ def _db_setup(db_url):
 def main():
     db_url = os.environ.get('KRAKEN_DB_URL', consts.DEFAULT_DB_URL)
     planner_url = os.environ.get('KRAKEN_PLANNER_URL', consts.DEFAULT_PLANNER_URL)
-    # logstash_addr = os.environ.get('KRAKEN_LOGSTASH_ADDR', consts.DEFAULT_LOGSTASH_ADDR)
+    # clickhouse_addr = os.environ.get('KRAKEN_CLICKHOUSE_ADDR', consts.DEFAULT_CLICKHOUSE_ADDR)
 
     srvcheck.check_postgresql(db_url)
-    # srvcheck.check_tcp_service('logstash', logstash_addr, 9600)
+    # srvcheck.check_tcp_service('clickhouse', clickhouse_addr, 9600)
 
     logs.setup_logging('planner')
     log.info('Kraken Planner started, version %s', version.version)

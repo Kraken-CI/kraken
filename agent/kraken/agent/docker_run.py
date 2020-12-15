@@ -66,7 +66,7 @@ class DockerExecContext:
         self.cntr = None
         self.lab_net = None
         self.curr_cntr = None
-        self.logstash_ip = None
+        self.clickhouse_ip = None
         self.storage_ip = None
         self.swarm = False
 
@@ -174,14 +174,14 @@ class DockerExecContext:
                 self.lab_net.connect(self.curr_cntr)
                 self.curr_cntr.reload()
 
-            # connect logstash and storage to lab_net
+            # connect clickhouse and storage to lab_net
             for c in self.client.containers.list():
-                if 'logstash' in c.name or 'storage' in c.name:
+                if 'clickhouse' in c.name or 'storage' in c.name:
                     if self.lab_net.name not in c.attrs['NetworkSettings']['Networks']:
                         self.lab_net.connect(c)
                     c.reload()
-                    if 'logstash' in c.name:
-                        self.logstash_ip = c.attrs['NetworkSettings']['Networks'][self.lab_net.name]['IPAddress']
+                    if 'clickhouse' in c.name:
+                        self.clickhouse_ip = c.attrs['NetworkSettings']['Networks'][self.lab_net.name]['IPAddress']
                     if 'storage' in c.name:
                         self.storage_ip = c.attrs['NetworkSettings']['Networks'][self.lab_net.name]['IPAddress']
 

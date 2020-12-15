@@ -478,8 +478,8 @@ def serve_agent_request():
     if msg == consts.AGENT_MSG_GET_JOB:
         response = _handle_get_job(agent)
 
-        logstash_addr = os.environ.get('KRAKEN_LOGSTASH_ADDR', consts.DEFAULT_LOGSTASH_ADDR)
-        response['cfg'] = dict(logstash_addr=logstash_addr)
+        clickhouse_addr = os.environ.get('KRAKEN_CLICKHOUSE_ADDR', consts.DEFAULT_CLICKHOUSE_ADDR)
+        response['cfg'] = dict(clickhouse_addr=clickhouse_addr)
         response['version'] = version.version
 
     elif msg == consts.AGENT_MSG_STEP_RESULT:

@@ -14,7 +14,7 @@ ENV['KRAKEN_VERSION'] = kk_ver
 KRAKEN_VERSION_FILE = File.expand_path("kraken-version-#{kk_ver}.txt")
 
 LOCALHOST_IP=ENV['LOCALHOST_IP'] || '192.168.0.89'
-LOGSTASH_ADDR="#{LOCALHOST_IP}:9001"
+CLICKHOUSE_ADDR="#{LOCALHOST_IP}:9001"
 
 # prepare env
 task :prepare_env do
@@ -118,13 +118,13 @@ end
 
 task :run_server => 'server/kraken/version.py' do
   Dir.chdir('server') do
-    sh "KRAKEN_LOGSTASH_ADDR=#{LOGSTASH_ADDR} KRAKEN_STORAGE_ADDR=#{LOCALHOST_IP}:2121 ../venv/bin/poetry run python -m kraken.server.server"
+    sh "KRAKEN_CLICKHOUSE_ADDR=#{CLICKHOUSE_ADDR} KRAKEN_STORAGE_ADDR=#{LOCALHOST_IP}:2121 ../venv/bin/poetry run python -m kraken.server.server"
   end
 end
 
 task :run_scheduler => 'server/kraken/version.py' do
   Dir.chdir('server') do
-    sh "KRAKEN_LOGSTASH_ADDR=#{LOGSTASH_ADDR} ../venv/bin/poetry run kkscheduler"
+    sh "KRAKEN_CLICKHOUSE_ADDR=#{CLICKHOUSE_ADDR} ../venv/bin/poetry run kkscheduler"
   end
 end
 
@@ -140,7 +140,7 @@ task :run_agent => ['./agent/venv/bin/kkagent', :build_agent] do
   sh 'cp server/kraken/server/logs.py agent/kraken/agent/'
   sh 'rm -rf /tmp/kk-jobs/ /opt/kraken/*'
   sh 'cp agent/venv/bin/kkagent agent/kktool /opt/kraken'
-  sh "LANGUAGE=en_US:en LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 KRAKEN_LOGSTASH_ADDR=#{LOGSTASH_ADDR} ./agent/venv/bin/kkagent --no-update -d /tmp/kk-jobs -s http://localhost:8080 run"
+  sh "LANGUAGE=en_US:en LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 KRAKEN_CLICKHOUSE_ADDR=#{CLICKHOUSE_ADDR} ./agent/venv/bin/kkagent --no-update -d /tmp/kk-jobs -s http://localhost:8080 run"
 end
 
 task :run_agent_in_docker do
@@ -240,25 +240,25 @@ end
 
 task :run_celery => './server/kraken/version.py' do
   Dir.chdir('server') do
-    sh "KRAKEN_LOGSTASH_ADDR=#{LOGSTASH_ADDR} ../venv/bin/poetry run kkcelery"
+    sh "KRAKEN_CLICKHOUSE_ADDR=#{CLICKHOUSE_ADDR} ../venv/bin/poetry run kkcelery"
   end
 end
 
 task :run_planner => 'server/kraken/version.py' do
   Dir.chdir('server') do
-    sh "KRAKEN_LOGSTASH_ADDR=#{LOGSTASH_ADDR} ../venv/bin/poetry run kkplanner"
+    sh "KRAKEN_CLICKHOUSE_ADDR=#{CLICKHOUSE_ADDR} ../venv/bin/poetry run kkplanner"
   end
 end
 
 task :run_watchdog => 'server/kraken/version.py' do
   Dir.chdir('server') do
-    sh "KRAKEN_LOGSTASH_ADDR=#{LOGSTASH_ADDR} ../venv/bin/poetry run kkwatchdog"
+    sh "KRAKEN_CLICKHOUSE_ADDR=#{CLICKHOUSE_ADDR} ../venv/bin/poetry run kkwatchdog"
   end
 end
 
 task :run_storage => 'server/kraken/version.py' do
   Dir.chdir('server') do
-    sh "KRAKEN_LOGSTASH_ADDR=#{LOGSTASH_ADDR} ../venv/bin/poetry run kkstorage"
+    sh "KRAKEN_CLICKHOUSE_ADDR=#{CLICKHOUSE_ADDR} ../venv/bin/poetry run kkstorage"
   end
 end
 
@@ -291,12 +291,6 @@ task :clean_backend do
 end
 
 task :build_all => [:build_py, :build_ui]
-
-# when there is storage limit hit in ELK then do this
-task :unlock_elk do
-  sh 'curl -XPUT -H "Content-Type: application/json" http://localhost:9200/_cluster/settings -d \'{ "transient": { "cluster.routing.allocation.disk.threshold_enabled": false } }\''
-  sh 'curl -XPUT -H "Content-Type: application/json" http://localhost:9200/_all/_settings -d \'{"index.blocks.read_only_allow_delete": null}\''
-end
 
 # DATABASE
 DB_URL = "postgresql://kraken:kk123@localhost:5433/kraken"
@@ -337,10 +331,6 @@ end
 
 task :docker_down do
   sh "docker-compose down -v --remove-orphans"
-end
-
-task :run_elk do
-  sh 'docker-compose up kibana logstash elasticsearch'
 end
 
 task :run_ch do
@@ -404,13 +394,12 @@ task :compose_to_swarm do
   # remove port map 9000:9000 from clickhouse by override; it is needed only in local composer, in demo it collides with portainer
   sh "yq d -i docker-compose-swarm-tmp.yaml 'services.clickhouse.ports'"
   sh "yq w -i docker-compose-swarm-tmp.yaml 'services.clickhouse.ports[+]' 8123:8123"
-  sh "yq d -i docker-compose-swarm-tmp.yaml 'services.elasticsearch.ports'"
   sh 'yq m docker-compose-swarm-patch.yaml docker-compose-swarm-tmp.yaml > docker-compose-swarm.yaml'
   sh 'rm docker-compose-swarm-tmp.yaml'
   sh "docker-compose -f docker-compose-swarm.yaml config > kraken-docker-stack-#{kk_ver}.yaml"
   sh 'rm docker-compose-swarm.yaml'
   sh "sed -i -e s/kk_ver/#{kk_ver}/g kraken-docker-stack-#{kk_ver}.yaml"
-#  sh "yq w -i kraken-docker-stack-#{kk_ver}.yaml 'services.*.environment.KRAKEN_LOGSTASH_ADDR' lab.kraken.ci:5959"
+#  sh "yq w -i kraken-docker-stack-#{kk_ver}.yaml 'services.*.environment.KRAKEN_CLICKHOUSE_ADDR' lab.kraken.ci:5959"
 #  sh "yq w -i kraken-docker-stack-#{kk_ver}.yaml 'services.*.environment.KRAKEN_STORAGE_ADDR' lab.kraken.ci:2121"
 end
 

@@ -24,7 +24,6 @@ from flask import abort
 from sqlalchemy.orm.attributes import flag_modified
 import pytimeparse
 import dateutil.parser
-from elasticsearch import Elasticsearch
 
 from . import consts, srvcheck
 from .models import db, Branch, Stage, Agent, AgentsGroup, Secret, AgentAssignment, Setting
@@ -554,20 +553,8 @@ def get_branch_sequences(branch_id):
 def get_diagnostics():
     diags = {}
 
-    # check elasticsearch
-    diags['elasticsearch'] = {'name': 'ElasticSearch'}
-    es_addr = os.environ.get('KRAKEN_ELASTICSEARCH_URL', consts.DEFAULT_ELASTICSEARCH_URL)
-    es_open = srvcheck.is_addr_open(es_addr)
-    diags['elasticsearch']['address'] = es_addr
-    diags['elasticsearch']['open'] = es_open
-    if es_open:
-        es = Elasticsearch(es_addr)
-        alloc = es.cat.allocation(format='json')
-        health = es.cat.health(format='json')
-        indices = es.cat.indices('logs*', format='json')
-        diags['elasticsearch']['allocation'] = alloc
-        diags['elasticsearch']['health'] = health
-        diags['elasticsearch']['indicies'] = indices
+    # check clickhouse
+    # TODO
 
     # check postgresql
     pgsql_addr = os.environ.get('KRAKEN_DB_URL', consts.DEFAULT_DB_URL)

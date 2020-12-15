@@ -22,7 +22,6 @@ from flask import abort
 from sqlalchemy.sql.expression import asc, desc
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.attributes import flag_modified
-from elasticsearch import Elasticsearch
 import clickhouse_driver
 
 from . import consts
@@ -704,119 +703,7 @@ def get_run(run_id):
     return run.get_json(), 200
 
 
-def _get_job_logs_from_es(job_id, limit=200, order=None, filters=None, search_after=None):
-    job = Job.query.filter_by(id=job_id).one()
-    job_json = job.get_json()
-
-    es_server = os.environ.get('KRAKEN_ELASTICSEARCH_URL', consts.DEFAULT_ELASTICSEARCH_URL)
-    es = Elasticsearch(es_server)
-
-    query = {"query": {"bool": {"must": []}}}
-
-    # take only logs from given job
-    query["query"]["bool"]["must"].append({"match": {"job": int(job_id)}})
-
-    # take only logs generated explicitly by tool
-    query["query"]["bool"]["must"].append({"exists": {"field": "tool"}})
-
-    #filters = {'service': ['tool']}
-    filters = {}
-
-    if filters:
-        if 'origin' in filters:
-            process_name = filters['origin']
-            del filters['origin']
-            if "^" in process_name or "*" in process_name:
-                rx = process_name
-            else:
-                rx = ".*%s.*" % process_name.lower()
-            query["query"]["bool"]["must"].append({"regexp": {"processName": rx}})
-
-        if "level" in filters:
-            level = filters['level']
-            del filters['level']
-            if level == 'error':
-                levels = "ERROR"
-            elif level == 'warning':
-                levels = "ERROR WARNING"
-            elif level == 'important':
-                levels = "ERROR WARNING IMPORTANT"
-            elif level == 'info':
-                levels = "ERROR WARNING IMPORTANT INFO"
-            elif level == 'debug':
-                levels = "ERROR WARNING IMPORTANT INFO DEBUG"
-            query["query"]["bool"]["must"].append({"match": {"levelname": levels}})
-
-        if "service" in filters:
-            services = filters['service']
-            del filters['service']
-            if any(services):
-                query["query"]["bool"]["must"].append({"terms": {"service": services}})
-
-        if "message" in filters:
-            message = filters['message']
-            del filters['message']
-            if "^" in message or "*" in message:
-                rx = message
-            else:
-                rx = ".*%s.*" % message.lower()
-            query["query"]["bool"]["must"].append({"regexp": {"message": rx}})
-
-        if "recent" in filters:
-            recent = filters['recent']
-            del filters['recent']
-            if recent.lower() == 'true':
-                start_date = datetime.datetime.now() - datetime.timedelta(days=7)
-                query["query"]["bool"]["must"].append(
-                    {"range": {"@timestamp": {"gt": start_date.strftime("%Y-%m-%d")}}})
-
-        query["query"]["bool"]["must"].extend([{"match": {k: v}} for k, v in filters.items()])
-
-    query["size"] = limit
-    if order is None:
-        query["sort"] = [{"@timestamp": {"order": "asc"}}]  # , "ignore_unmapped": True}}
-    elif order in ['asc', 'desc']:
-        query["sort"] = [{"@timestamp": {"order": order}}]
-    else:
-        query["sort"] = [order]
-    query["sort"].append({"_id": "desc"})
-
-    if search_after:
-        ts, _id = search_after.split(',')
-        query['search_after'] = [int(ts), _id]
-
-    log.info(query)
-    try:
-        res = es.search(index="logstash*", body=query)
-    except:
-        # try one more time
-        res = es.search(index="logstash*", body=query)
-
-    logs = []
-    for hit in res['hits']['hits']:
-        l = hit[u'_source']
-        entry = dict(time=l[u'@timestamp'],
-                     message=l['message'],
-                     service=l['service'] if u'service' in l else "",
-                     origin=l['processName'] if u'processName' in l else "",
-                     host=l['host'],
-                     level=l['level'].lower()[:4] if u'level' in l else "info",
-                     job=l['job'],
-                     tool=l['tool'] if 'tool' in l else "",
-                     step=l['step'] if 'step' in l else "")
-        logs.append(entry)
-
-    total = res['hits']['total']['value']
-    bookmarks = None
-    if len(res['hits']['hits']) > 0:
-        bookmarks = {
-            'first': [res['hits']['hits'][0]['sort'][0], res['hits']['hits'][0]['sort'][1]],
-            'last': [res['hits']['hits'][-1]['sort'][0], res['hits']['hits'][-1]['sort'][1]]
-        }
-    return {'items': logs, 'total': total, 'job': job_json, 'bookmarks': bookmarks}, 200
-
-
-def _get_job_logs_from_ch(job_id, start=0, limit=200, order=None, filters=None):
+def  get_job_logs(job_id, start=0, limit=200, order=None, filters=None):
     if order not in [None, 'asc', 'desc']:
         abort(400, "incorrect order value: %s" % str(order))
 
@@ -854,11 +741,6 @@ def _get_job_logs_from_ch(job_id, start=0, limit=200, order=None, filters=None):
         logs.append(entry)
 
     return {'items': logs, 'total': total, 'job': job_json}, 200
-
-
-# def get_job_logs(job_id, limit=200, order=None, filters=None, search_after=None):
-def get_job_logs(job_id, start=0, limit=200, order=None, filters=None):
-    return _get_job_logs_from_ch(job_id, start, limit, order, filters)
 
 
 def cancel_job(job, note, cmplt_status):

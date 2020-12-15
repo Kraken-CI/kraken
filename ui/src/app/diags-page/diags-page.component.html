@@ -13,44 +13,4 @@
 
   </p-tabPanel>
 
-  <p-tabPanel header="ELK" *ngIf="data && data['elasticsearch']">
-    <h3>Cluster Health</h3>
-    <div style="padding: 8px;">
-      {{ data['elasticsearch']['health'][0]['status'] }}
-    </div>
-
-    <h3>Indices</h3>
-    <table>
-      <tr *ngFor="let idx of data['elasticsearch']['indicies']">
-        <td style="padding: 8px;">
-          {{ idx['index'] }}
-        </td>
-        <td style="padding: 8px;">
-          {{ idx['store.size'] }}
-        </td>
-      </tr>
-    </table>
-
-    <h3>Disk Allocation</h3>
-    <table>
-      <ng-container *ngFor="let alc of data['elasticsearch']['allocation']">
-        <tr *ngIf="alc['host']">
-          <td style="padding: 8px;">
-            {{ alc['host'] }}
-          </td>
-          <td style="padding: 8px;">
-            {{ alc['disk.avail'] }} / {{ alc['disk.total'] }}
-          </td>
-          <td style="padding: 8px;">
-            {{ alc['disk.percent'] }} %
-          </td>
-          <td style="padding: 8px;">
-            {{ alc['disk.indices'] }}
-          </td>
-        </tr>
-      </ng-container>
-    </table>
-
-  </p-tabPanel>
-
 </p-tabView>
