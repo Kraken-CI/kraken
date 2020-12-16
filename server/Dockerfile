@@ -1,27 +1,4 @@
-FROM ubuntu:20.04 as base
-
-ENV \
-        PYTHONFAULTHANDLER=1 \
-        PYTHONHASHSEED=random \
-        PYTHONUNBUFFERED=1
-
-WORKDIR /server
-
-RUN apt-get update && apt-get install -y --no-install-recommends python3 libpq5 && rm -rf /var/lib/apt/lists/*
-
-
-##############################################################################################################
-FROM base as builder
-
-ENV \
-        PIP_DEFAULT_TIMEOUT=100 \
-        PIP_DISABLE_PIP_VERSION_CHECK=1 \
-        PIP_NO_CACHE_DIR=1 \
-        POETRY_VERSION=1.0.10
-
-RUN apt-get update && apt-get install -y --no-install-recommends python3-pip python3-venv && rm -rf /var/lib/apt/lists/*
-RUN pip3 install poetry==$POETRY_VERSION
-RUN python3 -m venv /venv
+FROM krakenci/srv-builder as builder
 
 # install python dependencies first
 COPY pyproject.toml poetry.lock /server/
@@ -39,7 +16,7 @@ RUN \
 
 
 ##############################################################################################################
-FROM base as controller
+FROM krakenci/srv-base as controller
 RUN apt-get update && apt-get install -y --no-install-recommends supervisor && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /venv /venv
 COPY supervisor.conf /etc/supervisor.conf
@@ -49,7 +26,7 @@ LABEL kkver=${kkver} kkname=server
 
 
 ##############################################################################################################
-FROM base as server
+FROM krakenci/srv-base as server
 RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates && rm -rf /var/lib/apt/lists/*
 WORKDIR /server
 COPY --from=builder /venv /venv
@@ -62,7 +39,7 @@ LABEL kkver=${kkver} kkname=server
 
 
 ##############################################################################################################
-FROM base as celery
+FROM krakenci/srv-base as celery
 WORKDIR /server
 RUN groupadd user && useradd --create-home --home-dir /home/user -g user user
 USER user
@@ -73,7 +50,7 @@ LABEL kkver=${kkver} kkname=server
 
 
 ##############################################################################################################
-FROM base as storage
+FROM krakenci/srv-base as storage
 COPY --from=builder /venv /venv
 CMD /venv/bin/python3 -m kraken.server.storage
 ARG kkver=0.0

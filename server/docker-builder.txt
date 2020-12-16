@@ -1,0 +1,17 @@
+FROM krakenci/srv-base
+
+ENV \
+        PIP_DEFAULT_TIMEOUT=100 \
+        PIP_DISABLE_PIP_VERSION_CHECK=1 \
+        PIP_NO_CACHE_DIR=1 \
+        POETRY_VERSION=1.0.10
+
+RUN apt-get update && apt-get install -y --no-install-recommends python3-pip python3-venv && rm -rf /var/lib/apt/lists/*
+RUN pip3 install poetry==$POETRY_VERSION
+RUN python3 -m venv /venv
+
+# install python dependencies first
+COPY pyproject.toml poetry.lock /server/
+RUN \
+        . /venv/bin/activate && \
+        poetry install -n --no-dev --no-root

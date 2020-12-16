@@ -1,0 +1,10 @@
+FROM ubuntu:20.04
+
+ENV \
+        PYTHONFAULTHANDLER=1 \
+        PYTHONHASHSEED=random \
+        PYTHONUNBUFFERED=1
+
+WORKDIR /server
+
+RUN apt-get update && apt-get install -y --no-install-recommends python3 libpq5 && rm -rf /var/lib/apt/lists/*

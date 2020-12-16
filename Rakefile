@@ -9,12 +9,22 @@ OPENAPI_GENERATOR_VER = '5.0.0-beta2'
 OPENAPI_GENERATOR = "#{TOOLS_DIR}/swagger-codegen-cli-#{OPENAPI_GENERATOR_VER}.jar"
 SWAGGER_FILE = File.expand_path("server/kraken/server/swagger.yml")
 
+DOCKER_COMPOSE_VER = '1.27.4'
+DOCKER_COMPOSE = "#{TOOLS_DIR}/docker-compose-#{DOCKER_COMPOSE_VER}"
+ENV['DOCKER_BUILDKIT']='1'
+ENV['COMPOSE_DOCKER_CLI_BUILD']='1'
+
 kk_ver = ENV['kk_ver'] || '0.0'
 ENV['KRAKEN_VERSION'] = kk_ver
 KRAKEN_VERSION_FILE = File.expand_path("kraken-version-#{kk_ver}.txt")
 
 LOCALHOST_IP=ENV['LOCALHOST_IP'] || '192.168.0.89'
 CLICKHOUSE_ADDR="#{LOCALHOST_IP}:9001"
+
+file DOCKER_COMPOSE do
+  sh "wget -nv https://github.com/docker/compose/releases/download/#{DOCKER_COMPOSE_VER}/docker-compose-Linux-x86_64 -O #{DOCKER_COMPOSE}"
+  sh "chmod a+x #{DOCKER_COMPOSE}"
+end
 
 # prepare env
 task :prepare_env do
@@ -322,19 +332,19 @@ end
 
 # DOCKER
 
-task :docker_up => :build_all do
+task :docker_up => [DOCKER_COMPOSE, :build_all] do
 #task :docker_up do
-  sh "docker-compose down"
-  sh "docker-compose build --build-arg kkver=#{kk_ver}"
-  sh "docker-compose up"
+  sh "#{DOCKER_COMPOSE} down"
+  sh "#{DOCKER_COMPOSE} build --build-arg kkver=#{kk_ver}"
+  sh "#{DOCKER_COMPOSE} up"
 end
 
-task :docker_down do
-  sh "docker-compose down -v --remove-orphans"
+task :docker_down => DOCKER_COMPOSE do
+  sh "#{DOCKER_COMPOSE} down -v --remove-orphans"
 end
 
-task :run_ch do
-  sh 'docker-compose up clickhouse clickhouse-proxy'
+task :run_ch => DOCKER_COMPOSE do
+  sh '#{DOCKER_COMPOSE} up clickhouse clickhouse-proxy'
 end
 
 task :run_chcli do
@@ -349,11 +359,11 @@ task :run_redis do
   sh 'docker run --rm -p 6379:6379 redis:alpine'
 end
 
-task :build_docker_deploy do
-  sh 'docker-compose -f docker-compose-swarm.yaml config > docker-compose-swarm-deploy.yaml'
+task :build_docker_deploy => DOCKER_COMPOSE do
+  sh "#{DOCKER_COMPOSE} -f docker-compose-swarm.yaml config > docker-compose-swarm-deploy.yaml"
 end
 
-task :build_docker do
+task :build_docker => DOCKER_COMPOSE do
   # generate docker-compose config for installing kraken under the desk and for pushing images to docker images repository
   sh "cp docker-compose.yaml kraken-docker-compose-#{kk_ver}-tmp.yaml"
   sh "sed -i -e s/kk_ver/#{kk_ver}/g kraken-docker-compose-#{kk_ver}-tmp.yaml"
@@ -366,24 +376,24 @@ task :build_docker do
   else
     flags = '--force-rm --no-cache --pull'
   end
-  sh "docker-compose -f kraken-docker-compose-#{kk_ver}-tmp.yaml build #{flags} --build-arg kkver=#{kk_ver}"
+  sh "#{DOCKER_COMPOSE} -f kraken-docker-compose-#{kk_ver}-tmp.yaml build #{flags} --build-arg kkver=#{kk_ver}"
 end
 
-task :publish_docker do
+task :publish_docker => DOCKER_COMPOSE do
   Rake::Task["build_docker"].invoke
 
   # push built images
-  sh "docker-compose -f kraken-docker-compose-#{kk_ver}-tmp.yaml push"
+  sh "#{DOCKER_COMPOSE} -f kraken-docker-compose-#{kk_ver}-tmp.yaml push"
   # strip build: section - release docker-compose file should use build images directly
   sh "yq d -i kraken-docker-compose-#{kk_ver}-tmp.yaml 'services.*.build'"
   # strip deploy: section - deploy is used only in swarm
   sh "yq d -i kraken-docker-compose-#{kk_ver}-tmp.yaml 'services.*.deploy'"
   # validate final docker compose file
-  sh "docker-compose -f kraken-docker-compose-#{kk_ver}-tmp.yaml config > /dev/null"
+  sh "#{DOCKER_COMPOSE} -f kraken-docker-compose-#{kk_ver}-tmp.yaml config > /dev/null"
   sh "mv kraken-docker-compose-#{kk_ver}-tmp.yaml kraken-docker-compose-#{kk_ver}.yaml"
 end
 
-task :compose_to_swarm do
+task :compose_to_swarm => DOCKER_COMPOSE do
   sh 'cp docker-compose.yaml docker-compose-swarm-tmp.yaml'
   sh "yq d -i docker-compose-swarm-tmp.yaml 'services.*.depends_on'"
   sh "yq d -i docker-compose-swarm-tmp.yaml 'services.*.build'"
@@ -396,7 +406,7 @@ task :compose_to_swarm do
   sh "yq w -i docker-compose-swarm-tmp.yaml 'services.clickhouse.ports[+]' 8123:8123"
   sh 'yq m docker-compose-swarm-patch.yaml docker-compose-swarm-tmp.yaml > docker-compose-swarm.yaml'
   sh 'rm docker-compose-swarm-tmp.yaml'
-  sh "docker-compose -f docker-compose-swarm.yaml config > kraken-docker-stack-#{kk_ver}.yaml"
+  sh "#{DOCKER_COMPOSE} -f docker-compose-swarm.yaml config > kraken-docker-stack-#{kk_ver}.yaml"
   sh 'rm docker-compose-swarm.yaml'
   sh "sed -i -e s/kk_ver/#{kk_ver}/g kraken-docker-stack-#{kk_ver}.yaml"
 #  sh "yq w -i kraken-docker-stack-#{kk_ver}.yaml 'services.*.environment.KRAKEN_CLICKHOUSE_ADDR' lab.kraken.ci:5959"
