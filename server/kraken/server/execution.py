@@ -368,9 +368,15 @@ def get_flows(branch_id, kind, start=0, limit=10, middle=None):
     else:
         kind = 0
     q = Flow.query.filter_by(branch_id=branch_id, kind=kind)
+    q = q.options(joinedload('branch'),
+                  joinedload('branch.project'),
+                  joinedload('branch.stages'),
+                  joinedload('artifacts_files'),
+                  joinedload('runs'),
+                  joinedload('runs.artifacts_files'))
     if middle is None:
-        q = q.order_by(desc(Flow.created))
         total = q.count()
+        q = q.order_by(desc(Flow.created))
         q = q.offset(start).limit(limit)
         for flow in q.all():
             flows.append(flow.get_json())

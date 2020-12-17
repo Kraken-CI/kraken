@@ -90,7 +90,7 @@ class Branch(db.Model, DatesMixin):
                             primaryjoin="and_(Branch.id==Flow.branch_id, Flow.kind==0)", viewonly=True)
     dev_flows = relationship("Flow", order_by="desc(Flow.created)",
                              primaryjoin="and_(Branch.id==Flow.branch_id, Flow.kind==1)", viewonly=True)
-    stages = relationship("Stage", back_populates="branch", lazy="dynamic", order_by="Stage.name")
+    stages = relationship("Stage", back_populates="branch", order_by="Stage.name")
     sequences = relationship("BranchSequence", back_populates="branch")
 
     #base_branch = relationship('BaseBranch', uselist=False, primaryjoin="or_(Branch.id==BaseBranch.ci_branch_id, Branch.id==BaseBranch.dev_branch_id)")
@@ -108,7 +108,7 @@ class Branch(db.Model, DatesMixin):
             data['ci_flows'] = [f.get_json() for f in self.ci_flows[:10]]
             data['dev_flows'] = [f.get_json() for f in self.dev_flows[:10]]
         if with_cfg:
-            data['stages'] = [s.get_json() for s in self.stages.filter_by(deleted=None)]
+            data['stages'] = [s.get_json() for s in self.stages if s.deleted is None]
         return data
 
 
@@ -277,7 +277,7 @@ class Flow(db.Model, DatesMixin):
                     project_id=self.branch.project_id,
                     project_name=self.branch.project.name,
                     args=self.args,
-                    stages=[s.get_json() for s in self.branch.stages.filter_by(deleted=None)],
+                    stages=[s.get_json() for s in self.branch.stages if s.deleted is None],
                     runs=[r.get_json() for r in self.runs],
                     trigger=trigger,
                     artifacts=self.artifacts)
