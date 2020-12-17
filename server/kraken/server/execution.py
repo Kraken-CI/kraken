@@ -249,7 +249,7 @@ def start_run(stage, flow, args=None):
             if label_pattern:
                 lbl_vals[lbl_field] = label_pattern
         if lbl_vals:
-            lbl_vals = _substitute_vars(lbl_vals, run_args)
+            lbl_vals = substitute_vars(lbl_vals, run_args)
             if flow.label is None:
                 flow.label = lbl_vals.get('flow_label', None)
 
