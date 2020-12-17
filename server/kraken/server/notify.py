@@ -229,6 +229,7 @@ def _notify_github(run, event, gh):
         'description': descr
     }
 
+    log.info('GH data %s', data)
     r = requests.post(url, data=json.dumps(data), auth=creds)
 
     log.info('github resp: %s, %s', r, r.text)
@@ -242,7 +243,9 @@ def notify(run, event):
     # prepare secrets to pass them to substitute in notifications definitions
     args = prepare_secrets(run)
     args.update(run.args)
+    log.info('notification1 %s', notification)
     notification = substitute_vars(notification, args)
+    log.info('notification2 %s', notification)
 
     # slack
     slack = notification.get('slack', None)
