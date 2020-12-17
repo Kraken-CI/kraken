@@ -27,7 +27,7 @@ import clickhouse_driver
 from . import consts
 from .models import db, Branch, Flow, Run, Stage, Job, Step, AgentsGroup, Tool, TestCaseResult
 from .models import TestCase, Issue, Artifact, AgentAssignment, BranchSequence, System
-from .schema import check_and_correct_stage_schema, SchemaError
+from .schema import check_and_correct_stage_schema, SchemaError, prepare_secrets, substitute_vars
 
 log = logging.getLogger(__name__)
 
@@ -42,27 +42,6 @@ def complete_run(run, now):
     # trigger run analysis
     t = bg_jobs.analyze_run.delay(run.id)
     log.info('run %s completed, analyze run: %s', run, t)
-
-
-def _substitute_vars(fields, args):
-    new_fields = {}
-    for f, val in fields.items():
-        if isinstance(val, dict):
-            new_fields[f] = _substitute_vars(val, args)
-            continue
-        if not isinstance(val, str):
-            new_fields[f] = val
-            continue
-
-        for var in re.findall(r'#{[A-Za-z_ ]+}', val):
-            name = var[2:-1]
-            if name in args:
-                arg_val = args[name]
-                if  not isinstance(arg_val, str):
-                    raise Exception("value '%s' of '%s' should have string type but has '%s'" % (str(arg_val), name, str(type(arg_val))))
-                val = val.replace(var, arg_val)
-        new_fields[f] = val
-    return new_fields
 
 
 def _setup_schema_context(run):
@@ -101,23 +80,6 @@ def _find_covered_jobs(run):
     return covered_jobs
 
 
-def _prepare_secrets(run):
-    secrets = {}
-    for s in run.stage.branch.project.secrets:
-        if s.deleted:
-            continue
-        if s.kind == consts.SECRET_KIND_SSH_KEY:
-            name = "KK_SECRET_USER_" + s.name
-            secrets[name] = s.data['username']
-            name = "KK_SECRET_KEY_" + s.name
-            secrets[name] = s.data['key']
-        elif s.kind == consts.SECRET_KIND_SIMPLE:
-            name = "KK_SECRET_SIMPLE_" + s.name
-            secrets[name] = s.data['secret']
-
-    return secrets
-
-
 def _establish_timeout_for_job(j, run, system, agents_group):
     if agents_group is not None:
         job_key = "%s-%d-%d" % (j['name'], system.id, agents_group.id)
@@ -147,8 +109,8 @@ def trigger_jobs(run, replay=False):
     if replay:
         covered_jobs = _find_covered_jobs(run)
 
-    # prepare secrets to pass them to substitute is steps
-    secrets = _prepare_secrets(run)
+    # prepare secrets to pass them to substitute in steps
+    secrets = prepare_secrets(run)
 
     # prepare missing group
     missing_agents_group = AgentsGroup.query.filter_by(name='missing').one_or_none()
@@ -241,7 +203,7 @@ def trigger_jobs(run, replay=False):
                     for idx, s in enumerate(j['steps']):
                         args = secrets.copy()
                         args.update(run.args)
-                        fields = _substitute_vars(s, args)
+                        fields = substitute_vars(s, args)
                         del fields['tool']
                         Step(job=job, index=idx, tool=tools[idx], fields=fields)
 

@@ -3,7 +3,10 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
-from kraken.server import notify
+from kraken.server import notify, consts
+
+class SecretStub:
+    pass
 
 def test_notify_github_start():
     run = MagicMock()
@@ -12,7 +15,7 @@ def test_notify_github_start():
     run.stage.schema = {
         'notification': {
             'github': {
-                'credentials': 'user:token',
+                'credentials': '#{KK_SECRET_SIMPLE_gh_creds}',
             }
         }
     }
@@ -20,6 +23,12 @@ def test_notify_github_start():
         'after': 'sha1',
         'repo': 'http://gh.com/Kraken-CI/kraken.git',
     }
+    s = SecretStub()
+    s.deleted = False
+    s.kind = consts.SECRET_KIND_SIMPLE
+    s.name = 'gh_creds'
+    s.data = {'secret': 'user:token'}
+    run.stage.branch.project.secrets = [s]
 
     with patch('requests.post') as rp, patch('kraken.server.notify._get_srv_url', return_value='http://aa.pl'):
         notify.notify(run, 'start')

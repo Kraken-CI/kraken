@@ -12,12 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
 import logging
 
 import RestrictedPython
 from RestrictedPython import compile_restricted
 from RestrictedPython import limited_builtins
 
+from . import consts
 from .models import Secret
 
 
@@ -141,3 +143,41 @@ def check_and_correct_stage_schema(branch, stage_name, schema_code, context=None
 
     # TODO: check if git url is valid according to giturlparse
     return schema_code, schema
+
+
+def prepare_secrets(run):
+    secrets = {}
+    for s in run.stage.branch.project.secrets:
+        if s.deleted:
+            continue
+        if s.kind == consts.SECRET_KIND_SSH_KEY:
+            name = "KK_SECRET_USER_" + s.name
+            secrets[name] = s.data['username']
+            name = "KK_SECRET_KEY_" + s.name
+            secrets[name] = s.data['key']
+        elif s.kind == consts.SECRET_KIND_SIMPLE:
+            name = "KK_SECRET_SIMPLE_" + s.name
+            secrets[name] = s.data['secret']
+
+    return secrets
+
+
+def substitute_vars(fields, args):
+    new_fields = {}
+    for f, val in fields.items():
+        if isinstance(val, dict):
+            new_fields[f] = substitute_vars(val, args)
+            continue
+        if not isinstance(val, str):
+            new_fields[f] = val
+            continue
+
+        for var in re.findall(r'#{[A-Za-z_ ]+}', val):
+            name = var[2:-1]
+            if name in args:
+                arg_val = args[name]
+                if  not isinstance(arg_val, str):
+                    raise Exception("value '%s' of '%s' should have string type but has '%s'" % (str(arg_val), name, str(type(arg_val))))
+                val = val.replace(var, arg_val)
+        new_fields[f] = val
+    return new_fields

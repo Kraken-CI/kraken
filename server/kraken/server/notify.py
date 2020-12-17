@@ -22,6 +22,7 @@ from email.mime.multipart import MIMEMultipart
 import requests
 
 from .models import get_setting
+from .schema import prepare_secrets, substitute_vars
 
 
 log = logging.getLogger(__name__)
@@ -236,6 +237,11 @@ def notify(run, event):
     notification = run.stage.schema.get('notification', None)
     if notification is None:
         return
+
+    # prepare secrets to pass them to substitute in notifications definitions
+    args = prepare_secrets(run)
+    args.update(run.args)
+    notification = substitute_vars(notification, args)
 
     # slack
     slack = notification.get('slack', None)

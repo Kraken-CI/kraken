@@ -302,6 +302,12 @@ end
 
 task :build_all => [:build_py, :build_ui]
 
+task :srv_ut do
+  Dir.chdir('server') do
+    sh "../venv/bin/poetry run pytest -s -v"
+  end
+end
+
 # DATABASE
 DB_URL = "postgresql://kraken:kk123@localhost:5433/kraken"
 task :db_up do
