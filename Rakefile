@@ -344,7 +344,11 @@ task :docker_down => DOCKER_COMPOSE do
 end
 
 task :run_ch => DOCKER_COMPOSE do
-  sh '#{DOCKER_COMPOSE} up clickhouse clickhouse-proxy'
+  sh "#{DOCKER_COMPOSE} up clickhouse clickhouse-proxy"
+end
+
+task :build_chp => DOCKER_COMPOSE do
+  sh "#{DOCKER_COMPOSE} build --build-arg kkver=#{kk_ver} clickhouse-proxy"
 end
 
 task :run_chcli do

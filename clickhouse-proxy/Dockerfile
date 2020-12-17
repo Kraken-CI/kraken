@@ -1,8 +1,14 @@
 ##############################################################################################################
-FROM rust:1.48.0-alpine3.12 as builder
-WORKDIR /proxy
-COPY . /proxy
-RUN apk add --no-cache musl-dev g++ && cargo build --release
+FROM krakenci/chp-builder as builder
+
+# copy your source tree
+COPY ./src ./src
+COPY ./Cargo.lock ./Cargo.lock
+COPY ./Cargo.toml ./Cargo.toml
+
+# build for release
+RUN rm ./target/release/deps/clickhouse_proxy*
+RUN cargo build --release
 
 ##############################################################################################################
 FROM alpine:3.12 as clickhouse-proxy
