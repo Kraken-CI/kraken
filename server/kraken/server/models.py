@@ -250,6 +250,9 @@ class Flow(db.Model, DatesMixin):
     artifacts = Column(JSONB, default={})
     artifacts_files = relationship('Artifact', back_populates="flow")
 
+    def get_label(self):
+        return self.label if self.label else ("%d." % self.id)
+
     def get_json(self):
         if self.state == consts.FLOW_STATE_COMPLETED:
             duration = self.finished - self.created
@@ -261,7 +264,7 @@ class Flow(db.Model, DatesMixin):
             trigger = self.trigger_data
 
         return dict(id=self.id,
-                    label=self.label if self.label else ("%d." % self.id),
+                    label=self.get_label(),
                     created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,
                     finished=self.finished.strftime("%Y-%m-%dT%H:%M:%SZ") if self.finished else None,
                     deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,

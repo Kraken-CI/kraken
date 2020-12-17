@@ -222,6 +222,11 @@ def trigger_jobs(run, replay=False):
     run.state = consts.RUN_STATE_IN_PROGRESS  # need to be set in case of replay
     db.session.commit()
 
+    # notify
+    from .bg import jobs as bg_jobs  # pylint: disable=import-outside-toplevel
+    t = bg_jobs.notify_about_started_run.delay(run.id)
+    log.info('enqueued notification about start of run %s, bg processing: %s', run, t)
+
     if len(schema['jobs']) == 0 or all_started_erred:
         complete_run(run, now)
 
@@ -269,11 +274,6 @@ def start_run(stage, flow, args=None):
         log.info('starting run %s for stage %s of branch %s', run, stage, stage.branch)
         # TODO: move triggering jobs to background tasks
         trigger_jobs(run, replay=replay)
-
-    # notify
-    from .bg import jobs as bg_jobs  # pylint: disable=import-outside-toplevel
-    t = bg_jobs.notify_about_started_run.delay(run.id)
-    log.info('enqueued notification about start of run %s, bg processing: %s', run, t)
 
     return run
 

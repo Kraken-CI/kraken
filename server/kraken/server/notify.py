@@ -190,7 +190,7 @@ def _notify_github(run, event, gh):
     creds = tuple(creds)  # requests require tuple, not list
 
     # prepare data for github status
-    context = 'kraken / %s [%s]' % (run.stage.name, run.label)
+    context = 'kraken / %s [%s]' % (run.stage.name, run.flow.get_label())
 
     if event == 'start':
         state = 'pending'
@@ -229,7 +229,7 @@ def _notify_github(run, event, gh):
         'description': descr
     }
 
-    log.info('GH data %s', data)
+    # log.info('GH data %s', data)
     r = requests.post(url, data=json.dumps(data), auth=creds)
 
     log.info('github resp: %s, %s', r, r.text)
@@ -243,9 +243,9 @@ def notify(run, event):
     # prepare secrets to pass them to substitute in notifications definitions
     args = prepare_secrets(run)
     args.update(run.args)
-    log.info('notification1 %s', notification)
+    # log.info('notification1 %s', notification)
     notification = substitute_vars(notification, args)
-    log.info('notification2 %s', notification)
+    # log.info('notification2 %s', notification)
 
     # slack
     slack = notification.get('slack', None)
