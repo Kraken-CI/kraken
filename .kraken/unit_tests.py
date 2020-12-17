@@ -7,7 +7,7 @@ def stage(ctx):
         "parameters": [],
         "configs": [],
         "jobs": [{
-            "name": "pytest",
+            "name": "pytest agent",
             "steps": [{
                 "tool": "shell",
                 "cmd": "sudo apt update && sudo apt-get install -y python3-pip || ps axf",
@@ -42,7 +42,7 @@ def stage(ctx):
                 "config": "default"
             }]
         }, {
-            "name": "pytest",
+            "name": "pytest server",
             "steps": [{
                 "tool": "shell",
                 "cmd": "sudo apt update && sudo apt-get install -y python3-pip || ps axf",
