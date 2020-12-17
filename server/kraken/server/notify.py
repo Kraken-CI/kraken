@@ -187,6 +187,7 @@ def _notify_github(run, event, gh):
     if len(creds) != 2:
         log.error('github credentials should have user:token form')
         return
+    creds = tuple(creds)  # requests require tuple, not list
 
     # prepare data for github status
     context = 'kraken / %s [%s]' % (run.stage.name, run.label)
