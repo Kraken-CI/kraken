@@ -151,7 +151,7 @@ def execute(sock, module, command, step_file_path):
 
         sock.send_json(result)
     except:
-        log.exception('tool interrupted by exception', tool=None)
+        log.exception('tool interrupted by exception')
         exc = traceback.format_exc()
         sock.send_json({'status': 'error', 'reason': 'exception', 'msg': exc})
 
@@ -174,7 +174,7 @@ class JsonSocket(socket.socket):
 class StdoutSock:
     def send_json(self, data):
         data = json.dumps(data) + '\n'
-        # log.info('tool response: %s', data[:200], tool=None)
+        # log.info('tool response: %s', data[:200])
 
 
 def check_integrity():

@@ -346,7 +346,9 @@ def create_flow(branch_id, kind, flow, trigger_data=None):
     flow = Flow(branch=branch, kind=kind, branch_name=branch_name, args=flow_args, trigger_data=trigger_data)
     db.session.commit()
 
-    for stage in branch.stages.filter_by(deleted=None):
+    for stage in branch.stages:
+        if stage.deleted:
+            continue
         if stage.schema['parent'] != 'root' or stage.schema['triggers'].get('parent', False) is False:
             continue
 

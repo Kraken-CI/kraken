@@ -389,7 +389,6 @@ def run(srv, job):
             log.set_ctx(step=idx)
 
             step['job_id'] = job['id']
-            step['storage_addr'] = job['storage_addr']
             step['flow_id'] = job['flow_id']
             step['run_id'] = job['run_id']
             if 'trigger_data' in job:
