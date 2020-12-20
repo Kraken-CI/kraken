@@ -64,7 +64,7 @@ def install_linux():
         elif 'suse' in dstr:
             run('sudo useradd kraken -d %s -m -s /bin/bash -G wheel --system -U' % consts.AGENT_DIR)
         else:
-            raise Exception('distro %s is not supported yet' % dstr)
+            raise Exception('distro %s is not supported yet' % dstr)  # pylint: disable=raise-missing-from
 
     # install bin files
     kraken_version = pkg_resources.get_distribution('kraken-agent').version

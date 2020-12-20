@@ -96,7 +96,7 @@ def check_and_correct_stage_schema(branch, stage_name, schema_code, context=None
     try:
         schema = execute_schema_code(branch, schema_code, context)
     except Exception as e:
-        raise SchemaError("Problem with executing stage schema code: %s" % e)
+        raise SchemaError("Problem with executing stage schema code: %s" % str(e)) from e
 
     # fill missing parts in schema
     if 'jobs' not in schema:

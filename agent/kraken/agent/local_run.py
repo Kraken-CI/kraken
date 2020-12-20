@@ -47,7 +47,7 @@ class LocalExecContext:
             return ip_addr
         return '0.0.0.0'
 
-    async def async_run(self, proc_coord, tool_path, return_addr, step_file_path, command, cwd, timeout, user):
+    async def async_run(self, proc_coord, tool_path, return_addr, step_file_path, command, cwd, timeout, user):   # pylint: disable=unused-argument
         cmd = "%s -r %s -s %s %s" % (tool_path, return_addr, step_file_path, command)
         log.info("exec: '%s' in '%s', timeout %ss", cmd, cwd, timeout)
 

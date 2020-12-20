@@ -285,7 +285,7 @@ export class AgentsPageComponent implements OnInit {
             if (ignoredAttrs.has(key)) {
                 continue
             }
-            res.push({key: key, value:value})
+            res.push({key, value})
         }
         return res
     }

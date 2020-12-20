@@ -181,7 +181,7 @@ export class BranchResultsComponent implements OnInit, OnDestroy {
         if (flow.trigger.pull_request) {
             startCommit = flow.trigger.pull_request.base.sha
         }
-        let diffUrl = `${repoUrl}/compare/${startCommit}...${flow.trigger.after}`
+        const diffUrl = `${repoUrl}/compare/${startCommit}...${flow.trigger.after}`
         html += `<a href="${diffUrl}" target="blank" style="margin-left: 20px;">diff</a><br>`
         html += `</p>`
 
@@ -193,7 +193,7 @@ export class BranchResultsComponent implements OnInit, OnDestroy {
                 const ts = datetimeToLocal(c.timestamp, null)
                 html += ` at ${ts}<br>`
                 html += `${c.message}<br>`
-                let files = []
+                const files = []
                 if (c.modified) {
                     files.push(`modified ${c.modified.length}`)
                 }
@@ -213,7 +213,7 @@ export class BranchResultsComponent implements OnInit, OnDestroy {
         }
 
         if (flow.trigger.pull_request) {
-            let pr = flow.trigger.pull_request
+            const pr = flow.trigger.pull_request
             html += `<p>`
             html += `Pull Request `
             html += ` <a href="${pr.html_url}" target="blank">#${pr.number}</a> `

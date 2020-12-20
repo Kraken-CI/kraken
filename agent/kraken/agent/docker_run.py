@@ -234,7 +234,7 @@ class DockerExecContext:
 
         # Read output from command from docker. Stream returned from docker needs
         # to be parsed according to its format: https://docs.docker.com/engine/api/v1.39/#operation/ContainerAttach
-        reader, _ = await asyncio.open_unix_connection(sock=sock._sock)
+        reader, _ = await asyncio.open_unix_connection(sock=sock._sock)   # pylint: disable=protected-access
         buff = b''
         eof = False
         t0 = time.time()

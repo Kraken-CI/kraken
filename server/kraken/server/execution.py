@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import os
-import re
 import logging
 import datetime
 from urllib.parse import urljoin, urlparse
@@ -673,7 +672,7 @@ def get_run(run_id):
     return run.get_json(), 200
 
 
-def  get_job_logs(job_id, start=0, limit=200, order=None, filters=None):
+def  get_job_logs(job_id, start=0, limit=200, order=None, filters=None):  # pylint: disable=unused-argument
     if order not in [None, 'asc', 'desc']:
         abort(400, "incorrect order value: %s" % str(order))
 
