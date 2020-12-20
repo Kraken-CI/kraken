@@ -25,6 +25,7 @@ from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy.exc import IntegrityError
 from psycopg2.errors import UniqueViolation
 import giturlparse
+import minio
 
 from .models import db, Job, Step, Agent, TestCase, TestCaseResult, Issue, Secret, Artifact, File
 from .models import System
@@ -65,6 +66,20 @@ def _left_time(job):
     return int(timeout3)
 
 
+def _get_or_create_minio_bucket(job):
+    bucket_name = '%08d' % job.run.flow.branch_id
+
+    minio_addr = os.environ.get('KRAKEN_MINIO_ADDR', consts.DEFAULT_MINIO_ADDR)
+    access_key = os.environ['MINIO_ACCESS_KEY']
+    secret_key = os.environ['MINIO_SECRET_KEY']
+    mc = minio.Minio(minio_addr, access_key=access_key, secret_key=secret_key, secure=False)
+    found = mc.bucket_exists(bucket_name)
+    if not found:
+        mc.make_bucket(bucket_name)
+
+    return bucket_name
+
+
 def _handle_get_job(agent):
     if agent.job is None:
         return {'job': {}}
@@ -93,10 +108,10 @@ def _handle_get_job(agent):
         job['trigger_data'] = agent.job.run.flow.trigger_data
 
     # attach storage info to job
-    storage_addr = os.environ.get('KRAKEN_STORAGE_ADDR', consts.DEFAULT_STORAGE_ADDR)
-    job['storage_addr'] = storage_addr
     job['flow_id'] = agent.job.run.flow_id
     job['run_id'] = agent.job.run_id
+
+    minio_bucket = _get_or_create_minio_bucket(agent.job)
 
     # prepare steps
     project = agent.job.run.flow.branch.project
@@ -127,6 +142,15 @@ def _handle_get_job(agent):
                 step['http_url'] = url
             else:
                 log.info('invalid git url %s', step['checkout'])
+
+        if step['tool'] == 'artifacts':
+            minio_addr = os.environ.get('KRAKEN_MINIO_ADDR', consts.DEFAULT_MINIO_ADDR)
+            step['minio_addr'] = minio_addr
+            step['minio_bucket'] = minio_bucket
+            step['minio_access_key'] = os.environ['MINIO_ACCESS_KEY']
+            step['minio_secret_key'] = os.environ['MINIO_SECRET_KEY']
+            if 'destination' not in step:
+                step['destination'] = '.'
 
     if not agent.job.started:
         agent.job.started = datetime.datetime.utcnow()

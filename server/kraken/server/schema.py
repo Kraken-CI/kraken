@@ -117,7 +117,9 @@ def check_and_correct_stage_schema(branch, stage_name, schema_code, context=None
     # check parent in schema
     if schema['parent'] != 'root':
         found = False
-        for s in branch.stages.filter_by(deleted=None):
+        for s in branch.stages:
+            if s.deleted:
+                continue
             if schema['parent'] == s.name and stage_name != s.name:
                 found = True
                 break

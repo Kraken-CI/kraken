@@ -17,6 +17,9 @@ services:
       - KRAKEN_SERVER_ADDR
       - KRAKEN_PLANNER_URL
       - KRAKEN_STORAGE_ADDR
+      - KRAKEN_MINIO_ADDR
+      - MINIO_ACCESS_KEY
+      - MINIO_SECRET_KEY
     ports:
       - $KRAKEN_SERVER_PORT:$KRAKEN_SERVER_PORT
     networks:
@@ -101,17 +104,16 @@ services:
       context: agent
       dockerfile: docker-agent.txt
     environment:
-      - KRAKEN_REDIS_ADDR
-      - KRAKEN_DB_URL
-      - KRAKEN_CLICKHOUSE_PORT
       - KRAKEN_CLICKHOUSE_ADDR
-      - KRAKEN_SERVER_PORT
       - KRAKEN_SERVER_ADDR
       - KRAKEN_AGENT_BUILTIN=1
+      - KRAKEN_MINIO_ADDR
     networks:
       - lab_net
     depends_on:
       - server
+      - minio
+      - clickhouse-proxy
     deploy:
       replicas: 3
     volumes:
@@ -123,11 +125,6 @@ services:
       context: ui
       dockerfile: Dockerfile
     environment:
-      - KRAKEN_REDIS_ADDR
-      - KRAKEN_DB_URL
-      - KRAKEN_CLICKHOUSE_PORT
-      - KRAKEN_CLICKHOUSE_ADDR
-      - KRAKEN_SERVER_PORT
       - KRAKEN_SERVER_ADDR
     ports:
       - $KRAKEN_UI_PUBLIC_PORT:80
@@ -135,8 +132,6 @@ services:
       - web_net
     depends_on:
       - server
-    volumes:
-      - kraken-storage:$KRAKEN_STORAGE_DIR
 
   postgres:
     image: postgres:11
@@ -177,17 +172,31 @@ services:
     environment:
       - KRAKEN_CLICKHOUSE_URL
     ports:
-      - "9001:9001/udp"
+      - $KRAKEN_CLICKHOUSE_PORT:$KRAKEN_CLICKHOUSE_PORT/udp
     networks:
       - db_net
     depends_on:
       - clickhouse
 
+  minio:
+    image: minio/minio:RELEASE.2020-12-18T03-27-42Z
+    environment:
+      - MINIO_ACCESS_KEY
+      - MINIO_SECRET_KEY
+    command: server --address :$KRAKEN_MINIO_PORT /data
+    volumes:
+      - minio:/data
+    ports:
+      - $KRAKEN_MINIO_PORT:$KRAKEN_MINIO_PORT
+    networks:
+      - lab_net
+      - db_net
 
 volumes:
   db-data:
   kraken-storage:
   clickhouse:
+  minio:
 
 networks:
   db_net:

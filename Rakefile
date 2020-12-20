@@ -149,8 +149,8 @@ task :run_agent => ['./agent/venv/bin/kkagent', :build_agent] do
   sh 'cp server/kraken/server/consts.py agent/kraken/agent/'
   sh 'cp server/kraken/server/logs.py agent/kraken/agent/'
   sh 'rm -rf /tmp/kk-jobs/ /opt/kraken/*'
-  sh 'cp agent/venv/bin/kkagent agent/kktool /opt/kraken'
-  sh "LANGUAGE=en_US:en LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 KRAKEN_CLICKHOUSE_ADDR=#{CLICKHOUSE_ADDR} ./agent/venv/bin/kkagent --no-update -d /tmp/kk-jobs -s http://localhost:8080 run"
+  sh 'cp agent/kkagent agent/kktool /opt/kraken'
+  sh "LANGUAGE=en_US:en LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 KRAKEN_CLICKHOUSE_ADDR=#{CLICKHOUSE_ADDR} /opt/kraken/kkagent --no-update -d /tmp/kk-jobs -s http://localhost:8080 run"
 end
 
 task :run_agent_in_docker do
@@ -302,9 +302,15 @@ end
 
 task :build_all => [:build_py, :build_ui]
 
-task :srv_ut do
+task :server_ut do
   Dir.chdir('server') do
     sh "../venv/bin/poetry run pytest -s -v"
+  end
+end
+
+task :agent_ut do
+  Dir.chdir('agent') do
+    sh "./venv/bin/pytest -s -v"
   end
 end
 
