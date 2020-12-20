@@ -16,7 +16,6 @@ services:
       - KRAKEN_SERVER_PORT
       - KRAKEN_SERVER_ADDR
       - KRAKEN_PLANNER_URL
-      - KRAKEN_STORAGE_ADDR
       - KRAKEN_MINIO_ADDR
       - MINIO_ACCESS_KEY
       - MINIO_SECRET_KEY
@@ -51,29 +50,6 @@ services:
       - db_net
     depends_on:
       - celery
-      - postgres
-      - clickhouse-proxy
-
-  storage:
-    restart: always
-    image: 127.0.0.1:5000/kkstorage:kk_ver
-    build:
-      context: server
-      target: storage
-    environment:
-      - KRAKEN_DB_URL
-      - KRAKEN_CLICKHOUSE_PORT
-      - KRAKEN_CLICKHOUSE_ADDR
-      - KRAKEN_PLANNER_URL
-      - KRAKEN_STORAGE_DIR
-      - KRAKEN_STORAGE_ADDR
-    ports:
-      - $KRAKEN_STORAGE_PORT:$KRAKEN_STORAGE_PORT
-    volumes:
-      - kraken-storage:$KRAKEN_STORAGE_DIR
-    networks:
-      - lab_net
-    depends_on:
       - postgres
       - clickhouse-proxy
 
@@ -194,7 +170,6 @@ services:
 
 volumes:
   db-data:
-  kraken-storage:
   clickhouse:
   minio:
 

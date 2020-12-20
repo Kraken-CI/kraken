@@ -47,11 +47,3 @@ COPY --from=builder /venv /venv
 CMD /venv/bin/python3 -m kraken.server.kkcelery
 ARG kkver=0.0
 LABEL kkver=${kkver} kkname=server
-
-
-##############################################################################################################
-FROM krakenci/srv-base as storage
-COPY --from=builder /venv /venv
-CMD /venv/bin/python3 -m kraken.server.storage
-ARG kkver=0.0
-LABEL kkver=${kkver} kkname=server

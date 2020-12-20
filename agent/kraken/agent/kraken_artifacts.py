@@ -21,7 +21,7 @@ import minio
 log = logging.getLogger(__name__)
 
 
-def _upload_all(mc, minio_bucket, cwd, source, dest, report_artifact):
+def _upload_all(mc, minio_bucket, cwd, source, rundir, dest, report_artifact):
     for src in source:
         if cwd:
             cwd = os.path.abspath(cwd)
@@ -41,12 +41,15 @@ def _upload_all(mc, minio_bucket, cwd, source, dest, report_artifact):
                 f_path = os.path.relpath(f, cwd)
             else:
                 f_path = f
-            dest_f = os.path.join(dest, f_path)
+            dest_f = os.path.join(rundir, dest, f_path)
+            dest_f = os.path.normpath(dest_f)
 
             log.info('store %s -> %s / %s', f, minio_bucket, dest_f)
             mc.fput_object(minio_bucket, dest_f, f)
 
-            artifact = dict(path=dest_f, size=os.path.getsize(f))
+            pth = os.path.join(dest, f_path)
+            pth = os.path.normpath(pth)
+            artifact = dict(path=pth, size=os.path.getsize(f))
             report_artifact(artifact)
             files_num += 1
 
@@ -138,7 +141,7 @@ def run_artifacts(step, report_artifact=None):
     if action == 'upload':
         if dest == '/':
             dest = ''
-        dest = os.path.join(str(flow_id), str(run_id), dest)
+        rundir = os.path.join(str(flow_id), str(run_id))
     dest = os.path.normpath(dest)
 
     log.info('%s: source: %s, dest: %s', action, source, dest)
@@ -157,6 +160,6 @@ def run_artifacts(step, report_artifact=None):
     if action == 'download':
         status, msg = _download_all(mc, minio_bucket, flow_id, run_id, cwd, source, dest)
     else:
-        status, msg = _upload_all(mc, minio_bucket, cwd, source, dest, report_artifact)
+        status, msg = _upload_all(mc, minio_bucket, cwd, source, rundir, dest, report_artifact)
 
     return status, msg

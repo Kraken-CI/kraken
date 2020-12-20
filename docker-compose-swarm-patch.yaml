@@ -5,8 +5,6 @@ services:
       replicas: 2
   controller:
     image: eu.gcr.io/kraken-261806/kkcontroller:kk_ver
-  storage:
-    image: eu.gcr.io/kraken-261806/kkstorage:kk_ver
   celery:
     image: eu.gcr.io/kraken-261806/kkcelery:kk_ver
   clickhouse:

@@ -128,7 +128,7 @@ end
 
 task :run_server => 'server/kraken/version.py' do
   Dir.chdir('server') do
-    sh "KRAKEN_CLICKHOUSE_ADDR=#{CLICKHOUSE_ADDR} KRAKEN_STORAGE_ADDR=#{LOCALHOST_IP}:2121 ../venv/bin/poetry run python -m kraken.server.server"
+    sh "KRAKEN_CLICKHOUSE_ADDR=#{CLICKHOUSE_ADDR} MINIO_ACCESS_KEY='UFSEHRCFU4ACUEWHCHWU' MINIO_SECRET_KEY='HICSHuhIIUhiuhMIUHIUhGFfUHugy6fGJuyyfiGY' ../venv/bin/poetry run python -m kraken.server.server"
   end
 end
 
@@ -266,12 +266,6 @@ task :run_watchdog => 'server/kraken/version.py' do
   end
 end
 
-task :run_storage => 'server/kraken/version.py' do
-  Dir.chdir('server') do
-    sh "KRAKEN_CLICKHOUSE_ADDR=#{CLICKHOUSE_ADDR} ../venv/bin/poetry run kkstorage"
-  end
-end
-
 file './venv/bin/shiv' => ['./venv/bin/python3', 'requirements.txt'] do
     sh './venv/bin/pip install -r requirements.txt'
 end
@@ -359,6 +353,11 @@ task :run_ch => DOCKER_COMPOSE do
   sh "#{DOCKER_COMPOSE} up clickhouse clickhouse-proxy"
 end
 
+task :run_minio => DOCKER_COMPOSE do
+  sh "#{DOCKER_COMPOSE} up minio"
+end
+
+
 task :build_chp => DOCKER_COMPOSE do
   sh "#{DOCKER_COMPOSE} build --build-arg kkver=#{kk_ver} clickhouse-proxy"
 end
@@ -426,7 +425,7 @@ task :compose_to_swarm => DOCKER_COMPOSE do
   sh 'rm docker-compose-swarm.yaml'
   sh "sed -i -e s/kk_ver/#{kk_ver}/g kraken-docker-stack-#{kk_ver}.yaml"
 #  sh "yq w -i kraken-docker-stack-#{kk_ver}.yaml 'services.*.environment.KRAKEN_CLICKHOUSE_ADDR' lab.kraken.ci:5959"
-#  sh "yq w -i kraken-docker-stack-#{kk_ver}.yaml 'services.*.environment.KRAKEN_STORAGE_ADDR' lab.kraken.ci:2121"
+#  sh "yq w -i kraken-docker-stack-#{kk_ver}.yaml 'services.*.environment.KRAKEN_MINIO_ADDR' lab.kraken.ci:2121"
 end
 
 task :run_swarm => :build_docker_deploy do

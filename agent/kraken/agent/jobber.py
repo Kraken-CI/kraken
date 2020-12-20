@@ -289,7 +289,9 @@ def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
         timeout = deadline - time.time()
         if timeout <= 0:
             log.info('timout expired %s', deadline)
-            return {'status': 'error', 'reason': 'job-timeout'}, cancel
+            result = {'status': 'error', 'reason': 'job-timeout'}
+            srv.report_step_result(job_id, idx, result)
+            return result, cancel
         result, cancel = _exec_tool(srv, exec_ctx, tool_path, 'run_tests', job_dir, timeout, user, step_file_path, job_id, idx)
         log.info('result for run_tests: %s', str(result)[:200])
         # do not srv.report_step_result, it was already done in RequestHandler.async_handle_request
@@ -302,7 +304,9 @@ def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
         timeout = deadline - time.time()
         if timeout <= 0:
             log.info('timout expired %s', deadline)
-            return {'status': 'error', 'reason': 'job-timeout'}, cancel
+            result = {'status': 'error', 'reason': 'job-timeout'}
+            srv.report_step_result(job_id, idx, result)
+            return result, cancel
         result, cancel = _exec_tool(srv, exec_ctx, tool_path, 'run_analysis', job_dir, timeout, user, step_file_path, job_id, idx)
         log.info('result for run_analysis: %s', str(result)[:200])
         # do not srv.report_step_result, it was already done in RequestHandler.async_handle_request
@@ -315,7 +319,9 @@ def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
         timeout = deadline - time.time()
         if timeout <= 0:
             log.info('timout expired %s', deadline)
-            return {'status': 'error', 'reason': 'job-timeout'}, cancel
+            result = {'status': 'error', 'reason': 'job-timeout'}
+            srv.report_step_result(job_id, idx, result)
+            return result, cancel
         result, cancel = _exec_tool(srv, exec_ctx, tool_path, 'run_artifacts', job_dir, timeout, user, step_file_path, job_id, idx)
         log.info('result for run_artifacts: %s', str(result)[:200])
         # do not srv.report_step_result, it was already done in RequestHandler.async_handle_request
@@ -328,7 +334,9 @@ def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
         timeout = deadline - time.time()
         if timeout <= 0:
             log.info('timout expired %s', deadline)
-            return {'status': 'error', 'reason': 'job-timeout'}, cancel
+            result = {'status': 'error', 'reason': 'job-timeout'}
+            srv.report_step_result(job_id, idx, result)
+            return result, cancel
         attempts = step.get('attempts', 1)
         sleep_time_after_attempt = step.get('sleep_time_after_attempt', 0)
         for n in range(attempts):

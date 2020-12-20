@@ -45,8 +45,8 @@ def test_run_artifacts_upload():
             fput.assert_any_call('00000015', '123/456/a.txt', str(f1))
             fput.assert_any_call('00000015', '123/456/d1/b.txt', str(f2))
 
-            a1 = dict(path='123/456/a.txt', size=0)
-            a2 = dict(path='123/456/d1/b.txt', size=0)
+            a1 = dict(path='a.txt', size=0)
+            a2 = dict(path='d1/b.txt', size=0)
             assert a1 in collected_artifacts
             assert a2 in collected_artifacts
 
