@@ -20,14 +20,11 @@ import mimetypes
 from queue import Queue, Empty
 from threading import Thread, Event
 
-from flask import Flask, abort, Response
+from flask import abort, Response
 import minio
 
-from . import logs
-from .models import db, Run, Flow
+from .models import Run, Flow
 from . import consts
-from . import srvcheck
-from .. import version
 
 
 log = logging.getLogger('storage')
@@ -116,7 +113,3 @@ def serve_flow_artifact(store_type, flow_id, path):
 
 def serve_run_artifact(store_type, run_id, path):
     return serve_artifact(store_type, None, run_id, path)
-
-
-if __name__ == "__main__":
-    main()
