@@ -1,42 +1,77 @@
 set-option -g mouse on
+set-option -g pane-border-status bottom
+set-option -g allow-rename off
 
-selectp -t 0
-
-# storage
-splitw -v  -p 50
-send-keys 'rake run_storage' Enter
+rename-window '... ui server sched celery ...'
 
 # ui
 splitw -h -p 50
-send-keys 'rake serve_ui' Enter
-
-selectp -t 1
-
-# watchdog
-splitw -h -p 50
-send-keys 'rake run_watchdog' Enter
-
-selectp -t 3
-
-# clickhouse
-splitw -h -p 50
-send-keys 'rake run_ch' Enter
-
 selectp -t 0
+send-keys 'rake serve_ui' Enter
+select-pane -T UI
+
+# server
+splitw -v -p 50
+selectp -t 1
+send-keys 'rake run_server' Enter
+select-pane -T SERVER
+
+# celery
+selectp -t 2
+splitw -v -p 50
+send-keys 'rake run_celery' Enter
+select-pane -T CELERY
 
 # scheduler
-splitw -h -p 50
+selectp -t 2
 send-keys 'rake run_scheduler' Enter
+select-pane -T SCHEDULER
 
-#
+####################################
+new-window -n '... planner wdg minio clickhouse ...'
+
+# planner
 splitw -h -p 50
+selectp -t 0
 send-keys 'rake run_planner' Enter
+select-pane -T PLANNER
 
+# watchdog
+splitw -v -p 50
+send-keys 'rake run_watchdog' Enter
+select-pane -T WATCHDOG
+
+# minio
+selectp -t 2
+splitw -v  -p 50
+send-keys 'rake run_minio' Enter
+select-pane -T MINIO
+
+# clickhouse
+selectp -t 2
+send-keys 'rake run_ch' Enter
+select-pane -T CLICKHOUSE
+
+####################################
+new-window -n '... agents ...'
+
+# agent local
+splitw -v -p 30
 selectp -t 0
+send-keys 'rake run_agent' Enter
+select-pane -T 'AGENT LOCAL'
 
-#
-splitw -h -p 50
-send-keys 'rake run_celery' Enter
+# agent in docker
+selectp -t 1
+splitw -v -p 50
+selectp -t 1
+send-keys 'rake run_agent_in_docker'
+select-pane -T 'AGENT DOCKER'
 
-selectp -t 0
-send-keys 'rake run_server' Enter
+# agent in lxd
+selectp -t 2
+send-keys 'rake run_agent_in_lxd'
+select-pane -T 'AGENT LXD'
+
+####################################
+select-window -t 0

@@ -49,7 +49,6 @@ def redeploy(c, kk_ver):
     c.run('docker image prune -a -f')
     c.run('docker service update --force kraken_postgres')
     c.run('docker service update --force kraken_controller')
-    c.run('docker service update --force kraken_storage')
     c.run('docker service update --force kraken_server')
     c.run('docker service update --force kraken_celery')
     c.run('docker service update --force kraken_agent')

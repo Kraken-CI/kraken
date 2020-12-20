@@ -18,7 +18,6 @@ setup(
             'kkwatchdog = kraken.server.watchdog:main',
             'kkcelery = kraken.server.kkcelery:main',
             'kkdbmigrate = migrations.apply:main',
-            'kkstorage = kraken.server.storage:main'
         ],
     },
 )

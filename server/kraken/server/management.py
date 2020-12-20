@@ -582,13 +582,4 @@ def get_diagnostics():
         'open': plnr_open
     }
 
-    # check storage
-    strg_addr = os.environ.get('KRAKEN_STORAGE_ADDR', consts.DEFAULT_STORAGE_ADDR)
-    strg_open = srvcheck.is_addr_open(strg_addr)
-    diags['storage'] = {
-        'name': 'Kraken Storage',
-        'address': strg_addr,
-        'open': strg_open
-    }
-
     return diags

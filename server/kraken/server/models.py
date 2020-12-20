@@ -592,7 +592,7 @@ class Artifact(db.Model):
 
     def get_json(self):
         return dict(id=self.id,
-                    path=self.file.path[1:],
+                    path=self.file.path,
                     size=self.size,
                     flow_id=self.flow_id,
                     run_id=self.run_id,

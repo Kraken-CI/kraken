@@ -67,7 +67,7 @@ class DockerExecContext:
         self.lab_net = None
         self.curr_cntr = None
         self.clickhouse_ip = None
-        self.storage_ip = None
+        self.minio_ip = None
         self.swarm = False
 
     def start(self, timeout):
@@ -174,16 +174,16 @@ class DockerExecContext:
                 self.lab_net.connect(self.curr_cntr)
                 self.curr_cntr.reload()
 
-            # connect clickhouse and storage to lab_net
+            # connect clickhouse and minio to lab_net
             for c in self.client.containers.list():
-                if 'clickhouse' in c.name or 'storage' in c.name:
+                if 'clickhouse' in c.name or 'minio' in c.name:
                     if self.lab_net.name not in c.attrs['NetworkSettings']['Networks']:
                         self.lab_net.connect(c)
                     c.reload()
                     if 'clickhouse' in c.name:
                         self.clickhouse_ip = c.attrs['NetworkSettings']['Networks'][self.lab_net.name]['IPAddress']
-                    if 'storage' in c.name:
-                        self.storage_ip = c.attrs['NetworkSettings']['Networks'][self.lab_net.name]['IPAddress']
+                    if 'minio' in c.name:
+                        self.minio_ip = c.attrs['NetworkSettings']['Networks'][self.lab_net.name]['IPAddress']
 
     def get_return_ip_addr(self):
         if self.curr_cntr:
@@ -317,13 +317,13 @@ class DockerExecContext:
 
         env = {}
 
-        # pass address to storage via env
-        if self.storage_ip:
-            port = consts.DEFAULT_STORAGE_ADDR.split(':')[1]
-            storage_addr = '%s:%s' % (self.storage_ip, port)
-            env['KRAKEN_STORAGE_ADDR'] = storage_addr
-        elif 'KRAKEN_STORAGE_ADDR' in os.environ:
-            env['KRAKEN_STORAGE_ADDR'] = os.environ['KRAKEN_STORAGE_ADDR']
+        # pass address to minio via env
+        if self.minio_ip:
+            port = consts.DEFAULT_MINIO_ADDR.split(':')[1]
+            minio_addr = '%s:%s' % (self.minio_ip, port)
+            env['KRAKEN_MINIO_ADDR'] = minio_addr
+        elif 'KRAKEN_MINIO_ADDR' in os.environ:
+            env['KRAKEN_MINIO_ADDR'] = os.environ['KRAKEN_MINIO_ADDR']
 
         if not env:
             env = None

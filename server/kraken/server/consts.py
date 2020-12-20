@@ -109,7 +109,6 @@ DEFAULT_CLICKHOUSE_ADDR = 'localhost:%s' % DEFAULT_CLICKHOUSE_PORT
 DEFAULT_CLICKHOUSE_URL = 'http://localhost:8123'
 DEFAULT_PLANNER_URL = 'http://localhost:7997/'
 DEFAULT_SERVER_ADDR = 'localhost:8080'
-DEFAULT_STORAGE_ADDR = 'localhost:2121'
 DEFAULT_MINIO_ADDR = 'localhost:9999'
 
 ISSUE_TYPE_ERROR = 0
@@ -135,8 +134,6 @@ SECRET_KINDS_NAME = {
 DEFAULT_RUN_TIMEOUT = 3 * 60 * 60  # 3 hours (in seconds)
 DEFAULT_JOB_TIMEOUT = 5 * 60  # 5 minutes (in seconds)
 AGENT_TIMEOUT = 5 * 60  # 5 minutes (in seconds)
-
-DEFAULT_STORAGE_DIR = '/tmp/kraken_storage'
 
 
 ARTIFACTS_SECTION_PRIVATE = 0
