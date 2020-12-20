@@ -23,7 +23,7 @@ from sqlalchemy import or_
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy.exc import IntegrityError
-from psycopg2.errors import UniqueViolation
+from psycopg2.errors import UniqueViolation  # pylint: disable=no-name-in-module
 import giturlparse
 import minio
 
@@ -452,7 +452,7 @@ def _handle_host_info(agent, req):  # pylint: disable=unused-argument
             log.exception('IGNORED')
 
 
-def _handle_keep_alive(agent, req):
+def _handle_keep_alive(agent, req):  # pylint: disable=unused-argument
     job = agent.job
 
     # handle canceling situation

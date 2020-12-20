@@ -80,7 +80,7 @@ def _download_file_or_dir(mc, minio_bucket, subdir, source, dest):
     try:
         mc.fget_object(minio_bucket, src, dest_file)
     except Exception as e:
-        if hasattr(e, 'code') and e.code == 'NoSuchKey':
+        if hasattr(e, 'code') and e.code == 'NoSuchKey':  # pylint: disable=no-member
             _download_dir(mc, minio_bucket, subdir, source, dest_file)
         else:
             raise
@@ -130,7 +130,6 @@ def run_artifacts(step, report_artifact=None):
     minio_secret_key = step['minio_secret_key']
     action = step.get('action', 'upload')
     cwd = step.get('cwd', None)
-    public = step.get('public', False)
     flow_id = step['flow_id']
     run_id = step['run_id']
 

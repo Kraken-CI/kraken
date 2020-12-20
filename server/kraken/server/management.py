@@ -254,7 +254,7 @@ def create_stage(branch_id, stage):
     return new_stage.get_json(), 201
 
 
-def _get_schema_from_repo(repo_url, repo_branch, repo_access_token, schema_file):
+def _get_schema_from_repo(repo_url, repo_branch, repo_access_token, schema_file):  # pylint: disable=unused-argument
     with  tempfile.TemporaryDirectory(prefix='kraken-git-') as tmpdir:
         # clone repo
         cmd = "git clone '%s' repo" % repo_url
