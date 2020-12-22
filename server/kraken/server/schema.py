@@ -20,6 +20,7 @@ from RestrictedPython import compile_restricted
 from RestrictedPython import limited_builtins
 
 from . import consts
+from . import schemaval
 from .models import Secret
 
 
@@ -63,6 +64,10 @@ def execute_schema_code(branch, schema_code, context=None):
     my_locals2 = {}
     exec('schema = stage(ctx)', my_globals, my_locals2)  # pylint: disable=exec-used
     schema = my_locals2['schema']
+
+    error = schemaval.validate(schema)
+    if error:
+        raise Exception(error)
 
     return schema
 
