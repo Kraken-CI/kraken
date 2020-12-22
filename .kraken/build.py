@@ -49,7 +49,7 @@ def stage(ctx):
 
     return {
         "parent": "Tarball",
-        "trigger": {
+        "triggers": {
             "parent": True,
         },
         "parameters": [],
