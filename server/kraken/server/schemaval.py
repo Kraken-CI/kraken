@@ -138,7 +138,7 @@ data3 = {
             "steps": [
                 {
                     "tool": "shell",
-                    "cmd": "sudo apt update && sudo apt-get install -y --no-install-recommends python3-setuptools python3-wheel python3-pip gcc python3-dev || ps axf",
+                    "cmd": "sudo apt update && sudo apt-get install -y --no-install-recommends python3-setuptools",
                     "timeout": 300
                 },
                 {
@@ -185,7 +185,7 @@ data3 = {
             "steps": [
                 {
                     "tool": "shell",
-                    "cmd": "sudo apt update && sudo apt-get install -y --no-install-recommends python3-setuptools python3-wheel python3-pip gcc python3-dev libpq-dev python3-venv || ps axf",
+                    "cmd": "sudo apt update && sudo apt-get install -y --no-install-recommends python3-setuptools",
                     "timeout": 300
                 },
                 {
