@@ -20,7 +20,7 @@
             <div style="font-size: 0.7rem;">
               <div *ngIf="flow.trigger && flow.trigger.pull_request && flow.trigger.pull_request.head && flow.trigger.pull_request.head.ref">
                 {{ flow.trigger.pull_request.head.ref }}<br>
-                {{ flow.trigger.pull_request.user.login }}
+                by {{ flow.trigger.pull_request.user.login }}
               </div>
               <div>{{flow.created | localtime}}</div>
               <div>{{flow.duration}}
