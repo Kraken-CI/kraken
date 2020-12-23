@@ -55,7 +55,9 @@ def _trigger_stages(run):
     # go through next stages and trigger them if needed
     curr_stage_name = run.stage.name
     branch = run.stage.branch
-    for stage in branch.stages.filter_by(deleted=None):
+    for stage in branch.stages:
+        if stage.deleted:
+            continue
         if stage.schema['parent'] != curr_stage_name:
             # skip stages that are not childs of completed run's stage
             continue
@@ -596,7 +598,9 @@ def trigger_flow(self, project_id, trigger_data=None):
 
             # find stages that use repo from trigger
             matching_stages = []
-            for stage in branch.stages.filter_by(deleted=None):
+            for stage in branch.stages:
+                if stage.deleted:
+                    continue
                 found = False
                 for job in stage.schema['jobs']:
                     for step in job['steps']:
@@ -613,7 +617,7 @@ def trigger_flow(self, project_id, trigger_data=None):
 
             # map runs to stages
             run_stages = {run.stage_id: run for run in last_flow.runs if not run.deleted}
-            name_stages = {stage.name: stage for stage in branch.stages}
+            name_stages = {stage.name: stage for stage in branch.stages if not stage.deleted}
 
             # for stages that were not run while their parent was run, do run them
             started_something = False
