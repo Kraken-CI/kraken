@@ -285,11 +285,17 @@ class DockerExecContext:
 
             # check deadline
             if time.time() > deadline:
+                if logs_to_print:
+                    log.info(logs_to_print)
                 raise Timeout
 
             # check cancel
             if proc_coord and proc_coord.is_canceled:
                 break
+
+        # trace the rest of logs
+        if logs_to_print:
+            log.info(logs_to_print)
 
         if log_ctx:
             log.reset_ctx()

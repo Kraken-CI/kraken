@@ -229,7 +229,7 @@ def _notify_github(run, event, gh):
         'description': descr
     }
 
-    # log.info('GH data %s', data)
+    log.info('GH data %s', data)
     r = requests.post(url, data=json.dumps(data), auth=creds)
 
     log.info('github resp: %s, %s', r, r.text)
