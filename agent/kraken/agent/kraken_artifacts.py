@@ -75,6 +75,7 @@ def _download_dir(mc, minio_bucket, subdir, src_dir, dest):
         else:
             dest_file = os.path.join(src_dir, os.path.relpath(r.object_name, src))
             mc.fget_object(minio_bucket, r.object_name, dest_file)
+            log.info('downloaded %s -> %s', r.object_name, dest_file)
 
 
 def _download_file_or_dir(mc, minio_bucket, subdir, source, dest):
@@ -82,6 +83,7 @@ def _download_file_or_dir(mc, minio_bucket, subdir, source, dest):
     src = '%s/%s' % (subdir, source)
     try:
         mc.fget_object(minio_bucket, src, dest_file)
+        log.info('downloaded %s -> %s', src, dest_file)
     except Exception as e:
         if hasattr(e, 'code') and e.code == 'NoSuchKey':  # pylint: disable=no-member
             _download_dir(mc, minio_bucket, subdir, source, dest_file)
@@ -115,6 +117,7 @@ def _download_all(mc, minio_bucket, flow_id, run_id, cwd, source, dest):
             except Exception as e:
                 msg = 'problem with downloading %s: %s' % (src, str(e))
                 break
+        # no error so stop looking for files in other runs
         if msg is None:
             break
 
