@@ -189,9 +189,12 @@ def setup_logging(service, clickhouse_addr=None):
         l.removeHandler(g_clickhouse_handler)
         g_clickhouse_handler = None
 
-    if clickhouse_addr is None:
-        clickhouse_addr = os.environ.get('KRAKEN_CLICKHOUSE_ADDR', consts.DEFAULT_CLICKHOUSE_ADDR)
-    host, port = clickhouse_addr.split(':')
+    ch_addr = os.environ.get('KRAKEN_CLICKHOUSE_ADDR', None)
+    if ch_addr is None:
+        ch_addr = clickhouse_addr
+    if ch_addr is None:
+        ch_addr = consts.DEFAULT_CLICKHOUSE_ADDR
+    host, port = ch_addr.split(':')
     g_clickhouse_handler = ClickhouseHandler(host, int(port), fqdn=True)
     l.set_initial_ctx(service=service)
     l.addHandler(g_clickhouse_handler)

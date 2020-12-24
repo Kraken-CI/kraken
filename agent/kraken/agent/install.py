@@ -37,9 +37,17 @@ User=kraken
 ExecStart=/opt/kraken/kkagent -s %s -d %s run
 Restart=on-failure
 RestartSec=5s
+EnvironmentFile=/opt/kraken/kraken.env
 
 [Install]
 WantedBy=multi-user.target
+'''
+
+KRAKEN_ENV = '''# address of clickhouse-proxy, used for sending logs there
+KRAKEN_CLICKHOUSE_ADDR=
+
+# address of minio, used for storing and retrieving build artifacts and for a cache
+KRAKEN_MINIO_ADDR=
 '''
 
 def run(cmd):
@@ -86,6 +94,9 @@ def install_linux():
     if os.path.exists('/opt/kraken/kktool'):
         os.unlink('/opt/kraken/kktool')
     run('sudo ln -s %s/kktool /opt/kraken/kktool' % dest_dir)
+
+    # prepare kraken env file
+    run('sudo bash -c \'echo "%s" > /opt/kraken/kraken.env\'' % KRAKEN_ENV)
 
     run('sudo chown kraken:kraken %s/* /opt/kraken/*' % dest_dir)
 
