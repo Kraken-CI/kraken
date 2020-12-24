@@ -66,29 +66,38 @@ def _upload_all(mc, minio_bucket, cwd, source, rundir, dest, report_artifact):
 
 
 def _download_dir(mc, minio_bucket, subdir, src_dir, dest):
+    cnt = 0
     src = os.path.join(subdir, src_dir) + '/'
-    for r in mc.list_objects(minio_bucket, src):
+    objects = mc.list_objects(minio_bucket, src)
+    log.info('objects in %s: %s', src, objects)
+    for r in objects:
+        log.info('obj %s', r.object_name)
         if r.is_dir:
             next_dir = os.path.join(src_dir, r.object_name)
             next_dest = os.path.join(dest, r.object_name)
-            _download_dir(mc, minio_bucket, subdir, next_dir, next_dest)
+            cnt += _download_dir(mc, minio_bucket, subdir, next_dir, next_dest)
         else:
             dest_file = os.path.join(src_dir, os.path.relpath(r.object_name, src))
             mc.fget_object(minio_bucket, r.object_name, dest_file)
             log.info('downloaded %s -> %s', r.object_name, dest_file)
+            cnt += 1
+    return cnt
 
 
 def _download_file_or_dir(mc, minio_bucket, subdir, source, dest):
+    cnt = 0
     dest_file = os.path.realpath(os.path.join(dest, source))
     src = '%s/%s' % (subdir, source)
     try:
         mc.fget_object(minio_bucket, src, dest_file)
         log.info('downloaded %s -> %s', src, dest_file)
+        cnt = 1
     except Exception as e:
         if hasattr(e, 'code') and e.code == 'NoSuchKey':  # pylint: disable=no-member
-            _download_dir(mc, minio_bucket, subdir, source, dest_file)
+            cnt = _download_dir(mc, minio_bucket, subdir, source, dest_file)
         else:
             raise
+    return cnt
 
 
 def _download_all(mc, minio_bucket, flow_id, run_id, cwd, source, dest):
@@ -108,12 +117,16 @@ def _download_all(mc, minio_bucket, flow_id, run_id, cwd, source, dest):
         runs.append(r_id)
     runs.sort()
 
+    log.info('runs for download: %s', runs)
+    log.info('sources: %s', source)
+
+    cnt = 0
     for r_id in reversed(runs):
         msg = None
         subdir = '%d/%d' % (flow_id, r_id)
         for src in source:
             try:
-                _download_file_or_dir(mc, minio_bucket, subdir, src, dest)
+                cnt += _download_file_or_dir(mc, minio_bucket, subdir, src, dest)
             except Exception as e:
                 msg = 'problem with downloading %s: %s' % (src, str(e))
                 break
@@ -124,6 +137,10 @@ def _download_all(mc, minio_bucket, flow_id, run_id, cwd, source, dest):
     if msg:
         log.error(msg)
         return 1, msg
+
+    if cnt == 0:
+        return 2, "cannot find files to download"
+
     return 0, ''
 
 
@@ -152,13 +169,7 @@ def run_artifacts(step, report_artifact=None):
     if not isinstance(source, list):
         source = [source]
 
-    try:
-        mc = minio.Minio(minio_addr, access_key=minio_access_key, secret_key=minio_secret_key, secure=False)
-    except:
-        msg = 'problem with connecting to storage at %s' % minio_addr
-        log.exception(msg)
-        return 1, msg
-
+    mc = minio.Minio(minio_addr, access_key=minio_access_key, secret_key=minio_secret_key, secure=False)
 
     if action == 'download':
         status, msg = _download_all(mc, minio_bucket, flow_id, run_id, cwd, source, dest)
