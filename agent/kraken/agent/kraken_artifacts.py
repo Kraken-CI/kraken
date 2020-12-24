@@ -89,6 +89,7 @@ def _download_file_or_dir(mc, minio_bucket, subdir, source, dest):
     dest_file = os.path.realpath(os.path.join(dest, source))
     src = '%s/%s' % (subdir, source)
     try:
+        log.info('try download %s -> %s', src, dest_file)
         mc.fget_object(minio_bucket, src, dest_file)
         log.info('downloaded %s -> %s', src, dest_file)
         cnt = 1
