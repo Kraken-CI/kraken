@@ -94,6 +94,7 @@ def _download_file_or_dir(mc, minio_bucket, subdir, source, dest):
         log.info('downloaded %s -> %s', src, dest_file)
         cnt = 1
     except Exception as e:
+        log.exception('some problem with downloading')
         if hasattr(e, 'code') and e.code == 'NoSuchKey':  # pylint: disable=no-member
             cnt = _download_dir(mc, minio_bucket, subdir, source, dest_file)
         else:
@@ -126,11 +127,16 @@ def _download_all(mc, minio_bucket, flow_id, run_id, cwd, source, dest):
         msg = None
         subdir = '%d/%d' % (flow_id, r_id)
         for src in source:
+            cnt2 = 0
             try:
-                cnt += _download_file_or_dir(mc, minio_bucket, subdir, src, dest)
+                cnt2 = _download_file_or_dir(mc, minio_bucket, subdir, src, dest)
             except Exception as e:
                 msg = 'problem with downloading %s: %s' % (src, str(e))
                 break
+            if cnt2 == 0:
+                msg = 'problem with downloading %s: not found' % src
+                break
+            cnt += cnt2
         # no error so stop looking for files in other runs
         if msg is None:
             break
