@@ -178,6 +178,14 @@ def run_artifacts(step, report_artifact=None):
 
     mc = minio.Minio(minio_addr, access_key=minio_access_key, secret_key=minio_secret_key, secure=False)
 
+    # check connection
+    try:
+        mc.bucket_exists(minio_bucket)
+    except Exception as e:
+        log.exception('problem with connecting to minio %s', minio_addr)
+        msg = 'problem with connecting to minio %s: %s' % (minio_addr, str(e))
+        return 1, msg
+
     if action == 'download':
         status, msg = _download_all(mc, minio_bucket, flow_id, run_id, cwd, source, dest)
     else:
