@@ -38,9 +38,11 @@ def test_run_artifacts_upload():
             destination='/'
         )
 
-        with patch('minio.Minio.fput_object') as fput:
+        with patch('minio.Minio.bucket_exists', return_value=True) as be, patch('minio.Minio.fput_object') as fput:
             res, msg = kraken_artifacts.run_artifacts(step, report_artifact=report_artifact)
             assert res == 0
+
+            assert be.called
 
             fput.assert_any_call('00000015', '123/456/a.txt', str(f1))
             fput.assert_any_call('00000015', '123/456/d1/b.txt', str(f2))
@@ -70,12 +72,16 @@ def test_run_artifacts_download():
             destination='.'
         )
 
-        with patch('minio.Minio.fget_object') as fget, patch('minio.Minio.list_objects') as mlist:
+        with patch('minio.Minio.bucket_exists', return_value=True) as be, \
+             patch('minio.Minio.fget_object') as fget, \
+             patch('minio.Minio.list_objects') as mlist:
             o = Obj()
             o.object_name = '123/455/'
             o.is_dir = True
             mlist.return_value = [o]
 
             res, msg = kraken_artifacts.run_artifacts(step, report_artifact=None)
+
+            assert be.called
 
             fget.assert_any_call('00000015', '123/455/a1.txt', tmpdirname + '/a1.txt')
