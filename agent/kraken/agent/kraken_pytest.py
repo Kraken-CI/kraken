@@ -25,13 +25,14 @@ log = logging.getLogger(__name__)
 def collect_tests(step):
     params = step.get('params', '')
     cwd = step.get('cwd', '.')
+    pytest_exe = step.get('pytest_exe', 'pytest-3')
     params = params.replace('-vv', '')
     params = params.replace('-v', '')
     pypath = step.get('pythonpath', '')
     if pypath:
         pypath = ':' + pypath
 
-    cmd = 'PYTHONPATH=`pwd`%s pytest-3 --collect-only -q %s  | head -n -2' % (pypath, params)
+    cmd = 'PYTHONPATH=`pwd`%s %s --collect-only -q %s  | head -n -2' % (pypath, pytest_exe, params)
     _, out = utils.execute(cmd, cwd=cwd, out_prefix='')
     tests = out
     tests = tests.splitlines()
@@ -41,6 +42,7 @@ def collect_tests(step):
 def run_tests(step, report_result=None):
     params = step.get('params', '')
     tests = step['tests']
+    pytest_exe = step.get('pytest_exe', 'pytest-3')
 
     cwd = step.get('cwd', '.')
     params = [p for p in params.split() if p.startswith('-')]
@@ -51,7 +53,7 @@ def run_tests(step, report_result=None):
         pypath = ':' + pypath
 
     for test in tests:
-        cmd = 'PYTHONPATH=`pwd`%s pytest-3 -vv -r ap --junit-xml=result.xml %s %s' % (pypath, params, test)
+        cmd = 'PYTHONPATH=`pwd`%s %s -vv -r ap --junit-xml=result.xml %s %s' % (pypath, pytest_exe, params, test)
         ret, _ = utils.execute(cmd, cwd=cwd, out_prefix='')
 
         result = dict(cmd=cmd, test=test)

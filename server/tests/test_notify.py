@@ -11,7 +11,7 @@ class SecretStub:
 def test_notify_github_start():
     run = MagicMock()
     run.stage.name = 'stag'
-    run.label = 'lbl'
+    run.flow.get_label = lambda: 'lbl'
     run.stage.schema = {
         'notification': {
             'github': {
@@ -34,7 +34,7 @@ def test_notify_github_start():
         notify.notify(run, 'start')
         rp.assert_called_once()
         assert rp.call_args[0][0] == 'https://api.github.com/repos/Kraken-CI/kraken/statuses/sha1'
-        assert rp.call_args[1]['auth'] == ['user', 'token']
+        assert rp.call_args[1]['auth'] == ('user', 'token')
         assert 'data' in rp.call_args[1]
         data = rp.call_args[1]['data']
         data = json.loads(data)
@@ -47,7 +47,7 @@ def test_notify_github_start():
 def test_notify_github_end():
     run = MagicMock()
     run.stage.name = 'stag'
-    run.label = 'lbl'
+    run.flow.get_label = lambda: 'lbl'
     run.regr_cnt = 1
     run.fix_cnt = 2
     run.issues_new = 3
@@ -67,7 +67,7 @@ def test_notify_github_end():
         notify.notify(run, 'end')
         rp.assert_called_once()
         assert rp.call_args[0][0] == 'https://api.github.com/repos/Kraken-CI/kraken/statuses/sha1'
-        assert rp.call_args[1]['auth'] == ['user', 'token']
+        assert rp.call_args[1]['auth'] == ('user', 'token')
         assert 'data' in rp.call_args[1]
         data = rp.call_args[1]['data']
         data = json.loads(data)

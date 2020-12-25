@@ -837,6 +837,9 @@ schema = {
                                         "tool": {
                                             "const": "pytest"
                                         },
+                                        "pytest_exe": {
+                                            "type": "string"
+                                        },
                                         "params": {
                                             "type": "string"
                                         },

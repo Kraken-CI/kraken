@@ -48,9 +48,6 @@ def stage(ctx):
                 "cmd": "sudo apt update && sudo apt-get install -y python3-pip || ps axf",
                 "timeout": 300
             }, {
-                "tool": "shell",
-                "cmd": "sudo pip3 install pytest"
-            }, {
                 "tool": "artifacts",
                 "action": "download",
                 "source": "kraken.tar.gz"
@@ -66,6 +63,7 @@ def stage(ctx):
                 "cwd": "kraken/server"
             }, {
                 "tool": "pytest",
+                "pytest_exe": "poetry run pytest",
                 "params": "-vv",
                 "cwd": "kraken/server"
             }],
