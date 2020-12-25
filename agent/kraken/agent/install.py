@@ -87,18 +87,14 @@ def install_linux():
     agent_path, tool_path = update.get_blobs(tmp_dir)
     run('sudo mv %s %s %s' % (agent_path, tool_path, dest_dir))
 
-    if os.path.exists('/opt/kraken/kkagent'):
-        os.unlink('/opt/kraken/kkagent')
-    run('sudo ln -s %s/kkagent /opt/kraken/kkagent' % dest_dir)
-
-    if os.path.exists('/opt/kraken/kktool'):
-        os.unlink('/opt/kraken/kktool')
-    run('sudo ln -s %s/kktool /opt/kraken/kktool' % dest_dir)
-
     # prepare kraken env file
     run('sudo bash -c \'echo "%s" > /opt/kraken/kraken.env\'' % KRAKEN_ENV)
 
     run('sudo chown kraken:kraken %s/* /opt/kraken/*' % dest_dir)
+
+    update.make_links_to_new_binaries(dest_dir)
+
+    run('sudo chown kraken:kraken /opt/kraken/*')
 
     # setup kraken agent service in systemd
     svc = SYSTEMD_SERVICE % (config.get('server'), data_dir)

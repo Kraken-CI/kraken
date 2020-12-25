@@ -60,11 +60,25 @@ def prepare_dest_dir(version):
     return dest_dir
 
 
+def make_links_to_new_binaries(dest_dir):
+    if os.path.exists('/opt/kraken/kkagent'):
+        os.unlink('/opt/kraken/kkagent')
+    cmd = 'ln -s %s/kkagent /opt/kraken/kkagent' % dest_dir
+    subprocess.run(cmd, shell=True, check=True)
+
+    if os.path.exists('/opt/kraken/kktool'):
+        os.unlink('/opt/kraken/kktool')
+    cmd = 'ln -s %s/kktool /opt/kraken/kktool' % dest_dir
+    subprocess.run(cmd, shell=True, check=True)
+
+
 def update_agent(version):
     log.info('trying to update agent to new version: %s', version)
 
+    # prepare /opt/kraken/VER directory
     dest_dir = prepare_dest_dir(version)
 
+    # download binaries (kkagent and kktool) to prepared folder
     try:
         agent_path, tool_path = get_blobs(dest_dir)
     except:
@@ -72,6 +86,7 @@ def update_agent(version):
         return
     log.info('got blobs')
 
+    # check binaries integrity
     try:
         cmd = [agent_path, 'check-integrity']
         subprocess.run(cmd, check=True)
@@ -82,5 +97,12 @@ def update_agent(version):
         return
     log.info('integrity check passed')
 
+    # now we can safely make links to new bins
+    make_links_to_new_binaries(dest_dir)
+
+    cmd = 'rm -rf /opt/kraken/.shiv'
+    subprocess.run(cmd, shell=True, check=True)
+
+    # start new kkagent
     log.info('restarting agent to new version: %s', version)
-    os.execl(agent_path, agent_path, *sys.argv[1:])
+    os.execl('/opt/kraken/kkagent', '/opt/kraken/kkagent', *sys.argv[1:])
