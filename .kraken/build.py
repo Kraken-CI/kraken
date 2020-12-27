@@ -24,11 +24,6 @@ def stage(ctx):
             "env": {
                 "kk_ver": "0.#{KK_FLOW_SEQ}",
             }
-        }, {
-            "tool": "cache",
-            "action": "save",
-            "key": "one-for-all",
-            "paths": ["tools", "ui/node_modules"]
         }]
 
     if ctx.is_ci:
@@ -43,6 +38,13 @@ def stage(ctx):
         "env": {
             "kk_ver": "0.#{KK_FLOW_SEQ}",
         }
+    })
+
+    steps.append({
+        "tool": "cache",
+        "action": "save",
+        "key": "one-for-all",
+        "paths": ["tools", "ui/node_modules"]
     })
 
     if ctx.is_ci:
