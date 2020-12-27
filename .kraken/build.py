@@ -14,7 +14,7 @@ def stage(ctx):
             },
         }, {
             "tool": "cache",
-            "action": "restore"
+            "action": "restore",
             "key": "one-for-all"
         }, {
             "tool": "shell",
@@ -26,7 +26,7 @@ def stage(ctx):
             }
         }, {
             "tool": "cache",
-            "action": "save"
+            "action": "save",
             "key": "one-for-all",
             "paths": ["tools"]
         }]
