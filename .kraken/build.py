@@ -28,7 +28,7 @@ def stage(ctx):
             "tool": "cache",
             "action": "save",
             "key": "one-for-all",
-            "paths": ["tools"]
+            "paths": ["tools", "ui/node_modules"]
         }]
 
     if ctx.is_ci:
