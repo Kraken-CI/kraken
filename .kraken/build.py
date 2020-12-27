@@ -13,6 +13,10 @@ def stage(ctx):
                 "GOOGLE_KEY": "#{KK_SECRET_SIMPLE_google_key}"
             },
         }, {
+            "tool": "cache",
+            "action": "restore"
+            "key": "one-for-all"
+        }, {
             "tool": "shell",
             "cmd": "rake build_all",
             "cwd": "kraken",
@@ -20,6 +24,11 @@ def stage(ctx):
             "env": {
                 "kk_ver": "0.#{KK_FLOW_SEQ}",
             }
+        }, {
+            "tool": "cache",
+            "action": "save"
+            "key": "one-for-all",
+            "paths": ["tools"]
         }]
 
     if ctx.is_ci:

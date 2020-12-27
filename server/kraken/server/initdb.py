@@ -75,6 +75,7 @@ def prepare_initial_data():
         'pylint': {'rcfile': 'text', 'modules_or_packages': 'text'},
         'cloc': {'not-match-f': 'text', 'exclude-dir': 'text'},
         'nglint': {},
+        'cache': {},
     }
     tools = {}
     for name, fields in tool_fields.items():
@@ -82,7 +83,7 @@ def prepare_initial_data():
         if tool is None:
             tool = Tool(name=name, description="This is a %s tool." % name, fields=fields)
             db.session.commit()
-            print("   created Tool record '%s'", name)
+            print("   created Tool record", name)
         tools[name] = tool
 
     agent = Agent.query.filter_by(name="agent.7").one_or_none()

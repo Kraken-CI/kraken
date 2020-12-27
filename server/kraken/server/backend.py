@@ -66,7 +66,7 @@ def _left_time(job):
     return int(timeout3)
 
 
-def _get_or_create_minio_bucket(job):
+def _get_or_create_minio_bucket_for_artifacts(job):
     bucket_name = '%08d' % job.run.flow.branch_id
 
     minio_addr = os.environ.get('KRAKEN_MINIO_ADDR', consts.DEFAULT_MINIO_ADDR)
@@ -78,6 +78,31 @@ def _get_or_create_minio_bucket(job):
         mc.make_bucket(bucket_name)
 
     return bucket_name
+
+
+def _get_or_create_minio_bucket_for_cache(job, step):
+    bucket_name = '%08d-cache' % job.run.flow.branch_id
+
+    if 'key' in step:
+        cache_keys = [step['key']]
+    else:
+        cache_keys = step['keys']
+    folders = {}
+    for key in cache_keys:
+        fldr = '%d-%s/%s' % (job.run.stage_id,
+                             job.name.replace(' ', '_'),
+                             key)
+        folders[key] = fldr
+
+    minio_addr = os.environ.get('KRAKEN_MINIO_ADDR', consts.DEFAULT_MINIO_ADDR)
+    access_key = os.environ['MINIO_ACCESS_KEY']
+    secret_key = os.environ['MINIO_SECRET_KEY']
+    mc = minio.Minio(minio_addr, access_key=access_key, secret_key=secret_key, secure=False)
+    found = mc.bucket_exists(bucket_name)
+    if not found:
+        mc.make_bucket(bucket_name)
+
+    return bucket_name, folders
 
 
 def _handle_get_job(agent):
@@ -111,7 +136,7 @@ def _handle_get_job(agent):
     job['flow_id'] = agent.job.run.flow_id
     job['run_id'] = agent.job.run_id
 
-    minio_bucket = _get_or_create_minio_bucket(agent.job)
+    minio_bucket = _get_or_create_minio_bucket_for_artifacts(agent.job)
 
     # prepare steps
     project = agent.job.run.flow.branch.project
@@ -151,6 +176,18 @@ def _handle_get_job(agent):
             step['minio_secret_key'] = os.environ['MINIO_SECRET_KEY']
             if 'destination' not in step:
                 step['destination'] = '.'
+
+        if step['tool'] == 'cache':
+            minio_addr = os.environ.get('KRAKEN_MINIO_ADDR', consts.DEFAULT_MINIO_ADDR)
+            step['minio_addr'] = minio_addr
+            step['minio_access_key'] = os.environ['MINIO_ACCESS_KEY']
+            step['minio_secret_key'] = os.environ['MINIO_SECRET_KEY']
+            bucket, folders = _get_or_create_minio_bucket_for_cache(agent.job, step)
+            step['minio_bucket'] = bucket
+            if step['action'] == 'save':
+                step['minio_folder'] = folders
+            else:
+                step['minio_folders'] = folders
 
     if not agent.job.started:
         agent.job.started = datetime.datetime.utcnow()

@@ -683,7 +683,8 @@ schema = {
                                             "const": "artifacts"
                                         },
                                         "action": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "enum": ["download", "upload"]
                                         },
                                         "source": {
                                             "oneOf": [{
@@ -871,6 +872,44 @@ schema = {
                                     "properties": {
                                     }
                                 }
+                            }, {
+                                "if": { "properties": { "tool": { "const": "cache" } } },
+                                "then": {
+                                    "additionalProperties": False,
+                                    "properties": {
+                                        "tool": {
+                                            "const": "cache"
+                                        },
+                                        "action": {
+                                            "type": "string",
+                                            "enum": ["save", "restore"]
+                                        },
+                                        "key": {
+                                            "type": "string"
+                                        },
+                                        "keys": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "paths": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "expiry": {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "else": {
+                                    "additionalProperties": False,
+                                    "properties": {
+                                    }
+                                }
+
                             }]
                         }
                     },
