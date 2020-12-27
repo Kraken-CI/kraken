@@ -44,7 +44,7 @@ def stage(ctx):
         "tool": "cache",
         "action": "save",
         "key": "one-for-all",
-        "paths": ["tools", "ui/node_modules"]
+        "paths": ["kraken/tools", "kraken/ui/node_modules"]
     })
 
     if ctx.is_ci:
