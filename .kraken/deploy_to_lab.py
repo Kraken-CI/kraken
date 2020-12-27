@@ -29,7 +29,7 @@ def stage(ctx):
             "environments": [{
                 "system": "krakenci/bld-kraken",
                 "executor": "docker",
-            	"agents_group": "all",
+                "agents_group": "external",
                 "config": "default"
             }]
         }]
