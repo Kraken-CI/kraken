@@ -14,13 +14,11 @@
 
 import os
 import io
-import glob
 import time
 import json
 import shutil
 import logging
 import tarfile
-import threading
 
 import minio
 
@@ -42,7 +40,7 @@ class Pumper:
         self.t0 = time.time()
 
     def _walk_files(self):
-        for dirpath, dnames, fnames in os.walk(self.path):
+        for dirpath, _, fnames in os.walk(self.path):
             for f in fnames:
                 fp = os.path.join(dirpath, f)
                 yield fp
@@ -106,7 +104,6 @@ def _save_to_cache(mc, cache_key, minio_bucket, dest_folder, paths):
     size = 5 * 1024 * 1024
 
     for pth in paths:
-        t0 = time.time()
         pumper = Pumper(pth)
         tar_name = '%s.tar.gz' % pth.strip('/').replace('/', '_')
         tar = tarfile.open(tar_name, 'w|gz', pumper, bufsize=size)
@@ -118,7 +115,6 @@ def _save_to_cache(mc, cache_key, minio_bucket, dest_folder, paths):
         meta[tar_name] = pth
 
         mc.put_object(minio_bucket, object_name, pumper, length=-1, part_size=size)
-        log.info('save time %ds', time.time() - t0)
 
     data = json.dumps(meta)
     object_name = '%s/meta.json' % dest_folder
@@ -156,10 +152,8 @@ def _restore_from_cache(mc, minio_bucket, minio_folders):
                 dest = '.'
             try:
                 tar.extractall(dest)
-                log.info('extracted')
             except Exception as e:
                 log.error('problem with cache extraction: %s', str(e))
-                log.exception('IGN')
                 # remove not fully extracted folder
                 shutil.rmtree(path)
             finally:
