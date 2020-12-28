@@ -414,11 +414,17 @@ task :compose_to_swarm => DOCKER_COMPOSE do
   sh "yq d -i docker-compose-swarm-tmp.yaml 'services.*.build'"
   sh "yq d -i docker-compose-swarm-tmp.yaml 'services.*.networks'"
   sh "yq d -i docker-compose-swarm-tmp.yaml 'networks'"
+  sh "yq d -i docker-compose-swarm-tmp.yaml 'services.server.ports'"
+  sh "yq w -i docker-compose-swarm-tmp.yaml 'services.server.ports[+]' 127.0.0.1:6000:6000"
   sh "yq d -i docker-compose-swarm-tmp.yaml 'services.ui.ports'"
-  sh "yq w -i docker-compose-swarm-tmp.yaml 'services.ui.ports[+]' 80:80"
+  sh "yq w -i docker-compose-swarm-tmp.yaml 'services.ui.ports[+]' 127.0.0.1:80:80"
   # remove port map 9000:9000 from clickhouse by override; it is needed only in local composer, in demo it collides with portainer
   sh "yq d -i docker-compose-swarm-tmp.yaml 'services.clickhouse.ports'"
-  sh "yq w -i docker-compose-swarm-tmp.yaml 'services.clickhouse.ports[+]' 8123:8123"
+  sh "yq w -i docker-compose-swarm-tmp.yaml 'services.clickhouse.ports[+]' 127.0.0.1:8123:8123"
+  sh "yq d -i docker-compose-swarm-tmp.yaml 'services.clickhouse-proxy.ports'"
+  sh "yq w -i docker-compose-swarm-tmp.yaml 'services.clickhouse-proxy.ports[+]' 127.0.0.1:9001:9001"
+  sh "yq d -i docker-compose-swarm-tmp.yaml 'services.minio.ports'"
+  sh "yq w -i docker-compose-swarm-tmp.yaml 'services.minio.ports[+]' 127.0.0.1:9999:9999"
   sh 'yq m docker-compose-swarm-patch.yaml docker-compose-swarm-tmp.yaml > docker-compose-swarm.yaml'
   sh 'rm docker-compose-swarm-tmp.yaml'
   sh "#{DOCKER_COMPOSE} -f docker-compose-swarm.yaml config > kraken-docker-stack-#{kk_ver}.yaml"
