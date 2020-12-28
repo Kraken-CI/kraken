@@ -1,21 +1,7 @@
 import os
 import getpass
 import datetime
-#from fabric.api import *
-#from fabric.contrib import files
-#import fabric.state
 from fabric import task
-
-
-# env.user = 'godfryd'
-
-# # the servers where the commands are executed
-# if not env.hosts:
-#     #env.hosts = ['vps569226.ovh.net']
-#     env.hosts = ['localhost']
-#     execution_env = 'devel'
-# else:
-#     execution_env = 'prod'
 
 
 def missing(f):
