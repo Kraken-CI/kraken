@@ -12,10 +12,10 @@ def stage(ctx):
             "env": {
                 "GOOGLE_KEY": "#{KK_SECRET_SIMPLE_google_key}"
             },
-        }, {
-            "tool": "cache",
-            "action": "restore",
-            "key": "one-for-all"
+        # }, {
+        #     "tool": "cache",
+        #     "action": "restore",
+        #     "key": "one-for-all"
         }, {
             "tool": "shell",
             "cmd": "rake build_all",
@@ -40,12 +40,12 @@ def stage(ctx):
         }
     })
 
-    steps.append({
-        "tool": "cache",
-        "action": "save",
-        "key": "one-for-all",
-        "paths": ["kraken/tools", "kraken/ui/node_modules"]
-    })
+    # steps.append({
+    #     "tool": "cache",
+    #     "action": "save",
+    #     "key": "one-for-all",
+    #     "paths": ["kraken/tools", "kraken/ui/node_modules"]
+    # })
 
     if ctx.is_ci:
         steps.append({
