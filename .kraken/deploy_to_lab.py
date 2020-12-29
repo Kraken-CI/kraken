@@ -24,7 +24,10 @@ def stage(ctx):
             }, {
                 "tool": "shell",
                 "cmd": "rake kk_ver=0.#{KK_FLOW_SEQ} deploy_lab",
-                "cwd": "kraken"
+                "cwd": "kraken",
+                "env": {
+                    "host": "#{KK_SECRET_SIMPLE_deploy_host}"
+                }
             }],
             "environments": [{
                 "system": "krakenci/bld-kraken",

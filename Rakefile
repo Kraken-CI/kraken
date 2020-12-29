@@ -22,6 +22,7 @@ LOCALHOST_IP=ENV['LOCALHOST_IP'] || '192.168.0.89'
 CLICKHOUSE_ADDR="#{LOCALHOST_IP}:9001"
 
 file DOCKER_COMPOSE do
+  sh "mkdir -p #{TOOLS_DIR}"
   sh "wget -nv https://github.com/docker/compose/releases/download/#{DOCKER_COMPOSE_VER}/docker-compose-Linux-x86_64 -O #{DOCKER_COMPOSE}"
   sh "chmod a+x #{DOCKER_COMPOSE}"
 end
