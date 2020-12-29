@@ -9,9 +9,6 @@ def stage(ctx):
         "jobs": [{
             "name": "deploy to lab",
             "steps": [{
-                "tool": "shell",
-                "cmd": "sudo snap install yq"
-            }, {
                 "tool": "artifacts",
                 "action": "download",
                 "source": "kraken.tar.gz"

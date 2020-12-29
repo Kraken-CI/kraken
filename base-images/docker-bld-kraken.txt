@@ -5,4 +5,4 @@ RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
         add-apt-repository 'deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable' && \
         apt update && DEBIAN_FRONTEND=noninteractive apt-get install -y docker-ce-cli && \
         rm -rf /var/lib/apt/lists/*
-RUN wget https://github.com/mikefarah/yq/releases/download/3.3.4/yq_linux_amd64 && mv yq_linux_amd64 /usr/bin/yq && chmod a+x /usr/bin/yq
+RUN wget https://github.com/mikefarah/yq/releases/download/v4.2.0/yq_linux_amd64 && mv yq_linux_amd64 /usr/bin/yq && chmod a+x /usr/bin/yq
