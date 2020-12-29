@@ -401,9 +401,9 @@ task :publish_docker => DOCKER_COMPOSE do
   # push built images
   sh "#{DOCKER_COMPOSE} -f kraken-docker-compose-#{kk_ver}-tmp.yaml push"
   # strip build: section - release docker-compose file should use build images directly
-  sh "yq d -i kraken-docker-compose-#{kk_ver}-tmp.yaml 'services.*.build'"
+  sh "yq e 'del(.services.*.build)' -i kraken-docker-compose-#{kk_ver}-tmp.yaml"
   # strip deploy: section - deploy is used only in swarm
-  sh "yq d -i kraken-docker-compose-#{kk_ver}-tmp.yaml 'services.*.deploy'"
+  sh "yq e 'del(.services.*.deploy)' -i kraken-docker-compose-#{kk_ver}-tmp.yaml"
   # validate final docker compose file
   sh "#{DOCKER_COMPOSE} -f kraken-docker-compose-#{kk_ver}-tmp.yaml config > /dev/null"
   sh "mv kraken-docker-compose-#{kk_ver}-tmp.yaml kraken-docker-compose-#{kk_ver}.yaml"
@@ -416,7 +416,6 @@ task :compose_to_swarm => DOCKER_COMPOSE do
   sh "yq e 'del(.services.*.networks)'                           -i docker-compose-swarm-tmp.yaml"
   sh "yq e 'del(.networks)'                                      -i docker-compose-swarm-tmp.yaml"
   sh "yq e '.services.ui.ports = [\"8888:80\"]'                  -i docker-compose-swarm-tmp.yaml"
-  #  sh 'yq m docker-compose-swarm-patch.yaml docker-compose-swarm-tmp.yaml > docker-compose-swarm.yaml'
   sh "yq eval-all 'select(fileIndex == 0) * select(filename == \"docker-compose-swarm-patch.yaml\")' docker-compose-swarm-tmp.yaml docker-compose-swarm-patch.yaml > docker-compose-swarm.yaml"
   sh 'rm docker-compose-swarm-tmp.yaml'
   sh "#{DOCKER_COMPOSE} -f docker-compose-swarm.yaml config > kraken-docker-stack-#{kk_ver}.yaml"
