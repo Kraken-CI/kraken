@@ -144,42 +144,45 @@ def _analyze_job_results_history(job):
     fix_cnt = 0
 
     for job_tcr in job.results:
-        # analyze history, get previous 10 results for each TCR
+        # analyze history, get previous 10 results
         log.info('Analyze result %s %s', job_tcr, job_tcr.test_case.name)
         q = TestCaseResult.query
         q = q.filter(TestCaseResult.id != job_tcr.id)
         q = q.filter_by(test_case_id=job_tcr.test_case_id)
         q = q.join('job')
+        q = q.filter_by(covered=False)
         q = q.filter_by(agents_group=job_tcr.job.agents_group)
+        q = q.filter_by(system=job.system)
         q = q.join('job', 'run', 'flow', 'branch')
         q = q.filter(Branch.id == job.run.flow.branch_id)
-        q = q.join('job', 'run', 'flow')
         q = q.filter(Flow.kind == job.run.flow.kind)
-        q = q.order_by(asc(Flow.created))
+        q = q.filter(Flow.created < job.run.flow.created)
+        q = q.order_by(desc(Flow.created))
         q = q.limit(10)
 
         tcrs = q.all()
+        tcrs.reverse() # sort from oldest to latest
         # determine instability
         for idx, tcr in enumerate(tcrs):
+            log.info('TCR: %s %s %s', tcr, tcr.test_case.name, tcr.job.run.flow.created)
             if idx == 0:
                 job_tcr.instability = 0
             elif tcr.result != tcrs[idx - 1].result:
                 job_tcr.instability += 1
 
-            log.info('TCR: %s %s %s', tcr, tcr.test_case.name, tcr.job.run.flow.created)
-
         # determine age
         if len(tcrs) > 0:
-            if tcrs[-1].result == job_tcr.result:
-                job_tcr.age = tcrs[-1].age + 1
+            prev_tcr = tcrs[-1]
+            if prev_tcr.result == job_tcr.result:
+                job_tcr.age = prev_tcr.age + 1
                 no_change_cnt += 1
             else:
                 job_tcr.instability += 1
                 job_tcr.age = 0
-                if job_tcr.result == consts.TC_RESULT_PASSED and tcrs[-1].result != consts.TC_RESULT_PASSED:
+                if job_tcr.result == consts.TC_RESULT_PASSED and prev_tcr.result != consts.TC_RESULT_PASSED:
                     job_tcr.change = consts.TC_RESULT_CHANGE_FIX
                     fix_cnt += 1
-                elif job_tcr.result != consts.TC_RESULT_PASSED and tcrs[-1].result == consts.TC_RESULT_PASSED:
+                elif job_tcr.result != consts.TC_RESULT_PASSED and prev_tcr.result == consts.TC_RESULT_PASSED:
                     job_tcr.change = consts.TC_RESULT_CHANGE_REGR
                     regr_cnt += 1
         else:
@@ -209,7 +212,9 @@ def _analyze_job_issues_history(job):
         q = q.filter_by(path=issue.path, issue_type=issue.issue_type, symbol=issue.symbol)
         q = q.filter(Issue.line > issue.line - 5, Issue.line < issue.line + 5)
         q = q.join('job')
+        q = q.filter_by(covered=False)
         q = q.filter_by(agents_group=issue.job.agents_group)
+        q = q.filter_by(system=job.system)
         q = q.join('job', 'run')
         q = q.filter(Run.id == prev_run.id)
         q = q.join('job', 'run', 'flow')
