@@ -67,8 +67,10 @@ export class BranchMgmtComponent implements OnInit {
 
     ngOnInit() {
         this.schemaCheckContent = { schema: '', error: '' }
-        this.branchId = parseInt(this.route.snapshot.paramMap.get('id'), 10)
-        this.refresh()
+        this.route.paramMap.subscribe(params => {
+            this.branchId = parseInt(params.get('id'), 10)
+            this.refresh()
+        })
     }
 
     refresh() {
