@@ -66,7 +66,7 @@ export class RunBoxComponent implements OnInit {
                     this.run.tests_total &&
                     this.run.tests_passed < this.run.tests_total
                 ) {
-                    this.bgColor = 'linear-gradient(90deg, rgba(255,230,230,1) 0%, rgba(227,193,193,1) 100%)' // redish
+                    this.bgColor = 'linear-gradient(90deg, rgba(255,248,230,1) 0%, rgba(247,231,176,1) 100%)' // orangish
                 } else {
                     this.bgColor = 'linear-gradient(90deg, rgba(230,255,230,1) 0%, rgba(193,227,193,1) 100%)' // greenish
                 }
