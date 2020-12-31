@@ -35,6 +35,7 @@ import { InputSwitchModule } from 'primeng/inputswitch'
 import { InputNumberModule } from 'primeng/inputnumber';
 import { PasswordModule } from 'primeng/password'
 import { TooltipModule } from 'primeng/tooltip';
+import { ToggleButtonModule } from 'primeng/togglebutton';
 
 import { ApiModule, BASE_PATH, Configuration } from './backend'
 import { AppRoutingModule } from './app-routing.module'
@@ -123,6 +124,7 @@ export function cfgFactory() {
         InputNumberModule,
         PasswordModule,
         TooltipModule,
+        ToggleButtonModule,
     ],
     providers: [
         Title,

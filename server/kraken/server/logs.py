@@ -198,4 +198,4 @@ def setup_logging(service, clickhouse_addr=None):
     g_clickhouse_handler = ClickhouseHandler(host, int(port), fqdn=True)
     l.set_initial_ctx(service=service)
     l.addHandler(g_clickhouse_handler)
-    log.info('setup logging on %s to clickhouse: %s', service, clickhouse_addr)
+    log.info('setup logging on %s to clickhouse: %s', service, ch_addr)

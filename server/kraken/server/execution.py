@@ -672,7 +672,7 @@ def get_run(run_id):
     return run.get_json(), 200
 
 
-def  get_job_logs(job_id, start=0, limit=200, order=None, filters=None):  # pylint: disable=unused-argument
+def  get_job_logs(job_id, start=0, limit=200, order=None, internals=False, filters=None):  # pylint: disable=unused-argument
     if order not in [None, 'asc', 'desc']:
         abort(400, "incorrect order value: %s" % str(order))
 
@@ -683,15 +683,19 @@ def  get_job_logs(job_id, start=0, limit=200, order=None, filters=None):  # pyli
     o = urlparse(ch_url)
     ch = clickhouse_driver.Client(host=o.hostname)
 
-    query = "select count(*) from logs where job = %d and tool != ''" % job_id
+    tool = ''
+    if not internals:
+        tool = "and tool != ''"
+
+    query = "select count(*) from logs where job = %d %s" % (job_id, tool)
     resp = ch.execute(query)
     total = resp[0][0]
 
     if order is None:
         order = 'asc'
 
-    query = "select time,message,service,host,level,job,tool,step from logs where job = %d and tool != '' order by time %s limit %d, %d"
-    query %= (job_id, order, start, limit)
+    query = "select time,message,service,host,level,job,tool,step from logs where job = %d %s order by time %s limit %d, %d"
+    query %= (job_id, tool, order, start, limit)
 
     log.info(query)
 
@@ -723,7 +727,7 @@ def cancel_job(job, note, cmplt_status):
         job.notes = note
     db.session.commit()
     t = bg_jobs.job_completed.delay(job.id)
-    log.info('job %s timed out or canceled, bg processing: %s', job, t)
+    log.info('job %s timed out or canceled, bg processing: %s', job, t, job=job.id)
 
 
 def cancel_run(run_id):

@@ -957,6 +957,10 @@ paths:
           in: query
           description: ID of pet to return
           type: string
+        - name: internals
+          in: query
+          description: ID of pet to return
+          type: boolean
         - name: filters
           in: query
           description: ID of pet to return

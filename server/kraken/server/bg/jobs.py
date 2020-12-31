@@ -13,6 +13,7 @@ from ..models import db, Run, Job, TestCaseResult, Branch, Flow, Stage, Project,
 from .. import execution  # pylint: disable=cyclic-import
 from .. import consts
 from .. import notify
+from .. import logs
 
 log = logging.getLogger(__name__)
 
@@ -21,7 +22,7 @@ def _create_app():
     # addresses
     db_url = os.environ.get('KRAKEN_DB_URL', consts.DEFAULT_DB_URL)
 
-    #logging.basicConfig(format=consts.LOG_FMT, level=logging.INFO)
+    logs.setup_logging('celery')
 
     # Create  Flask app instance
     app = Flask('Kraken Background')
@@ -272,6 +273,7 @@ def analyze_results_history(self, run_id):
             run.issues_new = 0
             non_covered_jobs = Job.query.filter_by(run=run).filter_by(covered=False).all()
             for job in non_covered_jobs:
+                log.set_ctx(job=job.id)
                 # analyze results history
                 counts = _analyze_job_results_history(job)
                 new_cnt, no_change_cnt, regr_cnt, fix_cnt = counts
@@ -285,6 +287,7 @@ def analyze_results_history(self, run_id):
                 issues_new = _analyze_job_issues_history(job)
                 run.issues_new += issues_new
                 db.session.commit()
+            log.set_ctx(job=None)
 
             run.state = consts.RUN_STATE_PROCESSED
             db.session.commit()
@@ -459,6 +462,8 @@ def job_completed(self, job_id):
                 log.error('got unknown job: %s', job_id)
                 return
 
+            log.set_ctx(job=job_id)
+
             if job.state != consts.JOB_STATE_COMPLETED:
                 job.completed = now
                 job.state = consts.JOB_STATE_COMPLETED
@@ -495,7 +500,10 @@ def job_completed(self, job_id):
 
     except Exception as exc:
         log.exception('will retry')
+        log.set_ctx(job=None)
         raise self.retry(exc=exc)
+
+    log.set_ctx(job=None)
 
 
 @clry_app.task(base=BaseTask, bind=True)

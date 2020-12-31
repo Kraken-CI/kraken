@@ -327,15 +327,19 @@ def _handle_step_result(agent, req):
                   agent, req['job_id'])
         return response
 
+    log.set_ctx(job=agent.job_id)
+
     try:
         result = req['result']
         step_idx = req['step_idx']
         status = result['status']
         del result['status']
         if status not in list(consts.STEP_STATUS_TO_INT.keys()):
+            log.set_ctx(job=None)
             raise ValueError("unknown status: %s" % status)
     except:
         log.exception('problems with parsing request')
+        log.set_ctx(job=None)
         return response
 
     job = agent.job
@@ -349,6 +353,7 @@ def _handle_step_result(agent, req):
         db.session.commit()
         log.info("canceling job %s on %s", job, agent)
         response['cancel'] = True
+        log.set_ctx(job=None)
         return response
 
     db.session.commit()
@@ -388,6 +393,7 @@ def _handle_step_result(agent, req):
     else:
         response['timeout'] = _left_time(job)
 
+    log.set_ctx(job=None)
     return response
 
 
