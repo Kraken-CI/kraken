@@ -428,6 +428,9 @@ def update_agent(agent_id, data):
         for a in added:
             AgentAssignment(agent=agent, agents_group=a)
 
+    if 'disabled' in data:
+        agent.disabled = data['disabled']
+
     db.session.commit()
 
     return agent.get_json(), 200

@@ -25,7 +25,7 @@ import clickhouse_driver
 
 from . import consts
 from .models import db, Branch, Flow, Run, Stage, Job, Step, AgentsGroup, Tool, TestCaseResult
-from .models import TestCase, Issue, Artifact, AgentAssignment, BranchSequence, System
+from .models import TestCase, Issue, Artifact, Agent, AgentAssignment, BranchSequence, System
 from .schema import check_and_correct_stage_schema, SchemaError, prepare_secrets, substitute_vars
 
 log = logging.getLogger(__name__)
@@ -150,7 +150,11 @@ def trigger_jobs(run, replay=False):
 
             # get count of agents in the group
             if agents_group is not None and agents_group.name not in agents_count:
-                cnt = AgentAssignment.query.filter_by(agents_group=agents_group).count()
+                q = AgentAssignment.query.filter_by(agents_group=agents_group)
+                q = q.join('agent')
+                q = q.filter(Agent.disabled == False)
+                q = q.filter(Agent.authorized == True)
+                cnt = q.count()
                 #log.info("agents group '%s' count is %d", agents_group.name, cnt)
                 agents_count[agents_group.name] = cnt
 

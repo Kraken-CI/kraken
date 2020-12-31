@@ -34,7 +34,7 @@ log = logging.getLogger('scheduler')
 def assign_jobs_to_agents():
     counter = 0
 
-    all_idle_agents = Agent.query.filter_by(job=None, authorized=True).all()
+    all_idle_agents = Agent.query.filter_by(job=None, authorized=True, disabled=False).all()
     agents_count = len(all_idle_agents)
     if agents_count == 0:
         return 0

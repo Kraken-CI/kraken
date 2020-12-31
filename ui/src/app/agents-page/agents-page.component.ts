@@ -244,12 +244,15 @@ export class AgentsPageComponent implements OnInit {
         const groups = this.agentTab.agent.groups.map(g => {
             return { id: g.id }
         })
-        const ex = { groups }
+        const ag = { groups }
+        this.updateAgent(this.agentTab.agent.id, ag)
+    }
+
+    updateAgent(agent_id, data) {
         this.managementService
-            .updateAgent(this.agentTab.agent.id, ex)
+            .updateAgent(agent_id, data)
             .subscribe(
                 data => {
-                    console.info('updated', data)
                     // agentTab.agent.name = data.name
                     this.msgSrv.add({
                         severity: 'success',
@@ -288,5 +291,9 @@ export class AgentsPageComponent implements OnInit {
             res.push({key, value})
         }
         return res
+    }
+
+    changeAgentDisable(ev, ag) {
+        this.updateAgent(ag.id, {disabled: ag.disabled})
     }
 }

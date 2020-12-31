@@ -64,7 +64,9 @@
         <td><a routerLink="/agents/{{agent.id}}">{{agent.name}}</a></td>
         <td>{{agent.ip_address}}</td>
         <td>{{ agent.state }}</td>
-        <td>{{ agent.disabled }}</td>
+        <td>
+          <p-inputSwitch [(ngModel)]="agent.disabled" (onChange)="changeAgentDisable($event, agent)"></p-inputSwitch>
+        </td>
         <td>{{ agent.last_seen ? (agent.last_seen | localtime) : '' }}</td>
         <td>
           <span *ngFor="let g of agent.groups" style="padding-right: 5px;">
