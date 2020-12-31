@@ -23,12 +23,13 @@ struct LogEntryIn {
     step: i8
 }
 
-#[derive(Debug, PartialEq, Reflection, Serialize)]
+#[derive(Debug, PartialEq, Reflection, Serialize, Copy, Clone)]
 struct DateTime64(i64);
 
 #[derive(Debug, Reflection, Serialize)]
 struct LogEntryOut {
     time: DateTime64,
+    seq: u16,
     message: String,
     service: String,
     host: String,
@@ -54,6 +55,7 @@ async fn read_and_parse_log(buf: [u8; 65536], len: usize, mut tx: Sender<LogEntr
 
     let le_out = LogEntryOut{
         time: DateTime64(ts2),
+        seq: 0,
         message: le_in["message"].as_str().unwrap().to_string(),
         service: le_in["service"].as_str().unwrap().to_string(),
         host: le_in["host"].as_str().unwrap().to_string(),
@@ -77,11 +79,32 @@ async fn store_logs_batch(client: &Client, batch: &Vec<LogEntryOut>) -> Result<(
 
     let mut insert = client.insert("logs")?;
     for le in batch.iter() {
-        insert.write(le).await?;
+        for (idx, line) in le.message.lines().enumerate() {
+            let le2 = LogEntryOut{
+                time: le.time.clone(),
+                seq: idx as u16,
+                message: line.to_string(),
+                service: le.service.clone(),
+                host: le.host.clone(),
+                path: le.path.clone(),
+                lineno: le.lineno,
+                level: le.level.clone(),
+                job: le.job,
+                tool: le.tool.clone(),
+                step: le.step,
+            };
+            // println!("msg {:?} {:?}", idx, le2.message);
+            insert.write(&le2).await?;
+        }
     }
     insert.end().await?;
 
     Ok(())
+}
+
+#[derive(Reflection, Deserialize, Debug)]
+struct VersionRow<> {
+    version: u32
 }
 
 async fn store_logs(rx: &mut Receiver<LogEntryOut>) -> Result<()> {
@@ -112,8 +135,27 @@ async fn store_logs(rx: &mut Receiver<LogEntryOut>) -> Result<()> {
         ENGINE = ReplacingMergeTree
         ORDER BY id";
     client.query(create_db_schema_version_tbl).execute().await?;
-    let insert_version = r"INSERT INTO db_schema_version (id, version) VALUES (1, 1)";
-    client.query(insert_version).execute().await?;
+
+    // get latest version
+    let mut db_version = 1 as u32;
+    let mut cursor = client.query("SELECT version FROM db_schema_version").fetch::<VersionRow<>>()?;
+    while let Some(row) = cursor.next().await? {
+        println!("{:?}", row);
+        if row.version > db_version {
+            db_version = row.version;
+        }
+    }
+
+    // migration to version 2
+    if db_version < 2 {
+        let cmd = r"ALTER TABLE logs ADD COLUMN seq UInt16 AFTER time, MODIFY ORDER BY (time, seq)";
+        client.query(cmd).execute().await?;
+        db_version = 2;
+    }
+
+    // store latest version
+    let insert_version = r"INSERT INTO db_schema_version (id, version) VALUES (1, ?)";
+    client.query(insert_version).bind(db_version).execute().await?;
 
     println!("logs table created in clickhouse");
     println!("waiting for logs to store");

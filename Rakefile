@@ -416,6 +416,7 @@ task :compose_to_swarm => DOCKER_COMPOSE do
   sh "yq e 'del(.services.*.networks)'                           -i docker-compose-swarm-tmp.yaml"
   sh "yq e 'del(.networks)'                                      -i docker-compose-swarm-tmp.yaml"
   sh "yq e '.services.ui.ports = [\"8888:80\"]'                  -i docker-compose-swarm-tmp.yaml"
+  sh "yq e 'del(.services.clickhouse.ports)'                     -i docker-compose-swarm-tmp.yaml"
   sh "yq eval-all 'select(fileIndex == 0) * select(filename == \"docker-compose-swarm-patch.yaml\")' docker-compose-swarm-tmp.yaml docker-compose-swarm-patch.yaml > docker-compose-swarm.yaml"
   sh 'rm docker-compose-swarm-tmp.yaml'
   sh "#{DOCKER_COMPOSE} -f docker-compose-swarm.yaml config > kraken-docker-stack-#{kk_ver}.yaml"

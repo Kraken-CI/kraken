@@ -134,6 +134,9 @@ services:
     #--ulimit nofile=262144:262144
     volumes:
       - clickhouse:/var/lib/clickhouse
+    ports:
+      - "8123:8123"
+      - "9000:9000"
     networks:
       - db_net
 
