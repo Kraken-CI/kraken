@@ -64,7 +64,7 @@ def stage(ctx):
             }, {
                 "tool": "pytest",
                 "pytest_exe": "poetry run pytest",
-                "params": "-vv",
+                "params": "-vv -m 'not db'",
                 "cwd": "kraken/server"
             }],
             "environments": [{
