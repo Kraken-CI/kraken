@@ -36,7 +36,14 @@ def collect_tests(step):
     _, out = utils.execute(cmd, cwd=cwd, out_prefix='')
     tests = out
     tests = tests.splitlines()
-    return tests
+    tests2 = []
+    for t in tests:
+        if not t:
+            continue
+        if '= warnings summary =' in t:
+            break
+        tests2.append(t)
+    return tests2
 
 
 def run_tests(step, report_result=None):
