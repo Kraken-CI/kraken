@@ -56,8 +56,8 @@
             </td>
             <td style="overflow-wrap: anywhere;">{{ job.system }}</td>
             <td>default</td>
-            <td>{{job.agents_group_name}}</td>
-            <td>{{job.agent_name}}</td>
+            <td><a routerLink="/agents-groups/{{ job.agents_group_id }}">{{job.agents_group_name}}</a></td>
+            <td><a routerLink="/agents/{{ job.agent_id }}">{{job.agent_name}}</a></td>
           </tr>
         </ng-template>
       </p-table>
