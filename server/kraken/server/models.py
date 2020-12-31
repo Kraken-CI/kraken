@@ -452,6 +452,7 @@ class Job(db.Model, DatesMixin):
                 duration = self.finished - self.started
             else:
                 duration = datetime.datetime.utcnow() - self.started
+            duration = duration_to_txt(duration)
         else:
             duration = ''
 
@@ -463,7 +464,7 @@ class Job(db.Model, DatesMixin):
                     completed=self.completed.strftime("%Y-%m-%dT%H:%M:%SZ") if self.completed else None,
                     processing_started=self.processing_started.strftime(
                         "%Y-%m-%dT%H:%M:%SZ") if self.processing_started else None,
-                    duration=duration_to_txt(duration),
+                    duration=duration,
                     name=self.name,
                     state=self.state,
                     completion_status=self.completion_status,
