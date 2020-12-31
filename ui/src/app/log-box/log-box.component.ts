@@ -35,7 +35,7 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
     endPos = -1
     total = -1
 
-    logInternals: boolean = false
+    logInternals = false
 
     prvJobId: number
     @Input()

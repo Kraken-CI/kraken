@@ -447,6 +447,11 @@ class Job(db.Model, DatesMixin):
     issues = relationship('Issue', back_populates="job")
 
     def get_json(self):
+        if self.finished is None:
+            duration = datetime.datetime.utcnow() - self.started
+        else:
+            duration = self.finished - self.started
+
         return dict(id=self.id,
                     created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,
                     deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,
@@ -455,6 +460,7 @@ class Job(db.Model, DatesMixin):
                     completed=self.completed.strftime("%Y-%m-%dT%H:%M:%SZ") if self.completed else None,
                     processing_started=self.processing_started.strftime(
                         "%Y-%m-%dT%H:%M:%SZ") if self.processing_started else None,
+                    duration=duration_to_txt(duration),
                     name=self.name,
                     state=self.state,
                     completion_status=self.completion_status,
