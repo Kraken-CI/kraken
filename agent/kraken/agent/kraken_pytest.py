@@ -52,8 +52,6 @@ def run_tests(step, report_result=None):
     pytest_exe = step.get('pytest_exe', 'pytest-3')
 
     cwd = step.get('cwd', '.')
-    params = [p for p in params.split() if p.startswith('-')]
-    params = " ".join(params)
 
     pypath = step.get('pythonpath', '')
     if pypath:
