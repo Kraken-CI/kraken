@@ -248,9 +248,9 @@ export class AgentsPageComponent implements OnInit {
         this.updateAgent(this.agentTab.agent.id, ag)
     }
 
-    updateAgent(agent_id, data) {
+    updateAgent(agentId, agentData) {
         this.managementService
-            .updateAgent(agent_id, data)
+            .updateAgent(agentId, agentData)
             .subscribe(
                 data => {
                     // agentTab.agent.name = data.name
