@@ -9,7 +9,6 @@
         <p-multiSelect [options]="stagesAvailable" optionLabel="name" [filter]="false" style="height: 33px;" [style]="{minWidth: '12em'}" [panelStyle]="{minWidth: '12em'}"></p-multiSelect>
     -->
     <p-dropdown [options]="stagesAvailable" optionLabel="name" (onChange)="filterStages($event)"></p-dropdown>
-    <a routerLink="/branches/{{branchId}}" style="margin-left: 40px;"><i class="pi pi-cog" style="vertical-align: text-bottom;"></i> Management</a>
   </div>
 
   <div *ngFor="let flow of flows" class="p-grid p-align-stretch">

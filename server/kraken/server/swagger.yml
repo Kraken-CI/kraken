@@ -1494,11 +1494,16 @@ definitions:
       started:
         type: string
         format: date-time
+      finished:
+        type: string
+        format: date-time
       completed:
         type: string
         format: date-time
       duration:
         type: string
+      timeout:
+        type: integer
       name:
         type: string
       state:
@@ -1520,6 +1525,10 @@ definitions:
       agent_id:
         type: integer
       agent_name:
+        type: string
+      executor:
+        type: string
+      system:
         type: string
 
   Jobs:

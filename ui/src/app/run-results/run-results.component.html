@@ -56,8 +56,8 @@
             </td>
             <td style="overflow-wrap: anywhere;">{{ job.system }}</td>
             <td>default</td>
-            <td><a routerLink="/agents-groups/{{ job.agents_group_id }}">{{job.agents_group_name}}</a></td>
-            <td><a routerLink="/agents/{{ job.agent_id }}">{{job.agent_name}}</a></td>
+            <td><a routerLink="/agents-groups/{{ job.agents_group_id }}">{{ job.agents_group_name }}</a></td>
+            <td><a routerLink="/agents/{{ job.agent_id }}">{{ job.agent_name }}</a></td>
           </tr>
         </ng-template>
       </p-table>
@@ -93,13 +93,34 @@
                 {{ getStepInfo(step) }}
               </div>
               <div>
-                Status: <i style="vertical-align: bottom; font-size: 1.4em;" [ngClass]="getStepStatusClass(step)"></i>{{ getStepStatus(step) }}
+                Status: <i style="vertical-align: baseline;" [ngClass]="getStepStatusClass(step)"></i> {{ getStepStatus(step) }}
               </div>
               <div *ngIf="step.result && step.result['reason']">
                 Reason: {{ step.result['reason'] }}
                 <pre>{{ step.result['msg'] }}</pre>
               </div>
             </div>
+          </p-tabPanel>
+          <p-tabPanel header="Details">
+            <table>
+              <tr><td colspan="2" style="font-weight: bold; font-size: 1.2em;">Spec</td></tr>
+              <tr><td style="width: 11em;">System:</td><td>{{ job.system }}</td><tr>
+              <tr><td>Agent Group:</td><td><a routerLink="/agents-groups/{{ job.agents_group_id }}">{{ job.agents_group_name }}</a></td><tr>
+              <tr><td>Executor:</td><td>{{ job.executor }}</td><tr>
+
+              <tr><td colspan="2" style="font-weight: bold; font-size: 1.2em; padding-top: 10px;">Execution</td></tr>
+              <tr><td>Agent:</td><td><a routerLink="/agents/{{ job.agent_id }}">{{ job.agent_name }}</a></td><tr>
+              <tr><td>State:</td><td>{{ getJobState(job) }}</td><tr>
+              <tr><td>Completion Status:</td><td><i style="vertical-align: baseline;" [ngClass]="getJobStatusClass(job)"></i> {{ getJobStatus(job) }}</td><tr>
+
+              <tr><td colspan="2" style="font-weight: bold; font-size: 1.2em; padding-top: 10px;">Timing</td></tr>
+              <tr><td>Timeout:</td><td>{{ job.timeout }}s</td><tr>
+              <tr><td>Created:</td><td>{{ job.created ? (job.created | localtime) : '' }}</td><tr>
+              <tr><td>Started:</td><td>{{ job.started ? (job.started | localtime) : '' }}</td><tr>
+              <tr><td>Finished:</td><td>{{ job.finished ? (job.finished | localtime) : '' }}</td><tr>
+              <tr><td>Completed:</td><td>{{ job.completed ? (job.completed | localtime) : '' }}</td><tr>
+              <tr><td>Duration (start -> finish):</td><td>{{ job.duration }}</td><tr>
+            </table>
           </p-tabPanel>
         </p-tabView>
 

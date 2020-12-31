@@ -425,7 +425,7 @@ class Job(db.Model, DatesMixin):
     assigned = Column(DateTime)
     started = Column(DateTime)
     finished = Column(DateTime)
-    processing_started = Column(DateTime)
+    processing_started = Column(DateTime)  # TODO: this is never used
     completed = Column(DateTime)
     run_id = Column(Integer, ForeignKey('runs.id'), nullable=False)
     run = relationship("Run", back_populates="jobs")
@@ -462,8 +462,8 @@ class Job(db.Model, DatesMixin):
                     started=self.started.strftime("%Y-%m-%dT%H:%M:%SZ") if self.started else None,
                     finished=self.finished.strftime("%Y-%m-%dT%H:%M:%SZ") if self.finished else None,
                     completed=self.completed.strftime("%Y-%m-%dT%H:%M:%SZ") if self.completed else None,
-                    processing_started=self.processing_started.strftime(
-                        "%Y-%m-%dT%H:%M:%SZ") if self.processing_started else None,
+                    # processing_started=self.processing_started.strftime(
+                    #     "%Y-%m-%dT%H:%M:%SZ") if self.processing_started else None,
                     duration=duration,
                     name=self.name,
                     state=self.state,

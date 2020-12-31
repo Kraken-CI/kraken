@@ -78,17 +78,18 @@ export class BranchMgmtComponent implements OnInit {
             this.titleService.setTitle('Kraken - Branch Management - ' + branch.name)
             this.branch = branch
             this.newBranchName = branch.name
+            this.stage = null  // reset selected stage
             if (this.stageName !== '') {
                 // this is a finish of adding new stage ie. select newly created stage
                 for (const s of this.branch.stages) {
                     if (s.name === this.stageName) {
-                        this.stage = s
+                        this.selectStage(s)
                         this.stageName = ''
                         break
                     }
                 }
             }
-            if (this.stage.id === 0) {
+            if (this.stage === null) {
                 this.selectStage(branch.stages[0])
             }
 
