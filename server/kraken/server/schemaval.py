@@ -863,7 +863,12 @@ schema = {
                                             "const": "rndtest"
                                         },
                                         "count": {
-                                            "type": "string"
+                                            "oneOf": [{
+                                                "type": "integer",
+                                                "minimum": 1
+                                            }, {
+                                                "type": "string"
+                                            }]
                                         }
                                     }
                                 },

@@ -145,50 +145,85 @@ def _analyze_job_results_history(job):
     fix_cnt = 0
 
     for job_tcr in job.results:
-        # analyze history, get previous 10 results
+        # analyze history
         log.info('Analyze result %s %s', job_tcr, job_tcr.test_case.name)
-        q = TestCaseResult.query
-        q = q.filter(TestCaseResult.id != job_tcr.id)
-        q = q.filter_by(test_case_id=job_tcr.test_case_id)
-        q = q.join('job')
-        q = q.filter_by(covered=False)
-        q = q.filter_by(agents_group=job_tcr.job.agents_group)
-        q = q.filter_by(system=job.system)
-        q = q.join('job', 'run', 'flow', 'branch')
-        q = q.filter(Branch.id == job.run.flow.branch_id)
-        q = q.filter(Flow.kind == job.run.flow.kind)
-        q = q.filter(Flow.created < job.run.flow.created)
-        q = q.order_by(desc(Flow.created))
-        q = q.limit(10)
 
-        tcrs = q.all()
-        tcrs.reverse() # sort from oldest to latest
-        # determine instability
-        for idx, tcr in enumerate(tcrs):
-            log.info('TCR: %s %s %s', tcr, tcr.test_case.name, tcr.job.run.flow.created)
-            if idx == 0:
-                job_tcr.instability = 0
-            elif tcr.result != tcrs[idx - 1].result:
-                job_tcr.instability += 1
+        # CI flow: either get previous 10 results
+        if job.run.flow.kind == 0:  # CI
+            q = TestCaseResult.query
+            q = q.filter(TestCaseResult.id != job_tcr.id)
+            q = q.filter_by(test_case_id=job_tcr.test_case_id)
+            q = q.join('job')
+            q = q.filter_by(covered=False)
+            q = q.filter_by(agents_group=job_tcr.job.agents_group)
+            q = q.filter_by(system=job.system)
+            q = q.join('job', 'run', 'flow', 'branch')
+            q = q.filter(Branch.id == job.run.flow.branch_id)
+            q = q.filter(Flow.kind == 0)  # CI
+            q = q.filter(Flow.created < job.run.flow.created)
+            q = q.order_by(desc(Flow.created))
+            q = q.limit(10)
 
-        # determine age
-        if len(tcrs) > 0:
-            prev_tcr = tcrs[-1]
-            if prev_tcr.result == job_tcr.result:
-                job_tcr.age = prev_tcr.age + 1
-                no_change_cnt += 1
+            tcrs = q.all()
+            tcrs.reverse() # sort from oldest to latest
+            # determine instability
+            for idx, tcr in enumerate(tcrs):
+                log.info('TCR: %s %s %s', tcr, tcr.test_case.name, tcr.job.run.flow.created)
+                if idx == 0:
+                    job_tcr.instability = 0
+                elif tcr.result != tcrs[idx - 1].result:
+                    job_tcr.instability += 1
+
+            # determine age and change
+            if len(tcrs) > 0:
+                prev_tcr = tcrs[-1]
+                if prev_tcr.result == job_tcr.result:
+                    job_tcr.age = prev_tcr.age + 1
+                    no_change_cnt += 1
+                else:
+                    job_tcr.instability += 1
+                    job_tcr.age = 0
+                    if job_tcr.result == consts.TC_RESULT_PASSED and prev_tcr.result != consts.TC_RESULT_PASSED:
+                        job_tcr.change = consts.TC_RESULT_CHANGE_FIX
+                        fix_cnt += 1
+                    elif job_tcr.result != consts.TC_RESULT_PASSED and prev_tcr.result == consts.TC_RESULT_PASSED:
+                        job_tcr.change = consts.TC_RESULT_CHANGE_REGR
+                        regr_cnt += 1
             else:
-                job_tcr.instability += 1
-                job_tcr.age = 0
-                if job_tcr.result == consts.TC_RESULT_PASSED and prev_tcr.result != consts.TC_RESULT_PASSED:
-                    job_tcr.change = consts.TC_RESULT_CHANGE_FIX
-                    fix_cnt += 1
-                elif job_tcr.result != consts.TC_RESULT_PASSED and prev_tcr.result == consts.TC_RESULT_PASSED:
-                    job_tcr.change = consts.TC_RESULT_CHANGE_REGR
-                    regr_cnt += 1
+                job_tcr.change = consts.TC_RESULT_CHANGE_NEW
+                new_cnt += 1
+
+        # DEV flow: get reference result from CI flow
         else:
-            job_tcr.change = consts.TC_RESULT_CHANGE_NEW
-            new_cnt += 1
+            q = TestCaseResult.query
+            q = q.filter_by(test_case_id=job_tcr.test_case_id)
+            q = q.join('job')
+            q = q.filter_by(covered=False)
+            q = q.filter_by(agents_group=job_tcr.job.agents_group)
+            q = q.filter_by(system=job.system)
+            q = q.filter_by(state=consts.JOB_STATE_COMPLETED)
+            q = q.join('job', 'run', 'flow', 'branch')
+            q = q.filter(Branch.id == job.run.flow.branch_id)
+            q = q.filter(Flow.kind == 0)  # CI
+            q = q.order_by(desc(Flow.created))
+
+            ref_tcr = q.first()
+            log.info('REF TCR: %s %s %s %s', ref_tcr, ref_tcr.test_case.name, ref_tcr.job.run.flow, ref_tcr.job.run.flow.created)
+
+            # determine change
+            if ref_tcr:
+                if ref_tcr.result == job_tcr.result:
+                    no_change_cnt += 1
+                else:
+                    if job_tcr.result == consts.TC_RESULT_PASSED and ref_tcr.result != consts.TC_RESULT_PASSED:
+                        job_tcr.change = consts.TC_RESULT_CHANGE_FIX
+                        fix_cnt += 1
+                    elif job_tcr.result != consts.TC_RESULT_PASSED and ref_tcr.result == consts.TC_RESULT_PASSED:
+                        job_tcr.change = consts.TC_RESULT_CHANGE_REGR
+                        regr_cnt += 1
+            else:
+                job_tcr.change = consts.TC_RESULT_CHANGE_NEW
+                new_cnt += 1
 
         db.session.commit()
 
@@ -205,7 +240,7 @@ def _analyze_job_issues_history(job):
     q = q.filter_by(stage=job.run.stage)
     q = q.join('run', 'flow')
     q = q.filter(Flow.created < job.run.flow.created)
-    q = q.filter(Flow.kind == job.run.flow.kind)
+    q = q.filter(Flow.kind == 0)  # CI
     q = q.order_by(desc(Flow.created))
     prev_job = q.first()
     if prev_job is None:
@@ -245,27 +280,30 @@ def analyze_results_history(self, run_id):
         app = _create_app()
 
         with app.app_context():
-            log.info('starting results history analysis of run %s', run_id)
             run = Run.query.filter_by(id=run_id).one_or_none()
             if run is None:
                 log.error('got unknown run to analyze results history: %s', run_id)
                 return
 
-            # check prev run
-            q = Run.query
-            q = q.filter_by(stage_id=run.stage_id)
-            q = q.join('flow')
-            q = q.filter(Flow.created < run.flow.created)
-            q = q.filter(Flow.kind == run.flow.kind)
-            q = q.order_by(desc(Flow.created))
-            prev_run = q.first()
-            if prev_run is None:
-                log.info('skip anlysis of run %s as there is no prev run', run)
-                return
-            if prev_run.state == consts.RUN_STATE_IN_PROGRESS:
-                # prev run is not completed yet
-                log.info('postpone anlysis of run %s as prev run %s is not completed yet', run, prev_run)
-                return
+            log.info('starting results history analysis of run %s, flow %s [%s] ',
+                     run, run.flow, 'CI' if run.flow.kind == 0 else 'DEV')
+
+            # check prev run in case of CI
+            if run.flow.kind == 0:
+                q = Run.query
+                q = q.filter_by(stage_id=run.stage_id)
+                q = q.join('flow')
+                q = q.filter(Flow.created < run.flow.created)
+                q = q.filter(Flow.kind == run.flow.kind)
+                q = q.order_by(desc(Flow.created))
+                prev_run = q.first()
+                if prev_run is None:
+                    log.info('skip anlysis of run %s as there is no prev run', run)
+                    return
+                if prev_run.state == consts.RUN_STATE_IN_PROGRESS:
+                    # prev run is not completed yet
+                    log.info('postpone anlysis of run %s as prev run %s is not completed yet', run, prev_run)
+                    return
 
             # analyze jobs of this run
             run.new_cnt = run.no_change_cnt = run.regr_cnt = run.fix_cnt = 0

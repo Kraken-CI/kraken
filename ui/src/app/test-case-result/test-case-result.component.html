@@ -12,11 +12,11 @@
              [showCurrentPageReport]="true">
       <ng-template pTemplate="header">
         <tr>
-          <th style="width: 50px;">Flow ID</th>
+          <th style="width: 80px;">Flow</th>
           <th style="width: 140px;">Job</th>
           <th style="width: 100px;">Result</th>
           <th style="width: 80px;">Change</th>
-          <th style="width: 50%;">Name</th>
+          <th style="width: 100px;">Result ID</th>
           <th style="width: 40px;">Age</th>
           <th style="width: 100px;">Instability</th>
           <th style="width: 150px;">Values</th>
@@ -25,11 +25,11 @@
       </ng-template>
       <ng-template pTemplate="body" let-res>
         <tr>
-          <td><a routerLink="/flows/{{res.flow_id}}">{{res.flow_id}}</a></td>
+          <td><a routerLink="/flows/{{res.flow_id}}">{{ res.flow_kind.toUpperCase() }}/{{ res.flow_id }}</a></td>
           <td><a routerLink="/jobs/{{res.job_id}}">[{{res.job_id}}] {{res.job_name}}</a></td>
           <td [class]="resultToClass(res.result)">{{resultToTxt(res.result)}}</td>
           <td [class]="changeToClass(res.change)">{{changeToTxt(res.change)}}</td>
-          <td><a routerLink="/test_case_results/{{res.id}}">[{{res.id}}] {{res.test_case_name}}</a></td>
+          <td><a routerLink="/test_case_results/{{res.id}}">{{ res.id }}</a></td>
           <td>{{res.age}}</td>
           <td>{{res.instability}}</td>
           <td>

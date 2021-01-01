@@ -47,7 +47,7 @@ export class NewFlowComponent implements OnInit {
                 {
                     label: 'Branches',
                     branch_id: branch.id,
-                    branch_name: branch.branch_name,
+                    branch_name: branch.name,
                 },
             ]
             this.breadcrumbService.setCrumbs(crumbs)
@@ -105,12 +105,15 @@ export class NewFlowComponent implements OnInit {
                     this.router.navigate(['/flows/' + data.id])
                 },
                 err => {
+                    let msg = err.statusText
+                    if (err.error && err.error.detail) {
+                        msg = err.error.detail
+                    }
                     this.msgSrv.add({
                         severity: 'error',
                         summary: 'Flow start erred',
                         detail:
-                        'Starting flow erred: ' +
-                            err.statusText,
+                        'Starting flow erred: ' + msg,
                         life: 10000,
                     })
                 }

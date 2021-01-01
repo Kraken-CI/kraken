@@ -649,14 +649,19 @@ def get_result_history(test_case_result_id, start=0, limit=10):
                   joinedload('job.agent_used'))
     q = q.filter_by(test_case_id=tcr.test_case_id)
     q = q.join('job')
-    q = q.filter_by(agents_group_id=tcr.job.agents_group_id)
+    q = q.filter_by(agents_group=tcr.job.agents_group)
+    q = q.filter_by(system=tcr.job.system)
     q = q.join('job', 'run', 'flow', 'branch')
     q = q.filter(Branch.id == tcr.job.run.flow.branch_id)
+    q = q.filter(Flow.kind == 0)  # CI
+    q = q.filter(Flow.created < tcr.job.run.flow.created)
     q = q.order_by(desc(Flow.created))
 
     total = q.count()
     q = q.offset(start).limit(limit)
     results = []
+    if tcr.job.run.flow.kind == 1:  # DEV
+        results.append(tcr.get_json(with_extra=True))
     for tcr in q.all():
         results.append(tcr.get_json(with_extra=True))
     return {'items': results, 'total': total}, 200

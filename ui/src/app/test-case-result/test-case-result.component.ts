@@ -91,8 +91,10 @@ export class TestCaseResultComponent implements OnInit {
             this.titleService.setTitle('Kraken - Test ' + this.result.test_case_name + ' ' + this.tcrId)
 
             const valueNames = []
-            for (const name of Object.keys(result.values)) {
-                valueNames.push({ name })
+            if (result.values) {
+                for (const name of Object.keys(result.values)) {
+                    valueNames.push({ name })
+                }
             }
             this.valueNames = valueNames
             this.selectedValue = valueNames[0]
