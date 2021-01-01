@@ -698,8 +698,8 @@ def  get_job_logs(job_id, start=0, limit=200, order=None, internals=False, filte
     if order is None:
         order = 'asc'
 
-    query = "select time,message,service,host,level,job,tool,step from logs where job = %d %s order by time %s limit %d, %d"
-    query %= (job_id, tool, order, start, limit)
+    query = "select time,message,service,host,level,job,tool,step from logs where job = %d %s order by time %s, seq %s limit %d, %d"
+    query %= (job_id, tool, order, order, start, limit)
 
     log.info(query)
 

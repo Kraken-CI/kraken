@@ -15,9 +15,11 @@
 import os
 import logging
 from queue import Queue, Empty
+from urllib.parse import urlparse
 from threading import Thread, Event
 
 from flask import abort, Response
+import clickhouse_driver
 
 from . import consts
 from .models import Job
@@ -25,72 +27,38 @@ from .models import Job
 
 log = logging.getLogger(__name__)
 
-# TODO: rewrite it to Clickhouse, issue: #57
 class JobLogDownloader:
-    def __init__(self, job_id, timeout=0.01):
+    def __init__(self, job_id):
+        self.job_id = job_id
+        self.query = "select message from logs where job = %s order by time asc, seq asc"
+        self.query %= job_id
 
-        es_server = os.environ.get('KRAKEN_ELASTICSEARCH_URL', consts.DEFAULT_ELASTICSEARCH_URL)
-        self.es = Elasticsearch(es_server)
-
-        query = {"query": {"bool": {"must": []}}}
-
-        # take only logs from given job
-        query["query"]["bool"]["must"].append({"match": {"job": int(job_id)}})
-
-        # take only logs generated explicitly by tool
-        query["query"]["bool"]["must"].append({"exists": {"field": "tool"}})
-
-        query["size"] = 1000
-        query["sort"] = [{"@timestamp": {"order": "asc"}},
-                         {"_id": "desc"}]
-
-        self.query = query
-
-        self.timeout = timeout
+        ch_url = os.environ.get('KRAKEN_CLICKHOUSE_URL', consts.DEFAULT_CLICKHOUSE_URL)
+        o = urlparse(ch_url)
+        self.ch = clickhouse_driver.Client(host=o.hostname)
 
         self.logs_queue = Queue()
         self.finished = Event()
         self.worker = None
 
     def get_logs(self):
-        while True:
-            try:
-                res = self.es.search(index="logstash*", body=self.query)
-            except:
-                # try one more time
-                res = self.es.search(index="logstash*", body=self.query)
+        for l in self.ch.execute_iter(self.query, {'max_block_size': 100000}):
+            self.logs_queue.put(l[0] + '\n')
 
-            if len(res['hits']['hits']) == 0:
-                break
-
-            logs = ''
-            l = None
-            for hit in res['hits']['hits']:
-                l = hit
-                # TODO: log format
-                logs += l[u'_source']['message'] + '\n'
-
-            if l is not None:
-                ts = l['sort'][0]
-                l_id = l['sort'][1]
-                self.query['search_after'] = [int(ts), l_id]
-
-            self.logs_queue.put(logs)
-
-        self.logs_queue.join()   # wait for all blocks in the queue to be marked as processed
-        self.finished.set() # mark streaming as finished
+        self.logs_queue.join()  # wait for all blocks in the queue to be marked as processed
+        self.finished.set()  # mark streaming as finished
 
     def send_logs(self):
         while not self.finished.is_set():
             try:
-                yield self.logs_queue.get(timeout=self.timeout)
+                yield self.logs_queue.get(timeout=0.01)
                 self.logs_queue.task_done()
             except Empty:
-                self.finished.wait(self.timeout)
+                self.finished.wait(0.01)
         self.worker.join()
 
     def download(self, ):
-        self.worker = Thread(target=self.get_logs, args=())
+        self.worker = Thread(target=self.get_logs)
         self.worker.start()
         return self.send_logs()
 
