@@ -196,36 +196,35 @@ def _analyze_job_results_history(job):
 
 
 def _analyze_job_issues_history(job):
-    q = Run.query.filter_by(stage=job.run.stage)
-    q = q.filter(Run.created < job.run.created)
-    q = q.join('flow')
+    q = Job.query
+    q = q.filter_by(name=job.name)
+    q = q.filter_by(completion_status=consts.JOB_CMPLT_ALL_OK)
+    q = q.filter_by(system=job.system)
+    q = q.filter_by(agents_group=job.agents_group)
+    q = q.join('run')
+    q = q.filter_by(stage=job.run.stage)
+    q = q.join('run', 'flow')
+    q = q.filter(Flow.created < job.run.flow.created)
     q = q.filter(Flow.kind == job.run.flow.kind)
-    q = q.order_by(desc(Run.created))
-    prev_run = q.first()
-    if prev_run is None:
+    q = q.order_by(desc(Flow.created))
+    prev_job = q.first()
+    if prev_job is None:
+        log.info('prev job not found')
         return 0
 
     issues_new = 0
 
     for issue in job.issues:
         log.info('Analyze issue %s', issue)
-        q = Issue.query
-        q = q.filter_by(path=issue.path, issue_type=issue.issue_type, symbol=issue.symbol)
-        q = q.filter(Issue.line > issue.line - 5, Issue.line < issue.line + 5)
-        q = q.join('job')
-        q = q.filter_by(covered=False)
-        q = q.filter_by(agents_group=issue.job.agents_group)
-        q = q.filter_by(system=job.system)
-        q = q.join('job', 'run')
-        q = q.filter(Run.id == prev_run.id)
-        q = q.join('job', 'run', 'flow')
-        q = q.filter(Flow.kind == job.run.flow.kind)
-        prev_issues = q.all()
         prev_issue = None
         dist = 1000
-        log.info('PREV ISSES %s', len(prev_issues))
-        for i in prev_issues:
+        log.info('PREV ISSES %s', len(prev_job.issues))
+        for i in prev_job.issues:
+            if i.path != issue.path or i.issue_type != issue.issue_type or i.symbol !=issue.symbol:
+                continue
             new_dist = abs(i.line - issue.line)
+            if new_dist > 5:
+                continue
             log.info('issue %s - prev issue %s, dist %s', issue, i, new_dist)
             if new_dist < dist:
                 dist = new_dist

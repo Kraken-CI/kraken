@@ -274,3 +274,66 @@ def test__analyze_job_results_history__1_job_with_cover():
         assert tcr.instability == 2
         assert tcr.age == 0
         assert tcr.change == consts.TC_RESULT_CHANGE_FIX
+
+
+@pytest.mark.db
+def test__analyze_job_issues_history():
+    app = _create_app()
+
+    with app.app_context():
+        project = Project()
+        branch = Branch(project=project)
+        stage = Stage(branch=branch, schema={})
+        system = System()
+        agents_group = AgentsGroup()
+        tool = Tool(fields={})
+        test_case = TestCase(tool=tool)
+        db.session.commit()
+
+        def new_issue(line, issue_type, completion_status=consts.JOB_CMPLT_ALL_OK):
+            flow = Flow(branch=branch)
+            run = Run(stage=stage, flow=flow)
+            job = Job(run=run, agents_group=agents_group, system=system, completion_status=completion_status)
+            issue = Issue(line=line, issue_type=issue_type)
+            job.issues = [issue]
+            db.session.commit()
+            return job, issue
+
+        # issue 0
+        job, issue = new_issue(10, consts.ISSUE_TYPE_ERROR)
+        new_cnt = jobs._analyze_job_issues_history(job)
+        assert new_cnt == 0
+        assert issue.age == 0
+
+        # issue 2
+        job, issue = new_issue(10, consts.ISSUE_TYPE_ERROR)
+        new_cnt = jobs._analyze_job_issues_history(job)
+        assert new_cnt == 0
+        assert issue.age == 1
+
+        # issue 3, several lines moved but still the same
+        job, issue = new_issue(12, consts.ISSUE_TYPE_ERROR)
+        new_cnt = jobs._analyze_job_issues_history(job)
+        assert new_cnt == 0
+        assert issue.age == 2
+
+        # issue 4, same line but different type so new issue
+        job, issue = new_issue(12, consts.ISSUE_TYPE_WARNING)
+        new_cnt = jobs._analyze_job_issues_history(job)
+        assert new_cnt == 1
+        assert issue.age == 0
+
+        # issue 5, the same
+        job, issue = new_issue(12, consts.ISSUE_TYPE_WARNING)
+        new_cnt = jobs._analyze_job_issues_history(job)
+        assert new_cnt == 0
+        assert issue.age == 1
+
+        # issue 6, but job with error so it should be skipped
+        job, issue = new_issue(12, consts.ISSUE_TYPE_WARNING, consts.JOB_CMPLT_AGENT_ERROR_RETURNED)
+
+        # issue 7, it should take 5 as prev so age = 2
+        job, issue = new_issue(12, consts.ISSUE_TYPE_WARNING)
+        new_cnt = jobs._analyze_job_issues_history(job)
+        assert new_cnt == 0
+        assert issue.age == 2
