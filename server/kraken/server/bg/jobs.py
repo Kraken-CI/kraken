@@ -1,15 +1,19 @@
 import os
-import datetime
 import logging
+import datetime
+import xmlrpc.client
 
 from celery import Task
 from flask import Flask
 from sqlalchemy.sql.expression import asc, desc
 from sqlalchemy.orm.attributes import flag_modified
 import giturlparse
+import pytimeparse
 
 from .clry import app as clry_app
 from ..models import db, Run, Job, TestCaseResult, Branch, Flow, Stage, Project, Issue
+from ..schema import prepare_new_planner_triggers, get_schema_from_repo
+from ..schema import check_and_correct_stage_schema
 from .. import execution  # pylint: disable=cyclic-import
 from .. import consts
 from .. import notify
@@ -694,6 +698,69 @@ def trigger_flow(self, project_id, trigger_data=None):
 
             if not started_something:
                 execution.create_flow(branch.id, flow_kind, {}, trigger_data)
+
+    except Exception as exc:
+        log.exception('will retry')
+        raise self.retry(exc=exc)
+
+
+@clry_app.task(base=BaseTask, bind=True)
+def refresh_schema_repo(self, stage_id):
+    try:
+        app = _create_app()
+
+        with app.app_context():
+            stage = Stage.query.filter_by(id=stage_id).one_or_none()
+            if stage is None:
+                log.error('got unknown stage: %s', stage_id)
+                return
+
+            planner_url = os.environ.get('KRAKEN_PLANNER_URL', consts.DEFAULT_PLANNER_URL)
+            planner = xmlrpc.client.ServerProxy(planner_url, allow_none=True)
+
+            # cancel any previous scheduled refresh job
+            if stage.repo_refresh_job_id:
+                planner.remove_job(stage.repo_refresh_job_id)
+                stage.repo_refresh_job_id = 0
+                db.session.commit()
+
+            try:
+                # get schema from repo
+                schema_code, version = get_schema_from_repo(stage.repo_url, stage.repo_branch, stage.repo_access_token, stage.schema_file)
+
+                # check schema
+                schema_code, schema = check_and_correct_stage_schema(stage.branch, stage.name, schema_code)
+            except Exception as e:
+                stage.repo_error = str(e)
+                stage.repo_state = consts.REPO_STATE_ERROR
+                db.session.commit()
+                log.exception('problem with schema')
+                return
+
+            # store schema id db
+            stage.schema = schema
+            flag_modified(stage, 'schema')
+            stage.schema_code = schema_code
+            stage.repo_state = consts.REPO_STATE_OK
+            stage.repo_error = ''
+            stage.repo_version = version
+            stage.schema_from_repo_enabled = True
+            if stage.triggers is None:
+                stage.triggers = {}
+            prepare_new_planner_triggers(stage.id, schema['triggers'], stage.schema['triggers'], stage.triggers)
+            flag_modified(stage, 'triggers')
+            log.info('new schema: %s', stage.schema)
+
+            # start schema refresh job
+            try:
+                interval = int(stage.repo_refresh_interval)
+            except:
+                interval = int(pytimeparse.parse(stage.repo_refresh_interval))
+            job = planner.add_job('kraken.server.pljobs:refresh_schema_repo', 'interval', (stage_id,), None,
+                                  None, None, None, None, None, None, False, dict(seconds=interval))
+
+            stage.repo_refresh_job_id = job['id']
+            db.session.commit()
 
     except Exception as exc:
         log.exception('will retry')

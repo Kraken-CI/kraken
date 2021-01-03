@@ -111,6 +111,9 @@
             <div class="p-col-2" style="margin-top: 25px;">
               <p-checkbox [(ngModel)]="stage.schema_from_repo_enabled" binary="true" label="Schema from Repo"></p-checkbox>
             </div>
+            <div class="p-col-2" style="margin-top: 15px;">
+              <a pButton label="Schema Help" href="https://kraken.ci/docs/schema" class="p-button-text" target="blank" icon="pi pi-question-circle" style="margin-right: 10px;"></a>
+            </div>
           </div>
 
           <p-tabView>
@@ -121,7 +124,6 @@
                   [(ngModel)]="stage.schema_code"
                   [options]="codeMirrorOpts"></ngx-codemirror>
               </div>
-              <a pButton label="Schema Help" href="https://kraken.ci/docs/schema" class="p-button-text" target="blank" icon="pi pi-question-circle" style="margin-right: 10px;"></a>
               <button type="button" (click)="checkStageSchema()" pButton icon="pi pi-eye" label="Check Schema"></button>
             </p-tabPanel>
             <p-tabPanel header="Schema from Repository">
@@ -143,19 +145,34 @@
                     <input type="text" class="input-field" name="schema_file" pInputText formControlName="schema_file"/>
                   </label>
 
-                  <label>
-                    <p-button label="Reload" icon="pi pi-refresh" (onClick)="reloadSchema()"></p-button>
+                  <label for="repo_refresh_interval"><span>Refresh Interval</span>
+                    <input type="text" class="input-field" name="repo_refresh_interval" pInputText formControlName="repo_refresh_interval"/>
                   </label>
                 </form>
               </div>
             </p-tabPanel>
           </p-tabView>
         </div>
-        <button type="button" (click)="saveStage()" pButton icon="pi pi-check" label="Save Stage" style="margin: 0 50px 0 0.25em;"></button>
-        <button type="button" (click)="deleteStage()" pButton icon="pi pi-trash" class="p-button-danger" label="Delete Stage"></button>
-        <span *ngIf="saveErrorMsg.length > 0">
-          <p-message severity="error" [text]="saveErrorMsg" style="margin-left: 40px;"></p-message>
-        </span>
+
+        <!-- messages -->
+        <div *ngIf="stage.repo_state === 1" style="margin-bottom: 10px;">
+          <p-message severity="info" text="loading schema from repo in progress"></p-message>
+        </div>
+
+        <div *ngIf="saveErrorMsg.length > 0">
+          <p-messages severity="error">
+            <ng-template pTemplate>
+              <div [innerHTML]="saveErrorMsg"></div>
+            </ng-template>
+          </p-messages>
+        </div>
+
+        <!-- buttons -->
+        <div>
+          <button type="button" (click)="saveStage()" pButton icon="pi pi-check" label="Save Stage" style="margin: 0 30px 0 0;" [disabled]="stage.repo_state == 1"></button>
+          <button type="button" (click)="deleteStage()" pButton icon="pi pi-trash" class="p-button-danger" label="Delete Stage"></button>
+        </div>
+
       </div>
     </div>
   </p-tabPanel>

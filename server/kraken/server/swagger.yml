@@ -412,6 +412,22 @@ paths:
           schema:
             $ref: '#/definitions/ApiError'
   /stages/{stage_id}:
+    get:
+      operationId: get_stage
+      tags:
+        - Management
+      summary: Get a stage
+      description: Get stage settings
+      parameters:
+        - name: stage_id
+          in: path
+          description: ID of pet to return
+          required: true
+          type: integer
+          format: int64
+      responses:
+        201:
+          description: Successfully created run
     put:
       operationId: update_stage
       tags:

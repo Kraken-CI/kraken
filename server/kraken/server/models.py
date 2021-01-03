@@ -181,6 +181,11 @@ class Stage(db.Model, DatesMixin):
     repo_url = Column(UnicodeText)
     repo_branch = Column(UnicodeText)
     repo_access_token = Column(UnicodeText)
+    repo_state = Column(Integer, default=consts.REPO_STATE_OK)
+    repo_error = Column(UnicodeText)
+    repo_version = Column(UnicodeText)
+    repo_refresh_interval = Column(UnicodeText)
+    repo_refresh_job_id = Column(UnicodeText)
     schema_file = Column(UnicodeText)
     triggers = Column(JSONB)
     timeouts = Column(JSONB)
@@ -201,6 +206,10 @@ class Stage(db.Model, DatesMixin):
                     repo_url=self.repo_url,
                     repo_branch=self.repo_branch,
                     repo_access_token=self.repo_access_token,
+                    repo_state=self.repo_state,
+                    repo_error=self.repo_error,
+                    repo_refresh_interval=self.repo_refresh_interval,
+                    repo_version=self.repo_version,
                     schema_file=self.schema_file)
 
     def __repr__(self):
@@ -240,7 +249,7 @@ class Flow(db.Model, DatesMixin):
     label = Column(Unicode(200))
     finished = Column(DateTime)
     state = Column(Integer, default=consts.FLOW_STATE_IN_PROGRESS)
-    kind = Column(Integer, default=0)  # 0 - CI, 1 - dev
+    kind = Column(Integer, default=consts.FLOW_KIND_CI)  # 0 - CI, 1 - dev
     branch_name = Column(Unicode(255))
     branch_id = Column(Integer, ForeignKey('branches.id'), nullable=False)
     branch = relationship('Branch')

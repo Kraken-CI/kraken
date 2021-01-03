@@ -42,6 +42,9 @@ class Planner:
         self.scheduler.start()
         log.info('started planner scheduler')
 
+        for idx, j in enumerate(self.get_jobs()):
+            log.info('%d. %s %s %s', idx + 1, j['name'], j['trigger'], j['args'])
+
     def _job_to_dict(self, job):
         #log.info('trigger %s', dir(j.trigger))
         if isinstance(job.trigger, IntervalTrigger):
@@ -91,13 +94,10 @@ class Planner:
         return self._job_to_dict(job)
 
     def get_jobs(self):
-        log.info('get_jobs')
-
         try:
             jobs = []
             for j in self.scheduler.get_jobs():
                 jobs.append(self._job_to_dict(j))
-            log.info('get_jobs jobs:%s', jobs)
         except:
             log.exception('some problem')
             raise

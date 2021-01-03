@@ -16,8 +16,6 @@ import os
 import json
 import logging
 import datetime
-import tempfile
-import subprocess
 import xmlrpc.client
 
 from flask import abort
@@ -29,6 +27,7 @@ from . import consts, srvcheck
 from .models import db, Branch, Stage, Agent, AgentsGroup, Secret, AgentAssignment, Setting
 from .models import Project, BranchSequence
 from .schema import check_and_correct_stage_schema, SchemaError, execute_schema_code
+from .schema import prepare_new_planner_triggers
 
 log = logging.getLogger(__name__)
 
@@ -163,60 +162,6 @@ def delete_secret(secret_id):
     return {}, 200
 
 
-def _prepare_new_planner_triggers(stage_id, new_triggers, prev_triggers, triggers):
-    planner_url = os.environ.get('KRAKEN_PLANNER_URL', consts.DEFAULT_PLANNER_URL)
-    planner = xmlrpc.client.ServerProxy(planner_url, allow_none=True)
-
-    if 'interval' in new_triggers:
-        interval = int(pytimeparse.parse(new_triggers['interval']))
-        if prev_triggers is None or 'interval' not in prev_triggers or 'interval_planner_job' not in triggers:
-            job = planner.add_job('kraken.server.pljobs:trigger_run', 'interval', (stage_id,), None,
-                                  None, None, None, None, None, None, False, dict(seconds=int(interval)))
-            triggers['interval_planner_job'] = job['id']
-        else:
-            prev_interval = int(pytimeparse.parse(prev_triggers['interval']))
-            if interval != prev_interval:
-                planner.reschedule_job(new_triggers['interval_planner_job'], 'interval', dict(seconds=int(interval)))
-    elif 'interval_planner_job' in triggers:
-        planner.remove_job(triggers['interval_planner_job'])
-        del triggers['interval_planner_job']
-
-    if 'date' in new_triggers:
-        run_date = dateutil.parser.parse(new_triggers['date'])
-        if prev_triggers is None or 'date' not in prev_triggers or 'date_planner_job' not in triggers:
-            job = planner.add_job('kraken.server.pljobs:trigger_run', 'date', (stage_id,), None,
-                                  None, None, None, None, None, None, False, dict(run_date=str(run_date)))
-            triggers['date_planner_job'] = job['id']
-        else:
-            prev_run_date = dateutil.parser.parse(prev_triggers['date'])
-            if run_date != prev_run_date:
-                planner.reschedule_job(new_triggers['date_planner_job'], 'date', dict(run_date=str(run_date)))
-    elif 'date_planner_job' in triggers:
-        planner.remove_job(triggers['date_planner_job'])
-        del triggers['date_planner_job']
-
-    if 'cron' in new_triggers:
-        cron_rule = new_triggers['cron']
-        if prev_triggers is None or 'cron' not in prev_triggers or 'cron_planner_job' not in triggers:
-            minutes, hours, days, months, dow = cron_rule.split()
-            job = planner.add_job('kraken.server.pljobs:trigger_run', 'cron', (stage_id,), None,
-                                  None, None, None, None, None, None, False,
-                                  dict(minute=minutes, hour=hours, day=days, month=months, day_of_week=dow))
-            triggers['cron_planner_job'] = job['id']
-        else:
-            prev_cron_rule = prev_triggers['cron']
-            if cron_rule != prev_cron_rule:
-                minutes, hours, days, months, dow = cron_rule.split()
-                planner.reschedule_job(new_triggers['cron_planner_job'], 'cron',
-                                       dict(minute=minutes, hour=hours, day=days, month=months, day_of_week=dow))
-    elif 'cron_planner_job' in triggers:
-        planner.remove_job(triggers['cron_planner_job'])
-        del triggers['cron_planner_job']
-
-    if triggers == {}:
-        triggers['parent'] = True
-
-
 def create_stage(branch_id, stage):
     """
     This function creates a new person in the people structure
@@ -246,7 +191,7 @@ def create_stage(branch_id, stage):
     db.session.flush()
 
     triggers = {}
-    _prepare_new_planner_triggers(new_stage.id, schema['triggers'], None, triggers)
+    prepare_new_planner_triggers(new_stage.id, schema['triggers'], None, triggers)
     new_stage.triggers = triggers
 
     db.session.commit()
@@ -254,24 +199,13 @@ def create_stage(branch_id, stage):
     return new_stage.get_json(), 201
 
 
-def _get_schema_from_repo(repo_url, repo_branch, repo_access_token, schema_file):  # pylint: disable=unused-argument
-    with  tempfile.TemporaryDirectory(prefix='kraken-git-') as tmpdir:
-        # clone repo
-        cmd = "git clone '%s' repo" % repo_url
-        subprocess.run(cmd, shell=True, check=True, cwd=tmpdir)
-        repo_dir = os.path.join(tmpdir, 'repo')
+def get_stage(stage_id):
+    stage = Stage.query.filter_by(id=stage_id).one_or_none()
+    if stage is None:
+        abort(404, "Stage not found")
 
-        # checkout branch if needed
-        if repo_branch and repo_branch != 'master':
-            cmd = 'git checkout %s' % repo_branch
-            subprocess.run(cmd, shell=True, check=True, cwd=repo_dir)
-
-        # read schema code
-        schema_path = os.path.join(repo_dir, schema_file)
-        with open(schema_path, 'r') as f:
-            schema_code = f.read()
-
-    return schema_code
+    result = stage.get_json()
+    return result, 200
 
 
 def update_stage(stage_id, data):
@@ -288,25 +222,6 @@ def update_stage(stage_id, data):
     if 'enabled' in data:
         stage.enabled = data['enabled']
 
-    if 'schema_from_repo_enabled' in data:
-        schema_from_repo_enabled = data['schema_from_repo_enabled']
-    else:
-        schema_from_repo_enabled = stage.schema_from_repo_enabled
-    stage.schema_from_repo_enabled = schema_from_repo_enabled
-
-    if schema_from_repo_enabled:
-        if 'repo_url' in data:
-            stage.repo_url = data['repo_url']
-        if 'repo_branch' in data:
-            stage.repo_branch = data['repo_branch']
-        if 'repo_access_token' in data:
-            stage.repo_access_token = data['repo_access_token']
-        if 'schema_file' in data:
-            stage.schema_file = data['schema_file']
-
-        schema_code = _get_schema_from_repo(stage.repo_url, stage.repo_branch, stage.repo_access_token, stage.schema_file)
-        data['schema_code'] = schema_code
-
     if 'schema_code' in data:
         try:
             schema_code, schema = check_and_correct_stage_schema(stage.branch, data['name'], data['schema_code'])
@@ -317,11 +232,48 @@ def update_stage(stage_id, data):
         flag_modified(stage, 'schema')
         if stage.triggers is None:
             stage.triggers = {}
-        _prepare_new_planner_triggers(stage.id, schema['triggers'], stage.schema['triggers'], stage.triggers)
+        prepare_new_planner_triggers(stage.id, schema['triggers'], stage.schema['triggers'], stage.triggers)
         flag_modified(stage, 'triggers')
         log.info('new schema: %s', stage.schema)
 
     db.session.commit()
+
+    if 'schema_from_repo_enabled' in data:
+        schema_from_repo_enabled = data['schema_from_repo_enabled']
+    else:
+        schema_from_repo_enabled = stage.schema_from_repo_enabled
+
+    if schema_from_repo_enabled:
+        if 'repo_url' in data:
+            stage.repo_url = data['repo_url']
+        if 'repo_branch' in data:
+            stage.repo_branch = data['repo_branch']
+        if 'repo_access_token' in data:
+            stage.repo_access_token = data['repo_access_token']
+        if 'schema_file' in data:
+            stage.schema_file = data['schema_file']
+        if 'repo_refresh_interval' in data:
+            try:
+                interval = int(data['repo_refresh_interval'])
+            except:
+                interval = int(pytimeparse.parse(data['repo_refresh_interval']))
+            stage.repo_refresh_interval = data['repo_refresh_interval']
+            log.info('stage.repo_refresh_interval %s', stage.repo_refresh_interval)
+
+        stage.repo_state = consts.REPO_STATE_REFRESHING
+        stage.repo_error = ''
+        db.session.commit()
+
+        if stage.repo_refresh_job_id:
+            planner_url = os.environ.get('KRAKEN_PLANNER_URL', consts.DEFAULT_PLANNER_URL)
+            planner = xmlrpc.client.ServerProxy(planner_url, allow_none=True)
+            planner.remove_job(stage.repo_refresh_job_id)
+            stage.repo_refresh_job_id = 0
+            db.session.commit()
+
+        from .bg import jobs as bg_jobs  # pylint: disable=import-outside-toplevel
+        t = bg_jobs.refresh_schema_repo.delay(stage.id)
+        log.info('refresh schema repo %s, bg processing: %s', schema, t)
 
     result = stage.get_json()
     return result, 200

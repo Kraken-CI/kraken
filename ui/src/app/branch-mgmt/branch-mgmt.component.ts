@@ -51,6 +51,7 @@ export class BranchMgmtComponent implements OnInit {
         repo_branch: new FormControl(''),
         repo_access_token: new FormControl(''),
         schema_file: new FormControl(''),
+        repo_refresh_interval: new FormControl(''),
     })
 
     sequences = []
@@ -124,8 +125,14 @@ export class BranchMgmtComponent implements OnInit {
             repo_branch: stage.repo_branch,
             repo_access_token: stage.repo_access_token,
             schema_file: stage.schema_file,
+            repo_refresh_interval: stage.repo_refresh_interval,
         }
         this.schemaFromRepoForm.setValue(val)
+
+        if (stage.repo_error) {
+            this.saveErrorMsg = 'loading schema erred:<br>' + stage.repo_error.replaceAll('\n', '<br>')
+        }
+
     }
 
     newStage() {
@@ -266,6 +273,13 @@ export class BranchMgmtComponent implements OnInit {
                     summary: 'Stage update succeeded',
                     detail: 'Stage update operation succeeded.',
                 })
+
+                // if repo schema is being refreshed then refresh stage again in 10s
+                if (stage.repo_state === 1) {
+                    setTimeout(() => {
+                        this.refreshStage(stage.id)
+                    }, 10000)
+                }
             },
             err => {
                 let msg = err.statusText
@@ -278,6 +292,30 @@ export class BranchMgmtComponent implements OnInit {
                     detail: 'Stage update operation erred: ' + msg,
                     life: 10000,
                 })
+            }
+        )
+    }
+
+    refreshStage(stageId) {
+        this.managementService.getStage(stageId).subscribe(
+            stage => {
+                // update stage data in ui
+                for (const idx in this.branch.stages) {
+                    if (this.branch.stages[idx].id === stage.id) {
+                        this.branch.stages[idx] = stage
+                        if (this.stage.id === stage.id) {
+                            this.selectStage(stage)
+                        }
+                        break
+                    }
+                }
+
+                // if repo schema is still being refreshed then refresh stage again in 10s
+                if (stage.repo_state === 1) {
+                    setTimeout(() => {
+                        this.refreshStage(stage.id)
+                    }, 10000)
+                }
             }
         )
     }
@@ -318,9 +356,6 @@ export class BranchMgmtComponent implements OnInit {
     }
 
     forkBranch() {}
-
-    reloadSchema() {
-    }
 
     getSeqTypeName(seq) {
         switch (seq.kind) {

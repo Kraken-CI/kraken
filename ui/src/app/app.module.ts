@@ -24,6 +24,7 @@ import { DialogModule } from 'primeng/dialog'
 import { InputTextModule } from 'primeng/inputtext'
 import { InputTextareaModule } from 'primeng/inputtextarea'
 import { MessageModule } from 'primeng/message'
+import { MessagesModule } from 'primeng/messages'
 import { ConfirmDialogModule } from 'primeng/confirmdialog'
 import { ConfirmationService } from 'primeng/api'
 import { InplaceModule } from 'primeng/inplace'
@@ -114,6 +115,7 @@ export function cfgFactory() {
         InputTextModule,
         InputTextareaModule,
         MessageModule,
+        MessagesModule,
         ConfirmDialogModule,
         InplaceModule,
         PaginatorModule,
