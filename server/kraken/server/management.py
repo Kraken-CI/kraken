@@ -21,7 +21,6 @@ import xmlrpc.client
 from flask import abort
 from sqlalchemy.orm.attributes import flag_modified
 import pytimeparse
-import dateutil.parser
 
 from . import consts, srvcheck
 from .models import db, Branch, Stage, Agent, AgentsGroup, Secret, AgentAssignment, Setting
@@ -253,10 +252,11 @@ def update_stage(stage_id, data):
         if 'schema_file' in data:
             stage.schema_file = data['schema_file']
         if 'repo_refresh_interval' in data:
+            # check if interval can be parsed
             try:
-                interval = int(data['repo_refresh_interval'])
+                int(data['repo_refresh_interval'])
             except:
-                interval = int(pytimeparse.parse(data['repo_refresh_interval']))
+                int(pytimeparse.parse(data['repo_refresh_interval']))
             stage.repo_refresh_interval = data['repo_refresh_interval']
             log.info('stage.repo_refresh_interval %s', stage.repo_refresh_interval)
 

@@ -19,6 +19,8 @@ import tempfile
 import subprocess
 import xmlrpc.client
 
+import pytimeparse
+import dateutil.parser
 import RestrictedPython
 from RestrictedPython import compile_restricted
 from RestrictedPython import limited_builtins
@@ -252,7 +254,7 @@ def get_schema_from_repo(repo_url, repo_branch, repo_access_token, schema_file):
     with  tempfile.TemporaryDirectory(prefix='kraken-git-') as tmpdir:
         # clone repo
         cmd = "git clone --depth 1 --single-branch --branch %s '%s' repo" % (repo_branch, repo_url)
-        p = subprocess.run(cmd, shell=True, cwd=tmpdir, capture_output=True, text=True)
+        p = subprocess.run(cmd, shell=True, check=False, cwd=tmpdir, capture_output=True, text=True)
         if p.returncode != 0:
             err = "command '%s' returned non-zero exit status %d\n" % (cmd, p.returncode)
             err += p.stdout.strip()[:140] + '\n'
