@@ -166,7 +166,7 @@ export class BranchResultsComponent implements OnInit, OnDestroy {
         }
         for (const run of flow.runs) {
             if (run.repo_data) {
-                for (const url in run.repo_data) {
+                for (const url of Object.keys(run.repo_data)) {
                     const commits = run.repo_data[url]
                     if (commits.length > 0) {
                         return true
@@ -244,7 +244,7 @@ export class BranchResultsComponent implements OnInit, OnDestroy {
                 if (!run.repo_data) {
                     continue
                 }
-                for (const url in run.repo_data) {
+                for (const url of Object.keys(run.repo_data)) {
                     const commits = run.repo_data[url]
                     html = `<p>`
                     html += `<a href="${url}" target="blank" style="font-size: 1.5em; font-weight: bold;">${url}</a>`

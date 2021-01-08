@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import logging
 
 from .bg import jobs as bg_jobs
@@ -20,8 +21,6 @@ from . import consts
 
 log = logging.getLogger(__name__)
 
-import base64
-import json
 
 
 def _is_in_celery_queue(func, args):
