@@ -73,7 +73,7 @@ class Planner:
         if next_run_time is not None:
             all_kw_args['next_run_time'] = next_run_time
 
-        if trigger == 'interval':
+        if trigger in ['interval', 'repo_interval']:
             trigger = IntervalTrigger(**trigger_args)
         elif trigger == 'date':
             trigger = DateTrigger(**trigger_args)

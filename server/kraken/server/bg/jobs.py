@@ -1,6 +1,8 @@
 import os
 import logging
 import datetime
+import tempfile
+import subprocess
 import xmlrpc.client
 
 from celery import Task
@@ -295,6 +297,7 @@ def analyze_results_history(self, run_id):
             # check prev run in case of CI
             if run.flow.kind == 0:
                 q = Run.query
+                q = q.filter_by(deleted=None)
                 q = q.filter_by(stage_id=run.stage_id)
                 q = q.join('flow')
                 q = q.filter(Flow.created < run.flow.created)
@@ -547,13 +550,81 @@ def job_completed(self, job_id):
     log.set_ctx(job=None)
 
 
+def _check_repo_commits(stage, flow_kind):
+    triggers = stage.schema['triggers']
+    if 'repo' not in triggers:
+        return True, None  # no repo in triggers so start run; no repo_data
+
+    log.info('looking for new commits for stage %s', stage.name)
+
+    # get prev repo to get prev commit
+    q = Run.query
+    q = q.filter_by(deleted=None)
+    q = q.filter_by(stage_id=stage.id)
+    q = q.join('flow')
+    q = q.filter(Flow.kind == flow_kind)
+    q = q.order_by(desc(Flow.created))
+    prev_run = q.first()
+
+    repo = triggers['repo']
+    repos = []
+    if 'url' in repo:
+        repos.append((repo['url'], repo['branch']))
+    else:
+        for r in repo['repos']:
+            repos.append((r['url'], r['branch']))
+
+    changes = False
+    repo_data = {}
+    for repo_url, repo_branch in repos:
+        commits = []
+        log.info('checking commits in %s %s', repo_url, repo_branch)
+        with  tempfile.TemporaryDirectory(prefix='kraken-git-') as tmpdir:
+            # clone repo
+            cmd = "git clone --single-branch --branch %s '%s' repo" % (repo_branch, repo_url)
+            p = subprocess.run(cmd, shell=True, check=False, cwd=tmpdir, capture_output=True, text=True)
+            if p.returncode != 0:
+                err = "command '%s' returned non-zero exit status %d\n" % (cmd, p.returncode)
+                err += p.stdout.strip()[:140] + '\n'
+                err += p.stderr.strip()[:140]
+                err = err.strip()
+                raise Exception(err)
+
+            repo_dir = os.path.join(tmpdir, 'repo')
+
+            # get commits history
+            cmd = "git log --no-merges --since='2 weeks ago' -n 20 --pretty=format:'commit:%H%nauthor:%an%nemail:%ae%ndate:%aI%nsubject:%s'"
+            if prev_run and prev_run.repo_data and repo_url in prev_run.repo_data:
+                base_commit = prev_run.repo_data[repo_url][0]['commit']
+                log.info('base commit: %s', base_commit)
+                cmd += ' %s..' % base_commit
+            p = subprocess.run(cmd, shell=True, check=True, cwd=repo_dir, capture_output=True, text=True)
+            text = p.stdout.strip()
+
+            commit = {}
+            for line in text.splitlines():
+                field, val = line.split(':', 1)
+                commit[field] = val
+                if len(commit) == 5:
+                    commits.append(commit)
+                    log.info('  %s', commit)
+                    commit = {}
+        if commits:
+            changes = True
+        repo_data[repo_url] = commits
+
+    if not changes:
+        log.info('no commits since prev check')
+    return changes, repo_data
+
+
 @clry_app.task(base=BaseTask, bind=True)
-def trigger_run(self, stage_id):
+def trigger_run(self, stage_id, flow_kind=consts.FLOW_KIND_CI):
     try:
         app = _create_app()
 
         with app.app_context():
-            log.info('triggering run for stage %s', stage_id)
+            log.info('triggering run for stage %s, flow kind %d', stage_id, flow_kind)
             stage = Stage.query.filter_by(id=stage_id).one_or_none()
             if stage is None:
                 log.error('got unknown stage: %s', stage_id)
@@ -561,8 +632,7 @@ def trigger_run(self, stage_id):
 
             # if this stage does not have parent then start new flow
             if stage.schema['parent'] == 'root':
-                flow = Flow(branch=stage.branch)
-                db.session.commit()
+                flow = Flow(branch=stage.branch, kind=flow_kind)
 
                 # TODO: other root, sibling stages should be triggered when new flow is started
 
@@ -583,6 +653,7 @@ def trigger_run(self, stage_id):
                 q = q.filter_by(deleted=None)
                 q = q.filter_by(stage_id=parent_stage.id)
                 q = q.join('flow')
+                q = q.filter(Flow.kind == flow_kind)
                 q = q.order_by(desc(Flow.created))
                 parent_run = q.first()
                 if parent_run is None:
@@ -603,8 +674,16 @@ def trigger_run(self, stage_id):
 
                 flow = parent_run.flow
 
+            # if the trigger is repo then first check if there were any new commits to the repo
+            changes, repo_data = _check_repo_commits(stage, flow_kind)
+            if not changes:
+                return
+
+            # commit new flow if created and repo changes if detected
+            db.session.commit()
+
             # create run for current stage
-            execution.start_run(stage, flow)
+            execution.start_run(stage, flow, repo_data=repo_data)
 
     except Exception as exc:
         log.exception('will retry')

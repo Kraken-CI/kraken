@@ -1373,6 +1373,9 @@ definitions:
         type: integer
       regr_cnt:
         type: integer
+      repo_data:
+        type: object
+
   Runs:
     type: object
     properties:

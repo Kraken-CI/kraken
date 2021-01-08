@@ -521,7 +521,11 @@ data6 = {
 data7 = {
     "parent": "root",
     "triggers": {
-        "parent": True
+        "repo": {
+            "url": "https://github.com/Kraken-CI/kraken.git",
+            "branch": "master",
+            "interval": "20m"
+        }
     },
     "parameters": [],
     "configs": [],
@@ -549,7 +553,16 @@ data7 = {
 data8 = {
     "parent": "root",
     "triggers": {
-        "parent": True
+        "repo": {
+            "repos": [{
+                "url": "https://github.com/Kraken-CI/kraken",
+                "branch": "master"
+            }, {
+                "url": "https://github.com/Kraken-CI/workflow-examples",
+                "branch": "master"
+            }],
+            "interval": "20m"
+        }
     },
     "parameters": [
         {
@@ -621,6 +634,38 @@ schema = {
                 },
                 "manual": {
                     "type": "boolean"
+                },
+                "repo": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "properties": {
+                        "url": {
+                            "type": "string"
+                        },
+                        "branch": {
+                            "type": "string"
+                        },
+                        "repos": {
+                            "type": "object",
+                            "additionalProperties": False,
+                            "properties": {
+                                "url": {
+                                    "type": "string"
+                                },
+                                "branch": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "interval": {
+                            "oneOf": [{
+                                "type": "integer",
+                                "minimum": 1
+                            }, {
+                                "type": "string"
+                            }]
+                        }
+                    }
                 }
             }
         },

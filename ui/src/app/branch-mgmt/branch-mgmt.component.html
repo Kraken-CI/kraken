@@ -83,8 +83,8 @@
           <div *ngIf="stage.schema.parameters" style="font-size: 1.05rem;">Parameters: {{stage.schema.parameters.length}}</div>
         </div>
       </div>
-      <div class="p-col-9" style="padding-left: 40px;">
-        <div *ngIf="branch.stages.length">
+      <div class="p-col-9" style="padding-left: 40px;" *ngIf="branch.stages.length">
+        <div>
           <div class="p-grid">
             <div class="p-col-4">
               <p-inplace #stageNameInplace (onActivate)="stageNameInplaceActivated()">
@@ -173,6 +173,9 @@
           <button type="button" (click)="deleteStage()" pButton icon="pi pi-trash" class="p-button-danger" label="Delete Stage"></button>
         </div>
 
+      </div>
+      <div class="p-col-9" style="padding-left: 40px;" *ngIf="branch.stages.length === 0">
+        No stages yet.
       </div>
     </div>
   </p-tabPanel>

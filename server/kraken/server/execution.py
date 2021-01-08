@@ -234,7 +234,7 @@ def trigger_jobs(run, replay=False):
         complete_run(run, now)
 
 
-def start_run(stage, flow, args=None):
+def start_run(stage, flow, args=None, repo_data=None):
     # if there was already run for this stage then replay it, otherwise create new one
     replay = True
     run = Run.query.filter_by(stage=stage, flow=flow).one_or_none()
@@ -262,11 +262,12 @@ def start_run(stage, flow, args=None):
                 flow.label = lbl_vals.get('flow_label', None)
 
         # create run instance
-        run = Run(stage=stage, flow=flow, args=run_args, label=lbl_vals.get('run_label', None))
+        run = Run(stage=stage, flow=flow, args=run_args, label=lbl_vals.get('run_label', None), repo_data=repo_data)
         replay = False
         if stage.schema['triggers'].get('manual', False):
             run.state = consts.RUN_STATE_MANUAL
     else:
+        # move run back into IN PROGRESS state
         run.state = consts.RUN_STATE_IN_PROGRESS
     db.session.commit()
 

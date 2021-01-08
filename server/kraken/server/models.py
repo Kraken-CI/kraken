@@ -324,6 +324,7 @@ class Run(db.Model, DatesMixin):
     jobs_total = Column(Integer, default=0)
     issues_total = Column(Integer, default=0)
     issues_new = Column(Integer, default=0)
+    repo_data = Column(JSONB)
 
     def get_json(self):
         jobs_processing = 0
@@ -371,6 +372,7 @@ class Run(db.Model, DatesMixin):
                     deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,
                     started=self.started.strftime("%Y-%m-%dT%H:%M:%SZ") if self.started else None,
                     finished=self.finished.strftime("%Y-%m-%dT%H:%M:%SZ") if self.finished else None,
+                    duration=duration_to_txt(duration),
                     state=consts.RUN_STATES_NAME[self.state],
                     stage_name=self.stage.name,
                     stage_id=self.stage_id,
@@ -396,7 +398,7 @@ class Run(db.Model, DatesMixin):
                     no_change_cnt=self.no_change_cnt,
                     regr_cnt=self.regr_cnt,
                     fix_cnt=self.fix_cnt,
-                    duration=duration_to_txt(duration))
+                    repo_data=self.repo_data)
 
         return data
 
