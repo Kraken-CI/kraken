@@ -61,11 +61,9 @@ export class RunBoxComponent implements OnInit {
             if (this.run.jobs_error && this.run.jobs_error > 0) {
                 this.bgColor = 'linear-gradient(90deg, rgba(255,230,230,1) 0%, rgba(227,193,193,1) 100%)' // redish
             } else if (this.run.state === 'completed' || this.run.state === 'processed') {
-                if (
-                    this.run.tests_passed &&
-                    this.run.tests_total &&
-                    this.run.tests_passed < this.run.tests_total
-                ) {
+                if ((this.run.tests_passed && this.run.tests_total && this.run.tests_passed < this.run.tests_total) ||
+                    (this.run.issues_total && this.run.issues_total > 0))
+                {
                     this.bgColor = 'linear-gradient(90deg, rgba(255,248,230,1) 0%, rgba(247,231,176,1) 100%)' // orangish
                 } else {
                     this.bgColor = 'linear-gradient(90deg, rgba(230,255,230,1) 0%, rgba(193,227,193,1) 100%)' // greenish
