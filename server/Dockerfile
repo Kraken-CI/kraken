@@ -40,7 +40,7 @@ LABEL kkver=${kkver} kkname=server
 
 ##############################################################################################################
 FROM krakenci/srv-base as celery
-RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates && rm -rf /var/lib/apt/lists/*
 WORKDIR /server
 RUN groupadd user && useradd --create-home --home-dir /home/user -g user user
 USER user
