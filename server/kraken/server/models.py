@@ -325,6 +325,7 @@ class Run(db.Model, DatesMixin):
     issues_total = Column(Integer, default=0)
     issues_new = Column(Integer, default=0)
     repo_data = Column(JSONB)
+    reason = Column(JSONB, nullable=False)
 
     def get_json(self):
         jobs_processing = 0
@@ -398,7 +399,8 @@ class Run(db.Model, DatesMixin):
                     no_change_cnt=self.no_change_cnt,
                     regr_cnt=self.regr_cnt,
                     fix_cnt=self.fix_cnt,
-                    repo_data=self.repo_data)
+                    repo_data=self.repo_data,
+                    reason=self.reason['reason'])
 
         return data
 

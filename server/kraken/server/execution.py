@@ -27,6 +27,7 @@ from . import consts
 from .models import db, Branch, Flow, Run, Stage, Job, Step, AgentsGroup, Tool, TestCaseResult
 from .models import TestCase, Issue, Artifact, Agent, AgentAssignment, BranchSequence, System
 from .schema import check_and_correct_stage_schema, SchemaError, prepare_secrets, substitute_vars
+from . import dbutils
 
 log = logging.getLogger(__name__)
 
@@ -234,7 +235,7 @@ def trigger_jobs(run, replay=False):
         complete_run(run, now)
 
 
-def start_run(stage, flow, args=None, repo_data=None):
+def start_run(stage, flow, reason, args=None, repo_data=None):
     # if there was already run for this stage then replay it, otherwise create new one
     replay = True
     run = Run.query.filter_by(stage=stage, flow=flow).one_or_none()
@@ -261,8 +262,15 @@ def start_run(stage, flow, args=None, repo_data=None):
             if flow.label is None:
                 flow.label = lbl_vals.get('flow_label', None)
 
+        # if currently there is not repo data copy it from previous run if it is there
+        if not repo_data:
+            prev_run = dbutils.get_prev_run(stage.id, flow.kind)
+            if prev_run and prev_run.repo_data:
+                repo_data = prev_run.repo_data
+                log.info('new run, taken repo_data from prev run %s', prev_run.repo_data, prev_run)
+
         # create run instance
-        run = Run(stage=stage, flow=flow, args=run_args, label=lbl_vals.get('run_label', None), repo_data=repo_data)
+        run = Run(stage=stage, flow=flow, args=run_args, label=lbl_vals.get('run_label', None), reason=reason, repo_data=repo_data)
         replay = False
         if stage.schema['triggers'].get('manual', False):
             run.state = consts.RUN_STATE_MANUAL
@@ -349,18 +357,21 @@ def create_flow(branch_id, kind, flow, trigger_data=None):
     # create flow instance
     flow = Flow(branch=branch, kind=kind, branch_name=branch_name, args=flow_args, trigger_data=trigger_data)
     db.session.commit()
+    log.info('created %s flow in branch %s', 'ci' if kind == 0 else 'dev', branch.id)
+
+    reason = dict(reason='manual')
 
     for stage in branch.stages:
         if stage.deleted:
             continue
-        if stage.schema['parent'] != 'root' or stage.schema['triggers'].get('parent', False) is False:
+        if stage.schema['parent'] != 'root' or stage.schema['triggers'].get('parent', True) is False:
             continue
 
         if not stage.enabled:
             log.info('stage %s not started - disabled', stage.id)
             continue
 
-        start_run(stage, flow, args=args.get(stage.name, {}))
+        start_run(stage, flow, reason=reason, args=args.get(stage.name, {}))
 
     data = flow.get_json()
 
@@ -453,7 +464,7 @@ def create_run(flow_id, run):
     if stage is None:
         abort(404, "Stage not found")
 
-    new_run = start_run(stage, flow, args=run.get('args', {}))
+    new_run = start_run(stage, flow, reason=dict(reason='manual'), args=run.get('args', {}))
 
     # Serialize and return the newly created run in the response
     data = new_run.get_json()

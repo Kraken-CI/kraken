@@ -40,10 +40,10 @@ def _is_in_celery_queue(func, args):
     return False
 
 
-def trigger_run(stage_id, flow_kind=consts.FLOW_KIND_CI):
+def trigger_run(stage_id, flow_kind=consts.FLOW_KIND_CI, reason=None):
     logging.basicConfig(format=consts.LOG_FMT, level=logging.INFO)
 
-    args = (stage_id, flow_kind)
+    args = (stage_id, flow_kind, reason)
 
     if _is_in_celery_queue('kraken.server.bg.jobs.trigger_run', args):
         log.info('skipped trigger run for stage %s as it is already in celery queue', stage_id)

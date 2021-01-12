@@ -252,7 +252,7 @@ export class BranchResultsComponent implements OnInit, OnDestroy {
                     for (const c of commits.slice(0, 7)) {
                         html += '<div style="margin: 0 0 10px 12px;">'
                         html += `<b>${c.commit.slice(0, 8)}</b>`
-                        html += ` by <a href="mailto:${c.author}">${c.author}</a>`
+                        html += ` by <a href="mailto:${c.email}">${c.author}</a>`
                         const ts = datetimeToLocal(c.date, null)
                         html += ` at ${ts}<br>`
                         html += `${c.subject}<br>`

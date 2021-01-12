@@ -204,7 +204,8 @@ def prepare_new_planner_triggers(stage_id, new_triggers, prev_triggers, triggers
     if 'interval' in new_triggers:
         interval = int(pytimeparse.parse(new_triggers['interval']))
         if prev_triggers is None or 'interval' not in prev_triggers or 'interval_planner_job' not in triggers:
-            job = planner.add_job('kraken.server.pljobs:trigger_run', 'interval', (stage_id, consts.FLOW_KIND_CI), None,
+            args = (stage_id, consts.FLOW_KIND_CI, dict(reason='interval'))
+            job = planner.add_job('kraken.server.pljobs:trigger_run', 'interval', args, None,
                                   None, None, None, None, None, None, False, dict(seconds=int(interval)))
             triggers['interval_planner_job'] = job['id']
         else:
@@ -219,7 +220,8 @@ def prepare_new_planner_triggers(stage_id, new_triggers, prev_triggers, triggers
     if 'date' in new_triggers:
         run_date = dateutil.parser.parse(new_triggers['date'])
         if prev_triggers is None or 'date' not in prev_triggers or 'date_planner_job' not in triggers:
-            job = planner.add_job('kraken.server.pljobs:trigger_run', 'date', (stage_id, consts.FLOW_KIND_CI), None,
+            args = (stage_id, consts.FLOW_KIND_CI, dict(reason='date'))
+            job = planner.add_job('kraken.server.pljobs:trigger_run', 'date', args, None,
                                   None, None, None, None, None, None, False, dict(run_date=str(run_date)))
             triggers['date_planner_job'] = job['id']
         else:
@@ -235,7 +237,8 @@ def prepare_new_planner_triggers(stage_id, new_triggers, prev_triggers, triggers
         cron_rule = new_triggers['cron']
         if prev_triggers is None or 'cron' not in prev_triggers or 'cron_planner_job' not in triggers:
             minutes, hours, days, months, dow = cron_rule.split()
-            job = planner.add_job('kraken.server.pljobs:trigger_run', 'cron', (stage_id, consts.FLOW_KIND_CI), None,
+            args = (stage_id, consts.FLOW_KIND_CI, dict(reason='cron'))
+            job = planner.add_job('kraken.server.pljobs:trigger_run', 'cron', args, None,
                                   None, None, None, None, None, None, False,
                                   dict(minute=minutes, hour=hours, day=days, month=months, day_of_week=dow))
             triggers['cron_planner_job'] = job['id']
@@ -253,7 +256,8 @@ def prepare_new_planner_triggers(stage_id, new_triggers, prev_triggers, triggers
     if 'repo' in new_triggers:
         interval = int(pytimeparse.parse(new_triggers['repo']['interval']))
         if prev_triggers is None or 'repo' not in prev_triggers or 'repo_interval_planner_job' not in triggers:
-            job = planner.add_job('kraken.server.pljobs:trigger_run', 'repo_interval', (stage_id, consts.FLOW_KIND_CI), None,
+            args = (stage_id, consts.FLOW_KIND_CI, dict(reason='repo_interval'))
+            job = planner.add_job('kraken.server.pljobs:trigger_run', 'repo_interval', args, None,
                                   None, None, None, None, None, None, False, dict(seconds=int(interval)))
             triggers['repo_interval_planner_job'] = job['id']
         else:

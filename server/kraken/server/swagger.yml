@@ -1375,6 +1375,8 @@ definitions:
         type: integer
       repo_data:
         type: object
+      reason:
+        type: string
 
   Runs:
     type: object

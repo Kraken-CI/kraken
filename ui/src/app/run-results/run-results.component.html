@@ -1,7 +1,7 @@
 <p-tabMenu [model]="tabs" [activeItem]="activeTab">
   <ng-template pTemplate="item" let-item let-i="index">
     <span style="font-size: 1.1em; font-weight: bold; margin-right: 5px;">{{item.label}}</span>
-    <span style="background-color: #9cbae6; border-radius: 15px; padding: 1px 8px 2px; color: white; font-weight: bold;">{{ recordsCount[i] }}</span>
+    <span *ngIf="recordsCount[i]" style="background-color: #9cbae6; border-radius: 15px; padding: 1px 8px 2px; color: white; font-weight: bold;">{{ recordsCount[i] }}</span>
   </ng-template>
 </p-tabMenu>
 
@@ -424,4 +424,14 @@
       Total Records: {{state.totalRecords}}
     </ng-template>
   </p-table>
+</div>
+
+
+<!-- DETAILS TAB -->
+<div *ngIf="activeTabIdx === 4" style="margin: 10px 0 0 10px;">
+
+  Reason: {{ run.reason }}
+  <br>
+  Run State: {{ run.state }}
+
 </div>

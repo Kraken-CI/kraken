@@ -1,3 +1,17 @@
+# Copyright 2020 The Kraken Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import os
 import logging
 import datetime
@@ -20,6 +34,7 @@ from .. import execution  # pylint: disable=cyclic-import
 from .. import consts
 from .. import notify
 from .. import logs
+from .. import dbutils
 
 log = logging.getLogger(__name__)
 
@@ -74,7 +89,7 @@ def _trigger_stages(run):
             continue
 
         if stage.enabled:
-            execution.start_run(stage, run.flow)
+            execution.start_run(stage, run.flow, reason=dict(reason='parent', run_id=run.id))
         else:
             log.info('stage %s not started because it is disabled', stage.name)
 
@@ -555,16 +570,10 @@ def _check_repo_commits(stage, flow_kind):
     if 'repo' not in triggers:
         return True, None  # no repo in triggers so start run; no repo_data
 
-    log.info('looking for new commits for stage %s', stage.name)
+    # get prev run to get prev commit
+    prev_run = dbutils.get_prev_run(stage.id, flow_kind)
 
-    # get prev repo to get prev commit
-    q = Run.query
-    q = q.filter_by(deleted=None)
-    q = q.filter_by(stage_id=stage.id)
-    q = q.join('flow')
-    q = q.filter(Flow.kind == flow_kind)
-    q = q.order_by(desc(Flow.created))
-    prev_run = q.first()
+    log.info('looking for new commits for stage %s, prev run %s', stage.name, prev_run)
 
     repo = triggers['repo']
     repos = []
@@ -598,6 +607,8 @@ def _check_repo_commits(stage, flow_kind):
                 base_commit = prev_run.repo_data[repo_url][0]['commit']
                 log.info('base commit: %s', base_commit)
                 cmd += ' %s..' % base_commit
+            else:
+                log.info('no base commit %s %s', repo_url, prev_run.repo_data)
             p = subprocess.run(cmd, shell=True, check=True, cwd=repo_dir, capture_output=True, text=True)
             text = p.stdout.strip()
 
@@ -619,7 +630,7 @@ def _check_repo_commits(stage, flow_kind):
 
 
 @clry_app.task(base=BaseTask, bind=True)
-def trigger_run(self, stage_id, flow_kind=consts.FLOW_KIND_CI):
+def trigger_run(self, stage_id, flow_kind=consts.FLOW_KIND_CI, reason=None):
     try:
         app = _create_app()
 
@@ -678,12 +689,16 @@ def trigger_run(self, stage_id, flow_kind=consts.FLOW_KIND_CI):
             changes, repo_data = _check_repo_commits(stage, flow_kind)
             if not changes:
                 return
+            if repo_data and reason and reason['reason'] == 'repo_interval':
+                reason = dict(reason='commit to repo')
 
             # commit new flow if created and repo changes if detected
             db.session.commit()
 
             # create run for current stage
-            execution.start_run(stage, flow, repo_data=repo_data)
+            if reason is None:
+                reason = dict(reason='unknown')
+            execution.start_run(stage, flow, reason=reason, repo_data=repo_data)
 
     except Exception as exc:
         log.exception('will retry')
@@ -706,10 +721,14 @@ def trigger_flow(self, project_id, trigger_data=None):
                 branch_name = trigger_data['ref'].split('/')[-1]
                 flow_kind = 'ci'
                 flow_kind_no = 0
+                reason = dict(reason='github push')
             elif trigger_data['trigger'] == 'github-pull_request':
                 branch_name = trigger_data['pull_request']['base']['ref']
                 flow_kind = 'dev'
                 flow_kind_no = 1
+                reason = dict(reason='github pull request')
+            else:
+                reason = dict(reason=trigger_data['trigger'])
             branch = Branch.query.filter_by(project=project, branch_name=branch_name).one_or_none()
             if branch is None:
                 log.error('cannot find branch by branch_name: %s', branch_name)
@@ -772,7 +791,7 @@ def trigger_flow(self, project_id, trigger_data=None):
                     last_flow.trigger_data = trigger_data
                     db.session.commit()
 
-                execution.start_run(stage, last_flow)
+                execution.start_run(stage, last_flow, reason=reason)
                 started_something = True
 
             if not started_something:
