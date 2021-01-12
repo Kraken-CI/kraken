@@ -267,7 +267,7 @@ def start_run(stage, flow, reason, args=None, repo_data=None):
             prev_run = dbutils.get_prev_run(stage.id, flow.kind)
             if prev_run and prev_run.repo_data:
                 repo_data = prev_run.repo_data
-                log.info('new run, taken repo_data from prev run %s', prev_run.repo_data, prev_run)
+                log.info('new run, taken repo_data from prev run %s', prev_run)
 
         # create run instance
         run = Run(stage=stage, flow=flow, args=run_args, label=lbl_vals.get('run_label', None), reason=reason, repo_data=repo_data)

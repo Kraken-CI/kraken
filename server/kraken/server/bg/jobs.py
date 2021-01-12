@@ -27,7 +27,7 @@ import giturlparse
 import pytimeparse
 
 from .clry import app as clry_app
-from ..models import db, Run, Job, TestCaseResult, Branch, Flow, Stage, Project, Issue
+from ..models import db, Run, Job, TestCaseResult, Branch, Flow, Stage, Project
 from ..schema import prepare_new_planner_triggers, get_schema_from_repo
 from ..schema import check_and_correct_stage_schema
 from .. import execution  # pylint: disable=cyclic-import
