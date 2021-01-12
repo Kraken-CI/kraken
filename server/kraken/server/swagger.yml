@@ -80,6 +80,22 @@ paths:
           description: Successfully
           schema:
             $ref: '#/definitions/Project'
+    delete:
+      operationId: delete_project
+      tags:
+        - Management
+      summary: Delete a project
+      description: Delete a project
+      parameters:
+        - name: project_id
+          in: path
+          description: ID of project
+          required: true
+          type: integer
+          format: int64
+      responses:
+        200:
+          description: Successfully deleted project
 
   /projects/{project_id}/secrets:
     post:

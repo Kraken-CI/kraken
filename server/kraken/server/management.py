@@ -65,8 +65,20 @@ def get_project(project_id):
     return project.get_json(with_results=True), 200
 
 
+def delete_project(project_id):
+    project = Project.query.filter_by(id=project_id).one_or_none()
+    if project is None:
+        abort(400, "Project with id %s does not exist" % project_id)
+
+    project.deleted = datetime.datetime.utcnow()
+    db.session.commit()
+
+    return {}, 200
+
+
 def get_projects():
     q = Project.query
+    q = q.filter_by(deleted=None)
     projects = []
     for p in q.all():
         projects.append(p.get_json(with_results=False))

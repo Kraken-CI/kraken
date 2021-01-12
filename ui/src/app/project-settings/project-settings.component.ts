@@ -41,6 +41,7 @@ export class ProjectSettingsComponent implements OnInit {
 
     constructor(
         private route: ActivatedRoute,
+        private router: Router,
         private msgSrv: MessageService,
         private confirmationService: ConfirmationService,
         protected breadcrumbService: BreadcrumbsService,
@@ -352,5 +353,32 @@ export class ProjectSettingsComponent implements OnInit {
             { name: 'CI', flows: branch.ci_flows },
             { name: 'Dev', flows: branch.dev_flows },
         ]
+    }
+
+    deleteProject() {
+        this.managementService
+            .deleteProject(this.projectId)
+            .subscribe(
+                data => {
+                    this.msgSrv.add({
+                        severity: 'success',
+                        summary: 'Project deletion succeeded',
+                        detail: 'Project delete operation succeeded.',
+                    })
+                    this.router.navigate(['/'])
+                },
+                err => {
+                    let msg = err.statusText
+                    if (err.error && err.error.detail) {
+                        msg = err.error.detail
+                    }
+                    this.msgSrv.add({
+                        severity: 'error',
+                        summary: 'Project deletion erred',
+                        detail: 'Project delete operation erred: ' + msg,
+                        life: 10000,
+                    })
+                }
+            )
     }
 }

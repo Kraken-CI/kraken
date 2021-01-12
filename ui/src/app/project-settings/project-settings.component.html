@@ -1,7 +1,10 @@
+<div style="display: flex; justify-content: space-between;">
 <h2 style="padding-left: 7px;">{{ project.name }}</h2>
 
 <div style="float: right;">
   <p-button label="New Branch" icon="pi pi-plus" (onClick)="newBranch()"></p-button>
+  <p-button label="Archive Project" icon="pi pi-trash" styleClass="p-button-danger p-button-outlined" [style]="{'margin-left': '30px'}" (onClick)="deleteProject()"></p-button>
+</div>
 </div>
 
 <p-dialog header="New Branch in {{project.name}}" [(visible)]="newBranchDlgVisible">
