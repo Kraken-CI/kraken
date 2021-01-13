@@ -142,7 +142,6 @@ export class ProjectSettingsComponent implements OnInit {
                         detail: 'New branch operation succeeded.',
                     })
                     this.newBranchDlgVisible = false
-                    //this.refresh()
                     this.router.navigate(['/branches/' + branch.id])
                 },
                 err => {
