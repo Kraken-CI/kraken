@@ -74,7 +74,7 @@ class Project(db.Model, DatesMixin):
                     deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,
                     name=self.name,
                     description=self.description,
-                    branches=[b.get_json(with_results=with_results) for b in self.branches],
+                    branches=[b.get_json(with_results=with_results) for b in self.branches if b.deleted is None],
                     secrets=[s.get_json() for s in self.secrets if s.deleted is None],
                     webhooks=self.webhooks if self.webhooks else {})
 

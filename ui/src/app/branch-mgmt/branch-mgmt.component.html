@@ -31,30 +31,34 @@
 </p-dialog>
 
 
-<div style="margin-bottom: 15px; display: flex; align-items: baseline;">
-  <p-inplace #branchNameInplace>
-    <span pInplaceDisplay style="font-size: 2rem; font-weight: bold;">
-      {{branch.name}}
-    </span>
-    <span pInplaceContent>
-      <input type="text" pInputText [(ngModel)]="newBranchName" (keydown)="branchNameKeyDown($event, branchNameInplace)"/>
-    </span>
-  </p-inplace>
+<div style="margin-bottom: 15px; display: flex; justify-content: space-between;">
+  <div style="display: flex; align-items: baseline;">
+    <p-inplace #branchNameInplace>
+      <span pInplaceDisplay style="font-size: 2rem; font-weight: bold;">
+        {{branch.name}}
+      </span>
+      <span pInplaceContent>
+        <input type="text" pInputText [(ngModel)]="newBranchName" (keydown)="branchNameKeyDown($event, branchNameInplace)"/>
+      </span>
+    </p-inplace>
 
-  <div style="margin-left: 40px;">
-    <a routerLink="/branches/{{branchId}}/ci">CI Results</a>   &nbsp;&nbsp;&nbsp; | &nbsp;&nbsp;&nbsp;   <a routerLink="/branches/{{branchId}}/dev">Dev Results</a>
+    <div style="margin-left: 40px;">
+      <a routerLink="/branches/{{branchId}}/ci">CI Results</a>   &nbsp;&nbsp;&nbsp; | &nbsp;&nbsp;&nbsp;   <a routerLink="/branches/{{branchId}}/dev">Dev Results</a>
+    </div>
+
+    <a routerLink="/branches/{{branchId}}/ci/flows/new">
+      <button type="button" pButton icon="pi pi-caret-right" label="Run CI Flow" style="margin: 0 10px 0 100px;"></button>
+    </a>
+    <a routerLink="/branches/{{branchId}}/dev/flows/new">
+      <button type="button" pButton icon="pi pi-caret-right" label="Run Dev Flow"></button>
+    </a>
+    <!--
+        <button type="button" (click)="forkBranch()" pButton icon="fa fa-code-fork" label="Fork Branch" style="margin: 0 10px 0 100px;"></button>
+        -->
   </div>
-
-  <a routerLink="/branches/{{branchId}}/ci/flows/new">
-    <button type="button" pButton icon="pi pi-caret-right" label="Run CI Flow" style="margin: 0 10px 0 100px;"></button>
-  </a>
-  <a routerLink="/branches/{{branchId}}/dev/flows/new">
-    <button type="button" pButton icon="pi pi-caret-right" label="Run Dev Flow"></button>
-  </a>
-
-<!--
-  <button type="button" (click)="forkBranch()" pButton icon="fa fa-code-fork" label="Fork Branch" style="margin: 0 10px 0 100px;"></button>
--->
+  <div style="display: flex; align-items: baseline;">
+    <p-button label="Archive Branch" icon="pi pi-trash" styleClass="p-button-danger p-button-outlined" (onClick)="deleteBranch()"></p-button>
+  </div>
 </div>
 
 <p-tabView>

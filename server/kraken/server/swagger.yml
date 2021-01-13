@@ -183,6 +183,23 @@ paths:
       responses:
         201:
           description: Successfully created run
+  /branches/{branch_id}:
+    delete:
+      operationId: delete_branch
+      tags:
+        - Management
+      summary: Delete a branch
+      description: Delete a branch
+      parameters:
+        - name: branch_id
+          in: path
+          description: ID of branch
+          required: true
+          type: integer
+          format: int64
+      responses:
+        200:
+          description: Successfully deleted branch
   /branches/{branch_id}/cfg:
     get:
       summary: List all results

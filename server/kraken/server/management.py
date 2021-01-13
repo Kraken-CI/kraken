@@ -113,6 +113,17 @@ def get_branch(branch_id):
     return branch.get_json(with_cfg=True), 200
 
 
+def delete_branch(branch_id):
+    branch = Branch.query.filter_by(id=branch_id).one_or_none()
+    if branch is None:
+        abort(400, "Branch with id %s does not exist" % branch_id)
+
+    branch.deleted = datetime.datetime.utcnow()
+    db.session.commit()
+
+    return {}, 200
+
+
 def create_secret(project_id, secret):
     project = Project.query.filter_by(id=project_id).one_or_none()
     if project is None:

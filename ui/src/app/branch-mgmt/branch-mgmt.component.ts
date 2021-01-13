@@ -90,7 +90,7 @@ export class BranchMgmtComponent implements OnInit {
                     }
                 }
             }
-            if (this.stage === null) {
+            if (this.stage === null && branch.stages && branch.stages.length > 0) {
                 this.selectStage(branch.stages[0])
             }
 
@@ -373,5 +373,32 @@ export class BranchMgmtComponent implements OnInit {
             return 'DEV run'
         }
         return 'unknown'
+    }
+
+    deleteBranch() {
+        this.managementService
+            .deleteBranch(this.branchId)
+            .subscribe(
+                data => {
+                    this.msgSrv.add({
+                        severity: 'success',
+                        summary: 'Branch deletion succeeded',
+                        detail: 'Branch delete operation succeeded.',
+                    })
+                    this.router.navigate(['/projects/' + this.branch.project_id])
+                },
+                err => {
+                    let msg = err.statusText
+                    if (err.error && err.error.detail) {
+                        msg = err.error.detail
+                    }
+                    this.msgSrv.add({
+                        severity: 'error',
+                        summary: 'Branch deletion erred',
+                        detail: 'Branch delete operation erred: ' + msg,
+                        life: 10000,
+                    })
+                }
+            )
     }
 }

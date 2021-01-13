@@ -135,15 +135,15 @@ export class ProjectSettingsComponent implements OnInit {
         this.managementService
             .createBranch(this.project.id, { name: this.branchName })
             .subscribe(
-                data => {
-                    console.info(data)
+                branch => {
                     this.msgSrv.add({
                         severity: 'success',
                         summary: 'New branch succeeded',
                         detail: 'New branch operation succeeded.',
                     })
                     this.newBranchDlgVisible = false
-                    this.refresh()
+                    //this.refresh()
+                    this.router.navigate(['/branches/' + branch.id])
                 },
                 err => {
                     console.info(err)
