@@ -54,6 +54,7 @@ class LxdExecContext:
         self.lab_net = None
         self.cntr = None
         self.log_ctx = None
+        self.logs = []
 
     def _start(self, timeout):
         log.set_ctx(job=self.job['id'])
