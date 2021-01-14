@@ -39,7 +39,7 @@
       <div *ngFor="let branch of proj.branches" style="margin: 15px;">
         <div style="font-weight: bold; font-size: 1.5em; margin: 0 0 10px 0;">
           <i class="fa fa-code-fork" style="vertical-align: bottom; font-size: 1.7em; margin-right: 10px;"></i>
-          <a routerLink="/branches/{{ branch.id }}">
+          <a routerLink="/branches/{{ branch.id }}/ci">
             {{ branch.name }}
           </a>
         </div>

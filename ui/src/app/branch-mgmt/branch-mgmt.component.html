@@ -115,6 +115,9 @@
             <div class="p-col-2" style="margin-top: 25px;">
               <p-checkbox [(ngModel)]="stage.schema_from_repo_enabled" binary="true" label="Schema from Repo"></p-checkbox>
             </div>
+            <div class="p-col-1" style="margin-top: 5px;" *ngIf="stage.repo_version">
+              Current rev: {{ stage.repo_version.slice(0, 8) }}
+            </div>
             <div class="p-col-2" style="margin-top: 15px;">
               <a pButton label="Schema Help" href="https://kraken.ci/docs/schema" class="p-button-text" target="blank" icon="pi pi-question-circle" style="margin-right: 10px;"></a>
             </div>

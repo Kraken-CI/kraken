@@ -293,7 +293,10 @@ def update_stage(stage_id, data):
             try:
                 int(data['repo_refresh_interval'])
             except:
-                int(pytimeparse.parse(data['repo_refresh_interval']))
+                try:
+                    int(pytimeparse.parse(data['repo_refresh_interval']))
+                except:
+                    abort(400, 'Incorrect repo refresh interval value')
             stage.repo_refresh_interval = data['repo_refresh_interval']
             log.info('stage.repo_refresh_interval %s', stage.repo_refresh_interval)
 
