@@ -893,6 +893,9 @@ schema = {
                                         "params": {
                                             "type": "string"
                                         },
+                                        "pythonpath": {
+                                            "type": "string"
+                                        }
                                         "cwd": {
                                             "type": "string"
                                         }
