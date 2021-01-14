@@ -970,7 +970,14 @@ schema = {
                             "additionalProperties": False,
                             "properties": {
                                 "system": {
-                                    "type": "string"
+                                    "oneOf": [{
+                                        "type": "string"
+                                    }, {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }]
                                 },
                                 "executor": {
                                     "type": "string"
