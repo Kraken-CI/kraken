@@ -69,12 +69,14 @@ class Project(db.Model, DatesMixin):
     webhooks = Column(JSONB)
 
     def get_json(self, with_results=False):
+        branches = [b.get_json(with_results=with_results) for b in self.branches if b.deleted is None]
+        branches.sort(key=lambda b: b['name'])
         return dict(id=self.id,
                     created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,
                     deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,
                     name=self.name,
                     description=self.description,
-                    branches=[b.get_json(with_results=with_results) for b in self.branches if b.deleted is None],
+                    branches=branches,
                     secrets=[s.get_json() for s in self.secrets if s.deleted is None],
                     webhooks=self.webhooks if self.webhooks else {})
 
