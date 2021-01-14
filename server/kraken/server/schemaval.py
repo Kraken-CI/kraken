@@ -627,6 +627,9 @@ schema = {
                 "interval": {
                     "type": "string"
                 },
+                "date": {
+                    "type": "string"
+                },
                 "repository":{
                     "type": "boolean"
                 },

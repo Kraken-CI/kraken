@@ -121,51 +121,6 @@ def prepare_initial_data():
 
     stage = Stage.query.filter_by(name="System Tests", branch=branch).one_or_none()
     if stage is None:
-        # schema = {
-        #     "configs": [{
-        #         "name": "c1",
-        #         "p1": "1",
-        #         "p2": "3"
-        #     }, {
-        #         "name": "c2",
-        #         "n3": "33",
-        #         "t2": "asdf"
-        #     }],
-        #     "jobs": [{
-        #         "name": "make dist",
-        #         "steps": [{
-        #             "tool": "git",
-        #             "checkout": "git@gitlab.isc.org:isc-projects/kea.git",
-        #             "branch": "master"
-        #         }, {
-        #             "tool": "shell",
-        #             "cmd": "make dist",
-        #             "cwd": "kea"
-        #         }, {
-        #             "tool": "artifacts",
-        #             "type": "file",
-        #             "upload": "aaa-{ver}.tar.gz"
-        #         }],
-        #         "environments": [{
-        #             "system": "ubuntu-18.04",
-        #             "agents_group": "server",
-        #             "config": "c1"
-        #         }]
-        #     }],
-        #     "notification": {
-        #         "changes": {
-        #             "slack": {"channel": "abc"},
-        #             "email": "godfryd@abc.pl"
-        #         }
-        #     }
-        # }
-        #
-        # TRIGGER:
-        # kind: parent | interval | date | cron | repository | webhook
-        # interval: duration e.g. '1d' or '3h 30m'
-        # cron: cron rule e.g. '* * 10 * *'
-        # repository: url with branch
-        # webhook: from GitHub or GitLab or Bitbucket
         schema_code = '''def stage(ctx):
     return {
         "parent": "Unit Tests",
