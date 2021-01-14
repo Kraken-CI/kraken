@@ -106,6 +106,20 @@ def create_branch(project_id, branch):
     return new_branch.get_json(), 201
 
 
+def update_branch(branch_id, branch):
+    branch_rec = Branch.query.filter_by(id=branch_id).one_or_none()
+    if branch_rec is None:
+        abort(404, "Branch not found")
+
+    if 'name' in branch:
+        branch_rec.name = branch['name']
+
+    db.session.commit()
+
+    result = branch_rec.get_json()
+    return result, 200
+
+
 def get_branch(branch_id):
     branch = Branch.query.filter_by(id=branch_id).one_or_none()
     if branch is None:

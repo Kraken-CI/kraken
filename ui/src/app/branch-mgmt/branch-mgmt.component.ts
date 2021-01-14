@@ -251,11 +251,37 @@ export class BranchMgmtComponent implements OnInit {
     branchNameKeyDown(event, branchNameInplace) {
         if (event.key === 'Enter') {
             branchNameInplace.deactivate()
+            this.doSaveBranch(this.branch.id, {name: this.newBranchName})
         }
         if (event.key === 'Escape') {
             branchNameInplace.deactivate()
             this.newBranchName = this.branch.name
         }
+    }
+
+    doSaveBranch(branchId, branchData) {
+        this.managementService.updateBranch(branchId, branchData).subscribe(
+            branch => {
+                this.branch = branch
+                this.msgSrv.add({
+                    severity: 'success',
+                    summary: 'Branch update succeeded',
+                    detail: 'Branch update operation succeeded.',
+                })
+            },
+            err => {
+                let msg = err.statusText
+                if (err.error && err.error.detail) {
+                    msg = err.error.detail
+                }
+                this.msgSrv.add({
+                    severity: 'error',
+                    summary: 'Branch update erred',
+                    detail: 'Branch update operation erred: ' + msg,
+                    life: 10000,
+                })
+            }
+        )
     }
 
     doSaveStage(stageData) {

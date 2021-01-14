@@ -184,6 +184,29 @@ paths:
         201:
           description: Successfully created run
   /branches/{branch_id}:
+    put:
+      operationId: update_branch
+      tags:
+        - Management
+      summary: Update a branch
+      description: Update branch
+      parameters:
+        - name: branch_id
+          in: path
+          description: ID of branch
+          required: true
+          type: integer
+          format: int64
+        - name: branch
+          in: body
+          description: branch
+          schema:
+            $ref: '#/definitions/Branch'
+      responses:
+        200:
+          description: Successfully
+          schema:
+            $ref: '#/definitions/Branch'
     delete:
       operationId: delete_branch
       tags:

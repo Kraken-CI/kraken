@@ -85,7 +85,7 @@ class Branch(db.Model, DatesMixin):
     name = Column(Unicode(255))
     project_id = Column(Integer, ForeignKey('projects.id'), nullable=False)
     project = relationship('Project', back_populates="branches")
-    branch_name = Column(Unicode(255))
+    branch_name = Column(Unicode(255))  # TODO: it seems that it is not used
     ci_flows = relationship("Flow", order_by="desc(Flow.created)",
                             primaryjoin="and_(Branch.id==Flow.branch_id, Flow.kind==0)", viewonly=True)
     dev_flows = relationship("Flow", order_by="desc(Flow.created)",
