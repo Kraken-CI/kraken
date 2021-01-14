@@ -324,6 +324,7 @@ data4 = {
     "parameters": [],
     "configs": [],
     "flow_label": "0.#{KK_FLOW_SEQ}",
+    "run_label": "a.#{KK_CI_DEV_RUN_SEQ}",
     "jobs": [
         {
             "name": "tarball",
@@ -700,6 +701,9 @@ schema = {
             }
         },
         "flow_label": {
+            "type": "string"
+        },
+        "run_label": {
             "type": "string"
         },
         "jobs": {
