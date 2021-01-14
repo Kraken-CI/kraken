@@ -750,6 +750,12 @@ schema = {
                                         },
                                         "public": {
                                             "type": "boolean"
+                                        },
+                                        "attempts": {
+                                            "type": "integer"
+                                        },
+                                        "sleep_time_after_attempt": {
+                                            "type": "integer"
                                         }
                                     }
                                 },
@@ -781,6 +787,12 @@ schema = {
                                             "additionalProperties": {
                                                 "type": "string"
                                             }
+                                        },
+                                        "attempts": {
+                                            "type": "integer"
+                                        },
+                                        "sleep_time_after_attempt": {
+                                            "type": "integer"
                                         }
                                     }
                                 },
@@ -808,6 +820,12 @@ schema = {
                                         },
                                         "cwd": {
                                             "type": "string"
+                                        },
+                                        "attempts": {
+                                            "type": "integer"
+                                        },
+                                        "sleep_time_after_attempt": {
+                                            "type": "integer"
                                         }
                                     }
                                 },
@@ -826,6 +844,12 @@ schema = {
                                         },
                                         "cwd": {
                                             "type": "string"
+                                        },
+                                        "attempts": {
+                                            "type": "integer"
+                                        },
+                                        "sleep_time_after_attempt": {
+                                            "type": "integer"
                                         }
                                     }
                                 },
@@ -850,6 +874,12 @@ schema = {
                                         },
                                         "cwd": {
                                             "type": "string"
+                                        },
+                                        "attempts": {
+                                            "type": "integer"
+                                        },
+                                        "sleep_time_after_attempt": {
+                                            "type": "integer"
                                         }
                                     }
                                 },
@@ -871,6 +901,12 @@ schema = {
                                         },
                                         "branch": {
                                             "type": "string"
+                                        },
+                                        "attempts": {
+                                            "type": "integer"
+                                        },
+                                        "sleep_time_after_attempt": {
+                                            "type": "integer"
                                         }
                                     }
                                 },
@@ -898,6 +934,12 @@ schema = {
                                         },
                                         "cwd": {
                                             "type": "string"
+                                        },
+                                        "attempts": {
+                                            "type": "integer"
+                                        },
+                                        "sleep_time_after_attempt": {
+                                            "type": "integer"
                                         }
                                     }
                                 },
@@ -921,6 +963,12 @@ schema = {
                                             }, {
                                                 "type": "string"
                                             }]
+                                        },
+                                        "attempts": {
+                                            "type": "integer"
+                                        },
+                                        "sleep_time_after_attempt": {
+                                            "type": "integer"
                                         }
                                     }
                                 },
@@ -958,6 +1006,12 @@ schema = {
                                         },
                                         "expiry": {
                                             "type": "string"
+                                        },
+                                        "attempts": {
+                                            "type": "integer"
+                                        },
+                                        "sleep_time_after_attempt": {
+                                            "type": "integer"
                                         }
                                     }
                                 },
