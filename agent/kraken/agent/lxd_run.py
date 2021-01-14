@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import re
 import json
 import time
 import shlex
@@ -55,6 +56,8 @@ class LxdExecContext:
         self.log_ctx = None
 
     def _start(self, timeout):
+        log.set_ctx(job=self.job['id'])
+
         self.client = pylxd.Client()
 
         # prepare network for container
@@ -101,9 +104,18 @@ class LxdExecContext:
         self.cntr.files.put('/root/kktool', filedata)
 
         deadline = time.time() + timeout
-        asyncio.run(self._lxd_run('chmod a+x kktool', '.', deadline))
-        asyncio.run(self._lxd_run('apt-get update', '/', deadline))
-        asyncio.run(self._lxd_run('apt-get install -y python3', '/', deadline))
+        self._async_run('chmod a+x kktool', '.', deadline)
+        logs = self._async_run('cat /etc/os-release', '/', deadline)
+        m = re.search('^ID="?(.*?)"?$', logs, re.M)
+        distro = m.group(1).lower()
+        if distro in ['debian', 'ubuntu']:
+            self._async_run('apt-get update', '/', deadline)
+            self._async_run('apt-get install -y python3', '/', deadline)
+        elif distro in ['centos', 'fedora']:
+            self._async_run('yum install -y python3', '/', deadline)
+        elif 'suse' in distro:
+            time.sleep(3)  # wait for network
+            self._async_run('zypper install -y curl python3 sudo system-group-wheel', '/', deadline)
 
     def start(self, timeout):
         try:
@@ -139,6 +151,8 @@ class LxdExecContext:
         if not isinstance(chunk, str):
             chunk = chunk.decode()
 
+        self.logs.append(chunk)
+
         if self.log_ctx:
             log.set_ctx(**self.log_ctx)
 
@@ -146,13 +160,27 @@ class LxdExecContext:
 
         if self.log_ctx:
             log.reset_ctx()
+            log.set_ctx(job=self.job['id'])
+
+    def _async_run(self, cmd, cwd, deadline, env=None):
+        logs, exit_code = asyncio.run(self._lxd_run(cmd, cwd, deadline, env))
+        if exit_code != 0:
+            now = time.time()
+            t0 = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(now))
+            t1 = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(deadline))
+            timeout = deadline - now
+            raise Exception("non-zero %d exit code from '%s', cwd:%s, now:%s, deadline:%s, time: %ds" % (
+                exit_code, cmd, str(cwd), t0, t1, timeout))
+        return logs
 
     async def _lxd_run(self, cmd, cwd, deadline, env=None):  # pylint: disable=unused-argument
         log.info('cmd %s', cmd)
+        self.logs = []
         cmd = shlex.split(cmd)
         result = self.cntr.execute(cmd, environment=env, stdout_handler=self._stdout_handler,
                                    stderr_handler=self._stdout_handler)
         log.info('EXIT: %s', result.exit_code)
+        return ''.join(self.logs), result.exit_code
 
     async def async_run(self, proc_coord, tool_path, return_addr, step_file_path, command, cwd, timeout, user):  # pylint: disable=unused-argument
         lxd_cwd = '/root'
