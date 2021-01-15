@@ -55,7 +55,10 @@ class Planner:
             trigger = 'cron'
         else:
             trigger = 'unknown'
-        return dict(id=job.id, name=job.name, func=job.func_ref, args=job.args, kwargs=job.kwargs, trigger=trigger)
+        next_run_time = ""
+        if job.next_run_time:
+            next_run_time = job.next_run_time.strftime("%Y-%m-%dT%H:%M:%SZ")
+        return dict(id=job.id, name=job.name, func=job.func_ref, args=job.args, kwargs=job.kwargs, trigger=trigger, next_run_time=next_run_time)
 
     def add_job(self, func=None, trigger=None, args=None, kwargs=None, job_id=None, name=None, misfire_grace_time=None,  # pylint: disable=too-many-arguments
                 coalesce=None, max_instances=None, next_run_time=None, replace_existing=False, trigger_args=None):

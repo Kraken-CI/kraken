@@ -123,7 +123,7 @@
             </div>
           </div>
 
-          <p-tabView>
+          <p-tabView (onChange)="handleTabChange($event)">
             <p-tabPanel header="Schema">
               <div style="height: calc(100vh - 520px); padding: 5px 0 10px 0;">
                 <ngx-codemirror
@@ -133,6 +133,7 @@
               </div>
               <button type="button" (click)="checkStageSchema()" pButton icon="pi pi-eye" label="Check Schema"></button>
             </p-tabPanel>
+
             <p-tabPanel header="Schema from Repository">
               <div class="form-style-2">
                 <form [formGroup]="schemaFromRepoForm">
@@ -156,6 +157,25 @@
                     <input type="text" class="input-field" name="repo_refresh_interval" pInputText formControlName="repo_refresh_interval"/>
                   </label>
                 </form>
+              </div>
+            </p-tabPanel>
+
+            <p-tabPanel header="Schedule">
+              <div *ngIf="!stage || !stage.schedules || stage.schedules.length === 0">
+                   No schedules for this stage.
+              </div>
+              <div *ngIf="stage && stage.schedules && stage.schedules.length > 0">
+                <div *ngFor="let s of stage.schedules" style="margin-bottom: 16px;">
+                  <div style="margin-bottom: 4px; font-weight: bold; font-size: 1.1em;">
+                    {{ s.name }}
+                  </div>
+                  <div style="margin-bottom: 4px;">
+                    Job ID: {{ s.job_id }}
+                  </div>
+                  <div style="margin-bottom: 4px;">
+                    Next Run Time: {{ s.next_run_time ? (s.next_run_time | localtime) : '-' }}
+                  </div>
+                </div>
               </div>
             </p-tabPanel>
           </p-tabView>

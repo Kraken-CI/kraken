@@ -344,6 +344,31 @@ def get_stage_schema_as_json(stage_id, schema_code):
 
     return dict(stage_id=stage_id, schema=schema), 200
 
+def get_stage_schedule(stage_id):
+    stage = Stage.query.filter_by(id=stage_id).one_or_none()
+    if stage is None:
+        abort(404, "Stage not found")
+
+    schedules = []
+
+    if stage.triggers:
+        planner_url = os.environ.get('KRAKEN_PLANNER_URL', consts.DEFAULT_PLANNER_URL)
+        planner = xmlrpc.client.ServerProxy(planner_url, allow_none=True)
+        jobs = planner.get_jobs()
+        jobs = {j['id']: j for j in jobs}
+
+        for name, val in stage.triggers.items():
+            if 'planner_job' not in name:
+                continue
+            if val not in jobs:
+                continue
+            job = jobs[val]
+            s = dict(name=name,
+                     job_id=val,
+                     next_run_time=job['next_run_time'])
+            schedules.append(s)
+
+    return dict(schedules=schedules), 200
 
 def get_agent(agent_id):
     ag = Agent.query.filter_by(id=agent_id).one_or_none()

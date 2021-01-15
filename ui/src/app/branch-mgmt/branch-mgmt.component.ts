@@ -25,7 +25,7 @@ export class BranchMgmtComponent implements OnInit {
     newStageName: string
     newStageDescr: string
 
-    stage: any = { id: 0, name: '', description: '' }
+    stage: any = { id: 0, name: '', description: '', schedules: [] }
     saveErrorMsg = ''
 
     codeMirrorOpts = {
@@ -426,5 +426,16 @@ export class BranchMgmtComponent implements OnInit {
                     })
                 }
             )
+    }
+
+    handleTabChange(ev) {
+        if (ev.index === 2) {
+            this.managementService
+                .getStageSchedule(this.stage.id)
+                .subscribe(
+                    data => {
+                        this.stage.schedules = data.schedules
+                    })
+        }
     }
 }
