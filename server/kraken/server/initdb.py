@@ -76,6 +76,7 @@ def prepare_initial_data():
         'cloc': {'not-match-f': 'text', 'exclude-dir': 'text'},
         'nglint': {},
         'cache': {},
+        'gotest': {},
     }
     tools = {}
     for name, fields in tool_fields.items():

@@ -1023,6 +1023,36 @@ schema = {
                                     "properties": {
                                     }
                                 }
+                            }, {
+                                "if": { "properties": { "tool": { "const": "gotest" } } },
+                                "then": {
+                                    "additionalProperties": False,
+                                    "properties": {
+                                        "tool": {
+                                            "const": "gotest"
+                                        },
+                                        "gotest_exe": {
+                                            "type": "string"
+                                        },
+                                        "params": {
+                                            "type": "string"
+                                        },
+                                        "cwd": {
+                                            "type": "string"
+                                        },
+                                        "attempts": {
+                                            "type": "integer"
+                                        },
+                                        "sleep_time_after_attempt": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "else": {
+                                    "additionalProperties": False,
+                                    "properties": {
+                                    }
+                                }
 
                             }]
                         }

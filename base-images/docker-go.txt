@@ -1,0 +1,19 @@
+FROM golang:1.15.7-buster
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pytest git openssh-client ca-certificates sudo python3-docker python3-setuptools unzip zip gnupg curl wget make net-tools locales && rm -rf /var/lib/apt/lists/*
+
+# Set timezone to UTC by default
+RUN ln -sf /usr/share/zoneinfo/Etc/UTC /etc/localtime
+
+# Use unicode
+RUN locale-gen C.UTF-8
+ENV LANG=C.UTF-8
+
+# Setup kraken user
+RUN useradd kraken -d /opt/kraken -m -s /bin/bash -G sudo \
+  && echo 'kraken ALL=NOPASSWD: ALL' >> /etc/sudoers.d/kraken \
+  && echo 'Defaults    env_keep += "DEBIAN_FRONTEND"' >> /etc/sudoers.d/env_keep
+
+WORKDIR /opt/kraken

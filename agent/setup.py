@@ -21,6 +21,7 @@ setup(
             'nglint = kraken.agent.kraken_nglint',
             'artifacts = kraken.agent.kraken_artifacts',
             'cache = kraken.agent.kraken_cache',
+            'gotest = kraken.agent.kraken_gotest',
         ]
     },
 )

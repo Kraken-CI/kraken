@@ -20,6 +20,7 @@ KRAKEN_VERSION_FILE = File.expand_path("kraken-version-#{kk_ver}.txt")
 
 LOCALHOST_IP=ENV['LOCALHOST_IP'] || '192.168.0.89'
 CLICKHOUSE_ADDR="#{LOCALHOST_IP}:9001"
+MINIO_ADDR="#{LOCALHOST_IP}:9999"
 
 file DOCKER_COMPOSE do
   sh "mkdir -p #{TOOLS_DIR}"
@@ -29,8 +30,10 @@ end
 
 # prepare env
 task :prepare_env do
-  sh 'sudo DEBIAN_FRONTEND=noninteractive apt-get install -y default-jre python3-venv npm libpq-dev libpython3.7-dev'
+  sh 'sudo DEBIAN_FRONTEND=noninteractive apt-get install -y default-jre python3-venv npm libpq-dev libpython3-dev'
   sh 'python3 -m venv venv && ./venv/bin/pip install -U pip'
+  sh './venv/bin/pip install -r requirements.txt'
+  sh 'cd server && ../venv/bin/poetry install'
 end
 
 # UI
@@ -151,7 +154,7 @@ task :run_agent => ['./agent/venv/bin/kkagent', :build_agent] do
   sh 'cp server/kraken/server/logs.py agent/kraken/agent/'
   sh 'rm -rf /tmp/kk-jobs/ /opt/kraken/*'
   sh 'cp agent/kkagent agent/kktool /opt/kraken'
-  sh "LANGUAGE=en_US:en LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 KRAKEN_CLICKHOUSE_ADDR=#{CLICKHOUSE_ADDR} /opt/kraken/kkagent --no-update -d /tmp/kk-jobs -s http://localhost:8080 run"
+  sh "LANGUAGE=en_US:en LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 KRAKEN_CLICKHOUSE_ADDR=#{CLICKHOUSE_ADDR} KRAKEN_MINIO_ADDR=#{MINIO_ADDR} /opt/kraken/kkagent --no-update -d /tmp/kk-jobs -s http://localhost:8080 run"
 end
 
 task :run_agent_in_docker do
@@ -325,7 +328,7 @@ end
 
 task :db_init do
   Dir.chdir('server/kraken/migrations') do
-    sh "KRAKEN_DB_URL=#{DB_URL} ../../venv/bin/python3 apply.py"
+    sh "KRAKEN_DB_URL=#{DB_URL} ../../../venv/bin/poetry run python apply.py"
   end
 end
 
