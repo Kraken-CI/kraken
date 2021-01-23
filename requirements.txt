@@ -1,3 +1,4 @@
 poetry
 shiv
 wheel
+fabric

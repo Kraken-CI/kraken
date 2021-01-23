@@ -104,6 +104,11 @@ def _save_to_cache(mc, cache_key, minio_bucket, dest_folder, paths):
     size = 5 * 1024 * 1024
 
     for pth in paths:
+        pth = os.path.expandvars(pth)
+        pth = os.path.expanduser(pth)
+        if not os.path.exists(pth):
+            log.error("path '%s' does not exists", pth)
+            return 1, "path '%s' does not exists" % pth
         pumper = Pumper(pth)
         tar_name = '%s.tar.gz' % pth.strip('/').replace('/', '_')
         tar = tarfile.open(tar_name, 'w|gz', pumper, bufsize=size)

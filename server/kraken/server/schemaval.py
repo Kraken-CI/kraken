@@ -1031,6 +1031,10 @@ schema = {
                                         "tool": {
                                             "const": "gotest"
                                         },
+                                        "timeout": {
+                                            "type": "integer",
+                                            "minimum": 30
+                                        },
                                         "gotest_exe": {
                                             "type": "string"
                                         },

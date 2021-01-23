@@ -30,6 +30,7 @@ def _process_output(q, text):
         try:
             data = json.loads(l)
         except:
+            log.error('failed parsing: %s', l)
             log.exception('IGNORED EXCEPTION')
             continue
 
@@ -78,6 +79,7 @@ def run_tests(step, report_result=None):
     cwd = step.get('cwd', None)
     go_exe = step.get('go_exe', 'go')
     params = step.get('params', '')
+    timeout = int(step.get('timeout', 60))
 
     cmd = '%s test -json %s' % (go_exe, params)
 
@@ -88,16 +90,21 @@ def run_tests(step, report_result=None):
 
     _process_output2 = partial(_process_output, q)
 
-    ret = utils.execute(cmd, cwd=cwd, output_handler=_process_output2, tracing=False)
+    ret = utils.execute(cmd, cwd=cwd, output_handler=_process_output2, tracing=False, timeout=timeout)
 
     q.join()
     finished.set()
     uploader.join()
 
+    if ret != 0:
+        log.error('go test exited with non-zero retcode: %s', ret)
+        return ret, 'go test exited with non-zero retcode'
+
     return 0, ''
 
 
 def main():
+    logging.basicConfig(level=logging.INFO)
     step = dict(cwd='/tmp/hgo/hugo',
                 go_exe='/usr/bin/go',
                 params='-p 1 ./...')
