@@ -899,10 +899,17 @@ schema = {
                                         "tool": {
                                             "const": "git"
                                         },
+                                        "timeout": {
+                                            "type": "integer",
+                                            "minimum": 30
+                                        },
                                         "checkout": {
                                             "type": "string"
                                         },
                                         "branch": {
+                                            "type": "string"
+                                        },
+                                        "destination": {
                                             "type": "string"
                                         },
                                         "attempts": {
