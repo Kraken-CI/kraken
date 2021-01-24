@@ -81,7 +81,7 @@ export class MainPageComponent implements OnInit {
                     })
                     this.newProjectDlgVisible = false
                     this.selectedProject = data
-                    this.refresh()
+                    this.router.navigate(['/projects/' + data.id])
                 },
                 err => {
                     console.info(err)
@@ -127,7 +127,7 @@ export class MainPageComponent implements OnInit {
                         detail: 'New branch operation succeeded.',
                     })
                     this.newBranchDlgVisible = false
-                    this.refresh()
+                    this.router.navigate(['/branches/' + data.id])
                 },
                 err => {
                     console.info(err)
