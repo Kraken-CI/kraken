@@ -77,6 +77,7 @@ def prepare_initial_data():
         'nglint': {},
         'cache': {},
         'gotest': {},
+        'junit_collect': {},
     }
     tools = {}
     for name, fields in tool_fields.items():

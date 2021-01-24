@@ -22,6 +22,7 @@ setup(
             'artifacts = kraken.agent.kraken_artifacts',
             'cache = kraken.agent.kraken_cache',
             'gotest = kraken.agent.kraken_gotest',
+            'junit_collect = kraken.agent.kraken_junit_collect',
         ]
     },
 )

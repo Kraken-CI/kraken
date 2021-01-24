@@ -1064,6 +1064,27 @@ schema = {
                                     "properties": {
                                     }
                                 }
+                            }, {
+                                "if": { "properties": { "tool": { "const": "junit_collect" } } },
+                                "then": {
+                                    "additionalProperties": False,
+                                    "properties": {
+                                        "tool": {
+                                            "const": "junit_collect"
+                                        },
+                                        "cwd": {
+                                            "type": "string"
+                                        },
+                                        "file_glob": {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "else": {
+                                    "additionalProperties": False,
+                                    "properties": {
+                                    }
+                                }
 
                             }]
                         }
