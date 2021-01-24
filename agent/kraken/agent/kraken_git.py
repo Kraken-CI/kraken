@@ -12,7 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import logging
+
+import minio
 
 from . import utils
 from . import tool
@@ -22,10 +25,19 @@ log = logging.getLogger(__name__)
 
 
 def run(step, **kwargs):  # pylint: disable=unused-argument
+    timeout = int(step.get('timeout', 60))
     url = step['checkout']
     dest = ''
     if 'destination' in step:
         dest = step['destination']
+
+    # determine repo dir
+    if dest:
+        repo_dir = dest
+    else:
+        repo_dir = url.split('/')[-1]
+        if repo_dir.endswith('.git'):
+            repo_dir = repo_dir[:-4]
 
     # prepare accessing git repo
     ssh_agent = None
@@ -42,26 +54,89 @@ def run(step, **kwargs):  # pylint: disable=unused-argument
             url = url[4:]
         url = 'https://%s@%s' % (access_token, url.replace(':', '/'))
 
+    # setup connection to minio
+    minio_addr = step['minio_addr']
+    minio_addr = os.environ.get('KRAKEN_MINIO_ADDR', minio_addr)
+    minio_access_key = step['minio_access_key']
+    minio_secret_key = step['minio_secret_key']
+    minio_bucket = step['minio_bucket']
+    minio_folder = step['minio_folder']
+    minio_repo_bundle_path = '%s/repo.bundle' % minio_folder
+    mc = minio.Minio(minio_addr, access_key=minio_access_key, secret_key=minio_secret_key, secure=False)
     try:
-        ret, _ = utils.execute('git clone %s %s' % (url, dest), mask=access_token, out_prefix='')
-        if ret != 0:
-            return ret, 'git clone exited with non-zero retcode'
-    finally:
-        if ssh_agent is not None:
-            ssh_agent.shutdown()
+        mc.bucket_exists(minio_bucket)
+    except Exception as e:
+        log.exception('problem with connecting to minio %s', minio_addr)
+        msg = 'problem with connecting to minio %s: %s' % (minio_addr, str(e))
+        return 1, msg
 
-    if 'trigger_data' in step:
-        if step['trigger_data']['repo'] == step['http_url']:
-            commit = step['trigger_data']['after']
-            if dest:
-                cwd = dest
-            else:
-                cwd = url.split('/')[-1]
-                if cwd.endswith('.git'):
-                    cwd = cwd[:-4]
-            ret, _ = utils.execute('git checkout %s' % commit, cwd=cwd, out_prefix='')
+    # retrieve git repo bundle
+    repo_bundle_path = 'repo.bundle'
+    log.info('try to retrieve repo bundle %s / %s -> %s', minio_bucket, minio_repo_bundle_path, repo_bundle_path)
+    try:
+        mc.fget_object(minio_bucket, minio_repo_bundle_path, repo_bundle_path)
+        bundle_present = True
+    except Exception as e:
+        if 'Object does not exist' in str(e):
+            log.info('repo bundled not archived yet')
+        else:
+            log.exception('retriving repo from bundle failed, skipping it')
+        bundle_present = False
+
+    restore_ok = False
+    if bundle_present:
+        # restore git repo bundle
+        ret, _ = utils.execute('git clone %s %s' % (repo_bundle_path, repo_dir), out_prefix='', timeout=timeout)
+        if ret == 0:
+            restore_ok = True
+
+        # delete old bundle
+        os.unlink(repo_bundle_path)
+
+        # pull latest stuff from repo
+        if restore_ok:
+            ret, _ = utils.execute('git pull', cwd=repo_dir, out_prefix='', timeout=timeout)
             if ret != 0:
-                return ret, 'git checkout exited with non-zero retcode'
+                restore_ok = False
+                shutil.rmtree(repo_dir)
+
+    # if restoring repo from bundle failed then do normal clone repo
+    if not restore_ok:
+        try:
+            ret, _ = utils.execute('git clone %s %s' % (url, dest), mask=access_token, out_prefix='', timeout=timeout)
+            if ret != 0:
+                return ret, 'git clone exited with non-zero retcode'
+        finally:
+            if ssh_agent is not None:
+                ssh_agent.shutdown()
+
+    # bundle repo and cache it
+    repo_bundle_path = os.path.abspath(os.path.join(repo_dir, '..', 'repo.bundle'))
+    ret, _ = utils.execute('git bundle create %s --all' % repo_bundle_path, cwd=repo_dir, out_prefix='', timeout=300)
+    if ret != 0:
+        log.warn('repo bundle failed, skipping it')
+    else:
+        minio_addr = step['minio_addr']
+        minio_addr = os.environ.get('KRAKEN_MINIO_ADDR', minio_addr)
+        minio_bucket = step['minio_bucket']
+        minio_access_key = step['minio_access_key']
+        minio_secret_key = step['minio_secret_key']
+        log.info('store repo bundle %s -> %s / %s', repo_bundle_path, minio_bucket, minio_repo_bundle_path)
+        try:
+            mc.fput_object(minio_bucket, minio_repo_bundle_path, repo_bundle_path)
+        except:
+            log.exception('problem with storing repo bundle, skipping it')
+
+    # checkout commit that comes from trigger, otherwise checkout master/main
+    if 'trigger_data' in step and step['trigger_data']['repo'] == step['http_url']:
+        branch_or_commit = step['trigger_data']['after']
+    else:
+        branch_or_commit = step.get('branch', 'master')  # TODO: detect if there is master, if not then checkout main
+
+    # do checkout
+    ret, _ = utils.execute('git checkout %s' % branch_or_commit, cwd=repo_dir, out_prefix='')
+    if ret != 0:
+        return ret, 'git checkout exited with non-zero retcode'
 
     return 0, ''
 
