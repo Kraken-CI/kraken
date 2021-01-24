@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import shutil
 import logging
 
 import minio
@@ -85,20 +86,24 @@ def run(step, **kwargs):  # pylint: disable=unused-argument
 
     restore_ok = False
     if bundle_present:
-        # restore git repo bundle
-        ret, _ = utils.execute('git clone %s %s' % (repo_bundle_path, repo_dir), out_prefix='', timeout=timeout)
-        if ret == 0:
+        try:
+            # restore git repo bundle
+            utils.execute('git clone %s %s' % (repo_bundle_path, repo_dir), out_prefix='', timeout=timeout, raise_on_error=True)
+
+            # restore original remote URL
+            utils.execute('git remote set-url origin %s' % url, cwd=repo_dir, out_prefix='', timeout=timeout, raise_on_error=True)
+
+            # pull latest stuff from remote
+            ret, _ = utils.execute('git pull', cwd=repo_dir, out_prefix='', timeout=timeout, raise_on_error=True)
+
             restore_ok = True
+        except:
+            log.exception('cloning repo from bundle failed, skipping it')
+            if os.path.exists(repo_dir):
+                shutil.rmtree(repo_dir)
 
         # delete old bundle
         os.unlink(repo_bundle_path)
-
-        # pull latest stuff from repo
-        if restore_ok:
-            ret, _ = utils.execute('git pull', cwd=repo_dir, out_prefix='', timeout=timeout)
-            if ret != 0:
-                restore_ok = False
-                shutil.rmtree(repo_dir)
 
     # if restoring repo from bundle failed then do normal clone repo
     if not restore_ok:
