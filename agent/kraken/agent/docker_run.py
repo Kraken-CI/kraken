@@ -312,7 +312,7 @@ class DockerExecContext:
         return logs, exit_code
 
     async def async_run(self, proc_coord, tool_path, return_addr, step_file_path, command, cwd, timeout, user):  # pylint: disable=unused-argument
-        docker_cwd = None
+        docker_cwd = '/opt/kraken'
         archive = _create_archive(step_file_path, os.path.basename(step_file_path))
         self.cntr.put_archive('/', archive)
 
