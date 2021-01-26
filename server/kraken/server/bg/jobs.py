@@ -1,4 +1,4 @@
-# Copyright 2020 The Kraken Authors
+# Copyright 2020-2021 The Kraken Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
 import os
 import logging
 import datetime
-import tempfile
 import subprocess
 import xmlrpc.client
 
@@ -25,16 +24,18 @@ from sqlalchemy.sql.expression import asc, desc
 from sqlalchemy.orm.attributes import flag_modified
 import giturlparse
 import pytimeparse
+import minio
 
 from .clry import app as clry_app
 from ..models import db, Run, Job, TestCaseResult, Branch, Flow, Stage, Project
-from ..schema import prepare_new_planner_triggers, get_schema_from_repo
+from ..schema import prepare_new_planner_triggers
 from ..schema import check_and_correct_stage_schema
 from .. import execution  # pylint: disable=cyclic-import
 from .. import consts
 from .. import notify
 from .. import logs
 from .. import dbutils
+from .. import gitops
 
 log = logging.getLogger(__name__)
 
@@ -583,43 +584,12 @@ def _check_repo_commits(stage, flow_kind):
         for r in repo['repos']:
             repos.append((r['url'], r['branch']))
 
+    # iterate over repos
     changes = False
     repo_data = {}
     for repo_url, repo_branch in repos:
-        commits = []
-        log.info('checking commits in %s %s', repo_url, repo_branch)
-        with  tempfile.TemporaryDirectory(prefix='kraken-git-') as tmpdir:
-            # clone repo
-            cmd = "git clone --single-branch --branch %s '%s' repo" % (repo_branch, repo_url)
-            p = subprocess.run(cmd, shell=True, check=False, cwd=tmpdir, capture_output=True, text=True)
-            if p.returncode != 0:
-                err = "command '%s' returned non-zero exit status %d\n" % (cmd, p.returncode)
-                err += p.stdout.strip()[:140] + '\n'
-                err += p.stderr.strip()[:140]
-                err = err.strip()
-                raise Exception(err)
+        commits = gitops.get_repo_commits_since(stage.branch_id, prev_run, repo_url, repo_branch)
 
-            repo_dir = os.path.join(tmpdir, 'repo')
-
-            # get commits history
-            cmd = "git log --no-merges --since='2 weeks ago' -n 20 --pretty=format:'commit:%H%nauthor:%an%nemail:%ae%ndate:%aI%nsubject:%s'"
-            if prev_run and prev_run.repo_data and repo_url in prev_run.repo_data:
-                base_commit = prev_run.repo_data[repo_url][0]['commit']
-                log.info('base commit: %s', base_commit)
-                cmd += ' %s..' % base_commit
-            else:
-                log.info('no base commit %s %s', repo_url, prev_run.repo_data)
-            p = subprocess.run(cmd, shell=True, check=True, cwd=repo_dir, capture_output=True, text=True)
-            text = p.stdout.strip()
-
-            commit = {}
-            for line in text.splitlines():
-                field, val = line.split(':', 1)
-                commit[field] = val
-                if len(commit) == 5:
-                    commits.append(commit)
-                    log.info('  %s', commit)
-                    commit = {}
         if commits:
             changes = True
         repo_data[repo_url] = commits
@@ -824,7 +794,7 @@ def refresh_schema_repo(self, stage_id):
 
             try:
                 # get schema from repo
-                schema_code, version = get_schema_from_repo(stage.repo_url, stage.repo_branch, stage.repo_access_token, stage.schema_file)
+                schema_code, version = gitops.get_schema_from_repo(stage.repo_url, stage.repo_branch, stage.repo_access_token, stage.schema_file)
 
                 # check schema
                 schema_code, schema = check_and_correct_stage_schema(stage.branch, stage.name, schema_code)

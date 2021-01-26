@@ -94,7 +94,7 @@ def run(step, **kwargs):  # pylint: disable=unused-argument
             utils.execute('git remote set-url origin %s' % url, cwd=repo_dir, out_prefix='', timeout=timeout, raise_on_error=True)
 
             # pull latest stuff from remote
-            ret, _ = utils.execute('git pull', cwd=repo_dir, out_prefix='', timeout=timeout, raise_on_error=True)
+            utils.execute('git pull', cwd=repo_dir, out_prefix='', timeout=timeout, raise_on_error=True)
 
             restore_ok = True
         except:

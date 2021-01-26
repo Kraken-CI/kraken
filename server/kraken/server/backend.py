@@ -1,4 +1,4 @@
-# Copyright 2020 The Kraken Authors
+# Copyright 2020-2021 The Kraken Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,7 +31,9 @@ from .models import db, Job, Step, Agent, TestCase, TestCaseResult, Issue, Secre
 from .models import System
 from . import consts
 from .bg import jobs as bg_jobs
+from . import minioops
 from .. import version
+
 
 log = logging.getLogger(__name__)
 
@@ -64,62 +66,6 @@ def _left_time(job):
              job.name, job.system, job.agents_group_id,
              now, slip, timeout, timeout2, timeout3)
     return int(timeout3)
-
-
-def _get_or_create_minio_bucket_for_artifacts(job):
-    bucket_name = '%08d' % job.run.flow.branch_id
-
-    minio_addr = os.environ.get('KRAKEN_MINIO_ADDR', consts.DEFAULT_MINIO_ADDR)
-    access_key = os.environ['MINIO_ACCESS_KEY']
-    secret_key = os.environ['MINIO_SECRET_KEY']
-    mc = minio.Minio(minio_addr, access_key=access_key, secret_key=secret_key, secure=False)
-    found = mc.bucket_exists(bucket_name)
-    if not found:
-        mc.make_bucket(bucket_name)
-
-    return bucket_name
-
-
-def _get_or_create_minio_bucket_for_cache(job, step):
-    bucket_name = '%08d-cache' % job.run.flow.branch_id
-
-    if 'key' in step:
-        cache_keys = [step['key']]
-    else:
-        cache_keys = step['keys']
-    folders = {}
-    for key in cache_keys:
-        fldr = '%d-%s/%s' % (job.run.stage_id,
-                             job.name.replace(' ', '_'),
-                             key)
-        folders[key] = fldr
-
-    minio_addr = os.environ.get('KRAKEN_MINIO_ADDR', consts.DEFAULT_MINIO_ADDR)
-    access_key = os.environ['MINIO_ACCESS_KEY']
-    secret_key = os.environ['MINIO_SECRET_KEY']
-    mc = minio.Minio(minio_addr, access_key=access_key, secret_key=secret_key, secure=False)
-    found = mc.bucket_exists(bucket_name)
-    if not found:
-        mc.make_bucket(bucket_name)
-
-    return bucket_name, folders
-
-
-def _get_or_create_minio_bucket_for_git(job, step):
-    bucket_name = '%08d-git' % job.run.flow.branch_id
-
-    repo_url = step['checkout']
-    folder = repo_url.replace('/', '_').replace(':', '_').replace('.', '_')
-
-    minio_addr = os.environ.get('KRAKEN_MINIO_ADDR', consts.DEFAULT_MINIO_ADDR)
-    access_key = os.environ['MINIO_ACCESS_KEY']
-    secret_key = os.environ['MINIO_SECRET_KEY']
-    mc = minio.Minio(minio_addr, access_key=access_key, secret_key=secret_key, secure=False)
-    found = mc.bucket_exists(bucket_name)
-    if not found:
-        mc.make_bucket(bucket_name)
-
-    return bucket_name, folder
 
 
 def _handle_get_job(agent):
@@ -159,8 +105,8 @@ def _handle_get_job(agent):
     job['flow_id'] = agent.job.run.flow_id
     job['run_id'] = agent.job.run_id
 
-    minio_bucket = _get_or_create_minio_bucket_for_artifacts(agent.job)
-    minio_addr = os.environ.get('KRAKEN_MINIO_ADDR', consts.DEFAULT_MINIO_ADDR)
+    minio_bucket = minioops.get_or_create_minio_bucket_for_artifacts(agent.job.run.flow.branch_id)
+    minio_addr, minio_access_key, minio_secret_key = minioops.get_minio_addr()
 
     # prepare steps
     project = agent.job.run.flow.branch.project
@@ -195,9 +141,9 @@ def _handle_get_job(agent):
 
             # add minio info for storing git repo bundle
             step['minio_addr'] = minio_addr
-            step['minio_access_key'] = os.environ['MINIO_ACCESS_KEY']
-            step['minio_secret_key'] = os.environ['MINIO_SECRET_KEY']
-            bucket, folder = _get_or_create_minio_bucket_for_git(agent.job, step)
+            step['minio_access_key'] = minio_access_key
+            step['minio_secret_key'] = minio_secret_key
+            bucket, folder = minioops.get_or_create_minio_bucket_for_git(agent.job.run.flow.branch_id, step['checkout'])
             step['minio_bucket'] = bucket
             step['minio_folder'] = folder
 
@@ -205,17 +151,17 @@ def _handle_get_job(agent):
         if step['tool'] == 'artifacts':
             step['minio_addr'] = minio_addr
             step['minio_bucket'] = minio_bucket
-            step['minio_access_key'] = os.environ['MINIO_ACCESS_KEY']
-            step['minio_secret_key'] = os.environ['MINIO_SECRET_KEY']
+            step['minio_access_key'] = minio_access_key
+            step['minio_secret_key'] = minio_secret_key
             if 'destination' not in step:
                 step['destination'] = '.'
 
         # custom fields for CACHE
         if step['tool'] == 'cache':
             step['minio_addr'] = minio_addr
-            step['minio_access_key'] = os.environ['MINIO_ACCESS_KEY']
-            step['minio_secret_key'] = os.environ['MINIO_SECRET_KEY']
-            bucket, folders = _get_or_create_minio_bucket_for_cache(agent.job, step)
+            step['minio_access_key'] = minio_access_key
+            step['minio_secret_key'] = minio_secret_key
+            bucket, folders = minioops.get_or_create_minio_bucket_for_cache(agent.job, step)
             step['minio_bucket'] = bucket
             if step['action'] == 'save':
                 step['minio_folder'] = folders

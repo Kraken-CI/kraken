@@ -67,6 +67,9 @@ services:
       - KRAKEN_SERVER_PORT
       - KRAKEN_SERVER_ADDR
       - KRAKEN_PLANNER_URL
+      - KRAKEN_MINIO_ADDR
+      - MINIO_ACCESS_KEY
+      - MINIO_SECRET_KEY
     networks:
       - db_net
     depends_on:

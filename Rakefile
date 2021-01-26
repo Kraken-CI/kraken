@@ -254,7 +254,7 @@ end
 
 task :run_celery => './server/kraken/version.py' do
   Dir.chdir('server') do
-    sh "KRAKEN_CLICKHOUSE_ADDR=#{CLICKHOUSE_ADDR} ../venv/bin/poetry run kkcelery"
+    sh "KRAKEN_CLICKHOUSE_ADDR=#{CLICKHOUSE_ADDR} KRAKEN_MINIO_ADDR=#{MINIO_ADDR} MINIO_ACCESS_KEY='UFSEHRCFU4ACUEWHCHWU' MINIO_SECRET_KEY='HICSHuhIIUhiuhMIUHIUhGFfUHugy6fGJuyyfiGY' ../venv/bin/poetry run kkcelery"
   end
 end
 
