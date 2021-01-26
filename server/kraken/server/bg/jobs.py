@@ -15,7 +15,6 @@
 import os
 import logging
 import datetime
-import subprocess
 import xmlrpc.client
 
 from celery import Task
@@ -24,7 +23,6 @@ from sqlalchemy.sql.expression import asc, desc
 from sqlalchemy.orm.attributes import flag_modified
 import giturlparse
 import pytimeparse
-import minio
 
 from .clry import app as clry_app
 from ..models import db, Run, Job, TestCaseResult, Branch, Flow, Stage, Project

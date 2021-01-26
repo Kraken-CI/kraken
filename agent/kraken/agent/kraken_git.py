@@ -119,7 +119,7 @@ def run(step, **kwargs):  # pylint: disable=unused-argument
     repo_bundle_path = os.path.abspath(os.path.join(repo_dir, '..', 'repo.bundle'))
     ret, _ = utils.execute('git bundle create %s --all' % repo_bundle_path, cwd=repo_dir, out_prefix='', timeout=300)
     if ret != 0:
-        log.warn('repo bundle failed, skipping it')
+        log.warning('repo bundle failed, skipping it')
     else:
         minio_addr = step['minio_addr']
         minio_addr = os.environ.get('KRAKEN_MINIO_ADDR', minio_addr)

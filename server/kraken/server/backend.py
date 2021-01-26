@@ -25,7 +25,6 @@ from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy.exc import IntegrityError
 from psycopg2.errors import UniqueViolation  # pylint: disable=no-name-in-module
 import giturlparse
-import minio
 
 from .models import db, Job, Step, Agent, TestCase, TestCaseResult, Issue, Secret, Artifact, File
 from .models import System

@@ -17,35 +17,8 @@ import glob
 import logging
 import xml.etree.ElementTree as ET
 
-from . import utils
-
 
 log = logging.getLogger(__name__)
-
-
-
-def _upload_results(q, finished, report_result):
-    while not finished.is_set():
-        try:
-            item = q.get(timeout=0.1)
-        except queue.Empty:
-            finished.wait(0.1)
-            continue
-        test, result = item
-        if report_result:
-            if result == 'pass':
-                status = 1  # passed
-            elif result == 'fail':
-                status = 2  # failed
-            elif result == 'skip':
-                status = 4  # disabled
-            else:
-                status = 3  # error
-            res = dict(cmd='', test=test, status=status)
-            report_result(res)
-        else:
-            log.info('%s --- %s', test, result)
-        q.task_done()
 
 
 def _parse_junit_file(fp, report_result):

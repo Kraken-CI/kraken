@@ -18,8 +18,6 @@ import logging
 import tempfile
 import subprocess
 
-import minio
-
 from . import minioops
 
 log = logging.getLogger(__name__)
@@ -101,7 +99,7 @@ def get_repo_commits_since(branch_id, prev_run, repo_url, repo_branch):
         # bundle repo and cache it
         p = _run('git bundle create %s --all' % repo_bundle_path, check=False, cwd=repo_dir)
         if p.returncode != 0:
-            log.warn('repo bundle failed, skipping it')
+            log.warning('repo bundle failed, skipping it')
         else:
             log.info('store repo bundle %s -> %s / %s', repo_bundle_path, minio_bucket, minio_repo_bundle_path)
             try:
