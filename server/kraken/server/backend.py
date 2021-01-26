@@ -430,7 +430,7 @@ def _handle_dispatch_tests(agent, req):
         # TODO
         raise NotImplementedError
 
-    if tests_cnt == 1:
+    if tests_cnt == 1 or 'autosplit' not in step or not step['autosplit']:
         _create_test_records(step, tests)
         db.session.commit()
         return {'tests': tests}
