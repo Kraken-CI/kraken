@@ -25,23 +25,25 @@
 <!-- Grid with all projects -->
 <div class="p-grid">
   <div class="p-col-6" *ngFor="let proj of projects">
-    <div class="round-shadow" style="height: 100%">
-      <div>
-        <span style="font-size: 1.7em; display:inline-block; margin-top: 2px;">
+    <div class="round-shadow" style="height: 100%;">
+      <div style="display: flex; justify-content: space-between;">
+        <div style="font-size: 1.7em; margin-top: 2px;">
           <a routerLink="/projects/{{ proj.id }}" style="color: black;">Project <b>{{proj.name}}</b></a>
-        </span>
-        <div style="display:inline-block; float: right; margin-top: 10px;">
+        </div>
+        <div style="margin-top: 10px;">
           <a pButton icon="pi pi-cog" routerLink="/projects/{{ proj.id }}" class="p-button-secondary p-button-sm" style="margin-right: 6px;"></a>
           <p-button label="New Branch" icon="pi pi-plus" (onClick)="newBranch(proj)" styleClass="p-button-secondary p-button-sm"></p-button>
         </div>
       </div>
 
-      <div *ngFor="let branch of proj.branches" style="margin: 15px;">
-        <div style="font-weight: bold; font-size: 1.5em; margin: 0 0 10px 0;">
-          <i class="fa fa-code-fork" style="vertical-align: bottom; font-size: 1.7em; margin-right: 10px;"></i>
-          <a routerLink="/branches/{{ branch.id }}/ci">
-            {{ branch.name }}
-          </a>
+      <div class="p-grid">
+        <div *ngFor="let branch of proj.branches" style="padding: 15px;" class="p-col-4">
+          <div style="font-weight: bold; font-size: 1.5em; margin: 0 0 10px 0;">
+            <i class="fa fa-code-fork" style="vertical-align: bottom; font-size: 1.7em; margin-right: 10px;"></i>
+            <a routerLink="/branches/{{ branch.id }}/ci">
+              {{ branch.name }}
+            </a>
+          </div>
         </div>
       </div>
     </div>
