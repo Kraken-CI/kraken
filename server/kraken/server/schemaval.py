@@ -603,7 +603,6 @@ data8 = {
 
 schema = {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "http://example.com/product.schema.json",
     "title": "Schema of Kraken Workflow Schema",
     "description": "This is a schema that defines format of Kraken Workflow Schema.",
 
@@ -611,10 +610,11 @@ schema = {
     "additionalProperties": False,
     "properties": {
         "parent": {
-            "description": "aaa",
+            "description": "A name of the parent stage. `'root'` if there is no parent. This allows chaining stages.",
             "type": "string"
         },
         "triggers": {
+            "description": "One or more triggers that cause starting a new run of this stage.",
             "type": "object",
             "additionalProperties": False,
             "properties": {
@@ -1167,5 +1167,14 @@ def test():
             print('problems: %s' % str(ex))
 
 
+def dump_to_json():
+    import json
+    with open('kraken.schema.json', 'w') as fp:
+        json.dump(schema, fp)
+
 if __name__ == '__main__':
-    test()
+    import sys
+    if sys.argv[1] == 'test':
+        test()
+    elif sys.argv[1] == 'json':
+        dump_to_json()
