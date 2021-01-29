@@ -31,7 +31,10 @@ def redeploy(c, kk_ver):
     with c.cd(bld_dir):
         c.run('docker stack deploy --with-registry-auth -c kraken-docker-stack-%s.yaml kraken' % kk_ver)
     # do some cleanup
-    c.run('docker system prune -a -f')
+    c.run('docker container prune -f')
+    c.run('docker image prune -a -f')
+    c.run('docker builder prune -a -f')
+    c.run('docker volume prune -f')
     c.run('docker service update --force kraken_postgres')
     c.run('docker service update --force kraken_clickhouse')
     c.run('docker service update --force kraken_clickhouse-proxy')
