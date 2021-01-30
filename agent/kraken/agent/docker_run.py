@@ -94,8 +94,11 @@ class DockerExecContext:
         else:
             log.info('docker swarm not present')
 
+        dkr_sock = '/var/run/docker.sock'
+
         # prepare list of mounts from host agent container
         mounts = []
+        dkr_sock_mounted = False
         if utils.is_in_docker():
             # get current container with agent
             curr_cntr_id = os.environ['HOSTNAME']
@@ -104,12 +107,13 @@ class DockerExecContext:
             for mnt in self.curr_cntr.attrs['Mounts']:
                 mnt2 = docker.types.Mount(target=mnt['Destination'], source=mnt['Source'], type=mnt['Type'])
                 mounts.append(mnt2)
+                if mnt['Destination'] == dkr_sock:
+                    dkr_sock_mounted = True
 
         image = self.job['system']
         log.info('starting container %s, mounts: %s', image, mounts)
         volumes = None
-        dkr_sock = '/var/run/docker.sock'
-        if os.path.exists(dkr_sock):
+        if os.path.exists(dkr_sock) and not dkr_sock_mounted:
             volumes = {dkr_sock: {'bind': dkr_sock, 'mode': 'rw'}}
         self.cntr = self.client.containers.run(image, 'sleep %d' % (int(timeout) + 60), detach=True, mounts=mounts, volumes=volumes)
         log.info('docker container %s', self.cntr.id)
