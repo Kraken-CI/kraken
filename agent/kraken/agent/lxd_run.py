@@ -105,18 +105,18 @@ class LxdExecContext:
         self.cntr.files.put('/root/kktool', filedata)
 
         deadline = time.time() + timeout
-        self._async_run('chmod a+x kktool', '.', deadline)
-        logs = self._async_run('cat /etc/os-release', '/', deadline)
+        self._async_run('chmod a+x kktool', deadline, cwd='.')
+        logs = self._async_run('cat /etc/os-release', deadline)
         m = re.search('^ID="?(.*?)"?$', logs, re.M)
         distro = m.group(1).lower()
         if distro in ['debian', 'ubuntu']:
-            self._async_run('apt-get update', '/', deadline)
-            self._async_run('apt-get install -y python3', '/', deadline)
+            self._async_run('apt-get update', deadline)
+            self._async_run('apt-get install -y python3', deadline)
         elif distro in ['centos', 'fedora']:
-            self._async_run('yum install -y python3', '/', deadline)
+            self._async_run('yum install -y python3', deadline)
         elif 'suse' in distro:
             time.sleep(3)  # wait for network
-            self._async_run('zypper install -y curl python3 sudo system-group-wheel', '/', deadline)
+            self._async_run('zypper install -y curl python3 sudo system-group-wheel', deadline)
 
     def start(self, timeout):
         try:
@@ -163,7 +163,7 @@ class LxdExecContext:
             log.reset_ctx()
             log.set_ctx(job=self.job['id'])
 
-    def _async_run(self, cmd, cwd, deadline, env=None):
+    def _async_run(self, cmd, deadline, cwd='/', env=None):
         logs, exit_code = asyncio.run(self._lxd_run(cmd, cwd, deadline, env))
         if exit_code != 0:
             now = time.time()

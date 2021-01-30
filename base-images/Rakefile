@@ -9,7 +9,7 @@ images = {
 }
 
 all_blds = []
-all_push = []
+all_pushs = []
 images.each do | name, tags |
   task "push-#{name}" do
     tags.each do | tag |
@@ -27,8 +27,8 @@ images.each do | name, tags |
   end
 
   all_blds.append("bld-#{name}")
-  all_push.append("push-#{name}")
+  all_pushs.append("push-#{name}")
 end
 
-task :all_blds => all_blds
-task :all_push => all_push
+task :bld_all => all_blds
+task :push_all => all_pushs

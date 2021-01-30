@@ -106,48 +106,59 @@ class DockerExecContext:
                 mounts.append(mnt2)
 
         image = self.job['system']
-        log.info('starting container %s', image)
-        self.cntr = self.client.containers.run(image, 'sleep %d' % (int(timeout) + 60), detach=True, mounts=mounts)
+        log.info('starting container %s, mounts: %s', image, mounts)
+        volumes = None
+        dkr_sock = '/var/run/docker.sock'
+        if os.path.exists(dkr_sock):
+            volumes = {dkr_sock: {'bind': dkr_sock, 'mode': 'rw'}}
+        self.cntr = self.client.containers.run(image, 'sleep %d' % (int(timeout) + 60), detach=True, mounts=mounts, volumes=volumes)
         log.info('docker container %s', self.cntr.id)
 
         archive = _create_archive(os.path.realpath(os.path.join(consts.AGENT_DIR, 'kktool')), arcname='kktool')
         self.cntr.put_archive('/', archive)
 
         deadline = time.time() + timeout
-        logs = self._async_run('cat /etc/os-release', '/', deadline, None, 'root')
+        logs = self._async_run('cat /etc/os-release', deadline)
         m = re.search('^ID="?(.*?)"?$', logs, re.M)
         distro = m.group(1).lower()
         #m = re.search('^VERSION_ID="(.*)"$', logs, re.M)
         #version = m.group(1)
+        self._async_run("ls -al %s" % dkr_sock, deadline)
         if distro in ['debian', 'ubuntu']:
-            self._async_run('apt-get update', '/', deadline, None, 'root')
+            self._async_run('apt-get update', deadline)
             self._async_run('apt-get install -y --no-install-recommends locales openssh-client '
                            'ca-certificates sudo git unzip zip gnupg curl wget make net-tools '
                            'python3 python3-pytest python3-venv python3-docker python3-setuptools',
-                           '/', deadline, None, 'root')
-            self._async_run('ln -sf /usr/share/zoneinfo/Etc/UTC /etc/localtime', '/', deadline, None, 'root')
-            self._async_run('locale-gen en_US.UTF-8', '/', deadline, None, 'root')
+                           deadline)
+            self._async_run('ln -sf /usr/share/zoneinfo/Etc/UTC /etc/localtime', deadline)
+            self._async_run('locale-gen en_US.UTF-8', deadline)
             try:
-                self._async_run('getent passwd kraken', '/', deadline, None, 'root')
+                self._async_run('getent passwd kraken', deadline)
             except:
-                self._async_run('useradd kraken -d /opt/kraken -m -s /bin/bash -G sudo', '/', deadline, None, 'root')
-            self._async_run('echo "kraken ALL=NOPASSWD: ALL" > /etc/sudoers.d/kraken', '/', deadline, None, 'root')
-            self._async_run('echo \'Defaults    env_keep += "DEBIAN_FRONTEND"\' > /etc/sudoers.d/kraken_env_keep', '/', deadline, None, 'root')
+                self._async_run('useradd kraken -d /opt/kraken -m -s /bin/bash -G sudo', deadline)
+            self._async_run('echo "kraken ALL=NOPASSWD: ALL" > /etc/sudoers.d/kraken', deadline)
+            self._async_run('echo \'Defaults    env_keep += "DEBIAN_FRONTEND"\' > /etc/sudoers.d/kraken_env_keep', deadline)
+            if os.path.exists(dkr_sock):
+                dkr_gid = self._async_run("stat -c '%%g' %s" % dkr_sock, deadline)
+                self._async_run("addgroup --gid %d docker" % int(dkr_gid.strip()), deadline)
         elif distro in ['centos', 'fedora']:
             pkgs = ('openssh-clients ca-certificates sudo git unzip zip gnupg curl wget make net-tools ' +
                     'python3 python3-pytest python3-virtualenv python3-setuptools')
             if distro == 'fedora':
                 pkgs += ' python3-docker'
-            self._async_run('yum install -y ' + pkgs, '/', deadline, None, 'root')
+            self._async_run('yum install -y ' + pkgs, deadline)
             if distro == 'centos':
-                self._async_run('python3 -m pip install docker-py', '/', deadline, None, 'root')
+                self._async_run('python3 -m pip install docker-py', deadline)
             try:
-                self._async_run('getent passwd kraken', '/', deadline, None, 'root')
+                self._async_run('getent passwd kraken', deadline)
             except:
-                self._async_run('useradd kraken -d /opt/kraken -m -s /bin/bash -G wheel --system', '/', deadline, None, 'root')
-            self._async_run('echo "kraken ALL=NOPASSWD: ALL" > /etc/sudoers.d/kraken', '/', deadline, None, 'root')
-            self._async_run('echo \'Defaults    env_keep += "DEBIAN_FRONTEND"\' > /etc/sudoers.d/kraken_env_keep', '/', deadline, None, 'root')
-
+                self._async_run('useradd kraken -d /opt/kraken -m -s /bin/bash -G wheel --system', deadline)
+            self._async_run('echo "kraken ALL=NOPASSWD: ALL" > /etc/sudoers.d/kraken', deadline)
+            if os.path.exists(dkr_sock):
+                dkr_gid = self._async_run("stat -c '%%g' %s" % dkr_sock, deadline)
+                self._async_run("groupadd --gid %d docker" % int(dkr_gid.strip()), deadline)
+        if os.path.exists(dkr_sock):
+            self._async_run('usermod -G docker kraken', deadline)
 
         # if agent is running inside docker then get or create lab_net and use it to communicate with execution container
         if utils.is_in_docker():
@@ -205,7 +216,7 @@ class DockerExecContext:
             except:
                 log.exception('IGNORED EXCEPTION')
 
-    def _async_run(self, cmd, cwd, deadline, env, user):
+    def _async_run(self, cmd, deadline, cwd='/', env=None, user='root'):
         logs, exit_code = asyncio.run(self._dkr_run(None, cmd, cwd, deadline, env, user))
         if exit_code != 0:
             now = time.time()
