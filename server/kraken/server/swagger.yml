@@ -1,8 +1,8 @@
 swagger: "2.0"
 info:
-  description: This is the swagger file that goes with our server code
-  version: "1.0.0"
-  title: Kraken CI ReST API
+  title: Server API
+  version: "1"
+  description: Kraken Server REST API
 consumes:
   - application/json
 produces:
@@ -239,10 +239,6 @@ paths:
       responses:
         "200":
           description: A paged array of runs
-          headers:
-            x-next:
-              type: string
-              description: A link to the next page of responses
           schema:
             $ref: '#/definitions/Branch'
         default:
@@ -336,10 +332,6 @@ paths:
       responses:
         "200":
           description: A paged array of runs
-          headers:
-            x-next:
-              type: string
-              description: A link to the next page of responses
           schema:
             $ref: '#/definitions/Flows'
         default:
@@ -384,10 +376,6 @@ paths:
       responses:
         "200":
           description: A paged array of runs
-          headers:
-            x-next:
-              type: string
-              description: A link to the next page of responses
           schema:
             $ref: '#/definitions/Flow'
         default:
@@ -410,10 +398,6 @@ paths:
       responses:
         "200":
           description: A paged array of runs
-          headers:
-            x-next:
-              type: string
-              description: A link to the next page of responses
           schema:
             $ref: '#/definitions/Runs'
         default:
@@ -457,10 +441,6 @@ paths:
       responses:
         "200":
           description: A paged array of runs
-          headers:
-            x-next:
-              type: string
-              description: A link to the next page of responses
           schema:
             $ref: '#/definitions/Artifacts'
         default:
@@ -543,10 +523,6 @@ paths:
       responses:
         "200":
           description: A paged array of runs
-          headers:
-            x-next:
-              type: string
-              description: A link to the next page of responses
           schema:
             $ref: '#/definitions/StageSchemaJson'
         default:
@@ -599,10 +575,6 @@ paths:
       responses:
         "200":
           description: A paged array of runs
-          headers:
-            x-next:
-              type: string
-              description: A link to the next page of responses
           schema:
             $ref: '#/definitions/Runs'
         default:
@@ -673,10 +645,6 @@ paths:
       responses:
         "200":
           description: A paged array of runs
-          headers:
-            x-next:
-              type: string
-              description: A link to the next page of responses
           schema:
             $ref: '#/definitions/Results'
         default:
@@ -716,10 +684,6 @@ paths:
       responses:
         "200":
           description: A paged array of runs
-          headers:
-            x-next:
-              type: string
-              description: A link to the next page of responses
           schema:
             $ref: '#/definitions/Jobs'
         default:
@@ -784,10 +748,6 @@ paths:
       responses:
         "200":
           description: A paged array of runs
-          headers:
-            x-next:
-              type: string
-              description: A link to the next page of responses
           schema:
             $ref: '#/definitions/Issues'
         default:
@@ -822,10 +782,6 @@ paths:
       responses:
         "200":
           description: A paged array of runs
-          headers:
-            x-next:
-              type: string
-              description: A link to the next page of responses
           schema:
             $ref: '#/definitions/Artifacts'
         default:
@@ -848,10 +804,6 @@ paths:
       responses:
         "200":
           description: A paged array of runs
-          headers:
-            x-next:
-              type: string
-              description: A link to the next page of responses
           schema:
             $ref: '#/definitions/Run'
         default:
@@ -873,10 +825,6 @@ paths:
       responses:
         "200":
           description: A paged array of runs
-          headers:
-            x-next:
-              type: string
-              description: A link to the next page of responses
           schema:
             $ref: '#/definitions/Run'
         default:
@@ -915,10 +863,6 @@ paths:
       responses:
         "200":
           description: A paged array of runs
-          headers:
-            x-next:
-              type: string
-              description: A link to the next page of responses
           schema:
             $ref: '#/definitions/Result'
         default:
@@ -953,10 +897,6 @@ paths:
       responses:
         "200":
           description: A paged array of runs
-          headers:
-            x-next:
-              type: string
-              description: A link to the next page of responses
           schema:
             $ref: '#/definitions/Results'
         default:
@@ -999,10 +939,6 @@ paths:
       responses:
         "200":
           description: A paged array of runs
-          headers:
-            x-next:
-              type: string
-              description: A link to the next page of responses
           schema:
             $ref: '#/definitions/Job'
         default:
@@ -1063,10 +999,6 @@ paths:
       responses:
         "200":
           description: A paged array of logs
-          headers:
-            x-next:
-              type: string
-              description: A link to the next page of responses
           schema:
             $ref: '#/definitions/Logs'
         default:
