@@ -1,0 +1,11 @@
+FROM centos:8
+
+RUN yum install -y openssh-clients ca-certificates sudo git unzip zip gnupg curl wget make net-tools \
+        python3 python3-pytest python3-virtualenv python3-setuptools && \
+        python3 -m pip install docker-py
+
+# Setup kraken user
+RUN useradd kraken -d /opt/kraken -m -s /bin/bash -G wheel --system \
+  && echo 'kraken ALL=NOPASSWD: ALL' >> /etc/sudoers.d/kraken
+
+WORKDIR /opt/kraken

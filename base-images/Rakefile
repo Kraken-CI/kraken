@@ -1,0 +1,34 @@
+images = {
+  'python'     => ['python:3.8.5', 'python:3.8', 'python:3', 'python:latest'],
+  'go'         => ['golang:1.15.7', 'golang:1.15', 'golang:latest'],
+  'openjdk'    => ['openjdk:11.0', 'openjdk:11', 'openjdk:latest'],
+  'ubuntu'     => ['ubuntu:20.04'],
+  'centos'     => ['centos:8'],
+  'fedora'     => ['fedora:33'],
+  'bld-kraken' => ['bld-kraken'],
+}
+
+all_blds = []
+all_push = []
+images.each do | name, tags |
+  task "push-#{name}" do
+    tags.each do | tag |
+      sh "docker push krakenci/#{tag}"
+    end
+  end
+
+  task "bld-#{name}" do
+    dkr_file = "docker-#{name}.txt"
+    main_tag = tags.shift
+    sh "docker build -t krakenci/#{main_tag} -f #{dkr_file} ."
+    tags.each do | tag |
+      sh "docker tag krakenci/#{main_tag} krakenci/#{tag}"
+    end
+  end
+
+  all_blds.append("bld-#{name}")
+  all_push.append("push-#{name}")
+end
+
+task :all_blds => all_blds
+task :all_push => all_push
