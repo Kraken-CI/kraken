@@ -1311,7 +1311,8 @@ definitions:
     properties:
       items:
         type: array
-        $ref: '#/definitions/Flow'
+        items:
+          $ref: '#/definitions/Flow'
       total:
         type: integer
         format: int64
@@ -1394,7 +1395,8 @@ definitions:
     properties:
       items:
         type: array
-        $ref: '#/definitions/Run'
+        items:
+          $ref: '#/definitions/Run'
       total:
         type: integer
         format: int64

@@ -619,10 +619,8 @@ schema = {
             "additionalProperties": False,
             "properties": {
                 "parent": {
+                    "description": "A parent stage to current one or 'root'. It allows defining a chain of stages.",
                     "type": "boolean"
-                },
-                "cron": {
-                    "type": "string"
                 },
                 "interval": {
                     "type": "string"
@@ -630,14 +628,9 @@ schema = {
                 "date": {
                     "type": "string"
                 },
-                "repository":{
-                    "type": "boolean"
-                },
-                "webhook": {
-                    "type": "boolean"
-                },
-                "manual": {
-                    "type": "boolean"
+                "cron": {
+                    "description": "A parent stage to current one or 'root'. It allows defining a chain of stages.",
+                    "type": "string"
                 },
                 "repo": {
                     "type": "object",
@@ -670,6 +663,9 @@ schema = {
                             }]
                         }
                     }
+                },
+                "manual": {
+                    "type": "boolean"
                 }
             }
         },
@@ -704,21 +700,26 @@ schema = {
             }
         },
         "flow_label": {
+            "description": "A custom label format for flows.",
             "type": "string"
         },
         "run_label": {
+            "description": "A custom label format for runs.",
             "type": "string"
         },
         "jobs": {
+            "description": "A list of jobs that are executed in the run. Jobs are executed in parallel.",
             "type": "array",
             "items": {
                 "type": "object",
                 "additionalProperties": False,
                 "properties": {
                     "name": {
+                        "description": "A name of the job.",
                         "type": "string"
                     },
                     "timeout": {
+                        "description": "An initial timeout of the job. If there are more than 10 historical succeded jobs then timeout is estimated automatically.",
                         "type": "integer",
                         "minimum": 30
                     },
