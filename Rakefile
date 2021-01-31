@@ -5,7 +5,7 @@ NODE_VER = 'v12.19.0'
 ENV['PATH'] = "#{TOOLS_DIR}/node-#{NODE_VER}-linux-x64/bin:#{ENV['PATH']}"
 NPX = "#{TOOLS_DIR}/node-#{NODE_VER}-linux-x64/bin/npx"
 NG = File.expand_path('ui/node_modules/.bin/ng')
-OPENAPI_GENERATOR_VER = '5.0.0-beta2'
+OPENAPI_GENERATOR_VER = '5.0.0'
 OPENAPI_GENERATOR = "#{TOOLS_DIR}/swagger-codegen-cli-#{OPENAPI_GENERATOR_VER}.jar"
 SWAGGER_FILE = File.expand_path("server/kraken/server/swagger.yml")
 
