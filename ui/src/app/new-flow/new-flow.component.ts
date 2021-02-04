@@ -5,6 +5,7 @@ import { TreeNode } from 'primeng/api'
 import { MenuItem } from 'primeng/api'
 import { MessageService } from 'primeng/api'
 
+import { AuthService } from '../auth.service'
 import { ManagementService } from '../backend/api/management.service'
 import { ExecutionService } from '../backend/api/execution.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
@@ -24,6 +25,7 @@ export class NewFlowComponent implements OnInit {
     constructor(
         private route: ActivatedRoute,
         private router: Router,
+        public auth: AuthService,
         protected managementService: ManagementService,
         protected executionService: ExecutionService,
         protected breadcrumbService: BreadcrumbsService,

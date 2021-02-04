@@ -1,7 +1,9 @@
 <div>
   <div style="margin-bottom: 5px;">
     <a routerLink="/branches/{{branchId}}/{{kind}}/flows/new">
-      <p-button label="Run Flow" icon="pi pi-caret-right" [style]="{'margin-right': '5px'}"></p-button>
+      <p-button label="Run Flow" icon="pi pi-caret-right" [style]="{'margin-right': '5px'}"
+            [disabled]="!auth.hasPermission('manage')"
+            [pTooltip]="auth.permTip('manage')"></p-button>
     </a>
     <p-button label="Refresh" icon="pi pi-refresh" (onClick)="refresh()" [style]="{'margin-right': '10px'}"></p-button>
     <!--

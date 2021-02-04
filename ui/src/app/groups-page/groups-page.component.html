@@ -46,6 +46,8 @@
                 icon="pi pi-plus"
                 style="margin-right: 20px;"
                 (click)="showNewGroupDlg()"
+                [disabled]="!auth.hasPermission('manage')"
+                [pTooltip]="auth.permTip('manage')"
             ></button>
             <button
                 type="button"

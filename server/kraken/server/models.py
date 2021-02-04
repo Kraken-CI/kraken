@@ -763,3 +763,28 @@ def get_setting(group, name):
         raise Exception('cannot find setting %s:%s' % (group, name))
 
     return s.value
+
+
+class User(db.Model, DatesMixin):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True)
+    name = Column(Unicode(50))
+    password = Column(Unicode(150))
+    sessions = relationship("UserSession", back_populates="user")
+
+    def get_json(self):
+        return dict(id=self.id,
+                    user=self.name)
+
+
+class UserSession(db.Model, DatesMixin):
+    __tablename__ = "user_sessions"
+    id = Column(Integer, primary_key=True)
+    token = Column(Unicode(32))
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    user = relationship('User', back_populates="sessions")
+
+    def get_json(self):
+        return dict(id=self.id,
+                    token=self.token,
+                    user=self.user.get_json())

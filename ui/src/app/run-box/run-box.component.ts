@@ -4,6 +4,7 @@ import { Router } from '@angular/router'
 import { MenuItem } from 'primeng/api'
 import { MessageService } from 'primeng/api'
 
+import { AuthService } from '../auth.service'
 import { ExecutionService } from '../backend/api/execution.service'
 import { Run, Stage } from '../backend/model/models'
 
@@ -24,6 +25,7 @@ export class RunBoxComponent implements OnInit {
 
     constructor(
         private router: Router,
+        public auth: AuthService,
         protected executionService: ExecutionService,
         private msgSrv: MessageService
     ) {}
@@ -44,6 +46,8 @@ export class RunBoxComponent implements OnInit {
                     command: () => {
                         this.runRunJobs(opName)
                     },
+                    disabled: !this.auth.hasPermission('manage'),
+                    title: this.auth.permTip('manage'),
                 },
             ]
 
@@ -54,6 +58,8 @@ export class RunBoxComponent implements OnInit {
                     command: () => {
                         this.cancelRun()
                     },
+                    disabled: !this.auth.hasPermission('manage'),
+                    title: this.auth.permTip('manage'),
                 })
             }
 
@@ -113,6 +119,8 @@ export class RunBoxComponent implements OnInit {
                             ])
                         }
                     },
+                    disabled: !this.auth.hasPermission('manage'),
+                    title: this.auth.permTip('manage'),
                 },
             ]
         }

@@ -39,5 +39,7 @@
 </p-tabView>
 
 <div style="margin: 8px 0 0 4px;">
-  <p-button label="Save Settings" icon="pi pi-check" (onClick)="saveSettings()"></p-button>
+  <p-button label="Save Settings" icon="pi pi-check" (onClick)="saveSettings()"
+            [disabled]="!auth.hasPermission('manage')"
+            [pTooltip]="auth.permTip('manage')"></p-button>
 </div>

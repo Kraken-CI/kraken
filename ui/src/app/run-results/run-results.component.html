@@ -13,7 +13,9 @@
       <div style="margin: 0 0 10px 0; display: flex; justify-content: space-between;">
         <div style="display: flex;">
           <p-button label="Refresh" icon="pi pi-refresh" (onClick)="refreshJobs(jobsTable)"></p-button>
-          <p-button label="Rerun All" icon="pi pi-replay" (onClick)="rerunAll()" [style]="{'margin-left': '20px'}"></p-button>
+          <p-button label="Rerun All" icon="pi pi-replay" (onClick)="rerunAll()" [style]="{'margin-left': '20px'}"
+                    [disabled]="!auth.hasPermission('manage')"
+                    [pTooltip]="auth.permTip('manage')"></p-button>
           <div style="margin: auto 20px;">
             Run State: {{ run.state }}
           </div>
@@ -77,8 +79,12 @@
             </span>
           </div>
           <div style="margin: auto 0;">
-            <button *ngIf="job.state !== 5" type="button" pButton label="Cancel Job" icon="pi pi-times" (click)="cancelJob()"></button>
-            <button *ngIf="job.state === 5" type="button" pButton label="Rerun Job" icon="pi pi-replay" (click)="rerunJob()"></button>
+            <button *ngIf="job.state !== 5" type="button" pButton label="Cancel Job" icon="pi pi-times" (click)="cancelJob()"
+                    [disabled]="!auth.hasPermission('manage')"
+                    [pTooltip]="auth.permTip('manage')"></button>
+            <button *ngIf="job.state === 5" type="button" pButton label="Rerun Job" icon="pi pi-replay" (click)="rerunJob()"
+                    [disabled]="!auth.hasPermission('manage')"
+                    [pTooltip]="auth.permTip('manage')"></button>
           </div>
         </div>
 

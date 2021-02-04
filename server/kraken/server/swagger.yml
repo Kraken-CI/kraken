@@ -7,7 +7,84 @@ info:
 servers:
 - url: /api
 
+security:
+  - bearerAuth: []  # by default all functions require this security
+
 paths:
+  /sessions:
+    post:
+      tags:
+        - Users
+      summary: Create a session ie. log in.
+      operationId: login
+      security: []  # no security, it is used to login
+      requestBody:
+        description: project
+        content:
+          application/json:
+            schema:
+              x-body-name: creds
+              type: object
+              properties:
+                user:
+                  type: string
+                password:
+                  type: string
+      responses:
+        201:
+          description: Successfully created session.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+      x-codegen-request-body-name: creds
+      x-body-name: creds
+  /sessions/{session_id}:
+    delete:
+      tags:
+      - Users
+      summary: Logout
+      description: Logut
+      operationId: logout
+      parameters:
+      - name: session_id
+        in: path
+        description: ID of session
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        200:
+          description: Successfully deleted session
+          content: {}
+  /users/{user_id}/password:
+    put:
+      tags:
+      - Users
+      summary: Change user password
+      description: Change user password
+      operationId: change_password
+      parameters:
+      - name: user_id
+        in: path
+        description: ID of user
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        description: secret
+        content:
+          application/json:
+            schema:
+              x-body-name: user_password
+              $ref: '#/components/schemas/UserPassword'
+        required: true
+      responses:
+        201:
+          description: Successfully
+          content: {}
   /projects:
     get:
       tags:
@@ -1286,6 +1363,7 @@ paths:
         content:
           application/json:
             schema:
+              x-body-name: data
               $ref: '#/components/schemas/Agent'
         required: false
       responses:
@@ -1476,7 +1554,28 @@ paths:
                 $ref: '#/components/schemas/Diagnostics'
 
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      x-bearerInfoFunc: kraken.server.users.check_auth_token
+
   schemas:
+    Session:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        token:
+          type: string
+    UserPassword:
+      type: object
+      properties:
+        password_old:
+          type: string
+        password_new:
+          type: string
     Flow:
       type: object
       properties:

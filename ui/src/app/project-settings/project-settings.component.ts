@@ -6,6 +6,7 @@ import { Title } from '@angular/platform-browser'
 import { MessageService } from 'primeng/api'
 import { ConfirmationService } from 'primeng/api'
 
+import { AuthService } from '../auth.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
 import { ManagementService } from '../backend/api/management.service'
 
@@ -42,6 +43,7 @@ export class ProjectSettingsComponent implements OnInit {
     constructor(
         private route: ActivatedRoute,
         private router: Router,
+        public auth: AuthService,
         private msgSrv: MessageService,
         private confirmationService: ConfirmationService,
         protected breadcrumbService: BreadcrumbsService,

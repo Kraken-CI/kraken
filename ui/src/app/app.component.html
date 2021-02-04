@@ -44,45 +44,38 @@
 
 </style>
 
-<div class="content" role="main">
+<div class="content" role="main" *ngIf="session">
 
+  <!-- top bar with logo and menu -->
   <div class="toolbar" role="banner">
     <a style="font-size: 2rem; cursor: pointer; color: white;" class="logo1" href="/">Kraken<span style="font-size: 0.5em;"> {{ krakenVersion }}</span></a>
     <!--    <span style="font-size: 2rem; cursor: pointer;" [class]="logoClass" (click)="randomLogoFont()">Kraken</span> -->
 
-    <!--
-    <p-menubar [model]="topMenuItems" [style]="{'margin-right': '5px'}">
-      <div>
-        <input type="text" pInputText placeholder="Search">
-        <button pButton label="Logout" icon="fa fa-sign-out" style="margin-left:.25em"></button>
-      </div>
-    </p-menubar>
-    -->
 
-        <p-menubar [model]="topMenuItems" styleClass="menubar">
-            <!-- <p-progressSpinner -->
-            <!--     *ngIf="(loadingInProgress | async)['state']" -->
-            <!--     [pTooltip]="(loadingInProgress | async)['text']" -->
-            <!--     [style]="{ width: '30px', height: '30px', 'vertical-align': 'top', 'margin-right': '20px' }" -->
-            <!--     strokeWidth="6" -->
-            <!--     fill="#005B9F" -->
-            <!--     animationDuration=".5s" -->
-            <!-- ></p-progressSpinner> -->
-            <!-- <input type="text" pInputText placeholder="Search" /> -->
-            <!-- <button -->
-            <!--     pButton -->
-            <!--     label="Logout ({{ this.currentUser.username || this.currentUser.email }})" -->
-            <!--     (click)="signOut()" -->
-            <!--     icon="pi pi-sign-out" -->
-            <!--     style="margin-left:.25em" -->
-            <!-- ></button> -->
-        </p-menubar>
+    <p-menubar [model]="topMenuItems" styleClass="menubar">
+      <!-- <p-progressSpinner -->
+      <!--     *ngIf="(loadingInProgress | async)['state']" -->
+      <!--     [pTooltip]="(loadingInProgress | async)['text']" -->
+      <!--     [style]="{ width: '30px', height: '30px', 'vertical-align': 'top', 'margin-right': '20px' }" -->
+      <!--     strokeWidth="6" -->
+      <!--     fill="#005B9F" -->
+      <!--     animationDuration=".5s" -->
+      <!-- ></p-progressSpinner> -->
+      <!-- <input type="text" pInputText placeholder="Search" /> -->
+      <p-splitButton
+        label="Logout {{ session.user.user }}"
+        (onClick)="logout()"
+        icon="pi pi-sign-out"
+        [model]="logoutMenuItems"
+      ></p-splitButton>
+    </p-menubar>
 
   </div>
 
   <p-toast></p-toast>
   <p-confirmDialog header="Confirmation" icon="pi pi-exclamation-triangle"></p-confirmDialog>
 
+  <!-- breadcrumb bar -->
   <div style="display: flex; justify-content: space-between; background-color: #eee; align-items: center;">
     <app-breadcrumbs></app-breadcrumbs>
 <!--
@@ -97,3 +90,61 @@
     <router-outlet></router-outlet>
   </div>
 </div>
+
+<!-- login screen -->
+<div class="content" role="main" *ngIf="!session" style="background-color: #007ad9; color: white; height: 100vh;">
+
+  <div style="text-align: center; font-size: 10em; padding: 5rem 0 3rem 0;" class="logo1">
+    Kraken
+  </div>
+
+  <!-- login box -->
+  <div style="width: 20vw; margin: auto;">
+    <div class="p-fluid">
+      <div class="p-field">
+        <label for="username">Username</label>
+        <input id="username" type="username" pInputText [(ngModel)]="username" />
+      </div>
+      <div class="p-field">
+        <label for="password">Password</label>
+        <input id="password" type="password" pPassword [(ngModel)]="password" [feedback]="false"
+               (keyup)="passwdKeyUp($event.key)"/>
+      </div>
+    </div>
+
+    <div style="text-align: center;">
+      <p-button icon="pi pi-sign-in" (click)="login()" label="Login"></p-button>
+    </div>
+
+    <div style="text-align: center; padding-top: 20px; font-size: 1.2em;" *ngIf="isDemo() || isLocal()">
+      For demo enter: demo / demo.
+    </div>
+    <div style="text-align: center; padding-top: 8px; font-size: 1.2em;" *ngIf="isLocal()">
+      For admin enter: admin / admin.
+    </div>
+  </div>
+</div>
+
+<!-- change password box -->
+<p-dialog header="Change Password" [(visible)]="displayPasswdBox">
+  <div class="p-fluid">
+    <div class="p-field">
+      <label for="password-old">Old Password</label>
+      <input id="password-old" type="password" pPassword [(ngModel)]="passwordOld" [feedback]="false"/>
+    </div>
+    <div class="p-field">
+      <label for="password-new1">New Password</label>
+      <input id="password-new1" type="password" pPassword [(ngModel)]="passwordNew1" [feedback]="true"/>
+    </div>
+    <div class="p-field">
+      <label for="password-new2">Repeat New Password</label>
+      <input id="password-new2" type="password" pPassword [(ngModel)]="passwordNew2" [feedback]="false"
+             (keyup)="passwdChangeKeyUp($event.key)"/>
+    </div>
+  </div>
+
+  <p-footer>
+    <p-button icon="pi pi-times" (click)="displayPasswdBox=false" label="Cancel" styleClass="p-button-outlined"></p-button>
+    <p-button icon="pi pi-check" (click)="changePassword()" label="Change"></p-button>
+  </p-footer>
+</p-dialog>

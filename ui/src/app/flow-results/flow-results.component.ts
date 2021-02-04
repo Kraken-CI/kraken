@@ -6,6 +6,7 @@ import { TreeNode } from 'primeng/api'
 import { MenuItem } from 'primeng/api'
 import { MessageService } from 'primeng/api'
 
+import { AuthService } from '../auth.service'
 import { humanBytes } from '../utils'
 import { ManagementService } from '../backend/api/management.service'
 import { ExecutionService } from '../backend/api/execution.service'
@@ -39,6 +40,7 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
     constructor(
         private route: ActivatedRoute,
         private router: Router,
+        public auth: AuthService,
         protected managementService: ManagementService,
         protected executionService: ExecutionService,
         protected breadcrumbService: BreadcrumbsService,
@@ -249,6 +251,8 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
                 {
                     label: 'Rerun',
                     icon: 'pi pi-replay',
+                    disabled: !this.auth.hasPermission('manage'),
+                    title: this.auth.permTip('manage'),
                 },
             ]
         } else {
@@ -288,6 +292,8 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
                             ])
                         }
                     },
+                    disabled: !this.auth.hasPermission('manage'),
+                    title: this.auth.permTip('manage'),
                 },
             ]
         }

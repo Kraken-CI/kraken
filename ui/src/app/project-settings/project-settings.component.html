@@ -2,8 +2,12 @@
 <h2 style="padding-left: 7px;">{{ project.name }}</h2>
 
 <div style="float: right;">
-  <p-button label="New Branch" icon="pi pi-plus" (onClick)="newBranch()"></p-button>
-  <p-button label="Archive Project" icon="pi pi-trash" styleClass="p-button-danger p-button-outlined" [style]="{'margin-left': '30px'}" (onClick)="deleteProject()"></p-button>
+  <p-button label="New Branch" icon="pi pi-plus" (onClick)="newBranch()"
+            [disabled]="!auth.hasPermission('manage')"
+            [pTooltip]="auth.permTip('manage')"></p-button>
+  <p-button label="Archive Project" icon="pi pi-trash" styleClass="p-button-danger p-button-outlined" [style]="{'margin-left': '30px'}" (onClick)="deleteProject()"
+            [disabled]="!auth.hasPermission('manage')"
+            [pTooltip]="auth.permTip('manage')"></p-button>
 </div>
 </div>
 
@@ -53,7 +57,9 @@
 
     <!-- SECRETS -->
     <p-tabPanel header="Secrets">
-      <p-button label="New Secret" icon="pi pi-plus" (onClick)="newSecret()"></p-button>
+      <p-button label="New Secret" icon="pi pi-plus" (onClick)="newSecret()"
+                [disabled]="!auth.hasPermission('manage')"
+                [pTooltip]="auth.permTip('manage')"></p-button>
       <div class="p-grid">
         <div class="p-col-3">
           <div *ngFor="let s of project.secrets" style="margin: 6px 0 12px 6px; cursor: pointer;" class="round-shadow {{ s.selectedClass }}" (click)="selectSecret(s)">
@@ -101,9 +107,15 @@
             </div>
 
             <label><span> </span>
-              <p-button *ngIf="secretMode === 1" label="Add" icon="pi pi-plus" (onClick)="secretAdd()"></p-button>
-              <p-button *ngIf="secretMode === 2" label="Save" icon="pi pi-plus" (onClick)="secretSave()"></p-button>
-              <p-button *ngIf="secretMode === 2" label="Delete" icon="pi pi-trash" [style]="{'margin-left': '20px'}" styleClass="p-button-danger" (onClick)="secretDelete()"></p-button>
+              <p-button *ngIf="secretMode === 1" label="Add" icon="pi pi-plus" (onClick)="secretAdd()"
+                        [disabled]="!auth.hasPermission('manage')"
+                        [pTooltip]="auth.permTip('manage')"></p-button>
+              <p-button *ngIf="secretMode === 2" label="Save" icon="pi pi-plus" (onClick)="secretSave()"
+                        [disabled]="!auth.hasPermission('manage')"
+                        [pTooltip]="auth.permTip('manage')"></p-button>
+              <p-button *ngIf="secretMode === 2" label="Delete" icon="pi pi-trash" [style]="{'margin-left': '20px'}" styleClass="p-button-danger" (onClick)="secretDelete()"
+                        [disabled]="!auth.hasPermission('manage')"
+                        [pTooltip]="auth.permTip('manage')"></p-button>
             </label>
           </form>
 
@@ -132,6 +144,8 @@
             <div style="color: #777; margin-top: 10px;">use URL and Secret on GitHub WebHooks setup page to trigger this project</div>
         </td></tr>
       </table>
-      <p-button label="Save" icon="pi pi-check" (onClick)="saveWebhooks()"></p-button>
+      <p-button label="Save" icon="pi pi-check" (onClick)="saveWebhooks()"
+                [disabled]="!auth.hasPermission('manage')"
+                [pTooltip]="auth.permTip('manage')"></p-button>
     </p-tabPanel>
 </p-tabView>

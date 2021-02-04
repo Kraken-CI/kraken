@@ -6,6 +6,7 @@ import { Title } from '@angular/platform-browser'
 import { MessageService } from 'primeng/api'
 import { ConfirmationService } from 'primeng/api'
 
+import { AuthService } from '../auth.service'
 import { ManagementService } from '../backend/api/management.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
 import { Branch } from '../backend/model/models'
@@ -59,6 +60,7 @@ export class BranchMgmtComponent implements OnInit {
     constructor(
         private route: ActivatedRoute,
         private router: Router,
+        public auth: AuthService,
         protected managementService: ManagementService,
         protected breadcrumbService: BreadcrumbsService,
         private msgSrv: MessageService,

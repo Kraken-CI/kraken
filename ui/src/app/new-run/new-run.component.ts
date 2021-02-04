@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core'
 import { Router, ActivatedRoute, ParamMap } from '@angular/router'
 
+import { AuthService } from '../auth.service'
 import { ExecutionService } from '../backend/api/execution.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
 
@@ -20,6 +21,7 @@ export class NewRunComponent implements OnInit {
     constructor(
         private route: ActivatedRoute,
         private router: Router,
+        public auth: AuthService,
         protected executionService: ExecutionService,
         protected breadcrumbService: BreadcrumbsService
     ) {}

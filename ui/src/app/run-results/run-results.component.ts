@@ -5,6 +5,7 @@ import { Title } from '@angular/platform-browser'
 import { MenuItem } from 'primeng/api'
 import { MessageService } from 'primeng/api'
 
+import { AuthService } from '../auth.service'
 import { ExecutionService } from '../backend/api/execution.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
 import { TestCaseResults } from '../test-case-results'
@@ -71,6 +72,7 @@ export class RunResultsComponent implements OnInit, OnDestroy {
     constructor(
         private route: ActivatedRoute,
         private router: Router,
+        public auth: AuthService,
         protected executionService: ExecutionService,
         protected breadcrumbService: BreadcrumbsService,
         private msgSrv: MessageService,

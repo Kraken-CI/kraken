@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from passlib.hash import pbkdf2_sha256
 
 from .models import db, Branch, Stage, Agent, AgentsGroup, Setting, Tool, Project
+from .models import User
 from .schema import execute_schema_code
 
 INITIAL_SETTINGS = {
@@ -291,5 +293,19 @@ def prepare_initial_data():
                       schema_code=schema_code, schema=execute_schema_code(branch, schema_code))
         db.session.commit()
         print("   created Stage record 'Unit Tests'")
+
+    admin_user = User.query.filter_by(name="admin").one_or_none()
+    if admin_user is None:
+        password = pbkdf2_sha256.hash('admin')
+        agent = User(name='admin', password=password)
+        db.session.commit()
+        print("   created User record 'admin'")
+
+    demo_user = User.query.filter_by(name="demo").one_or_none()
+    if demo_user is None:
+        password = pbkdf2_sha256.hash('demo')
+        agent = User(name='demo', password=password)
+        db.session.commit()
+        print("   created User record 'demo'")
 
     _prepare_initial_preferences()

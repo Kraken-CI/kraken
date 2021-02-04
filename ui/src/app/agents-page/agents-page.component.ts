@@ -9,6 +9,7 @@ import { Title } from '@angular/platform-browser'
 
 import { MessageService, MenuItem } from 'primeng/api'
 
+import { AuthService } from '../auth.service'
 import { ManagementService } from '../backend/api/management.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
 
@@ -42,6 +43,7 @@ export class AgentsPageComponent implements OnInit {
     constructor(
         private route: ActivatedRoute,
         private router: Router,
+        public auth: AuthService,
         private msgSrv: MessageService,
         protected managementService: ManagementService,
         protected breadcrumbService: BreadcrumbsService,
@@ -90,6 +92,8 @@ export class AgentsPageComponent implements OnInit {
             {
                 label: 'Delete',
                 icon: 'pi pi-times',
+                disabled: !this.auth.hasPermission('manage'),
+                title: this.auth.permTip('manage'),
             },
         ]
 

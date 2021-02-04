@@ -28,4 +28,6 @@
     </tr>
   </table>
 </div>
-<p-button label="Submit" icon="pi pi-check" (onClick)="submitFlow()"></p-button>
+<p-button label="Submit" icon="pi pi-check" (onClick)="submitFlow()"
+          [disabled]="!auth.hasPermission('manage')"
+          [pTooltip]="auth.permTip('manage')"></p-button>

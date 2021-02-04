@@ -12,6 +12,8 @@ import { ManagementService } from '../backend/api/management.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
 import { datetimeToLocal } from '../utils'
 
+import { AuthService } from '../auth.service'
+
 @Component({
     selector: 'app-main-page',
     templateUrl: './main-page.component.html',
@@ -30,6 +32,7 @@ export class MainPageComponent implements OnInit {
     constructor(
         private route: ActivatedRoute,
         private router: Router,
+        public auth: AuthService,
         protected executionService: ExecutionService,
         protected managementService: ManagementService,
         protected breadcrumbService: BreadcrumbsService,

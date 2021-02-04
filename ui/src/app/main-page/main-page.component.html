@@ -19,7 +19,9 @@
 
 <!-- Page header -->
 <div style="margin-bottom: 10px;">
-  <p-button label="New Project" icon="pi pi-plus" (onClick)="newProject()"></p-button>
+  <p-button label="New Project" icon="pi pi-plus" (onClick)="newProject()"
+            [disabled]="!auth.hasPermission('manage')"
+            [pTooltip]="auth.permTip('manage')"></p-button>
 </div>
 
 <!-- Grid with all projects -->
@@ -31,8 +33,10 @@
           <a routerLink="/projects/{{ proj.id }}" style="color: black;">Project <b>{{proj.name}}</b></a>
         </div>
         <div style="margin-top: 10px;">
-          <a pButton icon="pi pi-cog" routerLink="/projects/{{ proj.id }}" class="p-button-secondary p-button-sm" style="margin-right: 6px;"></a>
-          <p-button label="New Branch" icon="pi pi-plus" (onClick)="newBranch(proj)" styleClass="p-button-secondary p-button-sm"></p-button>
+          <a pButton icon="pi pi-cog" routerLink="/projects/{{ proj.id }}" class="p-button-outlined p-button-secondary p-button-sm" style="margin-right: 6px;"></a>
+          <p-button label="New Branch" icon="pi pi-plus" (onClick)="newBranch(proj)" styleClass="p-button-outlined p-button-secondary p-button-sm"
+            [disabled]="!auth.hasPermission('manage')"
+            [pTooltip]="auth.permTip('manage')"></p-button>
         </div>
       </div>
 

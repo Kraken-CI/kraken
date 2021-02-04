@@ -65,7 +65,9 @@
         <td>{{agent.ip_address}}</td>
         <td>{{ agent.state }}</td>
         <td>
-          <p-inputSwitch [(ngModel)]="agent.disabled" (onChange)="changeAgentDisable($event, agent)"></p-inputSwitch>
+          <p-inputSwitch [(ngModel)]="agent.disabled" (onChange)="changeAgentDisable($event, agent)"
+                         [disabled]="!auth.hasPermission('manage')"
+                         [pTooltip]="auth.permTip('manage')"></p-inputSwitch>
         </td>
         <td>{{ agent.last_seen ? (agent.last_seen | localtime) : '' }}</td>
         <td>
@@ -165,7 +167,9 @@
           </td>
         </tr>
       </table>
-      <p-button label="Save" icon="pi pi-check" (onClick)="saveAgent(agentsTable)"></p-button>
+      <p-button label="Save" icon="pi pi-check" (onClick)="saveAgent(agentsTable)"
+                [disabled]="!auth.hasPermission('manage')"
+                [pTooltip]="auth.permTip('manage')"></p-button>
     </div>
     <div class="p-col-4">
       <table>

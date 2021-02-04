@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core'
 import { Title } from '@angular/platform-browser'
 
+import { AuthService } from '../auth.service'
 import { ManagementService } from '../backend/api/management.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
 
@@ -16,6 +17,7 @@ export class DiscoveredPageComponent implements OnInit {
     selectedAgents: any[]
 
     constructor(
+        public auth: AuthService,
         protected managementService: ManagementService,
         protected breadcrumbService: BreadcrumbsService,
         private titleService: Title

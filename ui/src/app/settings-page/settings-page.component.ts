@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Title } from '@angular/platform-browser'
 import { FormGroup, FormControl } from '@angular/forms'
 
+import { AuthService } from '../auth.service'
 import { MessageService } from 'primeng/api'
 
 import { BreadcrumbsService } from '../breadcrumbs.service'
@@ -30,6 +31,7 @@ export class SettingsPageComponent implements OnInit {
     })
 
     constructor(
+        public auth: AuthService,
         private msgSrv: MessageService,
         protected breadcrumbService: BreadcrumbsService,
         protected managementService: ManagementService,
