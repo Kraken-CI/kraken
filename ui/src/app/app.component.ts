@@ -120,11 +120,11 @@ export class AppComponent implements OnInit {
     }
 
     isDemo() {
-        return window.location.hostname === "lab.kraken.ci"
+        return window.location.hostname === 'lab.kraken.ci'
     }
 
     isLocal() {
-        return window.location.hostname === "localhost"
+        return window.location.hostname === 'localhost'
     }
 
     changePassword() {

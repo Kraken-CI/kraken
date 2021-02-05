@@ -12,7 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
+import json
+
 import jsonschema
+
+# pylint: disable=line-too-long
 
 data1 = {
     "parent": "Tarball",
@@ -1183,12 +1188,11 @@ def test():
 
 
 def dump_to_json():
-    import json
     with open('kraken.schema.json', 'w') as fp:
         json.dump(schema, fp)
 
+
 if __name__ == '__main__':
-    import sys
     if sys.argv[1] == 'test':
         test()
     elif sys.argv[1] == 'json':

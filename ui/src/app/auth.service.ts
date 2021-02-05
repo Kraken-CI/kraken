@@ -19,7 +19,7 @@ export class AuthService {
                 private api: UsersService,
                 private router: Router,
                 private msgSrv: MessageService) {
-        let session = localStorage.getItem('session')
+        const session = localStorage.getItem('session')
         if (session) {
             this.session = JSON.parse(session)
         } else {
@@ -31,7 +31,7 @@ export class AuthService {
     }
 
     login(user, password, returnUrl) {
-        const credentials = { user: user, password: password }
+        const credentials = { user, password }
         this.api.login(credentials).subscribe(
             data => {
                 this.session = data
