@@ -1,7 +1,7 @@
 <p-dialog header="New Stage in {{branch.name}} branch" [(visible)]="newStageDlgVisible">
   <input type="text" pInputText [(ngModel)]="stageName" (keydown)="newStageKeyDown($event)"/>
   <p-footer>
-    <button type="button" (click)="cancelNewStage()" pButton icon="pi pi-times" label="Cancel"></button>
+    <button type="button" (click)="cancelNewStage()" pButton icon="pi pi-times" label="Cancel" class="p-button-outlined p-button-secondary"></button>
     <button type="button" (click)="addNewStage()" pButton icon="pi pi-check" label="Add"></button>
   </p-footer>
 </p-dialog>

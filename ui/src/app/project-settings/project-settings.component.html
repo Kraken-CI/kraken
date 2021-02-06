@@ -14,7 +14,7 @@
 <p-dialog header="New Branch in {{project.name}}" [(visible)]="newBranchDlgVisible">
   <input type="text" pInputText [(ngModel)]="branchName" (keydown)="newBranchKeyDown($event)"/>
   <p-footer>
-    <button type="button" (click)="cancelNewBranch()" pButton icon="pi pi-times" label="Cancel"></button>
+    <button type="button" (click)="cancelNewBranch()" pButton icon="pi pi-times" label="Cancel" class="p-button-outlined p-button-secondary"></button>
     <button type="button" (click)="addNewBranch()" pButton icon="pi pi-check" label="Add"></button>
   </p-footer>
 </p-dialog>
