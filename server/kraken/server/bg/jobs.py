@@ -804,6 +804,7 @@ def refresh_schema_repo(self, stage_id):
                 return
 
             # store schema id db
+            prev_triggers = stage.schema['triggers']
             stage.schema = schema
             flag_modified(stage, 'schema')
             stage.schema_code = schema_code
@@ -813,7 +814,7 @@ def refresh_schema_repo(self, stage_id):
             stage.schema_from_repo_enabled = True
             if stage.triggers is None:
                 stage.triggers = {}
-            prepare_new_planner_triggers(stage.id, schema['triggers'], stage.schema['triggers'], stage.triggers)
+            prepare_new_planner_triggers(stage.id, schema['triggers'], prev_triggers, stage.triggers)
             flag_modified(stage, 'triggers')
             log.info('new schema: %s', stage.schema)
 

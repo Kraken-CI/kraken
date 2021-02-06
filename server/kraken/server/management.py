@@ -244,23 +244,24 @@ def get_stage(stage_id):
     return result, 200
 
 
-def update_stage(stage_id, data):
+def update_stage(stage_id, body):
     stage = Stage.query.filter_by(id=stage_id).one_or_none()
     if stage is None:
         abort(404, "Stage not found")
 
-    if 'name' in data:
-        stage.name = data['name']
+    if 'name' in body:
+        stage.name = body['name']
 
-    if 'description' in data:
-        stage.description = data['description']
+    if 'description' in body:
+        stage.description = body['description']
 
-    if 'enabled' in data:
-        stage.enabled = data['enabled']
+    if 'enabled' in body:
+        stage.enabled = body['enabled']
 
-    if 'schema_code' in data:
+    if 'schema_code' in body:
+        prev_triggers = stage.schema['triggers']
         try:
-            schema_code, schema = check_and_correct_stage_schema(stage.branch, data['name'], data['schema_code'])
+            schema_code, schema = check_and_correct_stage_schema(stage.branch, body['name'], body['schema_code'])
         except SchemaError as e:
             abort(400, str(e))
         stage.schema = schema
@@ -268,36 +269,36 @@ def update_stage(stage_id, data):
         flag_modified(stage, 'schema')
         if stage.triggers is None:
             stage.triggers = {}
-        prepare_new_planner_triggers(stage.id, schema['triggers'], stage.schema['triggers'], stage.triggers)
+        prepare_new_planner_triggers(stage.id, schema['triggers'], prev_triggers, stage.triggers)
         flag_modified(stage, 'triggers')
         log.info('new schema: %s', stage.schema)
 
     db.session.commit()
 
-    if 'schema_from_repo_enabled' in data:
-        schema_from_repo_enabled = data['schema_from_repo_enabled']
+    if 'schema_from_repo_enabled' in body:
+        schema_from_repo_enabled = body['schema_from_repo_enabled']
     else:
         schema_from_repo_enabled = stage.schema_from_repo_enabled
 
     if schema_from_repo_enabled:
-        if 'repo_url' in data:
-            stage.repo_url = data['repo_url']
-        if 'repo_branch' in data:
-            stage.repo_branch = data['repo_branch']
-        if 'repo_access_token' in data:
-            stage.repo_access_token = data['repo_access_token']
-        if 'schema_file' in data:
-            stage.schema_file = data['schema_file']
-        if 'repo_refresh_interval' in data:
+        if 'repo_url' in body:
+            stage.repo_url = body['repo_url']
+        if 'repo_branch' in body:
+            stage.repo_branch = body['repo_branch']
+        if 'repo_access_token' in body:
+            stage.repo_access_token = body['repo_access_token']
+        if 'schema_file' in body:
+            stage.schema_file = body['schema_file']
+        if 'repo_refresh_interval' in body:
             # check if interval can be parsed
             try:
-                int(data['repo_refresh_interval'])
+                int(body['repo_refresh_interval'])
             except:
                 try:
-                    int(pytimeparse.parse(data['repo_refresh_interval']))
+                    int(pytimeparse.parse(body['repo_refresh_interval']))
                 except:
                     abort(400, 'Incorrect repo refresh interval value')
-            stage.repo_refresh_interval = data['repo_refresh_interval']
+            stage.repo_refresh_interval = body['repo_refresh_interval']
             log.info('stage.repo_refresh_interval %s', stage.repo_refresh_interval)
 
         stage.repo_state = consts.REPO_STATE_REFRESHING

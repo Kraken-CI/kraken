@@ -639,11 +639,11 @@ paths:
           format: int64
       requestBody:
         description: stage
+        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/Stage'
-        required: false
       responses:
         201:
           description: Successfully created run

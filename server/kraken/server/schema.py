@@ -198,21 +198,26 @@ def prepare_new_planner_triggers(stage_id, new_triggers, prev_triggers, triggers
     planner_url = os.environ.get('KRAKEN_PLANNER_URL', consts.DEFAULT_PLANNER_URL)
     planner = xmlrpc.client.ServerProxy(planner_url, allow_none=True)
 
+    log.info('stage %d, triggers: new: %s, old: %s', stage_id, new_triggers, prev_triggers)
+
     # set up interval trigger
     if 'interval' in new_triggers:
         interval = int(pytimeparse.parse(new_triggers['interval']))
         if prev_triggers is None or 'interval' not in prev_triggers or 'interval_planner_job' not in triggers:
             args = (stage_id, consts.FLOW_KIND_CI, dict(reason='interval'))
             job = planner.add_job('kraken.server.pljobs:trigger_run', 'interval', args, None,
-                                  None, None, None, None, None, None, False, dict(seconds=int(interval)))
+                                  None, None, None, None, None, None, False, dict(seconds=interval))
             triggers['interval_planner_job'] = job['id']
+            log.info('added new interval trigger - interval:%ds: next: %s', interval, job['next_run_time'])
         else:
             prev_interval = int(pytimeparse.parse(prev_triggers['interval']))
             if interval != prev_interval:
-                planner.reschedule_job(new_triggers['interval_planner_job'], 'interval', dict(seconds=int(interval)))
+                job = planner.reschedule_job(triggers['interval_planner_job'], 'interval', dict(seconds=interval))
+                log.info('rescheduled interval trigger - interval:%ds: next: %s', interval, job['next_run_time'])
     elif 'interval_planner_job' in triggers:
         planner.remove_job(triggers['interval_planner_job'])
         del triggers['interval_planner_job']
+        log.info('deleted interval trigger')
 
     # set up date trigger
     if 'date' in new_triggers:
@@ -222,10 +227,12 @@ def prepare_new_planner_triggers(stage_id, new_triggers, prev_triggers, triggers
             job = planner.add_job('kraken.server.pljobs:trigger_run', 'date', args, None,
                                   None, None, None, None, None, None, False, dict(run_date=str(run_date)))
             triggers['date_planner_job'] = job['id']
+            log.info('added new date trigger - date:%s: next: %s', str(run_date), job['next_run_time'])
         else:
             prev_run_date = dateutil.parser.parse(prev_triggers['date'])
             if run_date != prev_run_date:
-                planner.reschedule_job(new_triggers['date_planner_job'], 'date', dict(run_date=str(run_date)))
+                job = planner.reschedule_job(triggers['date_planner_job'], 'date', dict(run_date=str(run_date)))
+                log.info('rescheduled date trigger - date:%s: next: %s', str(run_date), job['next_run_time'])
     elif 'date_planner_job' in triggers:
         planner.remove_job(triggers['date_planner_job'])
         del triggers['date_planner_job']
@@ -240,12 +247,14 @@ def prepare_new_planner_triggers(stage_id, new_triggers, prev_triggers, triggers
                                   None, None, None, None, None, None, False,
                                   dict(minute=minutes, hour=hours, day=days, month=months, day_of_week=dow))
             triggers['cron_planner_job'] = job['id']
+            log.info('added new cron trigger - rule:%ds: next: %s', cron_rule, job['next_run_time'])
         else:
             prev_cron_rule = prev_triggers['cron']
             if cron_rule != prev_cron_rule:
                 minutes, hours, days, months, dow = cron_rule.split()
-                planner.reschedule_job(new_triggers['cron_planner_job'], 'cron',
-                                       dict(minute=minutes, hour=hours, day=days, month=months, day_of_week=dow))
+                job = planner.reschedule_job(triggers['cron_planner_job'], 'cron',
+                                             dict(minute=minutes, hour=hours, day=days, month=months, day_of_week=dow))
+                log.info('rescheduled cron trigger - rule:%s: next: %s', cron_rule, job['next_run_time'])
     elif 'cron_planner_job' in triggers:
         planner.remove_job(triggers['cron_planner_job'])
         del triggers['cron_planner_job']
@@ -256,15 +265,18 @@ def prepare_new_planner_triggers(stage_id, new_triggers, prev_triggers, triggers
         if prev_triggers is None or 'repo' not in prev_triggers or 'repo_interval_planner_job' not in triggers:
             args = (stage_id, consts.FLOW_KIND_CI, dict(reason='repo_interval'))
             job = planner.add_job('kraken.server.pljobs:trigger_run', 'repo_interval', args, None,
-                                  None, None, None, None, None, None, False, dict(seconds=int(interval)))
+                                  None, None, None, None, None, None, False, dict(seconds=interval))
             triggers['repo_interval_planner_job'] = job['id']
+            log.info('added new repo interval trigger - interval:%ds: next: %s', interval, job['next_run_time'])
         else:
             prev_interval = int(pytimeparse.parse(prev_triggers['repo']['interval']))
             if interval != prev_interval:
-                planner.reschedule_job(new_triggers['repo_interval_planner_job'], 'interval', dict(seconds=int(interval)))
+                job = planner.reschedule_job(triggers['repo_interval_planner_job'], 'interval', dict(seconds=interval))
+                log.info('rescheduled repo interval trigger - interval:%ds: next: %s', interval, job['next_run_time'])
     elif 'repo_interval_planner_job' in triggers:
         planner.remove_job(triggers['repo_interval_planner_job'])
         del triggers['repo_interval_planner_job']
+        log.info('deleted repo interval trigger')
 
     if triggers == {}:
         triggers['parent'] = True
