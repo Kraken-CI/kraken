@@ -24,6 +24,7 @@ import clickhouse_driver
 from . import consts
 from .models import db, Branch, Flow, Run, Stage, Job, Step, TestCaseResult
 from .models import TestCase, Issue, Artifact
+from .schema import SchemaError
 from . import exec_utils
 
 log = logging.getLogger(__name__)
@@ -137,7 +138,10 @@ def run_run_jobs(run_id):
     else:
         replay = True
 
-    exec_utils.trigger_jobs(run, replay=replay)
+    try:
+        exec_utils.trigger_jobs(run, replay=replay)
+    except SchemaError as e:
+        abort(400, str(e))
 
     data = run.get_json()
 

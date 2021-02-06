@@ -28,7 +28,7 @@ from .clry import app as clry_app
 from ..models import db, Run, Job, TestCaseResult, Branch, Flow, Stage, Project
 from ..schema import prepare_new_planner_triggers
 from ..schema import check_and_correct_stage_schema
-from .. import exec_utils
+from .. import exec_utils  # pylint: disable=cyclic-import
 from .. import consts
 from .. import notify
 from .. import logs

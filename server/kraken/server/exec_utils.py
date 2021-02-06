@@ -19,7 +19,7 @@ from sqlalchemy.orm.attributes import flag_modified
 
 from . import consts
 from .models import db, BranchSequence, Flow, Run, Job, Step, AgentsGroup, Tool, Agent, AgentAssignment, System
-from .schema import check_and_correct_stage_schema, SchemaError, prepare_secrets, substitute_vars
+from .schema import check_and_correct_stage_schema, prepare_secrets, substitute_vars
 from . import dbutils
 
 log = logging.getLogger(__name__)
@@ -194,10 +194,8 @@ def _setup_schema_context(run):
 def _reeval_schema(run):
     context = _setup_schema_context(run)
 
-    try:
-        schema_code, schema = check_and_correct_stage_schema(run.stage.branch, run.stage.name, run.stage.schema_code, context)
-    except SchemaError as e:
-        abort(400, str(e))
+    schema_code, schema = check_and_correct_stage_schema(run.stage.branch, run.stage.name, run.stage.schema_code, context)
+
     run.stage.schema = schema
     run.stage.schema_code = schema_code
     flag_modified(run.stage, 'schema')
