@@ -76,16 +76,22 @@
           </span>
         </td>
         <td>
+          <span *ngIf="agent.host_info">
           {{ agent.host_info['system_type'] }} /
           {{ agent.host_info['system'] }}
+          </span>
         </td>
         <td>
+          <span *ngIf="agent.host_info">
           {{ agent.host_info['isolation_type'] }}
           {{ agent.host_info['isolation'] === 'bare-metal' ? '' : ' / ' + agent.host_info['isolation'] }}
+          </span>
         </td>
         <td>
-          <div *ngFor="let hi of filterHostInfo(agent.host_info)">
-            <span style="color: #888;">{{ hi.key }}</span>: {{ hi.value }}
+          <div *ngIf="agent.host_info">
+            <div *ngFor="let hi of filterHostInfo(agent.host_info)">
+              <span style="color: #888;">{{ hi.key }}</span>: {{ hi.value }}
+            </div>
           </div>
         </td>
         <td>{{ agent.user_attrs }}</td>

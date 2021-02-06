@@ -28,7 +28,7 @@ from .clry import app as clry_app
 from ..models import db, Run, Job, TestCaseResult, Branch, Flow, Stage, Project
 from ..schema import prepare_new_planner_triggers
 from ..schema import check_and_correct_stage_schema
-from .. import execution  # pylint: disable=cyclic-import
+from .. import exec_utils
 from .. import consts
 from .. import notify
 from .. import logs
@@ -88,7 +88,7 @@ def _trigger_stages(run):
             continue
 
         if stage.enabled:
-            execution.start_run(stage, run.flow, reason=dict(reason='parent', run_id=run.id))
+            exec_utils.start_run(stage, run.flow, reason=dict(reason='parent', run_id=run.id))
         else:
             log.info('stage %s not started because it is disabled', stage.name)
 
@@ -554,7 +554,7 @@ def job_completed(self, job_id):
                     break
 
             if is_completed:
-                execution.complete_run(run, now)
+                exec_utils.complete_run(run, now)
 
     except Exception as exc:
         log.exception('will retry')
@@ -666,7 +666,7 @@ def trigger_run(self, stage_id, flow_kind=consts.FLOW_KIND_CI, reason=None):
             # create run for current stage
             if reason is None:
                 reason = dict(reason='unknown')
-            execution.start_run(stage, flow, reason=reason, repo_data=repo_data)
+            exec_utils.start_run(stage, flow, reason=reason, repo_data=repo_data)
 
     except Exception as exc:
         log.exception('will retry')
@@ -710,7 +710,7 @@ def trigger_flow(self, project_id, trigger_data=None):
 
             # handle the case when this is the first flow in the branch
             if last_flow is None:
-                execution.create_flow(branch.id, flow_kind, {})
+                exec_utils.create_a_flow(branch, flow_kind, {})
                 return
 
             trigger_git_url = giturlparse.parse(trigger_data['repo'])
@@ -759,11 +759,11 @@ def trigger_flow(self, project_id, trigger_data=None):
                     last_flow.trigger_data = trigger_data
                     db.session.commit()
 
-                execution.start_run(stage, last_flow, reason=reason)
+                exec_utils.start_run(stage, last_flow, reason=reason)
                 started_something = True
 
             if not started_something:
-                execution.create_flow(branch.id, flow_kind, {}, trigger_data)
+                exec_utils.create_a_flow(branch, flow_kind, {}, trigger_data)
 
     except Exception as exc:
         log.exception('will retry')

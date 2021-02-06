@@ -47,9 +47,6 @@ class Planner:
                      idx + 1, j['name'], j['trigger'], j['func'], j['args'], j['kwargs'], j['next_run_time'])
 
     def _job_to_dict(self, job):
-        #log.info('trigger %s', type(job.trigger))
-        #log.info('   interval %s', job.trigger.interval)
-        #log.info('   fire %s', job.next_run_time)
         if isinstance(job.trigger, IntervalTrigger):
             trigger = 'interval'
         elif isinstance(job.trigger, DateTrigger):

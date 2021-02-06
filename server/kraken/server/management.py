@@ -31,29 +31,28 @@ from .schema import prepare_new_planner_triggers
 log = logging.getLogger(__name__)
 
 
-def create_project(project):
-    project_rec = Project.query.filter_by(name=project['name']).one_or_none()
-    if project_rec is not None:
-        abort(400, "Project with name %s already exists" % project['name'])
+def create_project(body):
+    project = Project.query.filter_by(name=body['name']).one_or_none()
+    if project is not None:
+        abort(400, "Project with name %s already exists" % body['name'])
 
-    new_project = Project(name=project['name'], description=project.get('description', ''))
+    new_project = Project(name=body['name'], description=body.get('description', ''))
     db.session.commit()
 
     return new_project.get_json(), 201
 
 
-def update_project(project_id, project):
-    project_rec = Project.query.filter_by(id=project_id).one_or_none()
-    if project_rec is None:
+def update_project(project_id, body):
+    project = Project.query.filter_by(id=project_id).one_or_none()
+    if project is None:
         abort(404, "Project not found")
 
-    if 'webhooks' in project:
-        project_rec.webhooks = project['webhooks']
+    if 'webhooks' in body:
+        project.webhooks = body['webhooks']
 
     db.session.commit()
 
-    result = project_rec.get_json()
-    log.info('result: %s', result)
+    result = project.get_json()
     return result, 200
 
 
@@ -85,38 +84,31 @@ def get_projects():
     return {'items': projects, 'total': len(projects)}, 200
 
 
-def create_branch(project_id, branch):
-    """
-    This function creates a new person in the people structure
-    based on the passed in person data
-
-    :param person:  person to create in people structure
-    :return:        201 on success, 406 on person exists
-    """
+def create_branch(project_id, body):
     project = Project.query.filter_by(id=project_id).one_or_none()
     if project is None:
         abort(404, "Project not found")
 
-    new_branch = Branch(project=project, name=branch['name'])
-    BranchSequence(branch=new_branch, kind=consts.BRANCH_SEQ_FLOW, value=0)
-    BranchSequence(branch=new_branch, kind=consts.BRANCH_SEQ_CI_FLOW, value=0)
-    BranchSequence(branch=new_branch, kind=consts.BRANCH_SEQ_DEV_FLOW, value=0)
+    branch = Branch(project=project, name=body['name'])
+    BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_FLOW, value=0)
+    BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_CI_FLOW, value=0)
+    BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_DEV_FLOW, value=0)
     db.session.commit()
 
-    return new_branch.get_json(), 201
+    return branch.get_json(), 201
 
 
-def update_branch(branch_id, branch):
-    branch_rec = Branch.query.filter_by(id=branch_id).one_or_none()
-    if branch_rec is None:
+def update_branch(branch_id, body):
+    branch = Branch.query.filter_by(id=branch_id).one_or_none()
+    if branch is None:
         abort(404, "Branch not found")
 
-    if 'name' in branch:
-        branch_rec.name = branch['name']
+    if 'name' in body:
+        branch.name = body['name']
 
     db.session.commit()
 
-    result = branch_rec.get_json()
+    result = branch.get_json()
     return result, 200
 
 
@@ -138,101 +130,92 @@ def delete_branch(branch_id):
     return {}, 200
 
 
-def create_secret(project_id, secret):
+def create_secret(project_id, body):
     project = Project.query.filter_by(id=project_id).one_or_none()
     if project is None:
         abort(400, "Project with id %s does not exist" % project_id)
 
-    if secret['kind'] == 'ssh-key':
+    if body['kind'] == 'ssh-key':
         kind = consts.SECRET_KIND_SSH_KEY
-        data = dict(username=secret['username'],
-                    key=secret['key'])
-    elif secret['kind'] == 'simple':
+        data = dict(username=body['username'],
+                    key=body['key'])
+    elif body['kind'] == 'simple':
         kind = consts.SECRET_KIND_SIMPLE
-        data = dict(secret=secret['secret'])
+        data = dict(secret=body['secret'])
     else:
         abort(400, "Wrong data")
 
-    s = Secret(project=project, name=secret['name'], kind=kind, data=data)
+    secret = Secret(project=project, name=body['name'], kind=kind, data=data)
     db.session.commit()
 
-    return s.get_json(), 201
+    return secret.get_json(), 201
 
 
-def update_secret(secret_id, secret):
-    secret_rec = Secret.query.filter_by(id=secret_id).one_or_none()
-    if secret_rec is None:
+def update_secret(secret_id, body):
+    secret = Secret.query.filter_by(id=secret_id, deleted=None).one_or_none()
+    if secret is None:
         abort(404, "Secret not found")
 
-    log.info('secret %s', secret)
-    if 'name' in secret:
-        old_name = secret_rec.name
-        secret_rec.name = secret['name']
-        log.info('changed name from %s to %s', old_name, secret_rec.name)
+    if 'name' in body:
+        old_name = secret.name
+        secret.name = body['name']
+        log.info('changed name from %s to %s', old_name, secret.name)
 
-    if secret_rec.kind == consts.SECRET_KIND_SIMPLE:
-        if 'secret' in secret and secret['secret'] != '******':
-            secret_rec.data['secret'] = secret['secret']
-    elif secret_rec.kind == consts.SECRET_KIND_SSH_KEY:
-        if 'username' in secret:
-            secret_rec.data['username'] = secret['username']
-        if 'key' in secret and secret['key'] != '******':
-            secret_rec.data['key'] = secret['key']
-    flag_modified(secret_rec, 'data')
+    if secret.kind == consts.SECRET_KIND_SIMPLE:
+        if 'secret' in body and body['secret'] != '******':
+            secret.data['secret'] = body['secret']
+    elif secret.kind == consts.SECRET_KIND_SSH_KEY:
+        if 'username' in body:
+            secret.data['username'] = body['username']
+        if 'key' in body and body['key'] != '******':
+            secret.data['key'] = body['key']
+    flag_modified(secret, 'data')
 
     db.session.commit()
 
-    result = secret_rec.get_json()
-    log.info(result)
+    result = secret.get_json()
     return result, 200
 
 
 def delete_secret(secret_id):
-    secret_rec = Secret.query.filter_by(id=secret_id).one_or_none()
-    if secret_rec is None:
+    secret = Secret.query.filter_by(id=secret_id, deleted=None).one_or_none()
+    if secret is None:
         abort(404, "Secret not found")
 
-    secret_rec.deleted = datetime.datetime.utcnow()
+    secret.deleted = datetime.datetime.utcnow()
     db.session.commit()
 
     return {}, 200
 
 
-def create_stage(branch_id, stage):
-    """
-    This function creates a new person in the people structure
-    based on the passed in person data
-
-    :param person:  person to create in people structure
-    :return:        201 on success, 406 on person exists
-    """
+def create_stage(branch_id, body):
     branch = Branch.query.filter_by(id=branch_id).one_or_none()
     if branch is None:
         abort(404, "Branch not found")
 
     schema_code = None
-    if 'schema_code' in stage:
-        schema_code = stage['schema_code']
+    if 'schema_code' in body:
+        schema_code = body['schema_code']
 
     try:
-        schema_code, schema = check_and_correct_stage_schema(branch, stage['name'], schema_code)
+        schema_code, schema = check_and_correct_stage_schema(branch, body['name'], schema_code)
     except SchemaError as e:
         abort(400, str(e))
 
     # create record
-    new_stage = Stage(branch=branch, name=stage['name'], schema=schema, schema_code=schema_code)
-    BranchSequence(branch=branch, stage=new_stage, kind=consts.BRANCH_SEQ_RUN, value=0)
-    BranchSequence(branch=branch, stage=new_stage, kind=consts.BRANCH_SEQ_CI_RUN, value=0)
-    BranchSequence(branch=branch, stage=new_stage, kind=consts.BRANCH_SEQ_DEV_RUN, value=0)
+    stage = Stage(branch=branch, name=body['name'], schema=schema, schema_code=schema_code)
+    BranchSequence(branch=branch, stage=stage, kind=consts.BRANCH_SEQ_RUN, value=0)
+    BranchSequence(branch=branch, stage=stage, kind=consts.BRANCH_SEQ_CI_RUN, value=0)
+    BranchSequence(branch=branch, stage=stage, kind=consts.BRANCH_SEQ_DEV_RUN, value=0)
     db.session.flush()
 
     triggers = {}
-    prepare_new_planner_triggers(new_stage.id, schema['triggers'], None, triggers)
-    new_stage.triggers = triggers
+    prepare_new_planner_triggers(stage.id, schema['triggers'], None, triggers)
+    stage.triggers = triggers
 
     db.session.commit()
 
-    return new_stage.get_json(), 201
+    return stage.get_json(), 201
 
 
 def get_stage(stage_id):
@@ -331,7 +314,8 @@ def delete_stage(stage_id):
     return {}, 200
 
 
-def get_stage_schema_as_json(stage_id, schema_code):
+def get_stage_schema_as_json(stage_id, body):
+    schema_code = body
     stage = Stage.query.filter_by(id=stage_id).one_or_none()
     if stage is None:
         abort(404, "Stage not found")
@@ -395,7 +379,8 @@ def get_agents(unauthorized=None, start=0, limit=10):
     return {'items': agents, 'total': total}, 200
 
 
-def update_agents(agents):
+def update_agents(body):
+    agents = body
     log.info('agents %s', agents)
 
     agents2 = []
@@ -413,16 +398,16 @@ def update_agents(agents):
     return {}, 200
 
 
-def update_agent(agent_id, data):
+def update_agent(agent_id, body):
     agent = Agent.query.filter_by(id=agent_id).one_or_none()
     if agent is None:
         abort(404, "Agent not found")
 
-    if 'groups' in data:
+    if 'groups' in body:
         # check new groups
         new_groups = set()
-        if data['groups']:
-            for g_id in data['groups']:
+        if body['groups']:
+            for g_id in body['groups']:
                 g = AgentsGroup.query.filter_by(id=g_id['id']).one_or_none()
                 if g is None:
                     abort(404, "Agents Group with id %s not found" % g_id)
@@ -446,8 +431,8 @@ def update_agent(agent_id, data):
         for a in added:
             AgentAssignment(agent=agent, agents_group=a)
 
-    if 'disabled' in data:
-        agent.disabled = data['disabled']
+    if 'disabled' in body:
+        agent.disabled = body['disabled']
 
     db.session.commit()
 
@@ -492,21 +477,21 @@ def get_groups(start=0, limit=10):
     return {'items': groups, 'total': total}, 200
 
 
-def create_group(group):
-    group_rec = AgentsGroup.query.filter_by(name=group['name']).one_or_none()
-    if group_rec is not None:
-        abort(400, "Group with name %s already exists" % group['name'])
+def create_group(body):
+    group = AgentsGroup.query.filter_by(name=body['name']).one_or_none()
+    if group is not None:
+        abort(400, "Group with name %s already exists" % body['name'])
 
     project = None
-    if 'project_id' in group:
-        project = Project.query.filter_by(id=group['project_id']).one_or_none()
+    if 'project_id' in body:
+        project = Project.query.filter_by(id=body['project_id']).one_or_none()
         if project is None:
-            abort(400, "Cannot find project with id %s" % group['project_id'])
+            abort(400, "Cannot find project with id %s" % body['project_id'])
 
-    new_group = AgentsGroup(name=group['name'], project=project)
+    group = AgentsGroup(name=body['name'], project=project)
     db.session.commit()
 
-    return new_group.get_json(), 201
+    return group.get_json(), 201
 
 
 def update_group():
@@ -537,12 +522,12 @@ def get_settings():
     return groups, 200
 
 
-def update_settings(settings):
-    settings_recs = Setting.query.filter_by().all()
+def update_settings(body):
+    settings = Setting.query.filter_by().all()
 
-    for group_name, group in settings.items():
+    for group_name, group in body.items():
         for name, val in group.items():
-            for s in settings_recs:
+            for s in settings:
                 if s.group == group_name and s.name == name:
                     if s.val_type == 'password' and val == '':
                         continue
@@ -550,10 +535,8 @@ def update_settings(settings):
 
     db.session.commit()
 
-    groups, _ = get_settings()
-    log.info('settings %s', groups)
-
-    return groups, 200
+    settings, _ = get_settings()
+    return settings, 200
 
 
 def get_branch_sequences(branch_id):

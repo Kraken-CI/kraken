@@ -23,7 +23,6 @@ paths:
         content:
           application/json:
             schema:
-              x-body-name: creds
               type: object
               properties:
                 user:
@@ -37,8 +36,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Session'
-      x-codegen-request-body-name: creds
-      x-body-name: creds
   /sessions/{session_id}:
     delete:
       tags:
@@ -78,7 +75,6 @@ paths:
         content:
           application/json:
             schema:
-              x-body-name: user_password
               $ref: '#/components/schemas/UserPassword'
         required: true
       responses:
@@ -113,7 +109,6 @@ paths:
         201:
           description: Successfully created run
           content: {}
-      x-codegen-request-body-name: project
   /projects/{project_id}:
     get:
       tags:
@@ -164,7 +159,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Project'
-      x-codegen-request-body-name: project
     delete:
       tags:
       - Management
@@ -212,7 +206,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Secret'
-      x-codegen-request-body-name: secret
   /secrets/{secret_id}:
     put:
       tags:
@@ -239,7 +232,6 @@ paths:
         201:
           description: Successfully
           content: {}
-      x-codegen-request-body-name: secret
     delete:
       tags:
       - Management
@@ -284,7 +276,6 @@ paths:
         201:
           description: Successfully created run
           content: {}
-      x-codegen-request-body-name: branch
   /branches/{branch_id}:
     put:
       tags:
@@ -314,7 +305,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Branch'
-      x-codegen-request-body-name: branch
     delete:
       tags:
       - Management
@@ -469,7 +459,6 @@ paths:
         201:
           description: Successfully created run
           content: {}
-      x-codegen-request-body-name: flow
   /branches/{branch_id}/stages:
     post:
       tags:
@@ -496,7 +485,6 @@ paths:
         201:
           description: Successfully created run
           content: {}
-      x-codegen-request-body-name: stage
   /flows/{flow_id}:
     get:
       tags:
@@ -576,7 +564,6 @@ paths:
         201:
           description: Successfully created run
           content: {}
-      x-codegen-request-body-name: run
   /flows/{flow_id}/artifacts:
     get:
       tags:
@@ -648,7 +635,6 @@ paths:
         201:
           description: Successfully created run
           content: {}
-      x-codegen-request-body-name: data
     delete:
       tags:
       - Management
@@ -701,7 +687,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
-      x-codegen-request-body-name: schema_code
   /stages/{stage_id}/schedule:
     get:
       tags:
@@ -1155,7 +1140,6 @@ paths:
         201:
           description: Successfully created run
           content: {}
-      x-codegen-request-body-name: job2
   /jobs/{job_id}:
     put:
       tags:
@@ -1321,7 +1305,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
-      x-codegen-request-body-name: agents
   /agents/{agent_id}:
     get:
       tags:
@@ -1363,7 +1346,6 @@ paths:
         content:
           application/json:
             schema:
-              x-body-name: data
               $ref: '#/components/schemas/Agent'
         required: false
       responses:
@@ -1373,7 +1355,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Agent'
-      x-codegen-request-body-name: data
     delete:
       tags:
       - Management
@@ -1433,7 +1414,6 @@ paths:
         201:
           description: Successfully created group
           content: {}
-      x-codegen-request-body-name: group
   /groups/{group_id}:
     get:
       tags:
@@ -1484,7 +1464,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Group'
-      x-codegen-request-body-name: group
     delete:
       tags:
       - Management
@@ -1537,7 +1516,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Settings'
-      x-codegen-request-body-name: settings
   /diagnostics:
     get:
       tags:

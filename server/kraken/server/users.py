@@ -41,7 +41,8 @@ def _check_user_password(user_id_or_name, password):
 
     return user
 
-def login(creds):
+def login(body):
+    creds = body
     # find user for given name with given password
     user = _check_user_password(creds['user'], creds['password'])
     if user is None:
