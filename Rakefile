@@ -399,6 +399,7 @@ task :build_docker => DOCKER_COMPOSE do
 end
 
 task :publish_docker => DOCKER_COMPOSE do
+  sh 'cp dot.env .env'
   Rake::Task["build_docker"].invoke
 
   # push built images
@@ -413,6 +414,7 @@ task :publish_docker => DOCKER_COMPOSE do
 end
 
 task :compose_to_swarm => DOCKER_COMPOSE do
+  sh 'cp lab.env .env'
   sh 'cp docker-compose.yaml docker-compose-swarm-tmp.yaml'
   sh "yq e 'del(.services.*.depends_on)'                         -i docker-compose-swarm-tmp.yaml"
   sh "yq e 'del(.services.*.build)'                              -i docker-compose-swarm-tmp.yaml"
