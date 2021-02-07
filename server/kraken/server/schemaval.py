@@ -743,6 +743,7 @@ schema = {
                         "minimum": 30
                     },
                     "steps": {
+                        "description": "An array of steps that are executed by an agent. Each step has indicated tool that is executing it. Steps are executed in given order.",
                         "type": "array",
                         "items": {
                             "type": "object",
@@ -752,35 +753,51 @@ schema = {
                                     "additionalProperties": False,
                                     "properties": {
                                         "tool": {
+                                            "description": "A tool for storing and retrieving artifacts in Kraken global storage.",
                                             "const": "artifacts"
                                         },
                                         "action": {
+                                            "description": "An action that artifacts tool should execute. Default is `upload`.",
                                             "type": "string",
                                             "enum": ["download", "upload"]
                                         },
                                         "source": {
+                                            "description": "A path or list of paths that should be archived or retreived. A path can indicate a folder or a file. A path, in case of upload action, can contain globbing signs `*` or `**`. A path can be relative or absolute.",
                                             "oneOf": [{
+                                                "description": "A single path.",
                                                 "type": "string"
                                             }, {
+                                                "description": "A list of paths.",
                                                 "type": "array",
                                                 "items": {
                                                     "type": "string"
                                                 }
                                             }]
                                         },
+                                        "destination": {
+                                            "description": "A path were the artifact(s) should be stored. In case of download action, if the destination folder does not exist then it is created.",
+                                            "default": ".",
+                                            "type": "string"
+                                        },
                                         "cwd": {
+                                            "description": "A current working directory where the step is executed. It is optional.",
                                             "type": "string"
                                         },
                                         "public": {
+                                            "description": "Determines if artifacts should be public and available to users in web UI (`True`) or if they should be only accessible internally to other stages but only in the same flow (`False`).",
+                                            "default": False,
                                             "type": "boolean"
                                         },
                                         "attempts": {
+                                            "description": "A number of times the step is retried if if it returns error. It is optional.",
                                             "type": "integer"
                                         },
                                         "sleep_time_after_attempt": {
+                                            "description": "A sleep time between subsequent execution attempts. It is optional.",
                                             "type": "integer"
                                         }
-                                    }
+                                    },
+                                    "required": ["tool", "source"]
                                 },
                                 "else": {
                                     "additionalProperties": False,
@@ -793,28 +810,40 @@ schema = {
                                     "additionalProperties": False,
                                     "properties": {
                                         "tool": {
+                                            "description": "A tool that executes provided command in a shell.",
                                             "const": "shell"
                                         },
-                                        "cwd": {
+                                        "cmd": {
+                                            "description": "A command to execute.",
                                             "type": "string"
                                         },
-                                        "timeout": {
-                                            "type": "integer",
-                                            "minimum": 30
+                                        "cwd": {
+                                            "description": "A current working directory where the step is executed. It is optional.",
+                                            "type": "string"
                                         },
-                                        "cmd": {
+                                        "user": {
+                                            "description": "A user that is used to execute a command.",
+                                            "default": "kraken",
                                             "type": "string"
                                         },
                                         "env": {
+                                            "description": "A dictionary with environment variables and their values.",
                                             "type": "object",
                                             "additionalProperties": {
                                                 "type": "string"
                                             }
                                         },
+                                        "timeout": {
+                                            "description": "A timeout in seconds that limits time of step execution. It is guareded by an agent. If it is exceeded then the step is arbitrarly terminated.",
+                                            "type": "integer",
+                                            "minimum": 30
+                                        },
                                         "attempts": {
+                                            "description": "A number of times the step is retried if if it returns error. It is optional.",
                                             "type": "integer"
                                         },
                                         "sleep_time_after_attempt": {
+                                            "description": "A sleep time between subsequent execution attempts. It is optional.",
                                             "type": "integer"
                                         }
                                     }
@@ -842,12 +871,15 @@ schema = {
                                             "type": "string"
                                         },
                                         "cwd": {
+                                            "description": "A current working directory where the step is executed. It is optional.",
                                             "type": "string"
                                         },
                                         "attempts": {
+                                            "description": "A number of times the step is retried if if it returns error. It is optional.",
                                             "type": "integer"
                                         },
                                         "sleep_time_after_attempt": {
+                                            "description": "A sleep time between subsequent execution attempts. It is optional.",
                                             "type": "integer"
                                         }
                                     }
@@ -866,12 +898,15 @@ schema = {
                                             "const": "nglint"
                                         },
                                         "cwd": {
+                                            "description": "A current working directory where the step is executed. It is optional.",
                                             "type": "string"
                                         },
                                         "attempts": {
+                                            "description": "A number of times the step is retried if if it returns error. It is optional.",
                                             "type": "integer"
                                         },
                                         "sleep_time_after_attempt": {
+                                            "description": "A sleep time between subsequent execution attempts. It is optional.",
                                             "type": "integer"
                                         }
                                     }
@@ -896,12 +931,15 @@ schema = {
                                             "type": "string"
                                         },
                                         "cwd": {
+                                            "description": "A current working directory where the step is executed. It is optional.",
                                             "type": "string"
                                         },
                                         "attempts": {
+                                            "description": "A number of times the step is retried if if it returns error. It is optional.",
                                             "type": "integer"
                                         },
                                         "sleep_time_after_attempt": {
+                                            "description": "A sleep time between subsequent execution attempts. It is optional.",
                                             "type": "integer"
                                         }
                                     }
@@ -920,6 +958,7 @@ schema = {
                                             "const": "git"
                                         },
                                         "timeout": {
+                                            "description": "A timeout in seconds that limits time of step execution. It is guareded by an agent. If it is exceeded then the step is arbitrarly terminated.",
                                             "type": "integer",
                                             "minimum": 30
                                         },
@@ -933,9 +972,11 @@ schema = {
                                             "type": "string"
                                         },
                                         "attempts": {
+                                            "description": "A number of times the step is retried if if it returns error. It is optional.",
                                             "type": "integer"
                                         },
                                         "sleep_time_after_attempt": {
+                                            "description": "A sleep time between subsequent execution attempts. It is optional.",
                                             "type": "integer"
                                         }
                                     }
@@ -963,12 +1004,15 @@ schema = {
                                             "type": "string"
                                         },
                                         "cwd": {
+                                            "description": "A current working directory where the step is executed. It is optional.",
                                             "type": "string"
                                         },
                                         "attempts": {
+                                            "description": "A number of times the step is retried if if it returns error. It is optional.",
                                             "type": "integer"
                                         },
                                         "sleep_time_after_attempt": {
+                                            "description": "A sleep time between subsequent execution attempts. It is optional.",
                                             "type": "integer"
                                         }
                                     }
@@ -995,9 +1039,11 @@ schema = {
                                             }]
                                         },
                                         "attempts": {
+                                            "description": "A number of times the step is retried if if it returns error. It is optional.",
                                             "type": "integer"
                                         },
                                         "sleep_time_after_attempt": {
+                                            "description": "A sleep time between subsequent execution attempts. It is optional.",
                                             "type": "integer"
                                         }
                                     }
@@ -1038,9 +1084,11 @@ schema = {
                                             "type": "string"
                                         },
                                         "attempts": {
+                                            "description": "A number of times the step is retried if if it returns error. It is optional.",
                                             "type": "integer"
                                         },
                                         "sleep_time_after_attempt": {
+                                            "description": "A sleep time between subsequent execution attempts. It is optional.",
                                             "type": "integer"
                                         }
                                     }
@@ -1059,6 +1107,7 @@ schema = {
                                             "const": "gotest"
                                         },
                                         "timeout": {
+                                            "description": "A timeout in seconds that limits time of step execution. It is guareded by an agent. If it is exceeded then the step is arbitrarly terminated.",
                                             "type": "integer",
                                             "minimum": 30
                                         },
@@ -1069,12 +1118,15 @@ schema = {
                                             "type": "string"
                                         },
                                         "cwd": {
+                                            "description": "A current working directory where the step is executed. It is optional.",
                                             "type": "string"
                                         },
                                         "attempts": {
+                                            "description": "A number of times the step is retried if if it returns error. It is optional.",
                                             "type": "integer"
                                         },
                                         "sleep_time_after_attempt": {
+                                            "description": "A sleep time between subsequent execution attempts. It is optional.",
                                             "type": "integer"
                                         }
                                     }
@@ -1093,6 +1145,7 @@ schema = {
                                             "const": "junit_collect"
                                         },
                                         "cwd": {
+                                            "description": "A current working directory where the step is executed. It is optional.",
                                             "type": "string"
                                         },
                                         "file_glob": {
