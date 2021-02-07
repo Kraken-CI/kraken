@@ -748,9 +748,108 @@ schema = {
                         "items": {
                             "type": "object",
                             "oneOf": [{
+                                "if": { "properties": { "tool": { "const": "shell" } } },
+                                "then": {
+                                    "additionalProperties": False,
+                                    "required": ["tool", "cmd"],
+                                    "properties": {
+                                        "tool": {
+                                            "description": "A tool that executes provided command in a shell.",
+                                            "const": "shell"
+                                        },
+                                        "cmd": {
+                                            "description": "A command to execute.",
+                                            "type": "string"
+                                        },
+                                        "cwd": {
+                                            "description": "A current working directory where the step is executed.",
+                                            "default": ".",
+                                            "type": "string"
+                                        },
+                                        "user": {
+                                            "description": "A user that is used to execute a command.",
+                                            "default": "kraken",
+                                            "type": "string"
+                                        },
+                                        "env": {
+                                            "description": "A dictionary with environment variables and their values.",
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "timeout": {
+                                            "description": "A timeout in seconds that limits time of step execution. It is guareded by an agent. If it is exceeded then the step is arbitrarly terminated.",
+                                            "type": "integer",
+                                            "minimum": 30
+                                        },
+                                        "attempts": {
+                                            "description": "A number of times the step is retried if if it returns error.",
+                                            "default": 1,
+                                            "type": "integer"
+                                        },
+                                        "sleep_time_after_attempt": {
+                                            "description": "A sleep time between subsequent execution attempts.",
+                                            "default": 0,
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "else": {
+                                    "additionalProperties": False,
+                                    "properties": {
+                                    }
+                                }
+                            }, {
+                                "if": { "properties": { "tool": { "const": "git" } } },
+                                "then": {
+                                    "additionalProperties": False,
+                                    "required": ["tool", "checkout"],
+                                    "properties": {
+                                        "tool": {
+                                            "description": "A tool for cloning Git repository.",
+                                            "const": "git"
+                                        },
+                                        "checkout": {
+                                            "description": "An URL to the repository.",
+                                            "type": "string"
+                                        },
+                                        "branch": {
+                                            "description": "A branch to checkout.",
+                                            "default": "master",
+                                            "type": "string"
+                                        },
+                                        "destination": {
+                                            "description": "A destination folder for the repository. Default is empty ie. the name of the repository.",
+                                            "type": "string"
+                                        },
+                                        "timeout": {
+                                            "description": "A timeout in seconds that limits time of step execution. It is guareded by an agent. If it is exceeded then the step is arbitrarly terminated.",
+                                            "type": "integer",
+                                            "minimum": 30
+                                        },
+                                        "attempts": {
+                                            "description": "A number of times the step is retried if if it returns error. It is optional.",
+                                            "default": 1,
+                                            "type": "integer"
+                                        },
+                                        "sleep_time_after_attempt": {
+                                            "description": "A sleep time between subsequent execution attempts.",
+                                            "default": 0,
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "else": {
+                                    "additionalProperties": False,
+                                    "properties": {
+                                    }
+                                }
+                            }, {
                                 "if": { "properties": { "tool": { "const": "artifacts" } } },
                                 "then": {
                                     "additionalProperties": False,
+                                    "required": ["tool", "source"],
                                     "properties": {
                                         "tool": {
                                             "description": "A tool for storing and retrieving artifacts in Kraken global storage.",
@@ -780,7 +879,8 @@ schema = {
                                             "type": "string"
                                         },
                                         "cwd": {
-                                            "description": "A current working directory where the step is executed. It is optional.",
+                                            "description": "A current working directory where the step is executed.",
+                                            "default": ".",
                                             "type": "string"
                                         },
                                         "public": {
@@ -790,14 +890,15 @@ schema = {
                                         },
                                         "attempts": {
                                             "description": "A number of times the step is retried if if it returns error. It is optional.",
+                                            "default": 1,
                                             "type": "integer"
                                         },
                                         "sleep_time_after_attempt": {
-                                            "description": "A sleep time between subsequent execution attempts. It is optional.",
+                                            "description": "A sleep time between subsequent execution attempts.",
+                                            "default": 0,
                                             "type": "integer"
                                         }
-                                    },
-                                    "required": ["tool", "source"]
+                                    }
                                 },
                                 "else": {
                                     "additionalProperties": False,
@@ -805,45 +906,50 @@ schema = {
                                     }
                                 }
                             }, {
-                                "if": { "properties": { "tool": { "const": "shell" } } },
+                                "if": { "properties": { "tool": { "const": "cache" } } },
                                 "then": {
                                     "additionalProperties": False,
+                                    "required": ["tool", "action"],
                                     "properties": {
                                         "tool": {
-                                            "description": "A tool that executes provided command in a shell.",
-                                            "const": "shell"
+                                            "description": "A tool for storing and restoring files from cache.",
+                                            "const": "cache"
                                         },
-                                        "cmd": {
-                                            "description": "A command to execute.",
+                                        "action": {
+                                            "description": "An action that the tool should perform.",
+                                            "type": "string",
+                                            "enum": ["save", "restore"]
+                                        },
+                                        "key": {
+                                            "description": "A key under which files are stored in or restored from cache.",
                                             "type": "string"
                                         },
-                                        "cwd": {
-                                            "description": "A current working directory where the step is executed. It is optional.",
-                                            "type": "string"
-                                        },
-                                        "user": {
-                                            "description": "A user that is used to execute a command.",
-                                            "default": "kraken",
-                                            "type": "string"
-                                        },
-                                        "env": {
-                                            "description": "A dictionary with environment variables and their values.",
-                                            "type": "object",
-                                            "additionalProperties": {
+                                        "keys": {
+                                            "description": "A list of key under which files are restored from cache.",
+                                            "type": "array",
+                                            "items": {
                                                 "type": "string"
                                             }
                                         },
-                                        "timeout": {
-                                            "description": "A timeout in seconds that limits time of step execution. It is guareded by an agent. If it is exceeded then the step is arbitrarly terminated.",
-                                            "type": "integer",
-                                            "minimum": 30
+                                        "paths": {
+                                            "description": "Source paths used in `store` action.",
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "expiry": {
+                                            "description": "Not implemented yet.",
+                                            "type": "string"
                                         },
                                         "attempts": {
                                             "description": "A number of times the step is retried if if it returns error. It is optional.",
+                                            "default": 1,
                                             "type": "integer"
                                         },
                                         "sleep_time_after_attempt": {
-                                            "description": "A sleep time between subsequent execution attempts. It is optional.",
+                                            "description": "A sleep time between subsequent execution attempts.",
+                                            "default": 0,
                                             "type": "integer"
                                         }
                                     }
@@ -871,112 +977,18 @@ schema = {
                                             "type": "string"
                                         },
                                         "cwd": {
-                                            "description": "A current working directory where the step is executed. It is optional.",
+                                            "description": "A current working directory where the step is executed.",
+                                            "default": ".",
                                             "type": "string"
                                         },
                                         "attempts": {
                                             "description": "A number of times the step is retried if if it returns error. It is optional.",
+                                            "default": 1,
                                             "type": "integer"
                                         },
                                         "sleep_time_after_attempt": {
-                                            "description": "A sleep time between subsequent execution attempts. It is optional.",
-                                            "type": "integer"
-                                        }
-                                    }
-                                },
-                                "else": {
-                                    "additionalProperties": False,
-                                    "properties": {
-                                    }
-                                }
-                            }, {
-                                "if": { "properties": { "tool": { "const": "nglint" } } },
-                                "then": {
-                                    "additionalProperties": False,
-                                    "properties": {
-                                        "tool": {
-                                            "const": "nglint"
-                                        },
-                                        "cwd": {
-                                            "description": "A current working directory where the step is executed. It is optional.",
-                                            "type": "string"
-                                        },
-                                        "attempts": {
-                                            "description": "A number of times the step is retried if if it returns error. It is optional.",
-                                            "type": "integer"
-                                        },
-                                        "sleep_time_after_attempt": {
-                                            "description": "A sleep time between subsequent execution attempts. It is optional.",
-                                            "type": "integer"
-                                        }
-                                    }
-                                },
-                                "else": {
-                                    "additionalProperties": False,
-                                    "properties": {
-                                    }
-                                }
-                            }, {
-                                "if": { "properties": { "tool": { "const": "cloc" } } },
-                                "then": {
-                                    "additionalProperties": False,
-                                    "properties": {
-                                        "tool": {
-                                            "const": "cloc"
-                                        },
-                                        "not-match-f": {
-                                            "type": "string"
-                                        },
-                                        "exclude-dir": {
-                                            "type": "string"
-                                        },
-                                        "cwd": {
-                                            "description": "A current working directory where the step is executed. It is optional.",
-                                            "type": "string"
-                                        },
-                                        "attempts": {
-                                            "description": "A number of times the step is retried if if it returns error. It is optional.",
-                                            "type": "integer"
-                                        },
-                                        "sleep_time_after_attempt": {
-                                            "description": "A sleep time between subsequent execution attempts. It is optional.",
-                                            "type": "integer"
-                                        }
-                                    }
-                                },
-                                "else": {
-                                    "additionalProperties": False,
-                                    "properties": {
-                                    }
-                                }
-                            }, {
-                                "if": { "properties": { "tool": { "const": "git" } } },
-                                "then": {
-                                    "additionalProperties": False,
-                                    "properties": {
-                                        "tool": {
-                                            "const": "git"
-                                        },
-                                        "timeout": {
-                                            "description": "A timeout in seconds that limits time of step execution. It is guareded by an agent. If it is exceeded then the step is arbitrarly terminated.",
-                                            "type": "integer",
-                                            "minimum": 30
-                                        },
-                                        "checkout": {
-                                            "type": "string"
-                                        },
-                                        "branch": {
-                                            "type": "string"
-                                        },
-                                        "destination": {
-                                            "type": "string"
-                                        },
-                                        "attempts": {
-                                            "description": "A number of times the step is retried if if it returns error. It is optional.",
-                                            "type": "integer"
-                                        },
-                                        "sleep_time_after_attempt": {
-                                            "description": "A sleep time between subsequent execution attempts. It is optional.",
+                                            "description": "A sleep time between subsequent execution attempts.",
+                                            "default": 0,
                                             "type": "integer"
                                         }
                                     }
@@ -1004,15 +1016,148 @@ schema = {
                                             "type": "string"
                                         },
                                         "cwd": {
-                                            "description": "A current working directory where the step is executed. It is optional.",
+                                            "description": "A current working directory where the step is executed.",
+                                            "default": ".",
                                             "type": "string"
                                         },
                                         "attempts": {
                                             "description": "A number of times the step is retried if if it returns error. It is optional.",
+                                            "default": 1,
                                             "type": "integer"
                                         },
                                         "sleep_time_after_attempt": {
-                                            "description": "A sleep time between subsequent execution attempts. It is optional.",
+                                            "description": "A sleep time between subsequent execution attempts.",
+                                            "default": 0,
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "else": {
+                                    "additionalProperties": False,
+                                    "properties": {
+                                    }
+                                }
+                            }, {
+                                "if": { "properties": { "tool": { "const": "junit_collect" } } },
+                                "then": {
+                                    "additionalProperties": False,
+                                    "properties": {
+                                        "tool": {
+                                            "const": "junit_collect"
+                                        },
+                                        "cwd": {
+                                            "description": "A current working directory where the step is executed.",
+                                            "default": ".",
+                                            "type": "string"
+                                        },
+                                        "file_glob": {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "else": {
+                                    "additionalProperties": False,
+                                    "properties": {
+                                    }
+                                }
+                            }, {
+                                "if": { "properties": { "tool": { "const": "gotest" } } },
+                                "then": {
+                                    "additionalProperties": False,
+                                    "properties": {
+                                        "tool": {
+                                            "const": "gotest"
+                                        },
+                                        "gotest_exe": {
+                                            "type": "string"
+                                        },
+                                        "params": {
+                                            "type": "string"
+                                        },
+                                        "cwd": {
+                                            "description": "A current working directory where the step is executed.",
+                                            "default": ".",
+                                            "type": "string"
+                                        },
+                                        "timeout": {
+                                            "description": "A timeout in seconds that limits time of step execution. It is guareded by an agent. If it is exceeded then the step is arbitrarly terminated.",
+                                            "type": "integer",
+                                            "minimum": 30
+                                        },
+                                        "attempts": {
+                                            "description": "A number of times the step is retried if if it returns error. It is optional.",
+                                            "default": 1,
+                                            "type": "integer"
+                                        },
+                                        "sleep_time_after_attempt": {
+                                            "description": "A sleep time between subsequent execution attempts.",
+                                            "default": 0,
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "else": {
+                                    "additionalProperties": False,
+                                    "properties": {
+                                    }
+                                }
+                            }, {
+                                "if": { "properties": { "tool": { "const": "nglint" } } },
+                                "then": {
+                                    "additionalProperties": False,
+                                    "properties": {
+                                        "tool": {
+                                            "const": "nglint"
+                                        },
+                                        "cwd": {
+                                            "description": "A current working directory where the step is executed.",
+                                            "default": ".",
+                                            "type": "string"
+                                        },
+                                        "attempts": {
+                                            "description": "A number of times the step is retried if if it returns error. It is optional.",
+                                            "default": 1,
+                                            "type": "integer"
+                                        },
+                                        "sleep_time_after_attempt": {
+                                            "description": "A sleep time between subsequent execution attempts.",
+                                            "default": 0,
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "else": {
+                                    "additionalProperties": False,
+                                    "properties": {
+                                    }
+                                }
+                            }, {
+                                "if": { "properties": { "tool": { "const": "cloc" } } },
+                                "then": {
+                                    "additionalProperties": False,
+                                    "properties": {
+                                        "tool": {
+                                            "const": "cloc"
+                                        },
+                                        "not-match-f": {
+                                            "type": "string"
+                                        },
+                                        "exclude-dir": {
+                                            "type": "string"
+                                        },
+                                        "cwd": {
+                                            "description": "A current working directory where the step is executed.",
+                                            "default": ".",
+                                            "type": "string"
+                                        },
+                                        "attempts": {
+                                            "description": "A number of times the step is retried if if it returns error. It is optional.",
+                                            "default": 1,
+                                            "type": "integer"
+                                        },
+                                        "sleep_time_after_attempt": {
+                                            "description": "A sleep time between subsequent execution attempts.",
+                                            "default": 0,
                                             "type": "integer"
                                         }
                                     }
@@ -1040,116 +1185,13 @@ schema = {
                                         },
                                         "attempts": {
                                             "description": "A number of times the step is retried if if it returns error. It is optional.",
+                                            "default": 1,
                                             "type": "integer"
                                         },
                                         "sleep_time_after_attempt": {
-                                            "description": "A sleep time between subsequent execution attempts. It is optional.",
+                                            "description": "A sleep time between subsequent execution attempts.",
+                                            "default": 0,
                                             "type": "integer"
-                                        }
-                                    }
-                                },
-                                "else": {
-                                    "additionalProperties": False,
-                                    "properties": {
-                                    }
-                                }
-                            }, {
-                                "if": { "properties": { "tool": { "const": "cache" } } },
-                                "then": {
-                                    "additionalProperties": False,
-                                    "properties": {
-                                        "tool": {
-                                            "const": "cache"
-                                        },
-                                        "action": {
-                                            "type": "string",
-                                            "enum": ["save", "restore"]
-                                        },
-                                        "key": {
-                                            "type": "string"
-                                        },
-                                        "keys": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "string"
-                                            }
-                                        },
-                                        "paths": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "string"
-                                            }
-                                        },
-                                        "expiry": {
-                                            "type": "string"
-                                        },
-                                        "attempts": {
-                                            "description": "A number of times the step is retried if if it returns error. It is optional.",
-                                            "type": "integer"
-                                        },
-                                        "sleep_time_after_attempt": {
-                                            "description": "A sleep time between subsequent execution attempts. It is optional.",
-                                            "type": "integer"
-                                        }
-                                    }
-                                },
-                                "else": {
-                                    "additionalProperties": False,
-                                    "properties": {
-                                    }
-                                }
-                            }, {
-                                "if": { "properties": { "tool": { "const": "gotest" } } },
-                                "then": {
-                                    "additionalProperties": False,
-                                    "properties": {
-                                        "tool": {
-                                            "const": "gotest"
-                                        },
-                                        "timeout": {
-                                            "description": "A timeout in seconds that limits time of step execution. It is guareded by an agent. If it is exceeded then the step is arbitrarly terminated.",
-                                            "type": "integer",
-                                            "minimum": 30
-                                        },
-                                        "gotest_exe": {
-                                            "type": "string"
-                                        },
-                                        "params": {
-                                            "type": "string"
-                                        },
-                                        "cwd": {
-                                            "description": "A current working directory where the step is executed. It is optional.",
-                                            "type": "string"
-                                        },
-                                        "attempts": {
-                                            "description": "A number of times the step is retried if if it returns error. It is optional.",
-                                            "type": "integer"
-                                        },
-                                        "sleep_time_after_attempt": {
-                                            "description": "A sleep time between subsequent execution attempts. It is optional.",
-                                            "type": "integer"
-                                        }
-                                    }
-                                },
-                                "else": {
-                                    "additionalProperties": False,
-                                    "properties": {
-                                    }
-                                }
-                            }, {
-                                "if": { "properties": { "tool": { "const": "junit_collect" } } },
-                                "then": {
-                                    "additionalProperties": False,
-                                    "properties": {
-                                        "tool": {
-                                            "const": "junit_collect"
-                                        },
-                                        "cwd": {
-                                            "description": "A current working directory where the step is executed. It is optional.",
-                                            "type": "string"
-                                        },
-                                        "file_glob": {
-                                            "type": "string"
                                         }
                                     }
                                 },
