@@ -2111,6 +2111,9 @@ components:
         notification:
           type: object
           properties: {}
+        monitoring:
+          type: object
+          properties: {}
     Diagnostics:
       type: object
     ApiError:

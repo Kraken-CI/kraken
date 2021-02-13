@@ -22,7 +22,7 @@ import datetime
 from flask import Flask
 
 from . import logs
-from .models import db, Agent, Run, Job
+from .models import db, Agent, Run, Job, get_setting
 from . import consts
 from . import srvcheck
 from .. import version
@@ -52,6 +52,11 @@ def create_app():
 
     # initialize SqlAlchemy
     db.init_app(app)
+
+    # setup sentry
+    with app.app_context():
+        sentry_url = get_setting('monitoring', 'sentry_dsn')
+        logs.setup_sentry(sentry_url)
 
     return app
 

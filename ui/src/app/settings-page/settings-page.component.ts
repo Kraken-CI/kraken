@@ -30,6 +30,10 @@ export class SettingsPageComponent implements OnInit {
         slack_token: new FormControl(''),
     })
 
+    monitoringForm = new FormGroup({
+        sentry_dsn: new FormControl(''),
+    })
+
     constructor(
         public auth: AuthService,
         private msgSrv: MessageService,
@@ -54,6 +58,7 @@ export class SettingsPageComponent implements OnInit {
                 console.info(settings)
                 this.generalForm.setValue(settings.general)
                 this.notificationForm.setValue(settings.notification)
+                this.monitoringForm.setValue(settings.monitoring)
             }
         )
     }
@@ -61,7 +66,8 @@ export class SettingsPageComponent implements OnInit {
     saveSettings() {
         const settings = {
             general: this.generalForm.value,
-            notification: this.notificationForm.value
+            notification: this.notificationForm.value,
+            monitoring: this.monitoringForm.value,
         }
         this.managementService
             .updateSettings(settings)

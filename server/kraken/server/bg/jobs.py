@@ -25,7 +25,7 @@ import giturlparse
 import pytimeparse
 
 from .clry import app as clry_app
-from ..models import db, Run, Job, TestCaseResult, Branch, Flow, Stage, Project
+from ..models import db, Run, Job, TestCaseResult, Branch, Flow, Stage, Project, get_setting
 from ..schema import prepare_new_planner_triggers
 from ..schema import check_and_correct_stage_schema
 from .. import exec_utils  # pylint: disable=cyclic-import
@@ -55,6 +55,11 @@ def _create_app():
     # initialize SqlAlchemy
     db.init_app(app)
     db.create_all(app=app)
+
+    # setup sentry
+    with app.app_context():
+        sentry_url = get_setting('monitoring', 'sentry_dsn')
+        logs.setup_sentry(sentry_url)
 
     return app
 

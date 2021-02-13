@@ -20,6 +20,16 @@ import datetime
 import traceback
 from logging.handlers import DatagramHandler, SocketHandler
 
+# try to import sentry SDK
+try:
+    import sentry_sdk
+except ImportError:
+    sentry_sdk = None
+try:
+    from sentry_sdk.integrations.flask import FlaskIntegration
+except ImportError:
+    FlaskIntegration = None
+
 from . import consts
 
 
@@ -199,3 +209,18 @@ def setup_logging(service, clickhouse_addr=None):
     l.set_initial_ctx(service=service)
     l.addHandler(g_clickhouse_handler)
     log.info('setup logging on %s to clickhouse: %s', service, ch_addr)
+
+
+def setup_sentry(sentry_url):
+    if not sentry_url or not sentry_sdk:
+        return
+
+    if FlaskIntegration:
+        sentry_sdk.init(
+            dsn=sentry_url,
+            integrations=[FlaskIntegration()])
+    else:
+        sentry_sdk.init(
+            dsn=sentry_url)
+
+    log.info('sentry setup, DSN: %s...%s', sentry_url[:15], sentry_url[-5:])

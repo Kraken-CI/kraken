@@ -29,6 +29,9 @@ INITIAL_SETTINGS = {
         'smtp_user': '',
         'smtp_password': None,  # password
         'slack_token': None  # password
+    },
+    'monitoring': {
+        'sentry_dsn': None  # password
     }
 }
 

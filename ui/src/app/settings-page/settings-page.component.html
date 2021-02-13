@@ -36,6 +36,16 @@
       </form>
   </p-tabPanel>
 
+  <p-tabPanel header="Monitoring">
+      <!-- https://www.sanwebe.com/2014/08/css-html-forms-designs -->
+      <form [formGroup]="monitoringForm" class="form-style-2">
+
+        <div class="form-style-2-heading">Sentry</div>
+        <label for="sentry_dsn"><span>Sentry DSN</span>
+          <input type="password" class="input-field" name="sentry_dsn" pPassword [feedback]="false" formControlName="sentry_dsn"/>
+        </label>
+      </form>
+  </p-tabPanel>
 </p-tabView>
 
 <div style="margin: 8px 0 0 4px;">

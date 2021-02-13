@@ -143,6 +143,11 @@ def _db_setup(db_url):
     # initialize SqlAlchemy
     models.db.init_app(app)
 
+    # setup sentry
+    with app.app_context():
+        sentry_url = models.get_setting('monitoring', 'sentry_dsn')
+        logs.setup_sentry(sentry_url)
+
 
 def main():
     db_url = os.environ.get('KRAKEN_DB_URL', consts.DEFAULT_DB_URL)
