@@ -829,7 +829,7 @@ schema = {
                                             "minimum": 30
                                         },
                                         "attempts": {
-                                            "description": "A number of times the step is retried if if it returns error. It is optional.",
+                                            "description": "A number of times the step is retried if if it returns error.",
                                             "default": 1,
                                             "type": "integer"
                                         },
@@ -889,7 +889,7 @@ schema = {
                                             "type": "boolean"
                                         },
                                         "attempts": {
-                                            "description": "A number of times the step is retried if if it returns error. It is optional.",
+                                            "description": "A number of times the step is retried if if it returns error.",
                                             "default": 1,
                                             "type": "integer"
                                         },
@@ -943,7 +943,7 @@ schema = {
                                             "type": "string"
                                         },
                                         "attempts": {
-                                            "description": "A number of times the step is retried if if it returns error. It is optional.",
+                                            "description": "A number of times the step is retried if if it returns error.",
                                             "default": 1,
                                             "type": "integer"
                                         },
@@ -963,17 +963,23 @@ schema = {
                                 "if": { "properties": { "tool": { "const": "pylint" } } },
                                 "then": {
                                     "additionalProperties": False,
+                                    "required": ["tool", "rcfile", "modules_or_packages"],
                                     "properties": {
                                         "tool": {
+                                            "description": "A tool that allows for static analysis of Python source code.",
                                             "const": "pylint"
                                         },
                                         "pylint_exe": {
+                                            "description": "An alternative path or command to pylint.",
+                                            "default": "pylint",
                                             "type": "string"
                                         },
                                         "rcfile": {
+                                            "description": "A path to pylint rcfile.",
                                             "type": "string"
                                         },
                                         "modules_or_packages": {
+                                            "description": "A path or paths to Python modules or packages that should be checked.",
                                             "type": "string"
                                         },
                                         "cwd": {
@@ -982,7 +988,7 @@ schema = {
                                             "type": "string"
                                         },
                                         "attempts": {
-                                            "description": "A number of times the step is retried if if it returns error. It is optional.",
+                                            "description": "A number of times the step is retried if if it returns error.",
                                             "default": 1,
                                             "type": "integer"
                                         },
@@ -1004,15 +1010,20 @@ schema = {
                                     "additionalProperties": False,
                                     "properties": {
                                         "tool": {
+                                            "description": "A tool that allows for running Python tests.",
                                             "const": "pytest"
                                         },
                                         "pytest_exe": {
+                                            "description": "An alternative path or command to pytest.",
+                                            "default": "pytest-3",
                                             "type": "string"
                                         },
                                         "params": {
+                                            "description": "Parameters passed directly to pytest executable.",
                                             "type": "string"
                                         },
                                         "pythonpath": {
+                                            "description": "Extra paths that are used by Python to look for modules/packages that it wants to load.",
                                             "type": "string"
                                         },
                                         "cwd": {
@@ -1021,7 +1032,7 @@ schema = {
                                             "type": "string"
                                         },
                                         "attempts": {
-                                            "description": "A number of times the step is retried if if it returns error. It is optional.",
+                                            "description": "A number of times the step is retried if if it returns error.",
                                             "default": 1,
                                             "type": "integer"
                                         },
@@ -1041,16 +1052,19 @@ schema = {
                                 "if": { "properties": { "tool": { "const": "junit_collect" } } },
                                 "then": {
                                     "additionalProperties": False,
+                                    "required": ["tool", "file_glob"],
                                     "properties": {
                                         "tool": {
+                                            "description": "A tool that allows for collecting test results stored in JUnit files.",
                                             "const": "junit_collect"
+                                        },
+                                        "file_glob": {
+                                            "description": "A glob pattern for searching test result files.",
+                                            "type": "string"
                                         },
                                         "cwd": {
                                             "description": "A current working directory where the step is executed.",
                                             "default": ".",
-                                            "type": "string"
-                                        },
-                                        "file_glob": {
                                             "type": "string"
                                         }
                                     }
@@ -1066,12 +1080,15 @@ schema = {
                                     "additionalProperties": False,
                                     "properties": {
                                         "tool": {
+                                            "description": "A tool that allows for running Go language tests.",
                                             "const": "gotest"
                                         },
-                                        "gotest_exe": {
+                                        "go_exe": {
+                                            "description": "An alternative path or command to `go`.",
                                             "type": "string"
                                         },
                                         "params": {
+                                            "description": "Parameters passed directly to `go test`.",
                                             "type": "string"
                                         },
                                         "cwd": {
@@ -1085,7 +1102,7 @@ schema = {
                                             "minimum": 30
                                         },
                                         "attempts": {
-                                            "description": "A number of times the step is retried if if it returns error. It is optional.",
+                                            "description": "A number of times the step is retried if if it returns error.",
                                             "default": 1,
                                             "type": "integer"
                                         },
@@ -1107,6 +1124,7 @@ schema = {
                                     "additionalProperties": False,
                                     "properties": {
                                         "tool": {
+                                            "description": "A tool that allows for running Angular `ng lint`, that is performing static analysis of TypeScript in Angular projects.",
                                             "const": "nglint"
                                         },
                                         "cwd": {
@@ -1115,7 +1133,7 @@ schema = {
                                             "type": "string"
                                         },
                                         "attempts": {
-                                            "description": "A number of times the step is retried if if it returns error. It is optional.",
+                                            "description": "A number of times the step is retried if if it returns error.",
                                             "default": 1,
                                             "type": "integer"
                                         },
@@ -1137,12 +1155,15 @@ schema = {
                                     "additionalProperties": False,
                                     "properties": {
                                         "tool": {
+                                            "description": "A tool that allows for running counting lines of code.",
                                             "const": "cloc"
                                         },
                                         "not-match-f": {
+                                            "description": "Filter out files that match to provided regex.",
                                             "type": "string"
                                         },
                                         "exclude-dir": {
+                                            "description": "Excluded provided list of directories.",
                                             "type": "string"
                                         },
                                         "cwd": {
@@ -1151,7 +1172,7 @@ schema = {
                                             "type": "string"
                                         },
                                         "attempts": {
-                                            "description": "A number of times the step is retried if if it returns error. It is optional.",
+                                            "description": "A number of times the step is retried if if it returns error.",
                                             "default": 1,
                                             "type": "integer"
                                         },
@@ -1173,9 +1194,11 @@ schema = {
                                     "additionalProperties": False,
                                     "properties": {
                                         "tool": {
+                                            "description": "A tool that allows for generating random test case results.",
                                             "const": "rndtest"
                                         },
                                         "count": {
+                                            "description": "A number of expected test cases.",
                                             "oneOf": [{
                                                 "type": "integer",
                                                 "minimum": 1
@@ -1184,7 +1207,7 @@ schema = {
                                             }]
                                         },
                                         "attempts": {
-                                            "description": "A number of times the step is retried if if it returns error. It is optional.",
+                                            "description": "A number of times the step is retried if if it returns error.",
                                             "default": 1,
                                             "type": "integer"
                                         },
@@ -1205,12 +1228,25 @@ schema = {
                         }
                     },
                     "environments": {
+                        "description": "It defines the surroundings of a job execution.",
                         "type": "array",
                         "items": {
                             "type": "object",
                             "additionalProperties": False,
+                            "required": ["system", "agents_group"],
                             "properties": {
+                                "agents_group": {
+                                    "description": "A name of agents group. An agent from this group will be used to execute the job. There is a special built-in group, `'all'` that gathers all agents.",
+                                    "type": "string"
+                                },
+                                "executor": {
+                                    "description": "An executor that agent is using to execute a job.",
+                                    "enum": ["local", "docker", "lxd"],
+                                    "default": "local",
+                                    "type": "string"
+                                },
                                 "system": {
+                                    "description": "An operating system name or list of such names that should be used for job execution. If this is a list then the number of job instances is multiplied by numer of systems - each instance has its system. There is a special system name, `'any'`, that ignores system selection by jobs scheduler.",
                                     "oneOf": [{
                                         "type": "string"
                                     }, {
@@ -1220,13 +1256,8 @@ schema = {
                                         }
                                     }]
                                 },
-                                "executor": {
-                                    "type": "string"
-                                },
-                                "agents_group": {
-                                    "type": "string"
-                                },
                                 "config": {
+                                    "description": "Not implemented yet.",
                                     "type": "string"
                                 }
                             }
@@ -1236,26 +1267,32 @@ schema = {
             }
         },
         "notification": {
+            "description": "Notification allows for configuring a notification means that are used to pass an information about stage's run result. There are several communication methods supported.",
             "type": "object",
             "additionalProperties": False,
             "properties": {
+                "email":  {
+                    "description": "It sends run results to indicated email address.",
+                    "type": "string"
+                },
                 "slack": {
+                    "description": "It sends run results to indicated Slack channel.",
                     "type": "object",
                     "additionalProperties": False,
                     "properties": {
                         "channel": {
+                            "description": "Selected Slack channel",
                             "type": "string"
                         }
                     }
                 },
-                "email":  {
-                    "type": "string"
-                },
                 "github": {
+                    "description": "It sends run results to associated pull request page on GitHub.",
                     "type": "object",
                     "additionalProperties": False,
                     "properties": {
                         "credentials": {
+                            "description": "Credentials (user:password) that allows access to the project on GitHub.",
                             "type": "string"
                         }
                     }
