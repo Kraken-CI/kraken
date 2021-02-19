@@ -113,7 +113,7 @@ def _handle_get_job(agent):
         # insert secret from ssh-key
         if 'ssh-key' in step:
             value = step['ssh-key']
-            secret = Secret.query.filter_by(project=project, name=value).one_or_none()
+            secret = Secret.query.filter_by(project=project, name=value, deleted=None).one_or_none()
             if secret is None:
                 raise Exception("Secret '%s' does not exists in project %s" % (value, project.id))
             step['ssh-key'] = dict(username=secret.data['username'],

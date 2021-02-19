@@ -180,7 +180,7 @@ def _analyze_job_results_history(job):
             q = q.filter_by(test_case_id=job_tcr.test_case_id)
             q = q.join('job')
             q = q.filter_by(covered=False)
-            q = q.filter_by(agents_group=job_tcr.job.agents_group)
+            q = q.filter_by(agents_group=job.agents_group)
             q = q.filter_by(system=job.system)
             q = q.join('job', 'run', 'flow', 'branch')
             q = q.filter(Branch.id == job.run.flow.branch_id)

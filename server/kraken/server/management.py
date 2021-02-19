@@ -297,7 +297,7 @@ def update_stage(stage_id, body):
 
         from .bg import jobs as bg_jobs  # pylint: disable=import-outside-toplevel
         t = bg_jobs.refresh_schema_repo.delay(stage.id)
-        log.info('refresh schema repo %s, bg processing: %s', schema, t)
+        log.info('refresh schema repo %s, bg processing: %s', body, t)
 
     result = stage.get_json()
     return result, 200

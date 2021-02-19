@@ -823,6 +823,14 @@ schema = {
                                             "description": "A destination folder for the repository. Default is empty ie. the name of the repository.",
                                             "type": "string"
                                         },
+                                        "ssh-key": {
+                                            "description": "A name of a secret that holds SSH username and key.",
+                                            "type": "string"
+                                        },
+                                        "access-token": {
+                                            "description": "An access token for GitLab use case.",
+                                            "type": "string"
+                                        },
                                         "timeout": {
                                             "description": "A timeout in seconds that limits time of step execution. It is guareded by an agent. If it is exceeded then the step is arbitrarly terminated.",
                                             "type": "integer",

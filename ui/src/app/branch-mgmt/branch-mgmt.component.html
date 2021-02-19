@@ -98,8 +98,8 @@
       </div>
       <div class="p-col-9" style="padding-left: 40px;" *ngIf="branch.stages.length">
         <div>
-          <div class="p-grid">
-            <div class="p-col-4">
+          <div class="p-d-flex">
+            <div class="p-m-2" style="min-width: 18em;">
               <p-inplace #stageNameInplace (onActivate)="stageNameInplaceActivated()">
                 <span pInplaceDisplay style="font-size: 1.5rem; font-weight: bold;">
                   <span style="color: #999;">Stage</span> {{stage.name}}
@@ -118,16 +118,16 @@
                 </span>
               </p-inplace>
             </div>
-            <div class="p-col-1" style="margin-top: 25px;">
+            <div class="p-m-2" style="margin-top: 25px;">
               <p-checkbox [(ngModel)]="stage.enabled" binary="true" label="Enabled"></p-checkbox>
             </div>
-            <div class="p-col-2" style="margin-top: 25px;">
+            <div class="p-m-2" style="margin-top: 25px;">
               <p-checkbox [(ngModel)]="stage.schema_from_repo_enabled" binary="true" label="Schema from Repo"></p-checkbox>
             </div>
-            <div class="p-col-1" style="margin-top: 5px;" *ngIf="stage.repo_version">
+            <div class="p-m-2" style="margin-top: 5px;" *ngIf="stage.repo_version">
               Current rev: {{ stage.repo_version.slice(0, 8) }}
             </div>
-            <div class="p-col-2">
+            <div class="p-m-2">
               <a pButton label="Schema Help" href="https://kraken.ci/docs/schema" class="p-button-text" target="blank" icon="pi pi-question-circle" style="padding: 0 16px 4px 16px;"></a>
               <a pButton label="Schema Reference" href="https://kraken.ci/docs/schema-ref" class="p-button-text" target="blank" icon="pi pi-question-circle" style="padding-top: 0;"></a>
             </div>
