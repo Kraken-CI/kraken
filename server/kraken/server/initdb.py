@@ -134,9 +134,7 @@ def prepare_initial_data():
         "triggers": {
             "parent": True,
             "cron": "1 * * * *",
-            "interval": "10m",
-            "repository": True,
-            "webhook": True
+            "interval": "10m"
         },
         "parameters": [],
         "configs": [{
