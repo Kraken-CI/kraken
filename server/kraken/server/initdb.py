@@ -17,6 +17,8 @@ from passlib.hash import pbkdf2_sha256
 from .models import db, Branch, Stage, Agent, AgentsGroup, Setting, Tool, Project
 from .models import User, BranchSequence
 from .schema import execute_schema_code
+from . import consts
+
 
 INITIAL_SETTINGS = {
     'general': {
@@ -123,17 +125,19 @@ def prepare_initial_data():
     branch = Branch.query.filter_by(name="Master", project=project).one_or_none()
     if branch is None:
         branch = Branch(name='Master', branch_name='master', project=project)
-        BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_FLOW, value=0)
-        BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_CI_FLOW, value=0)
-        BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_DEV_FLOW, value=0)
         db.session.commit()
         print("   created Branch record 'master'")
 
+    for seq_type in [consts.BRANCH_SEQ_FLOW, consts.BRANCH_SEQ_CI_FLOW, consts.BRANCH_SEQ_DEV_FLOW]:
+        bs = BranchSequence.query.filter_by(branch=branch, kind=seq_type).one_or_none()
+        if bs is None:
+            BranchSequence(branch=branch, kind=seq_type, value=0)
+    db.session.commit()
+
     stage = Stage.query.filter_by(name="Tests", branch=branch).one_or_none()
-    if stage is None:
-        schema_code = '''def stage(ctx):
+    schema_code = '''def stage(ctx):
     return {
-        "parent": "Tests",
+        "parent": "root",
         "triggers": {
             "parent": True
         },
@@ -147,8 +151,9 @@ def prepare_initial_data():
                 "branch": "master"
             }, {
                 "tool": "pytest",
-                "params": "tests/",
-                "cwd": "sample-project-python"
+                "cwd": "sample-project-python",
+                "params": "-vv",
+                "pythonpath": "src"
             }],
             "environments": [{
                 "system": "any",
@@ -157,10 +162,22 @@ def prepare_initial_data():
             }]
         }]
     }'''
+    if stage is None:
         stage = Stage(name='Tests', description="This is a stage of tests.", branch=branch,
                       schema_code=schema_code, schema=execute_schema_code(branch, schema_code))
         db.session.commit()
         print("   created Stage record 'Tests'")
+    else:
+        stage.schema_code = schema_code
+        stage.schema = execute_schema_code(branch, schema_code)
+        db.session.commit()
+
+
+    for seq_type in [consts.BRANCH_SEQ_RUN, consts.BRANCH_SEQ_CI_RUN, consts.BRANCH_SEQ_DEV_RUN]:
+        bs = BranchSequence.query.filter_by(branch=branch, stage=stage, kind=seq_type).one_or_none()
+        if bs is None:
+            BranchSequence(branch=branch, stage=stage, kind=seq_type, value=0)
+    db.session.commit()
 
 
     # create default users: admin and demo
