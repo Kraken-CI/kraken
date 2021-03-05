@@ -15,7 +15,7 @@
 from passlib.hash import pbkdf2_sha256
 
 from .models import db, Branch, Stage, Agent, AgentsGroup, Setting, Tool, Project
-from .models import User
+from .models import User, BranchSequence
 from .schema import execute_schema_code
 
 INITIAL_SETTINGS = {
@@ -123,177 +123,47 @@ def prepare_initial_data():
     branch = Branch.query.filter_by(name="Master", project=project).one_or_none()
     if branch is None:
         branch = Branch(name='Master', branch_name='master', project=project)
+        BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_FLOW, value=0)
+        BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_CI_FLOW, value=0)
+        BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_DEV_FLOW, value=0)
         db.session.commit()
         print("   created Branch record 'master'")
 
-    stage = Stage.query.filter_by(name="System Tests", branch=branch).one_or_none()
+    stage = Stage.query.filter_by(name="Tests", branch=branch).one_or_none()
     if stage is None:
         schema_code = '''def stage(ctx):
     return {
-        "parent": "Unit Tests",
-        "triggers": {
-            "parent": True,
-            "cron": "1 * * * *",
-            "interval": "10m"
-        },
-        "parameters": [],
-        "configs": [{
-            "name": "c1",
-            "p1": "1",
-            "p2": "3"
-        }, {
-            "name": "c2",
-            "n3": "33",
-            "t2": "asdf"
-        }],
-        "jobs": [{
-            "name": "make dist",
-            "steps": [{
-                "tool": "git",
-                "checkout": "https://github.com/frankhjung/python-helloworld.git",
-                "branch": "master"
-            }, {
-                "tool": "pytest",
-                "params": "tests/testhelloworld.py",
-                "cwd": "python-helloworld"
-            }],
-            "environments": [{
-                "system": "ubuntu-18.04",
-                "agents_group": "all",
-                "config": "c1"
-            }]
-        }]
-    }'''
-        stage = Stage(name='System Tests', description="This is a stage of system tests.", branch=branch,
-                      schema_code=schema_code, schema=execute_schema_code(branch, schema_code))
-        db.session.commit()
-        print("   created Stage record 'System Tests'")
-
-    stage = Stage.query.filter_by(name="Unit Tests", branch=branch).one_or_none()
-    if stage is None:
-        schema_code = '''def stage(ctx):
-    return {
-        "parent": "root",
-        "triggers": {
-            "parent": True
-        },
-        "parameters": [{
-            "name": "COUNT",
-            "type": "string",
-            "default": "10",
-            "description": "Number of tests to generate"
-        }],
-        "jobs": [{
-            "name": "random tests",
-            "steps": [{
-                "tool": "rndtest",
-                "count": "#{COUNT}"
-            }],
-            "environments": [{
-                "system": "centos-7",
-                "agents_group": "all",
-                "config": "default"
-            }]
-        }]
-    }'''
-        stage = Stage(name='Unit Tests', description="This is a stage of unit tests.", branch=branch,
-                      schema_code=schema_code, schema=execute_schema_code(branch, schema_code))
-        db.session.commit()
-        print("   created Stage record 'Unit Tests'")
-
-    # Project KRAKEN
-    project = Project.query.filter_by(name="Kraken").one_or_none()
-    if project is None:
-        project = Project(name='Kraken', description="This is a Kraken project.")
-        db.session.commit()
-        print("   created Project record 'Kraken'")
-
-    branch = Branch.query.filter_by(name="Master", project=project).one_or_none()
-    if branch is None:
-        branch = Branch(name='Master', branch_name='master', project=project)
-        db.session.commit()
-        print("   created Branch record 'master'")
-
-    stage = Stage.query.filter_by(name="Static Analysis", branch=branch).one_or_none()
-    if stage is None:
-        # TODO: pylint
-        # }, {
-        #     "tool": "pylint",
-        #     "rcfile": "../pylint.rc",
-        #     "modules_or_packages": "kraken.agent",
-        #     "cwd": "kraken/agent"
-        schema_code = '''def stage(ctx):
-    return {
-        "parent": "root",
+        "parent": "Tests",
         "triggers": {
             "parent": True
         },
         "parameters": [],
         "configs": [],
         "jobs": [{
-            "name": "pylint",
+            "name": "test",
             "steps": [{
                 "tool": "git",
-                "checkout": "https://github.com/Kraken-CI/kraken.git",
+                "checkout": "https://github.com/Kraken-CI/sample-project-python.git",
                 "branch": "master"
-            }, {
-                "tool": "shell",
-                "cmd": "cp server/kraken/server/logs.py server/kraken/server/consts.py agent/kraken/agent",
-                "cwd": "kraken"
-            }, {
-                "tool": "pylint",
-                "rcfile": "pylint.rc",
-                "modules_or_packages": "agent/kraken/agent",
-                "cwd": "kraken"
-            }],
-            "environments": [{
-                "system": "ubuntu-18.04",
-                "agents_group": "all",
-                "config": "c1"
-            }]
-        }]
-    }'''
-        stage = Stage(name='Static Analysis', description="This is a stage of Static Analysis.", branch=branch,
-                      schema_code=schema_code, schema=execute_schema_code(branch, schema_code))
-        db.session.commit()
-        print("   created Stage record 'System Tests'")
-
-    stage = Stage.query.filter_by(name="Unit Tests", branch=branch).one_or_none()
-    if stage is None:
-        schema_code = '''def stage(ctx):
-    return {
-        "parent": "root",
-        "triggers": {
-            "parent": True
-        },
-        "parameters": [],
-        "configs": [],
-        "jobs": [{
-            "name": "pytest",
-            "steps": [{
-                "tool": "git",
-                "checkout": "https://github.com/Kraken-CI/kraken.git",
-                "branch": "master"
-            }, {
-                "tool": "shell",
-                "cmd": "cp server/kraken/server/logs.py server/kraken/server/consts.py agent/kraken/agent",
-                "cwd": "kraken"
             }, {
                 "tool": "pytest",
-                "params": "-vv",
-                "cwd": "kraken/agent"
+                "params": "tests/",
+                "cwd": "sample-project-python"
             }],
             "environments": [{
-                "system": "centos-7",
+                "system": "any",
                 "agents_group": "all",
                 "config": "default"
             }]
         }]
     }'''
-        stage = Stage(name='Unit Tests', description="This is a stage of unit tests.", branch=branch,
+        stage = Stage(name='Tests', description="This is a stage of tests.", branch=branch,
                       schema_code=schema_code, schema=execute_schema_code(branch, schema_code))
         db.session.commit()
-        print("   created Stage record 'Unit Tests'")
+        print("   created Stage record 'Tests'")
+
+
+    # create default users: admin and demo
 
     admin_user = User.query.filter_by(name="admin").one_or_none()
     if admin_user is None:
