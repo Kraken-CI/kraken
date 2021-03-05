@@ -390,9 +390,21 @@ def update_agents(body):
             abort(400, 'Cannot find agent %s' % a['id'])
         agents2.append(agent)
 
+    all_group = AgentsGroup.query.filter_by(name='all').one_or_none()
+
     for data, agent in zip(agents, agents2):
         if 'authorized' in data:
             agent.authorized = data['authorized']
+
+            if agent.authorized and all_group:
+                already_in = False
+                for ag in agent.agents_groups:
+                    if ag.agents_group_id == all_group.id:
+                        already_in = True
+                        break
+                if not already_in:
+                    AgentAssignment(agent=agent, agents_group=all_group)
+
     db.session.commit()
 
     return {}, 200

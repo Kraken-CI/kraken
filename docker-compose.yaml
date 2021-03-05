@@ -154,6 +154,7 @@ services:
       - $KRAKEN_CLICKHOUSE_PORT:$KRAKEN_CLICKHOUSE_PORT/udp
     networks:
       - db_net
+      - lab_net
     depends_on:
       - clickhouse
 

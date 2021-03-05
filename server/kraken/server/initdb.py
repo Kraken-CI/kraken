@@ -95,16 +95,6 @@ def prepare_initial_data():
             print("   created Tool record", name)
         tools[name] = tool
 
-    agent = Agent.query.filter_by(name="agent.7").one_or_none()
-    if agent is None:
-        agent = Agent(name='agent.7', address="agent.7", authorized=False)
-        db.session.commit()
-        print("   created Agent record 'agent.7'")
-    else:
-        agent.authorized = False
-        db.session.commit()
-        print("   Agent 'agent.7' unauthorized")
-
     agents_group = AgentsGroup.query.filter_by(name="all").one_or_none()
     if agents_group is None:
         agents_group = AgentsGroup(name='all')
@@ -185,14 +175,14 @@ def prepare_initial_data():
     admin_user = User.query.filter_by(name="admin").one_or_none()
     if admin_user is None:
         password = pbkdf2_sha256.hash('admin')
-        agent = User(name='admin', password=password)
+        user = User(name='admin', password=password)
         db.session.commit()
         print("   created User record 'admin'")
 
     demo_user = User.query.filter_by(name="demo").one_or_none()
     if demo_user is None:
         password = pbkdf2_sha256.hash('demo')
-        agent = User(name='demo', password=password)
+        user = User(name='demo', password=password)
         db.session.commit()
         print("   created User record 'demo'")
 
