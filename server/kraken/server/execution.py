@@ -195,7 +195,7 @@ def get_runs(stage_id):
     return runs, 200
 
 
-def get_run_results(run_id, start=0, limit=10,
+def get_run_results(run_id, start=0, limit=10, sort_field="name", sort_dir="asc",
                     statuses=None, changes=None,
                     min_age=None, max_age=None,
                     min_instability=None, max_instability=None,
@@ -231,7 +231,21 @@ def get_run_results(run_id, start=0, limit=10,
 
     total = q.count()
 
-    q = q.join('test_case').order_by(asc('name'))
+    sort_func = asc
+    if sort_dir == "desc":
+        sort_func = desc
+
+    if sort_field == "result":
+        q = q.order_by(sort_func('result'))
+    elif sort_field == "change":
+        q = q.order_by(sort_func('change'))
+    elif sort_field == "age":
+        q = q.order_by(sort_func('age'))
+    elif sort_field == "instability":
+        q = q.order_by(sort_func('instability'))
+    else:
+        q = q.join('test_case').order_by(sort_func('name'))
+
     q = q.offset(start).limit(limit)
     results = []
     for tcr in q.all():

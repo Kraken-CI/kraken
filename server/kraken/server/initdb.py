@@ -14,7 +14,7 @@
 
 from passlib.hash import pbkdf2_sha256
 
-from .models import db, Branch, Stage, Agent, AgentsGroup, Setting, Tool, Project
+from .models import db, Branch, Stage, AgentsGroup, Setting, Tool, Project
 from .models import User, BranchSequence
 from .schema import execute_schema_code
 from . import consts
@@ -175,14 +175,14 @@ def prepare_initial_data():
     admin_user = User.query.filter_by(name="admin").one_or_none()
     if admin_user is None:
         password = pbkdf2_sha256.hash('admin')
-        user = User(name='admin', password=password)
+        User(name='admin', password=password)
         db.session.commit()
         print("   created User record 'admin'")
 
     demo_user = User.query.filter_by(name="demo").one_or_none()
     if demo_user is None:
         password = pbkdf2_sha256.hash('demo')
-        user = User(name='demo', password=password)
+        User(name='demo', password=password)
         db.session.commit()
         print("   created User record 'demo'")
 

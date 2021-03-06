@@ -283,6 +283,14 @@ export class RunResultsComponent implements OnInit, OnDestroy {
         if (changes.length === 0) {
             changes = null
         }
+        let sortField = 'name'
+        if (event.sortField) {
+            sortField = event.sortField
+        }
+        let sortDir = 'asc'
+        if (event.sortOrder === -1) {
+            sortDir = 'desc'
+        }
 
         this.loadingResults = true
         this.executionService
@@ -290,6 +298,8 @@ export class RunResultsComponent implements OnInit, OnDestroy {
                 this.runId,
                 event.first,
                 event.rows,
+                sortField,
+                sortDir,
                 statuses,
                 changes,
                 this.filterMinAge,

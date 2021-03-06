@@ -228,17 +228,18 @@
            [totalRecords]="totalResults"
            [loading]="loadingResults"
            [rowsPerPageOptions]="[10,20,30,50,100]"
-           [showCurrentPageReport]="true">
+           [showCurrentPageReport]="true"
+           sortField="name">
     <ng-template pTemplate="header">
       <tr>
-        <th style="width: 150px;">Job Name</th>
+        <th style="width: 100px;">Job Name</th>
         <th style="width: 60px;">Job ID</th>
-        <th style="width: 100px;">Result</th>
-        <th style="width: 70px;">Change</th>
-        <th style="width: 50%;">Name</th>
-        <th style="width: 40px;">Age</th>
-        <th style="width: 40px; overflow-x: clip;" pTooltip="Instability, number of status changes in last 10 runs.">Instability</th>
-        <th style="width: 150px;">Values</th>
+        <th style="width: 110px;" pSortableColumn="result">Result <p-sortIcon field="result"></p-sortIcon></th>
+        <th style="width: 100px;" pSortableColumn="change">Change <p-sortIcon field="change"></p-sortIcon></th>
+        <th style="width: 50%;" pSortableColumn="name">Name <p-sortIcon field="name"></p-sortIcon></th>
+        <th style="width: 80px;" pSortableColumn="age">Age <p-sortIcon field="age"></p-sortIcon></th>
+        <th style="width: 80px;" pTooltip="Instability, number of status changes in last 10 runs." pSortableColumn="instability">Ins. <p-sortIcon field="instability"></p-sortIcon></th>
+        <th style="width: 160px;">Values</th>
         <th style="width: 30%;">System</th>
         <th style="width: 10%;">Config</th>
         <th style="width: 10%;">Agent Group</th>

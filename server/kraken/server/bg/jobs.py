@@ -173,6 +173,15 @@ def _analyze_job_results_history(job):
         # analyze history
         log.info('Analyze result %s %s', job_tcr, job_tcr.test_case.name)
 
+        # TODO relevance
+        # 0
+        # +1 not pass
+        # +1 failure
+        # +1 instability <= 3
+        # +1 age < 5
+        # +1 regression (age=0)
+        # +1 no comment
+
         # CI flow: either get previous 10 results
         if job.run.flow.kind == 0:  # CI
             q = TestCaseResult.query
