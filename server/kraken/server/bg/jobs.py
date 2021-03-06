@@ -173,15 +173,6 @@ def _analyze_job_results_history(job):
         # analyze history
         log.info('Analyze result %s %s', job_tcr, job_tcr.test_case.name)
 
-        # TODO relevance
-        # 0
-        # +1 not pass
-        # +1 failure
-        # +1 instability <= 3
-        # +1 age < 5
-        # +1 regression (age=0)
-        # +1 no comment
-
         # CI flow: either get previous 10 results
         if job.run.flow.kind == 0:  # CI
             q = TestCaseResult.query
@@ -226,6 +217,26 @@ def _analyze_job_results_history(job):
             else:
                 job_tcr.change = consts.TC_RESULT_CHANGE_NEW
                 new_cnt += 1
+
+            # determine relevancy
+            # 0 initial
+            job_tcr.relevancy = 0
+            # +1 not pass
+            if job_tcr.result != consts.TC_RESULT_PASSED:
+                job_tcr.relevancy += 1
+            # +1 failure
+            if job_tcr.result == consts.TC_RESULT_FAILED:
+                job_tcr.relevancy += 1
+            # +1 instability <= 3
+            if job_tcr.instability <= 3:
+                job_tcr.relevancy += 1
+            # +1 age < 5
+            if job_tcr.age < 5:
+                job_tcr.relevancy += 1
+            # +1 regression (age=0)
+            if job_tcr.change == consts.TC_RESULT_CHANGE_REGR:
+                job_tcr.relevancy += 1
+            # TODO: +1 no comment
 
         # DEV flow: get reference result from CI flow
         else:

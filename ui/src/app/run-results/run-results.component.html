@@ -237,14 +237,15 @@
         <th style="width: 110px;" pSortableColumn="result">Result <p-sortIcon field="result"></p-sortIcon></th>
         <th style="width: 100px;" pSortableColumn="change">Change <p-sortIcon field="change"></p-sortIcon></th>
         <th style="width: 50%;" pSortableColumn="name">Name <p-sortIcon field="name"></p-sortIcon></th>
-        <th style="width: 80px;" pSortableColumn="age">Age <p-sortIcon field="age"></p-sortIcon></th>
+        <th style="width: 80px;" pTooltip="Age, number of runs with no status change." pSortableColumn="age">Age <p-sortIcon field="age"></p-sortIcon></th>
         <th style="width: 80px;" pTooltip="Instability, number of status changes in last 10 runs." pSortableColumn="instability">Ins. <p-sortIcon field="instability"></p-sortIcon></th>
+        <th style="width: 80px;" pTooltip="Relevancy,<br>+1 for not passed<br>+1 for failure<br>+1 for instability <= 3<br>+1 for age < 5<br>+1 for regression." [escape]="false" pSortableColumn="relevancy">Rlvc <p-sortIcon field="relevancy"></p-sortIcon></th>
         <th style="width: 160px;">Values</th>
         <th style="width: 30%;">System</th>
         <th style="width: 10%;">Config</th>
         <th style="width: 10%;">Agent Group</th>
         <th style="width: 10%;">Agent</th>
-        <th style="width: 90px;">Cmd Line</th>
+        <!--<th style="width: 90px;">Cmd Line</th>-->
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-res>
@@ -254,8 +255,9 @@
         <td [class]="resultToClass(res.result)">{{resultToTxt(res.result)}}</td>
         <td [class]="getResultChangeCls(res.change)">{{getResultChangeTxt(res.change)}}</td>
         <td><a routerLink="/test_case_results/{{res.id}}">{{res.test_case_name}}</a></td>
-        <td>{{res.age}}</td>
-        <td>{{res.instability}}</td>
+        <td>{{ res.age }}</td>
+        <td>{{ res.instability }}</td>
+        <td>{{ res.relevancy }}</td>
         <td>
           <div *ngFor="let v of res.values | keyvalue">
             {{v.key}}:&nbsp;{{v.value.value}}
@@ -265,7 +267,7 @@
         <td>default</td>
         <td>{{res.agents_group_name}}</td>
         <td>{{res.agent_name}}</td>
-        <td><p-button label="CmdLine" (onClick)="showCmdLine()" styleClass="cmd-line-btn"></p-button></td>
+        <!--<td><p-button label="CmdLine" (onClick)="showCmdLine()" styleClass="p-button-outlined cmd-line-btn"></p-button></td>-->
       </tr>
     </ng-template>
     <ng-template pTemplate="paginatorright" let-state>

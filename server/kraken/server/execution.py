@@ -243,6 +243,8 @@ def get_run_results(run_id, start=0, limit=10, sort_field="name", sort_dir="asc"
         q = q.order_by(sort_func('age'))
     elif sort_field == "instability":
         q = q.order_by(sort_func('instability'))
+    elif sort_field == "relevancy":
+        q = q.order_by(sort_func('relevancy'))
     else:
         q = q.join('test_case').order_by(sort_func('name'))
 
@@ -332,7 +334,7 @@ def get_result_history(test_case_result_id, start=0, limit=10):
     q = q.join('job', 'run', 'flow', 'branch')
     q = q.filter(Branch.id == tcr.job.run.flow.branch_id)
     q = q.filter(Flow.kind == 0)  # CI
-    q = q.filter(Flow.created < tcr.job.run.flow.created)
+    q = q.filter(Flow.created <= tcr.job.run.flow.created)
     q = q.order_by(desc(Flow.created))
 
     total = q.count()

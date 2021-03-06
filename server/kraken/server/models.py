@@ -526,6 +526,7 @@ class TestCaseResult(db.Model):
     instability = Column(Integer, default=0)
     age = Column(Integer, default=0)
     change = Column(Integer, default=consts.TC_RESULT_CHANGE_NO)
+    relevancy = Column(Integer, default=0)
 
     def __repr__(self):
         txt = 'TCR %s, result:%s' % (self.id, consts.TC_RESULTS_NAME[self.result])
@@ -541,6 +542,7 @@ class TestCaseResult(db.Model):
                     instability=self.instability,
                     age=self.age,
                     change=self.change,
+                    relevancy=self.relevancy if self.relevancy is not None else 0,
                     job_id=self.job_id,
                     job_name=self.job.name,
                     agents_group_name=self.job.agents_group.name,
