@@ -13,8 +13,6 @@ services:
     image: eu.gcr.io/kraken-261806/kkchproxy:kk_ver
   agent:
     image: eu.gcr.io/kraken-261806/kkagent:kk_ver
-    environment:
-      - KRAKEN_AGENT_SLOT={{.Task.Slot}}
     deploy:
       replicas: 3
     volumes:
