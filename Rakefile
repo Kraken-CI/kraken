@@ -343,7 +343,7 @@ end
 # DOCKER
 
 task :docker_up => [DOCKER_COMPOSE, :build_all] do
-#task :docker_up do
+  sh "cp dot.env .env"
   sh "#{DOCKER_COMPOSE} down"
   sh "#{DOCKER_COMPOSE} build --build-arg kkver=#{kk_ver}"
   sh "#{DOCKER_COMPOSE} up"
