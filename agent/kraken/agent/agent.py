@@ -41,14 +41,26 @@ log = logging.getLogger('agent')
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Kraken Agent')
-    parser.add_argument('-s', '--server', help='Server URL')
-    parser.add_argument('-d', '--data-dir', help='Directory for presistent data')
-    parser.add_argument('-t', '--tools-dirs', help='List of tools directories')
-    parser.add_argument('--no-update', action='store_true', help='Do not update agent automatically (useful in agent development)')
-    parser.add_argument('command', help="A command to execute")
+    subparsers = parser.add_subparsers(title='Kraken Agent commands', dest='command')
+
+    parser_run = subparsers.add_parser('run',
+                                       help='Start Kraken Agent service',
+                                       description='Start Kraken Agent service.')
+    parser_run.add_argument('-s', '--server', help='Server URL')
+    parser_run.add_argument('-d', '--data-dir', help='Directory for presistent data')
+    parser_run.add_argument('-t', '--tools-dirs', help='List of tools directories')
+    parser_run.add_argument('--no-update', action='store_true', help='Do not update agent automatically (useful in agent development)')
+
+    pi = subparsers.add_parser('install',
+                               help='Install Kraken Agent in the system as a systemd service',
+                               description='Install Kraken Agent in the system as a systemd service.')
+
+    pci = subparsers.add_parser('check-integrity',
+                                help='Check if current installation of Kraken Agent is integral ie. is complete and should work ok',
+                                description="Check if current installation of Kraken Agent is integral ie. is complete and should work ok.")
 
     args = parser.parse_args()
-    return parser, args
+    return parser, parser_run, pi, pci, args
 
 
 def dispatch_job(srv, job):
@@ -104,6 +116,7 @@ def collect_host_info():
 
 
 def check_integrity():
+    print('All is ok')
     return True
 
 
@@ -112,9 +125,14 @@ def main():
     kraken_version = pkg_resources.get_distribution('kraken-agent').version
     log.info('Starting Kraken Agent, version %s', kraken_version)
 
-    parser, args = parse_args()
+    parser, pr, pi, pci, args = parse_args()
     cfg = vars(args)
     config.set_config(cfg)
+
+    if args.command is None:
+        parser.print_usage()
+        print('missing command - please, provide one of commands: run, install, check-integrity')
+        sys.exit(1)
 
     # check integrity (used during update)
     if args.command == 'check-integrity':
@@ -130,13 +148,13 @@ def main():
     # no specific command so start agent main loop
 
     if args.server is None:
-        parser.print_usage()
-        print('missing required --server option')
+        pr.print_usage()
+        print('missing required -s/--server option')
         sys.exit(1)
 
     if args.data_dir is None:
-        parser.print_usage()
-        print('missing required --data-dir option')
+        pr.print_usage()
+        print('missing required -d/--data-dir option')
         sys.exit(1)
 
     # allow running kktool from current dir in container
