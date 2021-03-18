@@ -12,6 +12,7 @@ import { environment } from './../environments/environment'
 
 import { AuthService } from './auth.service'
 import { UsersService } from './backend/api/users.service'
+import { SettingsService } from './services/settings.service'
 
 @Component({
     selector: 'app-root',
@@ -27,6 +28,7 @@ export class AppComponent implements OnInit {
     logoutMenuItems: MenuItem[]
 
     session: any
+    settings: any
 
     displayPasswdBox = false
     username: string
@@ -38,6 +40,7 @@ export class AppComponent implements OnInit {
 
     constructor(private auth: AuthService,
                 private api: UsersService,
+                private settingsService: SettingsService,
                 private msgSrv: MessageService) {
         this.logoClass = 'logo' + (Math.floor(Math.random() * 9) + 1)
         this.session = null
@@ -47,6 +50,15 @@ export class AppComponent implements OnInit {
         this.auth.currentSession.subscribe(
             session => {
                 this.session = session
+            }
+        )
+
+        this.settingsService.settings.subscribe(
+            settings => {
+                if (settings === null) {
+                    return
+                }
+                this.settings = settings
             }
         )
 
@@ -71,7 +83,9 @@ export class AppComponent implements OnInit {
                     },
                     {
                         label: 'Download',
-                        url: '/install/kraken-agent-install.sh',
+                        command: (event) => {
+                            this.downloadAgentInstallSh()
+                        }
                     },
                 ],
             },
@@ -182,5 +196,34 @@ export class AppComponent implements OnInit {
         if (evKey === 'Enter') {
             this.changePassword()
         }
+    }
+
+    downloadAgentInstallSh() {
+        if (!this.settings || !this.settings.general) {
+            this.msgSrv.add({
+                severity: 'error',
+                summary: 'Agent Install Script download failed',
+                detail: 'Cannot retrieve settings',
+                life: 10000,
+            })
+            return
+        }
+
+        if (!this.settings.general.server_url || this.settings.general.server_url.length < 4) {
+            this.msgSrv.add({
+                severity: 'error',
+                summary: 'Agent Install Script download failed',
+                detail: 'Server URL is missing or incorrect in settings. Please, set it on Settings page.',
+                life: 10000,
+            })
+            return
+        }
+
+        // invoke download
+        var link = document.createElement("a")
+        link.href = '/install/kraken-agent-install.sh'
+        document.body.appendChild(link)
+        link.click()
+        link.remove()
     }
 }

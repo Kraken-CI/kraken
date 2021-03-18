@@ -6,7 +6,7 @@ import { AuthService } from '../auth.service'
 import { MessageService } from 'primeng/api'
 
 import { BreadcrumbsService } from '../breadcrumbs.service'
-import { ManagementService } from '../backend/api/management.service'
+import { SettingsService } from '../services/settings.service'
 
 @Component({
   selector: 'app-settings-page',
@@ -38,7 +38,7 @@ export class SettingsPageComponent implements OnInit {
         public auth: AuthService,
         private msgSrv: MessageService,
         protected breadcrumbService: BreadcrumbsService,
-        protected managementService: ManagementService,
+        protected settingsService: SettingsService,
         private titleService: Title) { }
 
     ngOnInit() {
@@ -53,9 +53,11 @@ export class SettingsPageComponent implements OnInit {
             },
         ])
 
-        this.managementService.getSettings().subscribe(
+        this.settingsService.settings.subscribe(
             settings => {
-                console.info(settings)
+                if (settings === null) {
+                    return
+                }
                 this.generalForm.setValue(settings.general)
                 this.notificationForm.setValue(settings.notification)
                 this.monitoringForm.setValue(settings.monitoring)
@@ -69,7 +71,7 @@ export class SettingsPageComponent implements OnInit {
             notification: this.notificationForm.value,
             monitoring: this.monitoringForm.value,
         }
-        this.managementService
+        this.settingsService
             .updateSettings(settings)
             .subscribe(
                 settings2 => {

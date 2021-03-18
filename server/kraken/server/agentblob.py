@@ -80,7 +80,7 @@ def serve_agent_blob(blob):
     if blob == 'kraken-agent-install.sh':
         url = get_setting('general', 'server_url')
         if not url:
-            raise abort(500, 'Cannot get server URL and put it in Kraken agent install script. The URL should be defined in Kraken Settings first.')
+            raise abort(500, 'Cannot get server URL and put it in Kraken agent install script. The URL should be set on Kraken Settings page first.')
         script = INSTALL_SCRIPT.replace('{url}', url)
         resp = make_response(script)
         # add a filename
