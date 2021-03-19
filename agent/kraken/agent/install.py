@@ -33,7 +33,7 @@ After=time-sync.target
 
 [Service]
 User=kraken
-ExecStart=/opt/kraken/kkagent -s %s -d %s run
+ExecStart=/opt/kraken/kkagent run -s %s -d %s
 Restart=on-failure
 RestartSec=5s
 EnvironmentFile=/opt/kraken/kraken.env

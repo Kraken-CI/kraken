@@ -7,5 +7,5 @@ ARG kkver=0.0
 COPY kkagent kktool /opt/kraken/${kkver}/
 RUN ln -s /opt/kraken/${kkver}/kkagent /opt/kraken/kkagent
 RUN ln -s /opt/kraken/${kkver}/kktool /opt/kraken/kktool
-CMD ./kkagent -s http://${KRAKEN_SERVER_ADDR}/backend -d /tmp/kk run
+CMD ./kkagent run -s http://${KRAKEN_SERVER_ADDR}/backend -d /tmp/kk
 LABEL kkver=${kkver} kkname=agent
