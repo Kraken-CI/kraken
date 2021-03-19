@@ -87,7 +87,7 @@ class Server():
         if slot is not None:
             self.my_addr = 'agent.%s' % slot
         elif builtin is not None:
-            self.my_addr = 'server'
+            self.my_addr = 'agent'
         else:
             srv_ip_addr = urlparse(self.srv_addr).hostname
             self.my_addr = sysutils.get_my_ip(srv_ip_addr)
