@@ -220,7 +220,7 @@ export class AppComponent implements OnInit {
         }
 
         // invoke download
-        var link = document.createElement("a")
+        const link = document.createElement('a')
         link.href = '/install/kraken-agent-install.sh'
         document.body.appendChild(link)
         link.click()

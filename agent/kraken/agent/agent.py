@@ -125,7 +125,7 @@ def main():
     kraken_version = pkg_resources.get_distribution('kraken-agent').version
     log.info('Starting Kraken Agent, version %s', kraken_version)
 
-    parser, pr, pi, pci, args = parse_args()
+    parser, pr, _, _, args = parse_args()
     cfg = vars(args)
     config.set_config(cfg)
 
