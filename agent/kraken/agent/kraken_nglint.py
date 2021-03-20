@@ -15,6 +15,7 @@
 import os
 import json
 import logging
+import subprocess
 
 from . import utils
 from . import tool
@@ -67,7 +68,7 @@ def run_analysis(step, report_issue=None):
         repo_parent = os.path.abspath(cwd) + os.path.sep
 
     cmd = 'npx ng lint --format json --force'
-    ret, out = utils.execute(cmd, cwd=cwd, out_prefix='', timeout=180)
+    ret, out = utils.execute(cmd, cwd=cwd, out_prefix='', timeout=180, stderr=subprocess.DEVNULL)
     if ret != 0:
         log.error('ng list exited with non-zero retcode: %s', ret)
         return ret, 'ng list exited with non-zero retcode'
