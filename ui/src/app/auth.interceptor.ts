@@ -6,7 +6,9 @@ import {
   HttpEvent,
   HttpInterceptor
 } from '@angular/common/http';
+
 import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 
 import { AuthService } from './auth.service'
 
@@ -22,9 +24,16 @@ export class AuthInterceptor implements HttpInterceptor {
             const modifiedReq = request.clone({
                 headers: request.headers.set('Authorization', `Bearer ${userToken}`),
             });
-            return next.handle(modifiedReq);
+            return next.handle(modifiedReq).pipe(tap(
+                resp => {},
+                error => {
+                    if (error.status === 401) {
+                        this.auth.deleteLocalSession()
+                    }
+                }
+            ));
         } else {
-            return next.handle(request);
+            return next.handle(request)
         }
   }
 }
