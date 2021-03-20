@@ -6,11 +6,13 @@ describe('BranchMgmtComponent', () => {
     let component: BranchMgmtComponent
     let fixture: ComponentFixture<BranchMgmtComponent>
 
-    beforeEach(waitForAsync(() => {
-        TestBed.configureTestingModule({
-            declarations: [BranchMgmtComponent],
-        }).compileComponents()
-    }))
+    beforeEach(
+        waitForAsync(() => {
+            TestBed.configureTestingModule({
+                declarations: [BranchMgmtComponent],
+            }).compileComponents()
+        })
+    )
 
     beforeEach(() => {
         fixture = TestBed.createComponent(BranchMgmtComponent)

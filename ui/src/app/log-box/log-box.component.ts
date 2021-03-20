@@ -27,9 +27,9 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
     lastAttempts = 0
     fontSize = 1.0
 
-    timer1 = null  // wait for next logs for 3 seconds, only first time
-    timer2 = null  // nothing loaded but wait for another 3 seconds
-    timer3 = null  // wait for next logs for 3 seconds, the following attempts
+    timer1 = null // wait for next logs for 3 seconds, only first time
+    timer2 = null // nothing loaded but wait for another 3 seconds
+    timer3 = null // wait for next logs for 3 seconds, the following attempts
 
     beginPos = -1
     endPos = -1
@@ -175,10 +175,12 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
                 title: '',
                 expanded: true,
                 stepStatus: true,
-                logs: [{
-                    message: msg,
-                    cls,
-                }],
+                logs: [
+                    {
+                        message: msg,
+                        cls,
+                    },
+                ],
             })
         }
     }
@@ -194,8 +196,7 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
                 loading: true,
                 logs: [
                     {
-                        message:
-                            '... ' + this.beginPos + ' more log lines ...',
+                        message: '... ' + this.beginPos + ' more log lines ...',
                         cls: 'log-blue',
                     },
                 ],
@@ -244,7 +245,7 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
                             this.logInternals,
                             null
                         )
-                        .subscribe(data2 => {
+                        .subscribe((data2) => {
                             this.endPos += data2.items.length
                             this.total = data2.total
                             this._processNextLogs(jobId, data2, start)
@@ -261,13 +262,8 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
             // console.info('load the rest immediatelly', jobId)
             start = start + 200
             this.executionService
-                .getJobLogs(jobId,
-                            start,
-                            200,
-                            'asc',
-                            this.logInternals,
-                            null)
-                .subscribe(data2 => {
+                .getJobLogs(jobId, start, 200, 'asc', this.logInternals, null)
+                .subscribe((data2) => {
                     this.endPos += data2.items.length
                     this.total = data2.total
                     this._processNextLogs(jobId, data2, start)
@@ -288,13 +284,15 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
                 }
                 start = start + data.items.length
                 this.executionService
-                    .getJobLogs(jobId,
-                                start,
-                                200,
-                                'asc',
-                                this.logInternals,
-                                null)
-                    .subscribe(data2 => {
+                    .getJobLogs(
+                        jobId,
+                        start,
+                        200,
+                        'asc',
+                        this.logInternals,
+                        null
+                    )
+                    .subscribe((data2) => {
                         this.endPos += data2.items.length
                         this.total = data2.total
                         this._processNextLogs(jobId, data2, start)
@@ -312,13 +310,8 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
         this.resetLogging()
 
         this.executionService
-            .getJobLogs(jobId,
-                        0,
-                        200,
-                        'desc',
-                        this.logInternals,
-                        null)
-            .subscribe(data => {
+            .getJobLogs(jobId, 0, 200, 'desc', this.logInternals, null)
+            .subscribe((data) => {
                 if (jobId !== this.prvJobId) {
                     // console.info('!!!! job switch - stop processing getJobLogs', jobId)
                     return
@@ -356,7 +349,7 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
                                 this.logInternals,
                                 null
                             )
-                            .subscribe(data2 => {
+                            .subscribe((data2) => {
                                 this.endPos += data2.items.length
                                 this.total = data2.total
                                 this._processNextLogs(jobId, data2, data.total)
@@ -374,7 +367,7 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
 
     ngAfterViewInit() {
         this.logBoxEl = this.logBox.nativeElement
-        this.logFrags.changes.subscribe(_ => this.onLogFragsChanged())
+        this.logFrags.changes.subscribe((_) => this.onLogFragsChanged())
     }
 
     resetLogging() {
@@ -456,13 +449,8 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
         this.resetLogging()
 
         this.executionService
-            .getJobLogs(this.prvJobId,
-                        0,
-                        200,
-                        'asc',
-                        this.logInternals,
-                        null)
-            .subscribe(data => {
+            .getJobLogs(this.prvJobId, 0, 200, 'asc', this.logInternals, null)
+            .subscribe((data) => {
                 this.beginPos = 0
                 this.endPos = data.items.length
                 this.total = data.total
@@ -475,10 +463,13 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
                         title: '',
                         expanded: true,
                         loading: true,
-                        logs: [{
-                            message: '... ' + moreCount + ' more log lines ...',
-                            cls: 'log-blue',
-                        }],
+                        logs: [
+                            {
+                                message:
+                                    '... ' + moreCount + ' more log lines ...',
+                                cls: 'log-blue',
+                            },
+                        ],
                     })
                 }
 
@@ -492,13 +483,8 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
         this.resetLogging()
 
         this.executionService
-            .getJobLogs(this.prvJobId,
-                        0,
-                        200,
-                        'desc',
-                        this.logInternals,
-                        null)
-            .subscribe(data => {
+            .getJobLogs(this.prvJobId, 0, 200, 'desc', this.logInternals, null)
+            .subscribe((data) => {
                 this.beginPos = data.total - 200
                 if (this.beginPos < 0) {
                     this.beginPos = 0
@@ -506,7 +492,12 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
                 this.endPos = data.total
                 this.total = data.total
 
-                this._showLogs(data.items.reverse(), data.job, this.beginPos, false)
+                this._showLogs(
+                    data.items.reverse(),
+                    data.job,
+                    this.beginPos,
+                    false
+                )
 
                 if (this.beginPos > 0) {
                     this.logFragments.splice(0, 0, {
@@ -515,7 +506,10 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
                         loading: true,
                         logs: [
                             {
-                                message: '... ' + this.beginPos + ' more log lines ...',
+                                message:
+                                    '... ' +
+                                    this.beginPos +
+                                    ' more log lines ...',
                                 cls: 'log-blue',
                             },
                         ],
@@ -537,13 +531,15 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
             start = 0
         }
         this.executionService
-            .getJobLogs(this.prvJobId,
-                        start,
-                        200,
-                        'asc',
-                        this.logInternals,
-                        null)
-            .subscribe(data => {
+            .getJobLogs(
+                this.prvJobId,
+                start,
+                200,
+                'asc',
+                this.logInternals,
+                null
+            )
+            .subscribe((data) => {
                 this.beginPos = start
                 this.total = data.total
 
@@ -554,10 +550,15 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
                         title: '',
                         expanded: true,
                         loading: true,
-                        logs: [{
-                            message: '... ' + this.beginPos + ' more log lines ...',
-                            cls: 'log-blue',
-                        }],
+                        logs: [
+                            {
+                                message:
+                                    '... ' +
+                                    this.beginPos +
+                                    ' more log lines ...',
+                                cls: 'log-blue',
+                            },
+                        ],
                     })
                 }
 
@@ -569,13 +570,15 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
 
     loadNextPage() {
         this.executionService
-            .getJobLogs(this.prvJobId,
-                        this.endPos,
-                        200,
-                        'asc',
-                        this.logInternals,
-                        null)
-            .subscribe(data => {
+            .getJobLogs(
+                this.prvJobId,
+                this.endPos,
+                200,
+                'asc',
+                this.logInternals,
+                null
+            )
+            .subscribe((data) => {
                 const startLineNo = this.endPos
                 this.endPos += data.items.length
                 this.total = data.total
@@ -588,10 +591,13 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
                         title: '',
                         expanded: true,
                         loading: true,
-                        logs: [{
-                            message: '... ' + moreCount + ' more log lines ...',
-                            cls: 'log-blue',
-                        }],
+                        logs: [
+                            {
+                                message:
+                                    '... ' + moreCount + ' more log lines ...',
+                                cls: 'log-blue',
+                            },
+                        ],
                     })
                 }
 

@@ -49,7 +49,7 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
     ) {}
 
     ngOnInit() {
-        this.route.paramMap.subscribe(params => {
+        this.route.paramMap.subscribe((params) => {
             this.flowId = parseInt(params.get('id'), 10)
             this.titleService.setTitle('Kraken - Flow ' + this.flowId)
 
@@ -132,7 +132,7 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
     }
 
     refresh() {
-        this.executionService.getFlow(this.flowId).subscribe(flow => {
+        this.executionService.getFlow(this.flowId).subscribe((flow) => {
             this.flow = flow
             const crumbs = [
                 {
@@ -224,8 +224,13 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
             this._traverseTree(this.runsTree[0], 0)
             // console.info('flatTree', this.flatTree);
 
-            const tab = this.route.snapshot.queryParamMap.get('tab');
-            if (tab === 'artifacts' && flow.artifacts && flow.artifacts._public && flow.artifacts._public.count > 0) {
+            const tab = this.route.snapshot.queryParamMap.get('tab')
+            if (
+                tab === 'artifacts' &&
+                flow.artifacts &&
+                flow.artifacts._public &&
+                flow.artifacts._public.count > 0
+            ) {
                 setTimeout(() => {
                     this.activeTabIndex = 3
                 }, 100)
@@ -267,7 +272,7 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
                             this.executionService
                                 .createRun(this.flowId, stage.id)
                                 .subscribe(
-                                    data => {
+                                    (data) => {
                                         this.msgSrv.add({
                                             severity: 'success',
                                             summary: 'Run succeeded',
@@ -275,7 +280,7 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
                                         })
                                         this.refresh()
                                     },
-                                    err => {
+                                    (err) => {
                                         this.msgSrv.add({
                                             severity: 'error',
                                             summary: 'Run erred',
@@ -312,12 +317,8 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
     loadArtifactsLazy(event) {
         this.loadingArtifacts = true
         this.executionService
-            .getFlowArtifacts(
-                this.flowId,
-                event.first,
-                event.rows,
-            )
-            .subscribe(data => {
+            .getFlowArtifacts(this.flowId, event.first, event.rows)
+            .subscribe((data) => {
                 this.artifacts = data.items
                 this.totalArtifacts = data.total
                 this.loadingArtifacts = false

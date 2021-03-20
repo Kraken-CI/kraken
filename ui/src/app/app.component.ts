@@ -38,29 +38,27 @@ export class AppComponent implements OnInit {
     passwordNew1: string
     passwordNew2: string
 
-    constructor(private auth: AuthService,
-                private api: UsersService,
-                private settingsService: SettingsService,
-                private msgSrv: MessageService) {
+    constructor(
+        private auth: AuthService,
+        private api: UsersService,
+        private settingsService: SettingsService,
+        private msgSrv: MessageService
+    ) {
         this.logoClass = 'logo' + (Math.floor(Math.random() * 9) + 1)
         this.session = null
     }
 
     ngOnInit() {
-        this.auth.currentSession.subscribe(
-            session => {
-                this.session = session
-            }
-        )
+        this.auth.currentSession.subscribe((session) => {
+            this.session = session
+        })
 
-        this.settingsService.settings.subscribe(
-            settings => {
-                if (settings === null) {
-                    return
-                }
-                this.settings = settings
+        this.settingsService.settings.subscribe((settings) => {
+            if (settings === null) {
+                return
             }
-        )
+            this.settings = settings
+        })
 
         this.krakenVersion = environment.krakenVersion
 
@@ -85,7 +83,7 @@ export class AppComponent implements OnInit {
                         label: 'Download',
                         command: (event) => {
                             this.downloadAgentInstallSh()
-                        }
+                        },
                     },
                 ],
             },
@@ -103,16 +101,18 @@ export class AppComponent implements OnInit {
             },
         ]
 
-        this.logoutMenuItems = [{
-            label: 'Change Password',
-            icon: 'pi pi-key',
-            command: () => {
-                this.displayPasswdBox = true
-                console.info('this.displayPasswdBox', this.displayPasswdBox)
+        this.logoutMenuItems = [
+            {
+                label: 'Change Password',
+                icon: 'pi pi-key',
+                command: () => {
+                    this.displayPasswdBox = true
+                    console.info('this.displayPasswdBox', this.displayPasswdBox)
+                },
+                disabled: !this.auth.hasPermission('manage'),
+                title: this.auth.permTip('manage'),
             },
-            disabled: !this.auth.hasPermission('manage'),
-            title: this.auth.permTip('manage'),
-        }]
+        ]
     }
 
     randomLogoFont() {
@@ -166,7 +166,7 @@ export class AppComponent implements OnInit {
             password_new: this.passwordNew1,
         }
         this.api.changePassword(this.auth.session.user.id, passwds).subscribe(
-            data => {
+            (data) => {
                 this.msgSrv.add({
                     severity: 'success',
                     summary: 'Password changed',
@@ -177,7 +177,7 @@ export class AppComponent implements OnInit {
                 this.passwordNew1 = ''
                 this.passwordNew2 = ''
             },
-            err => {
+            (err) => {
                 let msg = err.statusText
                 if (err.error && err.error.detail) {
                     msg = err.error.detail
@@ -209,11 +209,15 @@ export class AppComponent implements OnInit {
             return
         }
 
-        if (!this.settings.general.server_url || this.settings.general.server_url.length < 4) {
+        if (
+            !this.settings.general.server_url ||
+            this.settings.general.server_url.length < 4
+        ) {
             this.msgSrv.add({
                 severity: 'error',
                 summary: 'Agent Install Script download failed',
-                detail: 'Server URL is missing or incorrect in settings. Please, set it on Settings page.',
+                detail:
+                    'Server URL is missing or incorrect in settings. Please, set it on Settings page.',
                 life: 10000,
             })
             return

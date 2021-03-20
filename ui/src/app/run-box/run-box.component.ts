@@ -42,7 +42,10 @@ export class RunBoxComponent implements OnInit {
                 },
                 {
                     label: opName,
-                    icon: this.run.state === 'manual' ? 'pi pi-caret-right' : 'pi pi-replay',
+                    icon:
+                        this.run.state === 'manual'
+                            ? 'pi pi-caret-right'
+                            : 'pi pi-replay',
                     command: () => {
                         this.runRunJobs(opName)
                     },
@@ -65,17 +68,27 @@ export class RunBoxComponent implements OnInit {
 
             // calculate bg color for box
             if (this.run.jobs_error && this.run.jobs_error > 0) {
-                this.bgColor = 'linear-gradient(90deg, rgba(255,230,230,1) 0%, rgba(227,193,193,1) 100%)' // redish
-            } else if (this.run.state === 'completed' || this.run.state === 'processed') {
-                if ((this.run.tests_passed && this.run.tests_total && this.run.tests_passed < this.run.tests_total) ||
-                    (this.run.issues_total && this.run.issues_total > 0))
-                {
-                    this.bgColor = 'linear-gradient(90deg, rgba(255,248,230,1) 0%, rgba(247,231,176,1) 100%)' // orangish
+                this.bgColor =
+                    'linear-gradient(90deg, rgba(255,230,230,1) 0%, rgba(227,193,193,1) 100%)' // redish
+            } else if (
+                this.run.state === 'completed' ||
+                this.run.state === 'processed'
+            ) {
+                if (
+                    (this.run.tests_passed &&
+                        this.run.tests_total &&
+                        this.run.tests_passed < this.run.tests_total) ||
+                    (this.run.issues_total && this.run.issues_total > 0)
+                ) {
+                    this.bgColor =
+                        'linear-gradient(90deg, rgba(255,248,230,1) 0%, rgba(247,231,176,1) 100%)' // orangish
                 } else {
-                    this.bgColor = 'linear-gradient(90deg, rgba(230,255,230,1) 0%, rgba(193,227,193,1) 100%)' // greenish
+                    this.bgColor =
+                        'linear-gradient(90deg, rgba(230,255,230,1) 0%, rgba(193,227,193,1) 100%)' // greenish
                 }
             } else if (this.run.state === 'manual') {
-                    this.bgColor = 'linear-gradient(90deg, rgba(230,243,255,1) 0%, rgba(193,209,227,1) 100%)' // blueish
+                this.bgColor =
+                    'linear-gradient(90deg, rgba(230,243,255,1) 0%, rgba(193,209,227,1) 100%)' // blueish
             }
         } else {
             // prepare menu items for stage box
@@ -90,7 +103,7 @@ export class RunBoxComponent implements OnInit {
                                     stage_id: this.stage.id,
                                 })
                                 .subscribe(
-                                    data => {
+                                    (data) => {
                                         this.msgSrv.add({
                                             severity: 'success',
                                             summary: 'Run succeeded',
@@ -98,7 +111,7 @@ export class RunBoxComponent implements OnInit {
                                         })
                                         this.stageRun.emit(data)
                                     },
-                                    err => {
+                                    (err) => {
                                         this.msgSrv.add({
                                             severity: 'error',
                                             summary: 'Run erred',
@@ -132,20 +145,18 @@ export class RunBoxComponent implements OnInit {
 
     runRunJobs(opName) {
         this.executionService.runRunJobs(this.run.id).subscribe(
-            data => {
+            (data) => {
                 this.msgSrv.add({
                     severity: 'success',
                     summary: opName + ' succeeded',
                     detail: opName + ' operation succeeded.',
                 })
             },
-            err => {
+            (err) => {
                 this.msgSrv.add({
                     severity: 'error',
                     summary: opName + ' erred',
-                    detail:
-                    opName + ' operation erred: ' +
-                        err.statusText,
+                    detail: opName + ' operation erred: ' + err.statusText,
                     life: 10000,
                 })
             }
@@ -154,19 +165,18 @@ export class RunBoxComponent implements OnInit {
 
     cancelRun() {
         this.executionService.cancelRun(this.run.id).subscribe(
-            data => {
+            (data) => {
                 this.msgSrv.add({
                     severity: 'success',
                     summary: ' succeeded',
                     detail: 'Cancel operation succeeded.',
                 })
             },
-            err => {
+            (err) => {
                 this.msgSrv.add({
                     severity: 'error',
                     summary: 'Cancel erred',
-                    detail: 'Cancel operation erred: ' +
-                        err.statusText,
+                    detail: 'Cancel operation erred: ' + err.statusText,
                     life: 10000,
                 })
             }

@@ -6,11 +6,13 @@ describe('BreadcrumbsComponent', () => {
     let component: BreadcrumbsComponent
     let fixture: ComponentFixture<BreadcrumbsComponent>
 
-    beforeEach(waitForAsync(() => {
-        TestBed.configureTestingModule({
-            declarations: [BreadcrumbsComponent],
-        }).compileComponents()
-    }))
+    beforeEach(
+        waitForAsync(() => {
+            TestBed.configureTestingModule({
+                declarations: [BreadcrumbsComponent],
+            }).compileComponents()
+        })
+    )
 
     beforeEach(() => {
         fixture = TestBed.createComponent(BreadcrumbsComponent)

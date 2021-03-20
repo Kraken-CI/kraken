@@ -6,11 +6,13 @@ describe('RunResultsComponent', () => {
     let component: RunResultsComponent
     let fixture: ComponentFixture<RunResultsComponent>
 
-    beforeEach(waitForAsync(() => {
-        TestBed.configureTestingModule({
-            declarations: [RunResultsComponent],
-        }).compileComponents()
-    }))
+    beforeEach(
+        waitForAsync(() => {
+            TestBed.configureTestingModule({
+                declarations: [RunResultsComponent],
+            }).compileComponents()
+        })
+    )
 
     beforeEach(() => {
         fixture = TestBed.createComponent(RunResultsComponent)

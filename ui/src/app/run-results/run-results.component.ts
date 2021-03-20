@@ -118,7 +118,7 @@ export class RunResultsComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit() {
-        this.route.paramMap.subscribe(params => {
+        this.route.paramMap.subscribe((params) => {
             const runId = parseInt(params.get('id'), 10)
 
             const tab = params.get('tab')
@@ -168,8 +168,13 @@ export class RunResultsComponent implements OnInit, OnDestroy {
                     this.loadArtifactsLazy({ first: 0, rows: 30 })
                 }
 
-                this.executionService.getRun(this.runId).subscribe(run => {
-                    this.titleService.setTitle('Kraken - Run ' + (run.label || run.stage_name) + ' ' + this.runId)
+                this.executionService.getRun(this.runId).subscribe((run) => {
+                    this.titleService.setTitle(
+                        'Kraken - Run ' +
+                            (run.label || run.stage_name) +
+                            ' ' +
+                            this.runId
+                    )
                     this.run = run
                     this.recordsCount[0] = '' + run.jobs_total
                     this.recordsCount[1] =
@@ -228,23 +233,23 @@ export class RunResultsComponent implements OnInit, OnDestroy {
 
     refreshPage() {
         switch (this.activeTabIdx) {
-        case 0:  // jobs
-            this.loadJobsLazy({ first: 0, rows: 30 })
-            break
-        case 1:  // results
-            this.loadResultsLazy({ first: 0, rows: 30 })
-            break
-        case 2:  // issues
-            this.loadIssuesLazy({ first: 0, rows: 30 })
-            break
-        case 3:  // artifacts
-            this.loadArtifactsLazy({ first: 0, rows: 30 })
-            break
-        default:
-            break
+            case 0: // jobs
+                this.loadJobsLazy({ first: 0, rows: 30 })
+                break
+            case 1: // results
+                this.loadResultsLazy({ first: 0, rows: 30 })
+                break
+            case 2: // issues
+                this.loadIssuesLazy({ first: 0, rows: 30 })
+                break
+            case 3: // artifacts
+                this.loadArtifactsLazy({ first: 0, rows: 30 })
+                break
+            default:
+                break
         }
 
-        this.executionService.getRun(this.runId).subscribe(run => {
+        this.executionService.getRun(this.runId).subscribe((run) => {
             this.run = run
             this.recordsCount[0] = '' + run.jobs_total
             this.recordsCount[1] =
@@ -275,11 +280,11 @@ export class RunResultsComponent implements OnInit, OnDestroy {
     }
 
     loadResultsLazy(event) {
-        let statuses = this.filterStatuses.map(e => e.code)
+        let statuses = this.filterStatuses.map((e) => e.code)
         if (statuses.length === 0) {
             statuses = null
         }
-        let changes = this.filterChanges.map(e => e.code)
+        let changes = this.filterChanges.map((e) => e.code)
         if (changes.length === 0) {
             changes = null
         }
@@ -309,7 +314,7 @@ export class RunResultsComponent implements OnInit, OnDestroy {
                 this.filterTestCaseText,
                 this.filterResultJob
             )
-            .subscribe(data => {
+            .subscribe((data) => {
                 this.results = data.items
                 this.totalResults = data.total
                 this.loadingResults = false
@@ -335,7 +340,7 @@ export class RunResultsComponent implements OnInit, OnDestroy {
                 event.rows,
                 this.includeCovered
             )
-            .subscribe(data => {
+            .subscribe((data) => {
                 this.jobs = data.items
                 this.totalJobs = data.total
 
@@ -372,7 +377,7 @@ export class RunResultsComponent implements OnInit, OnDestroy {
 
     rerunAll() {
         this.executionService.runRunJobs(this.run.id).subscribe(
-            data => {
+            (data) => {
                 this.msgSrv.add({
                     severity: 'success',
                     summary: 'Rerun submitted',
@@ -386,13 +391,11 @@ export class RunResultsComponent implements OnInit, OnDestroy {
                     }, 5000)
                 }
             },
-            err => {
+            (err) => {
                 this.msgSrv.add({
                     severity: 'error',
                     summary: 'Rerun erred',
-                    detail:
-                    'Rerun operation erred: ' +
-                        err.statusText,
+                    detail: 'Rerun operation erred: ' + err.statusText,
                     life: 10000,
                 })
             }
@@ -406,7 +409,7 @@ export class RunResultsComponent implements OnInit, OnDestroy {
     }
 
     loadIssuesLazy(event) {
-        let issueTypes = this.filterIssueTypes.map(e => e.code)
+        let issueTypes = this.filterIssueTypes.map((e) => e.code)
         if (issueTypes.length === 0) {
             issueTypes = null
         }
@@ -425,7 +428,7 @@ export class RunResultsComponent implements OnInit, OnDestroy {
                 this.filterIssueMaxAge,
                 this.filterIssueJob
             )
-            .subscribe(data => {
+            .subscribe((data) => {
                 this.issues = data.items
                 this.totalIssues = data.total
                 this.loadingIssues = false
@@ -434,12 +437,8 @@ export class RunResultsComponent implements OnInit, OnDestroy {
 
     loadArtifactsLazy(event) {
         this.executionService
-            .getRunArtifacts(
-                this.runId,
-                event.first,
-                event.rows
-            )
-            .subscribe(data => {
+            .getRunArtifacts(this.runId, event.first, event.rows)
+            .subscribe((data) => {
                 this.artifacts = data.items
                 this.totalArtifacts = data.total
                 this.loadingArtifacts = false
@@ -673,20 +672,18 @@ export class RunResultsComponent implements OnInit, OnDestroy {
             return
         }
         this.executionService.deleteJob(this.job.id).subscribe(
-            data => {
+            (data) => {
                 this.msgSrv.add({
                     severity: 'success',
                     summary: 'Job cancelled',
                     detail: 'Cancelling job succeeded.',
                 })
             },
-            err => {
+            (err) => {
                 this.msgSrv.add({
                     severity: 'error',
                     summary: 'Cancel erred',
-                    detail:
-                    'Cancelling job erred: ' +
-                        err.statusText,
+                    detail: 'Cancelling job erred: ' + err.statusText,
                     life: 10000,
                 })
             }
@@ -695,7 +692,7 @@ export class RunResultsComponent implements OnInit, OnDestroy {
 
     rerunJob() {
         this.executionService.jobRerun(this.job.id).subscribe(
-            data => {
+            (data) => {
                 this.msgSrv.add({
                     severity: 'success',
                     summary: 'Job rerun submitted',
@@ -709,13 +706,11 @@ export class RunResultsComponent implements OnInit, OnDestroy {
                     }, 5000)
                 }
             },
-            err => {
+            (err) => {
                 this.msgSrv.add({
                     severity: 'error',
                     summary: 'Job rerun erred',
-                    detail:
-                    'Job rerun operation erred: ' +
-                        err.statusText,
+                    detail: 'Job rerun operation erred: ' + err.statusText,
                     life: 10000,
                 })
             }
@@ -724,10 +719,10 @@ export class RunResultsComponent implements OnInit, OnDestroy {
 
     getStepInfo(step) {
         switch (step.tool) {
-        case 'shell':
-            return 'cmd: ' + step.cmd
-        case 'git':
-            return 'checkout: ' + step.checkout
+            case 'shell':
+                return 'cmd: ' + step.cmd
+            case 'git':
+                return 'checkout: ' + step.checkout
         }
         return ''
     }

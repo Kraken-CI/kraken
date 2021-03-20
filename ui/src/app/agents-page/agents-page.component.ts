@@ -132,11 +132,11 @@ export class AgentsPageComponent implements OnInit {
                 // if agent is not loaded in list fetch it individually
                 if (!found) {
                     this.managementService.getAgent(agentId).subscribe(
-                        data => {
+                        (data) => {
                             this.addAgentTab(data)
                             this.switchToTab(this.tabs.length - 1)
                         },
-                        err => {
+                        (err) => {
                             let msg = err.statusText
                             if (err.error && err.error.message) {
                                 msg = err.error.message
@@ -158,8 +158,8 @@ export class AgentsPageComponent implements OnInit {
             }
         })
 
-        this.managementService.getGroups(0, 1000).subscribe(data => {
-            this.agentGroups = data.items.map(g => {
+        this.managementService.getGroups(0, 1000).subscribe((data) => {
+            this.agentGroups = data.items.map((g) => {
                 return { id: g.id, name: g.name }
             })
             console.info(this.agentGroups)
@@ -171,7 +171,7 @@ export class AgentsPageComponent implements OnInit {
         this.loadingAgents = true
         this.managementService
             .getAgents(false, event.first, event.rows)
-            .subscribe(data => {
+            .subscribe((data) => {
                 this.agents = data.items
                 this.totalAgents = data.total
                 this.loadingAgents = false
@@ -194,9 +194,7 @@ export class AgentsPageComponent implements OnInit {
         if (this.activeTabIdx === idx) {
             this.switchToTab(idx - 1)
             if (idx - 1 > 0) {
-                this.router.navigate([
-                    '/agents/' + this.agentTab.agent.id,
-                ])
+                this.router.navigate(['/agents/' + this.agentTab.agent.id])
             } else {
                 this.router.navigate(['/agents/all'])
             }
@@ -213,30 +211,24 @@ export class AgentsPageComponent implements OnInit {
 
         // connect method to delete agent
         this.agentMenuItems[0].command = () => {
-            this.managementService
-                .deleteAgent(agent.id)
-                .subscribe(data => {
-                    // remove from list of machines
-                    for (let idx = 0; idx < this.agents.length; idx++) {
-                        const e = this.agents[idx]
-                        if (e.id === agent.id) {
-                            this.agents.splice(idx, 1) // TODO: does not work
-                            break
-                        }
+            this.managementService.deleteAgent(agent.id).subscribe((data) => {
+                // remove from list of machines
+                for (let idx = 0; idx < this.agents.length; idx++) {
+                    const e = this.agents[idx]
+                    if (e.id === agent.id) {
+                        this.agents.splice(idx, 1) // TODO: does not work
+                        break
                     }
-                    // remove from opened tabs if present
-                    for (
-                        let idx = 0;
-                        idx < this.openedAgents.length;
-                        idx++
-                    ) {
-                        const e = this.openedAgents[idx].agent
-                        if (e.id === agent.id) {
-                            this.closeTab(null, idx + 1)
-                            break
-                        }
+                }
+                // remove from opened tabs if present
+                for (let idx = 0; idx < this.openedAgents.length; idx++) {
+                    const e = this.openedAgents[idx].agent
+                    if (e.id === agent.id) {
+                        this.closeTab(null, idx + 1)
+                        break
                     }
-                })
+                }
+            })
         }
     }
 
@@ -245,7 +237,7 @@ export class AgentsPageComponent implements OnInit {
         // if (agentTab.name === agentTab.agent.name) {
         //     return
         // }
-        const groups = this.agentTab.agent.groups.map(g => {
+        const groups = this.agentTab.agent.groups.map((g) => {
             return { id: g.id }
         })
         const ag = { groups }
@@ -253,30 +245,28 @@ export class AgentsPageComponent implements OnInit {
     }
 
     updateAgent(agentId, agentData) {
-        this.managementService
-            .updateAgent(agentId, agentData)
-            .subscribe(
-                data => {
-                    // agentTab.agent.name = data.name
-                    this.msgSrv.add({
-                        severity: 'success',
-                        summary: 'Agent updated',
-                        detail: 'Agent update succeeded.',
-                    })
-                },
-                err => {
-                    let msg = err.statusText
-                    if (err.error && err.error.message) {
-                        msg = err.error.message
-                    }
-                    this.msgSrv.add({
-                        severity: 'error',
-                        summary: 'Agent update failed',
-                        detail: 'Updating agent erred: ' + msg,
-                        life: 10000,
-                    })
+        this.managementService.updateAgent(agentId, agentData).subscribe(
+            (data) => {
+                // agentTab.agent.name = data.name
+                this.msgSrv.add({
+                    severity: 'success',
+                    summary: 'Agent updated',
+                    detail: 'Agent update succeeded.',
+                })
+            },
+            (err) => {
+                let msg = err.statusText
+                if (err.error && err.error.message) {
+                    msg = err.error.message
                 }
-            )
+                this.msgSrv.add({
+                    severity: 'error',
+                    summary: 'Agent update failed',
+                    detail: 'Updating agent erred: ' + msg,
+                    life: 10000,
+                })
+            }
+        )
     }
 
     agentNameKeyDown(event, agentTab) {
@@ -286,18 +276,25 @@ export class AgentsPageComponent implements OnInit {
     }
 
     filterHostInfo(hostInfo) {
-        const ignoredAttrs = new Set(['system', 'system_type', 'distro_name', 'distro_version', 'isolation', 'isolation_type'])
+        const ignoredAttrs = new Set([
+            'system',
+            'system_type',
+            'distro_name',
+            'distro_version',
+            'isolation',
+            'isolation_type',
+        ])
         const res = []
         for (const [key, value] of Object.entries(hostInfo)) {
             if (ignoredAttrs.has(key)) {
                 continue
             }
-            res.push({key, value})
+            res.push({ key, value })
         }
         return res
     }
 
     changeAgentDisable(ev, ag) {
-        this.updateAgent(ag.id, {disabled: ag.disabled})
+        this.updateAgent(ag.id, { disabled: ag.disabled })
     }
 }

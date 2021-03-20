@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core'
 import { Title } from '@angular/platform-browser'
 import { FormGroup, FormControl } from '@angular/forms'
 
@@ -9,12 +9,11 @@ import { BreadcrumbsService } from '../breadcrumbs.service'
 import { SettingsService } from '../services/settings.service'
 
 @Component({
-  selector: 'app-settings-page',
-  templateUrl: './settings-page.component.html',
-  styleUrls: ['./settings-page.component.sass']
+    selector: 'app-settings-page',
+    templateUrl: './settings-page.component.html',
+    styleUrls: ['./settings-page.component.sass'],
 })
 export class SettingsPageComponent implements OnInit {
-
     settings: any
 
     generalForm = new FormGroup({
@@ -39,7 +38,8 @@ export class SettingsPageComponent implements OnInit {
         private msgSrv: MessageService,
         protected breadcrumbService: BreadcrumbsService,
         protected settingsService: SettingsService,
-        private titleService: Title) { }
+        private titleService: Title
+    ) {}
 
     ngOnInit() {
         this.titleService.setTitle('Kraken - Settings')
@@ -53,16 +53,14 @@ export class SettingsPageComponent implements OnInit {
             },
         ])
 
-        this.settingsService.settings.subscribe(
-            settings => {
-                if (settings === null) {
-                    return
-                }
-                this.generalForm.setValue(settings.general)
-                this.notificationForm.setValue(settings.notification)
-                this.monitoringForm.setValue(settings.monitoring)
+        this.settingsService.settings.subscribe((settings) => {
+            if (settings === null) {
+                return
             }
-        )
+            this.generalForm.setValue(settings.general)
+            this.notificationForm.setValue(settings.notification)
+            this.monitoringForm.setValue(settings.monitoring)
+        })
     }
 
     saveSettings() {
@@ -71,29 +69,27 @@ export class SettingsPageComponent implements OnInit {
             notification: this.notificationForm.value,
             monitoring: this.monitoringForm.value,
         }
-        this.settingsService
-            .updateSettings(settings)
-            .subscribe(
-                settings2 => {
-                    this.settings = settings2
-                    this.msgSrv.add({
-                        severity: 'success',
-                        summary: 'Settings update succeeded',
-                        detail: 'Settings update operation succeeded.',
-                    })
-                },
-                err => {
-                    let msg = err.statusText
-                    if (err.error && err.error.detail) {
-                        msg = err.error.detail
-                    }
-                    this.msgSrv.add({
-                        severity: 'error',
-                        summary: 'Settings update erred',
-                        detail: 'Settings update operation erred: ' + msg,
-                        life: 10000,
-                    })
+        this.settingsService.updateSettings(settings).subscribe(
+            (settings2) => {
+                this.settings = settings2
+                this.msgSrv.add({
+                    severity: 'success',
+                    summary: 'Settings update succeeded',
+                    detail: 'Settings update operation succeeded.',
+                })
+            },
+            (err) => {
+                let msg = err.statusText
+                if (err.error && err.error.detail) {
+                    msg = err.error.detail
                 }
-            )
+                this.msgSrv.add({
+                    severity: 'error',
+                    summary: 'Settings update erred',
+                    detail: 'Settings update operation erred: ' + msg,
+                    life: 10000,
+                })
+            }
+        )
     }
 }

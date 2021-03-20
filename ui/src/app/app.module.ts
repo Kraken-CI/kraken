@@ -33,13 +33,18 @@ import { TabMenuModule } from 'primeng/tabmenu'
 import { CheckboxModule } from 'primeng/checkbox'
 import { MenubarModule } from 'primeng/menubar'
 import { InputSwitchModule } from 'primeng/inputswitch'
-import { InputNumberModule } from 'primeng/inputnumber';
+import { InputNumberModule } from 'primeng/inputnumber'
 import { PasswordModule } from 'primeng/password'
-import { TooltipModule } from 'primeng/tooltip';
-import { ToggleButtonModule } from 'primeng/togglebutton';
+import { TooltipModule } from 'primeng/tooltip'
+import { ToggleButtonModule } from 'primeng/togglebutton'
 
 // REST API
-import { ApiModule, BASE_PATH, Configuration, ConfigurationParameters } from './backend'
+import {
+    ApiModule,
+    BASE_PATH,
+    Configuration,
+    ConfigurationParameters,
+} from './backend'
 
 import { AppRoutingModule } from './app-routing.module'
 import { AppComponent } from './app.component'
@@ -62,9 +67,9 @@ import { LogBoxComponent } from './log-box/log-box.component'
 import { ProjectSettingsComponent } from './project-settings/project-settings.component'
 import { AgentsPageComponent } from './agents-page/agents-page.component'
 import { DiscoveredPageComponent } from './discovered-page/discovered-page.component'
-import { GroupsPageComponent } from './groups-page/groups-page.component';
-import { SettingsPageComponent } from './settings-page/settings-page.component';
-import { DiagsPageComponent } from './diags-page/diags-page.component';
+import { GroupsPageComponent } from './groups-page/groups-page.component'
+import { SettingsPageComponent } from './settings-page/settings-page.component'
+import { DiagsPageComponent } from './diags-page/diags-page.component'
 
 export function cfgFactory() {
     const params: ConfigurationParameters = {
@@ -149,8 +154,7 @@ export function cfgFactory() {
             provide: HTTP_INTERCEPTORS,
             useClass: AuthInterceptor,
             multi: true,
-        }
-
+        },
     ],
     bootstrap: [AppComponent],
 })

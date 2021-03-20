@@ -129,11 +129,11 @@ export class GroupsPageComponent implements OnInit {
                 // if group is not loaded in list fetch it individually
                 if (!found) {
                     this.managementService.getGroup(groupId).subscribe(
-                        data => {
+                        (data) => {
                             this.addGroupTab(data)
                             this.switchToTab(this.tabs.length - 1)
                         },
-                        err => {
+                        (err) => {
                             let msg = err.statusText
                             if (err.error && err.error.message) {
                                 msg = err.error.message
@@ -160,7 +160,7 @@ export class GroupsPageComponent implements OnInit {
         console.info(event)
         this.managementService
             .getGroups(event.first, event.rows)
-            .subscribe(data => {
+            .subscribe((data) => {
                 this.groups = data.items
                 this.totalGroups = data.total
             })
@@ -186,7 +186,7 @@ export class GroupsPageComponent implements OnInit {
         const g = { name: this.groupName }
 
         this.managementService.createGroup(g).subscribe(
-            data => {
+            (data) => {
                 this.msgSrv.add({
                     severity: 'success',
                     summary: 'New group added',
@@ -196,7 +196,7 @@ export class GroupsPageComponent implements OnInit {
                 this.addGroupTab(data)
                 this.router.navigate(['/agents-groups/' + data.id])
             },
-            err => {
+            (err) => {
                 console.info(err)
                 let msg = err.statusText
                 if (err.error && err.error.message) {
@@ -258,7 +258,7 @@ export class GroupsPageComponent implements OnInit {
 
         // connect method to delete group
         this.groupMenuItems[0].command = () => {
-            this.managementService.deleteGroup(group.id).subscribe(data => {
+            this.managementService.deleteGroup(group.id).subscribe((data) => {
                 // remove from list of groups
                 for (let idx = 0; idx < this.groups.length; idx++) {
                     const g = this.groups[idx]
@@ -286,7 +286,7 @@ export class GroupsPageComponent implements OnInit {
         }
         const g = { name: groupTab.name }
         this.managementService.updateGroup(groupTab.group.id, g).subscribe(
-            data => {
+            (data) => {
                 console.info('updated', data)
                 groupTab.group.name = data.name
                 this.msgSrv.add({
@@ -295,7 +295,7 @@ export class GroupsPageComponent implements OnInit {
                     detail: 'Group update succeeded.',
                 })
             },
-            err => {
+            (err) => {
                 let msg = err.statusText
                 if (err.error && err.error.message) {
                     msg = err.error.message

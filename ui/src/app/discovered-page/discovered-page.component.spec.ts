@@ -6,11 +6,13 @@ describe('DiscoveredPageComponent', () => {
     let component: DiscoveredPageComponent
     let fixture: ComponentFixture<DiscoveredPageComponent>
 
-    beforeEach(waitForAsync(() => {
-        TestBed.configureTestingModule({
-            declarations: [DiscoveredPageComponent],
-        }).compileComponents()
-    }))
+    beforeEach(
+        waitForAsync(() => {
+            TestBed.configureTestingModule({
+                declarations: [DiscoveredPageComponent],
+            }).compileComponents()
+        })
+    )
 
     beforeEach(() => {
         fixture = TestBed.createComponent(DiscoveredPageComponent)

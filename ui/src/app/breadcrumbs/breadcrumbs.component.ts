@@ -46,7 +46,7 @@ export class BreadcrumbsComponent implements OnInit {
     ngOnInit() {
         this.breadcrumbsIn = this.breadcrumbService.getCrumbs()
 
-        this.breadcrumbsIn.subscribe(data => {
+        this.breadcrumbsIn.subscribe((data) => {
             if (data.length === 0) {
                 return
             }
@@ -110,19 +110,21 @@ export class BreadcrumbsComponent implements OnInit {
                 data2.push(it2)
             }
 
-            if (getBranches &&
+            if (
+                getBranches &&
                 this.currProjectId &&
                 (this.branches[this.currProjectId] === undefined ||
                     this.branches[this.currProjectId].length === 0)
             ) {
                 const projId = this.currProjectId
-                this.managementService.getProject(projId).subscribe(proj => {
+                this.managementService.getProject(projId).subscribe((proj) => {
                     this.branches[projId] = proj.branches
                 })
             }
 
             if (getFlows) {
-                const flowsKey = '' + this.currBranchId + '-' + this.currFlowKind
+                const flowsKey =
+                    '' + this.currBranchId + '-' + this.currFlowKind
                 if (
                     this.flows[flowsKey] === undefined ||
                     this.flows[flowsKey].length === 0
@@ -135,19 +137,20 @@ export class BreadcrumbsComponent implements OnInit {
                             10,
                             this.currFlowId
                         )
-                        .subscribe(flows => {
+                        .subscribe((flows) => {
                             this.flows[flowsKey] = flows.items
                         })
                 }
             }
 
-            if (getRuns &&
+            if (
+                getRuns &&
                 this.currFlowId &&
                 (this.runs[this.currFlowId] === undefined ||
                     this.runs[this.currFlowId].length === 0)
             ) {
                 const flowId = this.currFlowId
-                this.executionService.getFlow(flowId).subscribe(flow => {
+                this.executionService.getFlow(flowId).subscribe((flow) => {
                     this.runs[flowId] = flow.runs
                 })
             }
@@ -155,48 +158,52 @@ export class BreadcrumbsComponent implements OnInit {
             this.breadcrumbs.next(data2)
         })
 
-        this.managementService.getProjects().subscribe(data => {
+        this.managementService.getProjects().subscribe((data) => {
             this.projects = data.items
         })
     }
 
     showCrumbMenu(event, crumbMenu, breadcrumb) {
         switch (breadcrumb.label) {
-        case 'Projects':
-            this.crumbMenuItems = this.projects.map(p => {
-                return { label: p.name, routerLink: '/projects/' + p.id }
-            })
-            break
-        case 'Branches':
-            this.crumbMenuItems = this.branches[this.currProjectId].map(
-                b => {
-                    return {
-                        label: b.name,
-                        routerLink: '/branches/' + b.id,
+            case 'Projects':
+                this.crumbMenuItems = this.projects.map((p) => {
+                    return { label: p.name, routerLink: '/projects/' + p.id }
+                })
+                break
+            case 'Branches':
+                this.crumbMenuItems = this.branches[this.currProjectId].map(
+                    (b) => {
+                        return {
+                            label: b.name,
+                            routerLink: '/branches/' + b.id,
+                        }
                     }
+                )
+                break
+            case 'Flows':
+                const flowsKey =
+                    '' + this.currBranchId + '-' + this.currFlowKind
+                this.crumbMenuItems = this.flows[flowsKey].map((f) => {
+                    return {
+                        label: f.id + ' - ' + f.label,
+                        routerLink: '/flows/' + f.id,
+                    }
+                })
+                break
+            case 'Stages':
+                this.crumbMenuItems = this.runs[this.currFlowId].map((r) => {
+                    return { label: r.stage_name, routerLink: '/runs/' + r.id }
+                })
+                break
+            case 'Home':
+                this.router.navigate(['/'])
+                return
+            default:
+                if (breadcrumb.menuItems) {
+                    this.crumbMenuItems = breadcrumb.menuItems
+                } else {
+                    this.crumbMenuItems = []
                 }
-            )
-            break
-        case 'Flows':
-            const flowsKey = '' + this.currBranchId + '-' + this.currFlowKind
-            this.crumbMenuItems = this.flows[flowsKey].map(f => {
-                return { label: f.id + ' - ' + f.label, routerLink: '/flows/' + f.id }
-            })
-            break
-        case 'Stages':
-            this.crumbMenuItems = this.runs[this.currFlowId].map(r => {
-                return { label: r.stage_name, routerLink: '/runs/' + r.id }
-            })
-            break
-        case 'Home':
-            this.router.navigate(['/'])
-            return
-        default:
-            if (breadcrumb.menuItems) {
-                this.crumbMenuItems = breadcrumb.menuItems
-            } else {
-                this.crumbMenuItems = []
-            }
         }
 
         if (this.crumbMenuItems.length > 0) {

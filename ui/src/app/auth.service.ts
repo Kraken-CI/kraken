@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable } from '@angular/core'
 import { HttpClient } from '@angular/common/http'
 import { Router, ActivatedRoute } from '@angular/router'
 import { BehaviorSubject, Observable } from 'rxjs'
@@ -8,17 +8,19 @@ import { MessageService } from 'primeng/api'
 import { UsersService } from './backend/api/users.service'
 
 @Injectable({
-  providedIn: 'root'
+    providedIn: 'root',
 })
 export class AuthService {
-    private currentSessionSubject: BehaviorSubject<any>;
-    public currentSession: Observable<any>;
+    private currentSessionSubject: BehaviorSubject<any>
+    public currentSession: Observable<any>
     public session: any
 
-    constructor(private http: HttpClient,
-                private api: UsersService,
-                private router: Router,
-                private msgSrv: MessageService) {
+    constructor(
+        private http: HttpClient,
+        private api: UsersService,
+        private router: Router,
+        private msgSrv: MessageService
+    ) {
         const session = localStorage.getItem('session')
         if (session) {
             this.session = JSON.parse(session)
@@ -33,14 +35,14 @@ export class AuthService {
     login(user, password, returnUrl) {
         const credentials = { user, password }
         this.api.login(credentials).subscribe(
-            data => {
+            (data) => {
                 this.session = data
 
                 if (this.session === null) {
                     this.deleteLocalSession()
                     this.msgSrv.add({
                         severity: 'error',
-                        summary: 'Invalid user or password'
+                        summary: 'Invalid user or password',
                     })
                     return
                 }
@@ -49,7 +51,7 @@ export class AuthService {
                 localStorage.setItem('session', JSON.stringify(this.session))
                 // this.router.navigate([returnUrl])
             },
-            err => {
+            (err) => {
                 let msg = err.statusText
                 if (err.error && err.error.detail) {
                     msg = err.error.detail
@@ -67,10 +69,10 @@ export class AuthService {
     logout() {
         if (this.session && this.session.id) {
             this.api.logout(this.session.id).subscribe(
-                resp => {
+                (resp) => {
                     this.deleteLocalSession()
                 },
-                err => {
+                (err) => {
                     this.deleteLocalSession()
                 }
             )

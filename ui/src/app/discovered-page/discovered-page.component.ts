@@ -38,7 +38,7 @@ export class DiscoveredPageComponent implements OnInit {
 
     loadAgentsLazy(event) {
         this.loadingAgents = true
-        this.managementService.getAgents(true).subscribe(data => {
+        this.managementService.getAgents(true).subscribe((data) => {
             this.agents = data.items
             this.totalAgents = data.total
             this.loadingAgents = false
@@ -60,10 +60,10 @@ export class DiscoveredPageComponent implements OnInit {
     }
 
     authorize(agentsTable) {
-        const execs = this.selectedAgents.map(e => {
+        const execs = this.selectedAgents.map((e) => {
             return { id: e.id, authorized: true }
         })
-        this.managementService.updateAgents(execs).subscribe(data => {
+        this.managementService.updateAgents(execs).subscribe((data) => {
             this.refreshAgents(agentsTable)
         })
     }

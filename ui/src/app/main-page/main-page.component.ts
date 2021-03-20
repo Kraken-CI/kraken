@@ -52,7 +52,7 @@ export class MainPageComponent implements OnInit {
     }
 
     refresh() {
-        this.managementService.getProjects().subscribe(data => {
+        this.managementService.getProjects().subscribe((data) => {
             this.projects = data.items
         })
     }
@@ -75,7 +75,7 @@ export class MainPageComponent implements OnInit {
         this.managementService
             .createProject({ name: this.projectName })
             .subscribe(
-                data => {
+                (data) => {
                     console.info(data)
                     this.msgSrv.add({
                         severity: 'success',
@@ -86,7 +86,7 @@ export class MainPageComponent implements OnInit {
                     this.selectedProject = data
                     this.router.navigate(['/projects/' + data.id])
                 },
-                err => {
+                (err) => {
                     console.info(err)
                     let msg = err.statusText
                     if (err.error && err.error.detail) {
@@ -122,7 +122,7 @@ export class MainPageComponent implements OnInit {
         this.managementService
             .createBranch(this.selectedProject.id, { name: this.branchName })
             .subscribe(
-                data => {
+                (data) => {
                     console.info(data)
                     this.msgSrv.add({
                         severity: 'success',
@@ -132,7 +132,7 @@ export class MainPageComponent implements OnInit {
                     this.newBranchDlgVisible = false
                     this.router.navigate(['/branches/' + data.id])
                 },
-                err => {
+                (err) => {
                     console.info(err)
                     let msg = err.statusText
                     if (err.error && err.error.detail) {

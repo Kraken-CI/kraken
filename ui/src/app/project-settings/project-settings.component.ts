@@ -52,7 +52,7 @@ export class ProjectSettingsComponent implements OnInit {
     ) {}
 
     ngOnInit() {
-        this.route.paramMap.subscribe(params => {
+        this.route.paramMap.subscribe((params) => {
             this.projectId = parseInt(params.get('id'), 10)
             this.refresh()
         })
@@ -61,9 +61,11 @@ export class ProjectSettingsComponent implements OnInit {
     refresh() {
         this.managementService
             .getProject(this.projectId)
-            .subscribe(project => {
+            .subscribe((project) => {
                 this.project = project
-                this.titleService.setTitle('Kraken - Project Settings ' + this.project.name)
+                this.titleService.setTitle(
+                    'Kraken - Project Settings ' + this.project.name
+                )
 
                 this.breadcrumbService.setCrumbs([
                     {
@@ -137,7 +139,7 @@ export class ProjectSettingsComponent implements OnInit {
         this.managementService
             .createBranch(this.project.id, { name: this.branchName })
             .subscribe(
-                branch => {
+                (branch) => {
                     this.msgSrv.add({
                         severity: 'success',
                         summary: 'New branch succeeded',
@@ -146,7 +148,7 @@ export class ProjectSettingsComponent implements OnInit {
                     this.newBranchDlgVisible = false
                     this.router.navigate(['/branches/' + branch.id])
                 },
-                err => {
+                (err) => {
                     console.info(err)
                     let msg = err.statusText
                     if (err.error && err.error.detail) {
@@ -191,7 +193,7 @@ export class ProjectSettingsComponent implements OnInit {
         this.managementService
             .createSecret(this.projectId, secretVal)
             .subscribe(
-                data => {
+                (data) => {
                     console.info(data)
                     this.msgSrv.add({
                         severity: 'success',
@@ -200,7 +202,7 @@ export class ProjectSettingsComponent implements OnInit {
                     })
                     this.project.secrets.push(data)
                 },
-                err => {
+                (err) => {
                     console.info(err)
                     let msg = err.statusText
                     if (err.error && err.error.detail) {
@@ -221,7 +223,7 @@ export class ProjectSettingsComponent implements OnInit {
         this.managementService
             .updateSecret(this.secretForm.value.id, secretVal)
             .subscribe(
-                secret => {
+                (secret) => {
                     for (const idx in this.project.secrets) {
                         if (this.project.secrets[idx].id === secret.id) {
                             this.project.secrets[idx] = secret
@@ -235,7 +237,7 @@ export class ProjectSettingsComponent implements OnInit {
                         detail: 'Secret update operation succeeded.',
                     })
                 },
-                err => {
+                (err) => {
                     console.info(err)
                     let msg = err.statusText
                     if (err.error && err.error.detail) {
@@ -258,7 +260,7 @@ export class ProjectSettingsComponent implements OnInit {
                 'Do you really want to delete secret "' + secretVal.name + '"?',
             accept: () => {
                 this.managementService.deleteSecret(secretVal.id).subscribe(
-                    secret => {
+                    (secret) => {
                         this.selectSecret(this.project.secrets[0]) // TODO: what if this is deleted, same in list of stages
                         this.msgSrv.add({
                             severity: 'success',
@@ -266,7 +268,7 @@ export class ProjectSettingsComponent implements OnInit {
                             detail: 'Secret deletion operation succeeded.',
                         })
                     },
-                    err => {
+                    (err) => {
                         console.info(err)
                         let msg = err.statusText
                         if (err.error && err.error.detail) {
@@ -314,7 +316,7 @@ export class ProjectSettingsComponent implements OnInit {
     getOrGenerateSecret() {
         if (!this.project.webhooks.github_secret) {
             this.project.webhooks.github_secret = [...Array(20)]
-                .map(i => (~~(Math.random() * 36)).toString(36))
+                .map((i) => (~~(Math.random() * 36)).toString(36))
                 .join('')
         }
         return this.project.webhooks.github_secret
@@ -325,7 +327,7 @@ export class ProjectSettingsComponent implements OnInit {
         this.managementService
             .updateProject(this.projectId, projectVal)
             .subscribe(
-                project => {
+                (project) => {
                     this.project = project
                     this.msgSrv.add({
                         severity: 'success',
@@ -333,7 +335,7 @@ export class ProjectSettingsComponent implements OnInit {
                         detail: 'Project update operation succeeded.',
                     })
                 },
-                err => {
+                (err) => {
                     console.info(err)
                     let msg = err.statusText
                     if (err.error && err.error.detail) {
@@ -357,29 +359,27 @@ export class ProjectSettingsComponent implements OnInit {
     }
 
     deleteProject() {
-        this.managementService
-            .deleteProject(this.projectId)
-            .subscribe(
-                data => {
-                    this.msgSrv.add({
-                        severity: 'success',
-                        summary: 'Project deletion succeeded',
-                        detail: 'Project delete operation succeeded.',
-                    })
-                    this.router.navigate(['/'])
-                },
-                err => {
-                    let msg = err.statusText
-                    if (err.error && err.error.detail) {
-                        msg = err.error.detail
-                    }
-                    this.msgSrv.add({
-                        severity: 'error',
-                        summary: 'Project deletion erred',
-                        detail: 'Project delete operation erred: ' + msg,
-                        life: 10000,
-                    })
+        this.managementService.deleteProject(this.projectId).subscribe(
+            (data) => {
+                this.msgSrv.add({
+                    severity: 'success',
+                    summary: 'Project deletion succeeded',
+                    detail: 'Project delete operation succeeded.',
+                })
+                this.router.navigate(['/'])
+            },
+            (err) => {
+                let msg = err.statusText
+                if (err.error && err.error.detail) {
+                    msg = err.error.detail
                 }
-            )
+                this.msgSrv.add({
+                    severity: 'error',
+                    summary: 'Project deletion erred',
+                    detail: 'Project delete operation erred: ' + msg,
+                    life: 10000,
+                })
+            }
+        )
     }
 }

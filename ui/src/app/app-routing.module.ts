@@ -17,7 +17,6 @@ import { GroupsPageComponent } from './groups-page/groups-page.component'
 import { SettingsPageComponent } from './settings-page/settings-page.component'
 import { DiagsPageComponent } from './diags-page/diags-page.component'
 
-
 const routes: Routes = [
     {
         path: '',
@@ -104,7 +103,9 @@ const routes: Routes = [
 ]
 
 @NgModule({
-    imports: [RouterModule.forRoot(routes, { relativeLinkResolution: 'legacy' })],
+    imports: [
+        RouterModule.forRoot(routes, { relativeLinkResolution: 'legacy' }),
+    ],
     exports: [RouterModule],
 })
 export class AppRoutingModule {}

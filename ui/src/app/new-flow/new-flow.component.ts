@@ -36,7 +36,7 @@ export class NewFlowComponent implements OnInit {
         this.kind = this.route.snapshot.paramMap.get('kind')
 
         this.branchId = parseInt(this.route.snapshot.paramMap.get('id'), 10)
-        this.managementService.getBranch(this.branchId).subscribe(branch => {
+        this.managementService.getBranch(this.branchId).subscribe((branch) => {
             this.branch = branch
 
             // prepare breadcrumb
@@ -98,7 +98,7 @@ export class NewFlowComponent implements OnInit {
         this.executionService
             .createFlow(this.branchId, this.kind, flow)
             .subscribe(
-                data => {
+                (data) => {
                     this.msgSrv.add({
                         severity: 'success',
                         summary: 'Flow started',
@@ -106,7 +106,7 @@ export class NewFlowComponent implements OnInit {
                     })
                     this.router.navigate(['/flows/' + data.id])
                 },
-                err => {
+                (err) => {
                     let msg = err.statusText
                     if (err.error && err.error.detail) {
                         msg = err.error.detail
@@ -114,8 +114,7 @@ export class NewFlowComponent implements OnInit {
                     this.msgSrv.add({
                         severity: 'error',
                         summary: 'Flow start erred',
-                        detail:
-                        'Starting flow erred: ' + msg,
+                        detail: 'Starting flow erred: ' + msg,
                         life: 10000,
                     })
                 }

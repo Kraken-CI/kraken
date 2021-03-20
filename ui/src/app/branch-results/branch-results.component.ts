@@ -53,13 +53,15 @@ export class BranchResultsComponent implements OnInit, OnDestroy {
         this.selectedStage = null
         this.stagesAvailable = [{ name: 'All' }]
 
-        this.managementService.getBranch(this.branchId).subscribe(branch => {
-            this.titleService.setTitle('Kraken - Branch Results - ' + branch.name + ' ' + this.kind)
+        this.managementService.getBranch(this.branchId).subscribe((branch) => {
+            this.titleService.setTitle(
+                'Kraken - Branch Results - ' + branch.name + ' ' + this.kind
+            )
             this.branch = branch
             this.updateBreadcrumb()
         })
 
-        this.route.paramMap.subscribe(params => {
+        this.route.paramMap.subscribe((params) => {
             this.branchId = parseInt(params.get('id'), 10)
             this.kind = params.get('kind')
             this.updateBreadcrumb()
@@ -124,7 +126,7 @@ export class BranchResultsComponent implements OnInit, OnDestroy {
                     )
                 )
             )
-            .subscribe(data => {
+            .subscribe((data) => {
                 let flows = []
                 const stages = new Set<string>()
                 this.totalFlows = data.total
@@ -163,7 +165,10 @@ export class BranchResultsComponent implements OnInit, OnDestroy {
     }
 
     hasFlowCommits(flow) {
-        if (flow.trigger && (flow.trigger.commits || flow.trigger.pull_request)) {
+        if (
+            flow.trigger &&
+            (flow.trigger.commits || flow.trigger.pull_request)
+        ) {
             return true
         }
         for (const run of flow.runs) {
@@ -202,7 +207,10 @@ export class BranchResultsComponent implements OnInit, OnDestroy {
             if (flow.trigger.commits) {
                 for (const c of flow.trigger.commits) {
                     html += `<p>`
-                    html += `<a href="${c.url}" target="blank"><b>${c.id.slice(0, 8)}</b></a>`
+                    html += `<a href="${c.url}" target="blank"><b>${c.id.slice(
+                        0,
+                        8
+                    )}</b></a>`
                     html += ` by <a href="mailto:${c.author.email}">${c.author.name}</a>`
                     const ts = datetimeToLocal(c.timestamp, null)
                     html += ` at ${ts}<br>`

@@ -52,8 +52,7 @@ export class TestCaseResultComponent implements OnInit {
             },
         ])
 
-
-        this.executionService.getResult(this.tcrId).subscribe(result => {
+        this.executionService.getResult(this.tcrId).subscribe((result) => {
             this.result = result
             const crumbs = [
                 {
@@ -88,7 +87,9 @@ export class TestCaseResultComponent implements OnInit {
             ]
             this.breadcrumbService.setCrumbs(crumbs)
 
-            this.titleService.setTitle('Kraken - Test ' + this.result.test_case_name + ' ' + this.tcrId)
+            this.titleService.setTitle(
+                'Kraken - Test ' + this.result.test_case_name + ' ' + this.tcrId
+            )
 
             const valueNames = []
             if (result.values) {
@@ -243,7 +244,7 @@ export class TestCaseResultComponent implements OnInit {
     loadResultsLazy(event) {
         this.executionService
             .getResultHistory(this.tcrId, event.first, event.rows)
-            .subscribe(data => {
+            .subscribe((data) => {
                 this.results = data.items
                 this.totalRecords = data.total
 

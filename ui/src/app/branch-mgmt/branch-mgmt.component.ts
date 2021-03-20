@@ -70,18 +70,20 @@ export class BranchMgmtComponent implements OnInit {
 
     ngOnInit() {
         this.schemaCheckContent = { schema: '', error: '' }
-        this.route.paramMap.subscribe(params => {
+        this.route.paramMap.subscribe((params) => {
             this.branchId = parseInt(params.get('id'), 10)
             this.refresh()
         })
     }
 
     refresh() {
-        this.managementService.getBranch(this.branchId).subscribe(branch => {
-            this.titleService.setTitle('Kraken - Branch Management - ' + branch.name)
+        this.managementService.getBranch(this.branchId).subscribe((branch) => {
+            this.titleService.setTitle(
+                'Kraken - Branch Management - ' + branch.name
+            )
             this.branch = branch
             this.newBranchName = branch.name
-            this.stage = null  // reset selected stage
+            this.stage = null // reset selected stage
             if (this.stageName !== '') {
                 // this is a finish of adding new stage ie. select newly created stage
                 for (const s of this.branch.stages) {
@@ -92,7 +94,11 @@ export class BranchMgmtComponent implements OnInit {
                     }
                 }
             }
-            if (this.stage === null && branch.stages && branch.stages.length > 0) {
+            if (
+                this.stage === null &&
+                branch.stages &&
+                branch.stages.length > 0
+            ) {
                 this.selectStage(branch.stages[0])
             }
 
@@ -110,9 +116,11 @@ export class BranchMgmtComponent implements OnInit {
             ]
             this.breadcrumbService.setCrumbs(crumbs)
         })
-        this.managementService.getBranchSequences(this.branchId).subscribe(data => {
-            this.sequences = data.items
-        })
+        this.managementService
+            .getBranchSequences(this.branchId)
+            .subscribe((data) => {
+                this.sequences = data.items
+            })
     }
 
     selectStage(stage) {
@@ -132,9 +140,10 @@ export class BranchMgmtComponent implements OnInit {
         this.schemaFromRepoForm.setValue(val)
 
         if (stage.repo_error) {
-            this.saveErrorMsg = 'loading schema erred:<br>' + stage.repo_error.replaceAll('\n', '<br>')
+            this.saveErrorMsg =
+                'loading schema erred:<br>' +
+                stage.repo_error.replaceAll('\n', '<br>')
         }
-
     }
 
     newStage() {
@@ -155,7 +164,7 @@ export class BranchMgmtComponent implements OnInit {
         this.managementService
             .createStage(this.branchId, { name: this.stageName })
             .subscribe(
-                data => {
+                (data) => {
                     this.msgSrv.add({
                         severity: 'success',
                         summary: 'New stage succeeded',
@@ -164,7 +173,7 @@ export class BranchMgmtComponent implements OnInit {
                     this.newStageDlgVisible = false
                     this.refresh()
                 },
-                err => {
+                (err) => {
                     let msg = err.statusText
                     if (err.error && err.error.detail) {
                         msg = err.error.detail
@@ -199,11 +208,11 @@ export class BranchMgmtComponent implements OnInit {
                 schema_code: this.stage.schema_code,
             })
             .subscribe(
-                data => {
+                (data) => {
                     this.schemaCheckContent = data
                     this.schemaCheckDisplay = true
                 },
-                err => {
+                (err) => {
                     let msg = err.statusText
                     if (err.error && err.error.detail) {
                         msg = err.error.detail
@@ -224,7 +233,7 @@ export class BranchMgmtComponent implements OnInit {
                 'Do you really want to delete stage "' + this.stage.name + '"?',
             accept: () => {
                 this.managementService.deleteStage(this.stage.id).subscribe(
-                    stage => {
+                    (stage) => {
                         this.selectStage(this.branch.stages[0])
                         this.msgSrv.add({
                             severity: 'success',
@@ -233,7 +242,7 @@ export class BranchMgmtComponent implements OnInit {
                         })
                         this.refresh()
                     },
-                    err => {
+                    (err) => {
                         let msg = err.statusText
                         if (err.error && err.error.detail) {
                             msg = err.error.detail
@@ -253,7 +262,7 @@ export class BranchMgmtComponent implements OnInit {
     branchNameKeyDown(event, branchNameInplace) {
         if (event.key === 'Enter') {
             branchNameInplace.deactivate()
-            this.doSaveBranch(this.branch.id, {name: this.newBranchName})
+            this.doSaveBranch(this.branch.id, { name: this.newBranchName })
         }
         if (event.key === 'Escape') {
             branchNameInplace.deactivate()
@@ -263,7 +272,7 @@ export class BranchMgmtComponent implements OnInit {
 
     doSaveBranch(branchId, branchData) {
         this.managementService.updateBranch(branchId, branchData).subscribe(
-            branch => {
+            (branch) => {
                 this.branch = branch
                 this.msgSrv.add({
                     severity: 'success',
@@ -271,7 +280,7 @@ export class BranchMgmtComponent implements OnInit {
                     detail: 'Branch update operation succeeded.',
                 })
             },
-            err => {
+            (err) => {
                 let msg = err.statusText
                 if (err.error && err.error.detail) {
                     msg = err.error.detail
@@ -288,7 +297,7 @@ export class BranchMgmtComponent implements OnInit {
 
     doSaveStage(stageData) {
         this.managementService.updateStage(this.stage.id, stageData).subscribe(
-            stage => {
+            (stage) => {
                 this.selectStage(stage)
                 for (const idx in this.branch.stages) {
                     if (this.branch.stages[idx].id === stage.id) {
@@ -309,7 +318,7 @@ export class BranchMgmtComponent implements OnInit {
                     }, 10000)
                 }
             },
-            err => {
+            (err) => {
                 let msg = err.statusText
                 if (err.error && err.error.detail) {
                     msg = err.error.detail
@@ -325,27 +334,25 @@ export class BranchMgmtComponent implements OnInit {
     }
 
     refreshStage(stageId) {
-        this.managementService.getStage(stageId).subscribe(
-            stage => {
-                // update stage data in ui
-                for (const idx in this.branch.stages) {
-                    if (this.branch.stages[idx].id === stage.id) {
-                        this.branch.stages[idx] = stage
-                        if (this.stage.id === stage.id) {
-                            this.selectStage(stage)
-                        }
-                        break
+        this.managementService.getStage(stageId).subscribe((stage) => {
+            // update stage data in ui
+            for (const idx in this.branch.stages) {
+                if (this.branch.stages[idx].id === stage.id) {
+                    this.branch.stages[idx] = stage
+                    if (this.stage.id === stage.id) {
+                        this.selectStage(stage)
                     }
-                }
-
-                // if repo schema is still being refreshed then refresh stage again in 10s
-                if (stage.repo_state === 1) {
-                    setTimeout(() => {
-                        this.refreshStage(stage.id)
-                    }, 10000)
+                    break
                 }
             }
-        )
+
+            // if repo schema is still being refreshed then refresh stage again in 10s
+            if (stage.repo_state === 1) {
+                setTimeout(() => {
+                    this.refreshStage(stage.id)
+                }, 10000)
+            }
+        })
     }
 
     stageNameInplaceActivated() {
@@ -387,57 +394,54 @@ export class BranchMgmtComponent implements OnInit {
 
     getSeqTypeName(seq) {
         switch (seq.kind) {
-        case 0:
-            return 'flow'
-        case 1:
-            return 'CI flow'
-        case 2:
-            return 'DEV flow'
-        case 3:
-            return 'run'
-        case 4:
-            return 'CI run'
-        case 5:
-            return 'DEV run'
+            case 0:
+                return 'flow'
+            case 1:
+                return 'CI flow'
+            case 2:
+                return 'DEV flow'
+            case 3:
+                return 'run'
+            case 4:
+                return 'CI run'
+            case 5:
+                return 'DEV run'
         }
         return 'unknown'
     }
 
     deleteBranch() {
-        this.managementService
-            .deleteBranch(this.branchId)
-            .subscribe(
-                data => {
-                    this.msgSrv.add({
-                        severity: 'success',
-                        summary: 'Branch deletion succeeded',
-                        detail: 'Branch delete operation succeeded.',
-                    })
-                    this.router.navigate(['/projects/' + this.branch.project_id])
-                },
-                err => {
-                    let msg = err.statusText
-                    if (err.error && err.error.detail) {
-                        msg = err.error.detail
-                    }
-                    this.msgSrv.add({
-                        severity: 'error',
-                        summary: 'Branch deletion erred',
-                        detail: 'Branch delete operation erred: ' + msg,
-                        life: 10000,
-                    })
+        this.managementService.deleteBranch(this.branchId).subscribe(
+            (data) => {
+                this.msgSrv.add({
+                    severity: 'success',
+                    summary: 'Branch deletion succeeded',
+                    detail: 'Branch delete operation succeeded.',
+                })
+                this.router.navigate(['/projects/' + this.branch.project_id])
+            },
+            (err) => {
+                let msg = err.statusText
+                if (err.error && err.error.detail) {
+                    msg = err.error.detail
                 }
-            )
+                this.msgSrv.add({
+                    severity: 'error',
+                    summary: 'Branch deletion erred',
+                    detail: 'Branch delete operation erred: ' + msg,
+                    life: 10000,
+                })
+            }
+        )
     }
 
     handleTabChange(ev) {
         if (ev.index === 2) {
             this.managementService
                 .getStageSchedule(this.stage.id)
-                .subscribe(
-                    data => {
-                        this.stage.schedules = data.schedules
-                    })
+                .subscribe((data) => {
+                    this.stage.schedules = data.schedules
+                })
         }
     }
 }
