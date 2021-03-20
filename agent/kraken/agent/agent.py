@@ -147,12 +147,12 @@ def main():
 
     # no specific command so start agent main loop
 
-    if args.server is None:
+    if not args.server:
         pr.print_usage()
         print('missing required -s/--server option')
         sys.exit(1)
 
-    if args.data_dir is None:
+    if not args.data_dir:
         pr.print_usage()
         print('missing required -d/--data-dir option')
         sys.exit(1)
@@ -169,6 +169,11 @@ def main():
         os.makedirs(jobs_dir)
 
     srv = server.Server()
+    if not srv.srv_addr:
+        print('There is missing server address.')
+        print('Run agent with -s parameter or start agent container')
+        print('with KRAKEN_SERVER_ADDR env variable set properly')
+        sys.exit(1)
 
     host_info = collect_host_info()
     while True:
