@@ -1,25 +1,24 @@
-// import moment from 'moment';
-import moment from 'moment-timezone'
+import { DateTime } from "luxon";
 
 export function datetimeToLocal(d, fmt) {
     try {
         let tz = Intl.DateTimeFormat().resolvedOptions().timeZone
         if (!tz) {
-            tz = moment.tz.guess()
+            tz = DateTime.local().zoneName
         }
         if (tz) {
-            d = moment(d).tz(tz)
+            d = DateTime.fromISO(d).setZone(tz)
             tz = ''
         } else {
-            d = moment(d)
+            d = DateTime.fromISO(d)
             tz = ' UTC'
         }
 
         if (!fmt) {
-            fmt = 'YYYY-MM-DD HH:mm:ss'
+            fmt = 'yyyy-LL-dd HH:mm:ss'
         }
 
-        return d.format(fmt) + tz
+        return d.toFormat(fmt) + tz
     } catch (e) {
         return d
     }

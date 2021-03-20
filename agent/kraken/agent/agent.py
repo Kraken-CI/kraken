@@ -172,7 +172,7 @@ def main():
     if not srv.srv_addr:
         print('There is missing server address.')
         print('Run agent with -s parameter or start agent container')
-        print('with KRAKEN_SERVER_ADDR env variable set properly')
+        print('with KRAKEN_SERVER_ADDR env variable set properly.')
         sys.exit(1)
 
     host_info = collect_host_info()

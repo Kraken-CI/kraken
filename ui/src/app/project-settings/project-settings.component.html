@@ -40,7 +40,7 @@
               <table *ngIf="flows.flows.length > 0" >
                 <tr *ngFor="let flow of flows.flows" style="padding: 3px 6px;">
                   <td style="vertical-align: top; width: 3em;"><b><a routerLink="/flows/{{ flow.id }}">{{ flow.id }}</a>.</b></td>
-                  <td style="vertical-align: top;"><a routerLink="/flows/{{ flow.id }}" style="color: black;">{{ flow.created | localtime:'YYYY-MM-DD HH:mm' }}</a></td>
+                  <td style="vertical-align: top;"><a routerLink="/flows/{{ flow.id }}" style="color: black;">{{ flow.created | localtime:'yyyy-LL-dd HH:mm' }}</a></td>
                   <td style="vertical-align: top;">
                     <span *ngIf="flow.tests_total > 0"
                           [ngStyle]="{'border-radius': '4px', 'background-color': flow.tests_color, 'padding': '1px 3px', 'margin-right': '2px'}">{{ flow.tests_pass_ratio }}%&nbsp;pass</span>
