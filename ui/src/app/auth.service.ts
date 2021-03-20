@@ -66,9 +66,14 @@ export class AuthService {
 
     logout() {
         if (this.session && this.session.id) {
-            this.api.logout(this.session.id).subscribe((resp) => {
-                this.deleteLocalSession()
-            })
+            this.api.logout(this.session.id).subscribe(
+                resp => {
+                    this.deleteLocalSession()
+                },
+                err => {
+                    this.deleteLocalSession()
+                }
+            )
         }
     }
 
