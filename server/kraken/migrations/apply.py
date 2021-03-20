@@ -6,7 +6,7 @@ from flask import Flask
 import sqlalchemy
 import psycopg2.errors
 
-from kraken.server import models, initdb, consts
+from kraken.server import models, initdb, consts, srvcheck
 
 def _get_db_version(app):
     with app.app_context():
@@ -29,6 +29,10 @@ def main():
     app = Flask('Kraken DB Migration')
 
     db_url = os.environ.get('KRAKEN_DB_URL', consts.DEFAULT_DB_URL)
+    print('migrating db: %s' % db_url)
+
+    # wait for db
+    srvcheck.check_postgresql(db_url)
 
     # Configure the SqlAlchemy part of the app instance
     app.config["SQLALCHEMY_ECHO"] = False
