@@ -449,14 +449,14 @@ end
 
 task :github_release do
   # create release entry
-  sh "curl -H 'Authorization: token $GITHUB_TOKEN'  --fail --location --data '{\"tag_name\": \"v#{kk_ver}\"}' -o github-release-#{kk_ver}.json  https://api.github.com/repos/kraken-ci/kraken/releases"
+  sh "curl -H \"Authorization: token $GITHUB_TOKEN\"  --fail --location --data '{\"tag_name\": \"v#{kk_ver}\"}' -o github-release-#{kk_ver}.json  https://api.github.com/repos/kraken-ci/kraken/releases"
 
   # upload artifacts
   file = File.read("github-release-#{kk_ver}.json")
   rel = JSON.parse(file)
   upload_url = rel['upload_url'].chomp('{?name,label}')
-  sh "curl -H 'Authorization: token $GITHUB_TOKEN' -H 'Content-Type:text/plain' --data-binary @kraken-docker-compose-#{kk_ver}.yaml '#{upload_url}?name=kraken-docker-compose-#{kk_ver}.yaml'"
-  sh "curl -H 'Authorization: token $GITHUB_TOKEN' -H 'Content-Type:text/plain' --data-binary @dot.env '#{upload_url}?name=kraken-#{kk_ver}.env'"
+  sh "curl -H \"Authorization: token $GITHUB_TOKEN\" -H 'Content-Type:text/plain' --data-binary @kraken-docker-compose-#{kk_ver}.yaml '#{upload_url}?name=kraken-docker-compose-#{kk_ver}.yaml'"
+  sh "curl -H \"Authorization: token $GITHUB_TOKEN\" -H 'Content-Type:text/plain' --data-binary @dot.env '#{upload_url}?name=kraken-#{kk_ver}.env'"
   sh "rm -f github-release-#{kk_ver}.json"
 
   # generate and set release notes
