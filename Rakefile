@@ -464,7 +464,6 @@ task :github_release do
   # generate and set release notes
   ENV['GREN_GITHUB_TOKEN'] = ENV['GITHUB_TOKEN']
   Dir.chdir('ui') do
-    sh 'npm install'
     sh 'npm install github-release-notes'
   end
   sh './ui/node_modules/.bin/gren release --override'
