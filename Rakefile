@@ -455,7 +455,7 @@ task :github_release do
   file = File.read("github-release-#{kk_ver}.json")
   rel = JSON.parse(file)
   upload_url = rel['upload_url'].chomp('{?name,label}')
-  sh "curl -H \"Authorization: token $GITHUB_TOKEN\" -H 'Content-Type:text/plain' --data-binary @kraken-docker-compose-#{kk_ver}.yaml '#{upload_url}?name=kraken-docker-compose-#{kk_ver}.yaml'"
+  sh "curl -H \"Authorization: token #{ENV['GITHUB_TOKEN']}\" -H 'Content-Type:text/plain' --data-binary @kraken-docker-compose-#{kk_ver}.yaml '#{upload_url}?name=kraken-docker-compose-#{kk_ver}.yaml'"
   sh "curl -H \"Authorization: token $GITHUB_TOKEN\" -H 'Content-Type:text/plain' --data-binary @dot.env '#{upload_url}?name=kraken-#{kk_ver}.env'"
   sh "rm -f github-release-#{kk_ver}.json"
 
