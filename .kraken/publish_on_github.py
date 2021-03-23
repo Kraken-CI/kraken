@@ -27,7 +27,8 @@ def stage(ctx):
                 "cwd": "kraken",
                 "env": {
                     "GITHUB_TOKEN": "#{KK_SECRET_SIMPLE_github_token}"
-                }
+                },
+                "timeout": 300
             }],
             "environments": [{
                 "system": "krakenci/bld-kraken",
