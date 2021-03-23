@@ -20,7 +20,7 @@ def stage(ctx):
             "tool": "shell",
             "cmd": "rake build_all",
             "cwd": "kraken",
-            "timeout": 600,
+            "timeout": 1200,
             "env": {
                 "kk_ver": "0.#{KK_FLOW_SEQ}",
             }
