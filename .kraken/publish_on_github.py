@@ -8,6 +8,7 @@ def stage(ctx):
         "configs": [],
         "jobs": [{
             "name": "publish on github",
+            "timeout": 600,
             "steps": [{
                 "tool": "artifacts",
                 "action": "download",
