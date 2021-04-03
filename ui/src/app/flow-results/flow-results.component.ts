@@ -7,7 +7,7 @@ import { MenuItem } from 'primeng/api'
 import { MessageService } from 'primeng/api'
 
 import { AuthService } from '../auth.service'
-import { humanBytes } from '../utils'
+import { datetimeToLocal, humanBytes } from '../utils'
 import { ManagementService } from '../backend/api/management.service'
 import { ExecutionService } from '../backend/api/execution.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
@@ -36,6 +36,17 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
     loadingArtifacts = false
 
     refreshTimer: any = null
+
+    selectedNode: any = {
+        stage: {
+            name: '',
+            id: null,
+        },
+        run: null,
+        selected: false
+    }
+    repoUrl = 'awe'
+    diffUrl = 'dafsd'
 
     constructor(
         private route: ActivatedRoute,
@@ -104,6 +115,7 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
                 data: {
                     stage: c,
                     run: this._getRunForStage(c.name),
+                    selected: false,
                 },
             }
             if (allParents[c.name] !== undefined) {
@@ -118,10 +130,16 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
 
     _traverseTree(node, level) {
         if (node.data.run || node.data.stage) {
+            let selected = false
+            if (this.selectedNode.stage.id === null) {
+                this.selectedNode = node.data
+                selected = true
+            }
             this.flatTree.push({
                 level,
                 run: node.data.run,
                 stage: node.data.stage,
+                selected: selected,
             })
         }
         if (node.children) {
@@ -323,5 +341,25 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
                 this.totalArtifacts = data.total
                 this.loadingArtifacts = false
             })
+    }
+
+    changeSelection(selectedNode) {
+        for (const node of this.flatTree) {
+            if (node.stage.id !== selectedNode.stage.id) {
+                node.selected = false
+            }
+        }
+        selectedNode.selected = true
+        this.selectedNode = selectedNode
+    }
+
+    hasFlowCommits(flow) {
+        if (flow &&
+            flow.trigger &&
+            (flow.trigger.commits || flow.trigger.pull_request)
+        ) {
+            return true
+        }
+        return false
     }
 }

@@ -1,9 +1,14 @@
-<p-button label="Refresh" icon="pi pi-refresh" (onClick)="refresh()"></p-button>
+<div style="display: flex; align-items: center;">
+  <div style="font-size: 2.5em; font-weight: bold; width: 10em;">
+    Flow {{ flow ? flow.label : flowId }}
+  </div>
+  <p-button label="Refresh" icon="pi pi-refresh" (onClick)="refresh()" styleClass="p-button-sm"></p-button>
+</div>
 
 <p-tabView [activeIndex]="activeTabIndex">
   <p-tabPanel header="Stages">
     <div class="p-grid">
-      <div class="p-col-6">
+      <div class="p-col-5">
         <div style="display: flex; flex-direction: column; align-items: flex-end;">
           <div *ngFor="let n of flatTree" class="level{{n.level - 1}}" style="margin-bottom: 8px; display: flex; align-items: stretch;">
             <!--
@@ -11,13 +16,60 @@
                   <line x1="0" y1="5" x2="20" y2="25" style="stroke:rgb(0,0,0);stroke-width:1" />
                 </svg>
                 -->
-                <app-run-box [run]="n.run" [stage]="n.stage" [flowId]="flowId" (stageRun)="onStageRun($event)" style="flex: 1;">
+                <app-run-box [run]="n.run"
+                             [stage]="n.stage"
+                             [flowId]="flowId"
+                             (stageRun)="onStageRun($event)"
+                             [selectionEnabled]="true"
+                             [selected]="n.selected"
+                             (onSelect)="changeSelection(n)" style="flex: 1;">
                 </app-run-box>
           </div>
         </div>
       </div>
-      <div class="p-col-6">
-        details
+      <div class="p-col-7">
+        <div style="font-size: 2em; margin: -10px 0 0 20px;">
+          <span *ngIf="selectedNode.run">
+            Run <b>{{ selectedNode.run.label || (selectedNode.run.id + '.') }}</b> of stage
+          </span>
+          <span *ngIf="!selectedNode.run">
+            Stage
+          </span>
+          <b>{{ selectedNode.stage.name }}</b>
+        </div>
+        <p-tabView>
+          <p-tabPanel header="Overview">
+            <div *ngIf="selectedNode.run">
+              <div style="font-size: 1.3em; font-weight: bold; margin-bottom: 0.8em;">State</div>
+              {{ selectedNode.run.state }}
+              <br>
+              {{ selectedNode.run.created | localtime }} &rarr; {{ selectedNode.run.started | localtime }} &rarr; {{ selectedNode.run.finished | localtime }}
+              <br>
+              {{ selectedNode.run.duration }}
+              <div style="font-size: 1.3em; font-weight: bold; margin: 1em 0 0.8em 0;">Trigger</div>
+              Reason: {{ selectedNode.run.reason }}
+            </div>
+            <div *ngIf="!selectedNode.run">
+              Run not started
+            </div>
+          </p-tabPanel>
+
+          <p-tabPanel header="Arguments" *ngIf="selectedNode.run">
+            <div *ngFor="let arg of selectedNode.run.args | keyvalue" style="margin-bottom: 10px;">
+              {{ arg.key }}: {{ arg.value }}
+            </div>
+          </p-tabPanel>
+
+          <p-tabPanel header="Repo Trigger" *ngIf="selectedNode.run && selectedNode.run.repo_data">
+            <div *ngFor="let r of selectedNode.run.repo_data">
+              <app-repo-changes [changes]="r"></app-repo-changes>
+            </div>
+          </p-tabPanel>
+
+          <p-tabPanel header="Schema Code Dump" *ngIf="selectedNode.run && false">
+              {{ selectedNode.stage.schema_code }}
+          </p-tabPanel>
+        </p-tabView>
       </div>
     </div>
   </p-tabPanel>
@@ -50,7 +102,8 @@
     </div>
   </p-tabPanel>
 
-  <p-tabPanel header="Repo Changes">
+  <p-tabPanel header="Repo Trigger" *ngIf="hasFlowCommits(flow)">
+    <app-repo-changes [changes]="flow.trigger"></app-repo-changes>
   </p-tabPanel>
 
   <p-tabPanel header="Artifacts" *ngIf="flow && flow.artifacts && ((flow.artifacts.private && flow.artifacts.private.count > 0) || (flow.artifacts.public && flow.artifacts.public.count > 0) || (flow.artifacts.report && flow.artifacts.report.count > 0))">

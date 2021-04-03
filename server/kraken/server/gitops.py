@@ -92,6 +92,7 @@ def get_repo_commits_since(branch_id, prev_run, repo_url, repo_branch):
             log.info('base commit: %s', base_commit)
             cmd += ' %s..' % base_commit
         else:
+            base_commit = None
             log.info('no base commit %s %s', repo_url, prev_run.repo_data)
         p = subprocess.run(cmd, shell=True, check=True, cwd=repo_dir, capture_output=True, text=True)
         text = p.stdout.strip()
@@ -109,16 +110,44 @@ def get_repo_commits_since(branch_id, prev_run, repo_url, repo_branch):
 
 
     # collect commits info
-    commit = {}
+    commit = {'author': {}, 'added': [], 'modified': [], 'removed': []}
+    record_lines = 0
     for line in text.splitlines():
-        field, val = line.split(':', 1)
-        commit[field] = val
-        if len(commit) == 5:
-            commits.append(commit)
+        line = line.strip()
+        # if empty line ie. record finished
+        if not line:
             log.info('  %s', commit)
-            commit = {}
+            commits.append(commit)
+            commit = {'author': {}}
+            record_lines = 0
+            continue
 
-    return commits
+        record_lines += 1
+        if record_lines <= 5:
+            field, val = line.split(':', 1)
+            if field == 'commit':
+                commit['id'] = val
+            elif field == 'author':
+                commit['author']['name'] = val
+            elif field == 'email':
+                commit['author']['email'] = val
+            elif field == 'date':
+                commit['timestamp'] = val
+            elif field == 'subject':
+                commit['message'] = val
+            else:
+                raise Exception('unrecognized field %s' % field)
+        else:
+            flag, fpath = line.split(' ', 1)
+            fpath = fpath.strip()
+            if flag == 'A':
+                commit['added'].append(fpath)
+            elif flag == 'D':
+                commit['deleted'].append(fpath)
+            else:
+                commit['modified'].append(fpath)
+
+    return commits, base_commit
 
 
 def get_schema_from_repo(repo_url, repo_branch, repo_access_token, schema_file):  # pylint: disable=unused-argument
