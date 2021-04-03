@@ -609,13 +609,20 @@ def _check_repo_commits(stage, flow_kind):
 
     # iterate over repos
     changes = False
-    repo_data = {}
+    repo_data = []
     for repo_url, repo_branch in repos:
-        commits = gitops.get_repo_commits_since(stage.branch_id, prev_run, repo_url, repo_branch)
+        commits, base_commit = gitops.get_repo_commits_since(stage.branch_id, prev_run, repo_url, repo_branch)
 
         if commits:
             changes = True
-        repo_data[repo_url] = commits
+            after = commits[0]['id']
+        else:
+            after = base_commit
+        repo_data.append(dict(repo=repo_url,
+                              commits=commits,
+                              before=base_commit,
+                              after=after,
+                              trigger='git-push'))
 
     if not changes:
         log.info('no commits since prev check')
@@ -635,8 +642,10 @@ def trigger_run(self, stage_id, flow_kind=consts.FLOW_KIND_CI, reason=None):
                 return
 
             # if this stage does not have parent then start new flow
+            new_flow = False
             if stage.schema['parent'] == 'root':
                 flow = Flow(branch=stage.branch, kind=flow_kind)
+                new_flow = True
 
                 # TODO: other root, sibling stages should be triggered when new flow is started
 
@@ -684,6 +693,8 @@ def trigger_run(self, stage_id, flow_kind=consts.FLOW_KIND_CI, reason=None):
                 return
             if repo_data and reason and reason['reason'] == 'repo_interval':
                 reason = dict(reason='commit to repo')
+            if repo_data and new_flow:
+                flow.trigger_data = repo_data
 
             # commit new flow if created and repo changes if detected
             db.session.commit()

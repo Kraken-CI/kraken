@@ -1,5 +1,5 @@
 <p-menu #runBoxMenu [popup]="true" [model]="runBoxMenuItems"></p-menu>
-<div class="round-shadow" [ngStyle]="{'background': bgColor, 'height': '100%'}">
+<div [ngClass]="selected ? 'round-shadow-selected' : 'round-shadow'" [ngStyle]="{'background': bgColor, 'height': '100%', 'cursor': selectionEnabled ? 'e-resize' : ''}" (click)="onBoxClick()">
   <!-- title bar -->
   <div style="display: flex;">
     <b *ngIf="run" style="font-size: 1.1rem; flex: 1;"><a routerLink="/runs/{{run.id}}/jobs" routerLinkActive="active" style="color: unset;">{{ run.stage_name }} {{ run.label ? ' - ' + run.label : '' }}</a></b>
@@ -19,7 +19,8 @@
   <!--- details -->
   <div *ngIf="run" class="job-detal-items">
 
-    <div *ngIf="run.jobs_total" routerLink="/runs/{{ run.id }}/jobs" style="cursor: pointer;">
+    <div *ngIf="run.jobs_total">
+      <div routerLink="/runs/{{ run.id }}/jobs" style="cursor: pointer; display: inline;">
       <b style="font-weight: 500;">Execution</b><br>
       {{run.jobs_total}} jobs
       <span *ngIf="run.jobs_error">
@@ -42,6 +43,7 @@
         <br>
         {{run.jobs_processing}} processing <i class="pi pi-spin pi-spinner" style="font-size: 16px; vertical-align: bottom;"></i>
       </span>
+      </div>
     </div>
 
     <div *ngIf="run.tests_total" routerLink="/runs/{{ run.id }}/results" style="cursor: pointer; display: flex;">
