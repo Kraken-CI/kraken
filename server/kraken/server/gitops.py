@@ -29,87 +29,60 @@ def _run(cmd, check=True, cwd=None):
     return p
 
 
-def get_repo_commits_since(branch_id, prev_run, repo_url, repo_branch):
-    commits = []
-    log.info('checking commits in %s %s', repo_url, repo_branch)
+def _retrieve_git_repo(tmpdir, repo_url, mc, minio_bucket, minio_repo_bundle_path):
+    # retrieve git repo bundle from minio
+    repo_bundle_path = os.path.join(tmpdir, 'repo.bundle')
+    log.info('try to retrieve repo bundle %s / %s -> %s', minio_bucket, minio_repo_bundle_path, repo_bundle_path)
+    try:
+        mc.fget_object(minio_bucket, minio_repo_bundle_path, repo_bundle_path)
+        bundle_present = True
+    except Exception as e:
+        if 'Object does not exist' in str(e):
+            log.info('repo bundled not archived yet')
+        else:
+            log.exception('retriving repo from bundle failed, skipping it')
+        bundle_present = False
 
-    with tempfile.TemporaryDirectory(prefix='kraken-git-') as tmpdir:
-        # retrieve git repo bundle from minio
-        minio_bucket, minio_folder = minioops.get_or_create_minio_bucket_for_git(branch_id, repo_url)
-        mc = minioops.get_minio()
-        minio_repo_bundle_path = '%s/repo.bundle' % minio_folder
-        repo_bundle_path = os.path.join(tmpdir, 'repo.bundle')
-        log.info('try to retrieve repo bundle %s / %s -> %s', minio_bucket, minio_repo_bundle_path, repo_bundle_path)
+    repo_dir = os.path.join(tmpdir, 'repo')
+    restore_ok = False
+    if bundle_present:
         try:
-            mc.fget_object(minio_bucket, minio_repo_bundle_path, repo_bundle_path)
-            bundle_present = True
-        except Exception as e:
-            if 'Object does not exist' in str(e):
-                log.info('repo bundled not archived yet')
-            else:
-                log.exception('retriving repo from bundle failed, skipping it')
-            bundle_present = False
+            # restore git repo bundle
+            _run('git clone %s repo' % repo_bundle_path, check=True, cwd=tmpdir)
 
-        repo_dir = os.path.join(tmpdir, 'repo')
-        restore_ok = False
-        if bundle_present:
-            try:
-                # restore git repo bundle
-                _run('git clone %s repo' % repo_bundle_path, check=True, cwd=tmpdir)
+            # restore original remote URL
+            _run('git remote set-url origin %s' % repo_url, check=True, cwd=repo_dir)
 
-                # restore original remote URL
-                _run('git remote set-url origin %s' % repo_url, check=True, cwd=repo_dir)
+            # pull latest stuff from remote
+            _run('git pull', check=True, cwd=repo_dir)
 
-                # pull latest stuff from remote
-                _run('git pull', check=True, cwd=repo_dir)
+            restore_ok = True
+        except:
+            log.exception('cloning repo from bundle failed, skipping it')
+            if os.path.exists(repo_dir):
+                shutil.rmtree(repo_dir)
 
-                restore_ok = True
-            except:
-                log.exception('cloning repo from bundle failed, skipping it')
-                if os.path.exists(repo_dir):
-                    shutil.rmtree(repo_dir)
+        # delete old bundle
+        os.unlink(repo_bundle_path)
 
-            # delete old bundle
-            os.unlink(repo_bundle_path)
-
-        # if restoring repo from bundle failed then do normal clone repo
-        if not restore_ok:
-            # clone repo
-            #cmd = "git clone --single-branch --branch %s '%s' repo" % (repo_branch, repo_url)
-            cmd = "git clone '%s' repo" % repo_url
-            p = subprocess.run(cmd, shell=True, check=False, cwd=tmpdir, capture_output=True, text=True)
-            if p.returncode != 0:
-                err = "command '%s' returned non-zero exit status %d\n" % (cmd, p.returncode)
-                err += p.stdout.strip()[:140] + '\n'
-                err += p.stderr.strip()[:140]
-                err = err.strip()
-                raise Exception(err)
-
-        # get commits history
-        cmd = "git log --no-merges --since='2 weeks ago' -n 20 --pretty=format:'commit:%H%nauthor:%an%nemail:%ae%ndate:%aI%nsubject:%s'"
-        if prev_run and prev_run.repo_data and repo_url in prev_run.repo_data:
-            base_commit = prev_run.repo_data[repo_url][0]['commit']
-            log.info('base commit: %s', base_commit)
-            cmd += ' %s..' % base_commit
-        else:
-            base_commit = None
-            log.info('no base commit %s %s', repo_url, prev_run.repo_data)
-        p = subprocess.run(cmd, shell=True, check=True, cwd=repo_dir, capture_output=True, text=True)
-        text = p.stdout.strip()
-
-        # bundle repo and cache it
-        p = _run('git bundle create %s --all' % repo_bundle_path, check=False, cwd=repo_dir)
+    # if restoring repo from bundle failed then do normal clone repo
+    if not restore_ok:
+        # clone repo
+        #cmd = "git clone --single-branch --branch %s '%s' repo" % (repo_branch, repo_url)
+        cmd = "git clone '%s' repo" % repo_url
+        p = subprocess.run(cmd, shell=True, check=False, cwd=tmpdir, capture_output=True, text=True)
         if p.returncode != 0:
-            log.warning('repo bundle failed, skipping it')
-        else:
-            log.info('store repo bundle %s -> %s / %s', repo_bundle_path, minio_bucket, minio_repo_bundle_path)
-            try:
-                mc.fput_object(minio_bucket, minio_repo_bundle_path, repo_bundle_path)
-            except:
-                log.exception('problem with storing repo bundle, skipping it')
+            err = "command '%s' returned non-zero exit status %d\n" % (cmd, p.returncode)
+            err += p.stdout.strip()[:140] + '\n'
+            err += p.stderr.strip()[:140]
+            err = err.strip()
+            raise Exception(err)
+
+    return repo_dir
 
 
-    # collect commits info
+def _collect_commits_from_git_log(text):
+    commits = []
     commit = {'author': {}, 'added': [], 'modified': [], 'removed': []}
     record_lines = 0
     for line in text.splitlines():
@@ -118,7 +91,7 @@ def get_repo_commits_since(branch_id, prev_run, repo_url, repo_branch):
         if not line:
             log.info('  %s', commit)
             commits.append(commit)
-            commit = {'author': {}}
+            commit = {'author': {}, 'added': [], 'modified': [], 'removed': []}
             record_lines = 0
             continue
 
@@ -138,14 +111,56 @@ def get_repo_commits_since(branch_id, prev_run, repo_url, repo_branch):
             else:
                 raise Exception('unrecognized field %s' % field)
         else:
-            flag, fpath = line.split(' ', 1)
-            fpath = fpath.strip()
+            flag = line[0]
+            fpath = line[1:].strip()
             if flag == 'A':
                 commit['added'].append(fpath)
             elif flag == 'D':
                 commit['deleted'].append(fpath)
             else:
                 commit['modified'].append(fpath)
+
+    return commits
+
+
+def get_repo_commits_since(branch_id, prev_run, repo_url, repo_branch):
+    log.info('checking commits in %s %s', repo_url, repo_branch)
+
+    with tempfile.TemporaryDirectory(prefix='kraken-git-') as tmpdir:
+        # prepare minio
+        minio_bucket, minio_folder = minioops.get_or_create_minio_bucket_for_git(branch_id, repo_url)
+        mc = minioops.get_minio()
+        minio_repo_bundle_path = '%s/repo.bundle' % minio_folder
+
+        # retrieve repo from minio in bundle form or from remote git repository
+        repo_dir = _retrieve_git_repo(tmpdir, repo_url, mc, minio_bucket, minio_repo_bundle_path)
+
+        # get commits history
+        cmd = "git log --no-merges --since='2 weeks ago' -n 20 --pretty=format:'commit:%H%nauthor:%an%nemail:%ae%ndate:%aI%nsubject:%s' --name-status"
+        if prev_run and prev_run.repo_data and repo_url in prev_run.repo_data:
+            base_commit = prev_run.repo_data[repo_url][0]['commit']
+            log.info('base commit: %s', base_commit)
+            cmd += ' %s..' % base_commit
+        else:
+            base_commit = None
+            log.info('no base commit %s %s', repo_url, prev_run.repo_data)
+        p = subprocess.run(cmd, shell=True, check=True, cwd=repo_dir, capture_output=True, text=True)
+        text = p.stdout.strip()
+
+        # bundle repo and cache it
+        repo_bundle_path = os.path.join(tmpdir, 'repo.bundle')
+        p = _run('git bundle create %s --all' % repo_bundle_path, check=False, cwd=repo_dir)
+        if p.returncode != 0:
+            log.warning('repo bundle failed, skipping it')
+        else:
+            log.info('store repo bundle %s -> %s / %s', repo_bundle_path, minio_bucket, minio_repo_bundle_path)
+            try:
+                mc.fput_object(minio_bucket, minio_repo_bundle_path, repo_bundle_path)
+            except:
+                log.exception('problem with storing repo bundle, skipping it')
+
+    # collect commits from git log
+    commits = _collect_commits_from_git_log(text)
 
     return commits, base_commit
 
