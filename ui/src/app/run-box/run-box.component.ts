@@ -20,7 +20,7 @@ export class RunBoxComponent implements OnInit {
     @Input() selectionEnabled = false
     @Input() selected = false
     @Output() stageRun = new EventEmitter<any>()
-    @Output() select = new EventEmitter<any>()
+    @Output() boxSelect = new EventEmitter<any>()
 
     runBoxMenuItems: MenuItem[]
 
@@ -188,6 +188,6 @@ export class RunBoxComponent implements OnInit {
 
     onBoxClick() {
         this.selected = true
-        this.select.emit()
+        this.boxSelect.emit()
     }
 }
