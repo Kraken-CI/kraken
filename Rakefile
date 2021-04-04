@@ -385,6 +385,8 @@ task :build_docker_deploy => DOCKER_COMPOSE do
 end
 
 task :build_docker => DOCKER_COMPOSE do
+  sh 'cp dot.env .env'
+
   # generate docker-compose config for installing kraken under the desk and for pushing images to docker images repository
   sh "cp docker-compose.yaml kraken-docker-compose-#{kk_ver}-tmp.yaml"
   sh "sed -i -e s/kk_ver/#{kk_ver}/g kraken-docker-compose-#{kk_ver}-tmp.yaml"
@@ -401,7 +403,6 @@ task :build_docker => DOCKER_COMPOSE do
 end
 
 task :publish_docker => DOCKER_COMPOSE do
-  sh 'cp dot.env .env'
   Rake::Task["build_docker"].invoke
 
   # push built images
