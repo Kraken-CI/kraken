@@ -139,7 +139,7 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
                 level,
                 run: node.data.run,
                 stage: node.data.stage,
-                selected: selected,
+                selected,
             })
         }
         if (node.children) {
