@@ -28,6 +28,7 @@ def main():
     argv = [
         'worker',
         '--loglevel=INFO',
+        '--max-tasks-per-child=1',
     ]
     app.worker_main(argv=argv)
 

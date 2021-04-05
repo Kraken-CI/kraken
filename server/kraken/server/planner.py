@@ -38,7 +38,7 @@ class Planner:
     def __init__(self, db_url):
         job_defaults = dict(misfire_grace_time=180, coalesce=True, max_instances=1, next_run_time=None)
         self.scheduler = BackgroundScheduler(timezone='UTC', job_defaults=job_defaults)
-        self.scheduler.add_jobstore('sqlalchemy', url=db_url)
+        self.scheduler.add_jobstore('sqlalchemy', url=db_url + '?application_name=aps')
         self.scheduler.start()
         log.info('started planner scheduler')
 
@@ -137,7 +137,7 @@ def _db_setup(db_url):
 
     # Configure the SqlAlchemy part of the app instance
     app.config["SQLALCHEMY_ECHO"] = False
-    app.config["SQLALCHEMY_DATABASE_URI"] = db_url
+    app.config["SQLALCHEMY_DATABASE_URI"] = db_url + '?application_name=planner'
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     # initialize SqlAlchemy

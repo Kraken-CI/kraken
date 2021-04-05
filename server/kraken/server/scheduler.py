@@ -115,7 +115,7 @@ def create_app():
 
     # Configure the SqlAlchemy part of the app instance
     app.config["SQLALCHEMY_ECHO"] = False
-    app.config["SQLALCHEMY_DATABASE_URI"] = db_url
+    app.config["SQLALCHEMY_DATABASE_URI"] = db_url + '?application_name=scheduler'
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     # initialize SqlAlchemy

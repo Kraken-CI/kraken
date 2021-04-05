@@ -38,7 +38,7 @@ from .. import gitops
 log = logging.getLogger(__name__)
 
 
-def _create_app():
+def _create_app(task_name):
     # addresses
     db_url = os.environ.get('KRAKEN_DB_URL', consts.DEFAULT_DB_URL)
 
@@ -49,7 +49,7 @@ def _create_app():
 
     # Configure the SqlAlchemy part of the app instance
     app.config["SQLALCHEMY_ECHO"] = False
-    app.config["SQLALCHEMY_DATABASE_URI"] = db_url
+    app.config["SQLALCHEMY_DATABASE_URI"] = db_url + '?application_name=celery_' + task_name
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     # initialize SqlAlchemy
@@ -101,7 +101,7 @@ def _trigger_stages(run):
 @clry_app.task(base=BaseTask, bind=True)
 def analyze_run(self, run_id):
     try:
-        app = _create_app()
+        app = _create_app('analyze_run_%d' % run_id)
 
         with app.app_context():
             log.info('starting analysis of run %s', run_id)
@@ -322,7 +322,7 @@ def _analyze_job_issues_history(job):
 @clry_app.task(base=BaseTask, bind=True)
 def analyze_results_history(self, run_id):
     try:
-        app = _create_app()
+        app = _create_app('analyze_results_history_%d' % run_id)
 
         with app.app_context():
             run = Run.query.filter_by(id=run_id).one_or_none()
@@ -399,7 +399,7 @@ def analyze_results_history(self, run_id):
 @clry_app.task(base=BaseTask, bind=True)
 def notify_about_started_run(self, run_id):
     try:
-        app = _create_app()
+        app = _create_app('notify_about_started_run_%d' % run_id)
 
         with app.app_context():
             log.info('starting notification about started run %s', run_id)
@@ -418,7 +418,7 @@ def notify_about_started_run(self, run_id):
 @clry_app.task(base=BaseTask, bind=True)
 def notify_about_completed_run(self, run_id):
     try:
-        app = _create_app()
+        app = _create_app('notify_about_completed_run_%s' % run_id)
 
         with app.app_context():
             log.info('starting notification about completed run %s', run_id)
@@ -533,7 +533,7 @@ def _estimate_timeout(job):
 @clry_app.task(base=BaseTask, bind=True)
 def job_completed(self, job_id):
     try:
-        app = _create_app()
+        app = _create_app('job_completed_%d' % job_id)
 
         with app.app_context():
 
@@ -632,7 +632,7 @@ def _check_repo_commits(stage, flow_kind):
 @clry_app.task(base=BaseTask, bind=True)
 def trigger_run(self, stage_id, flow_kind=consts.FLOW_KIND_CI, reason=None):
     try:
-        app = _create_app()
+        app = _create_app('trigger_run_%d' % stage_id)
 
         with app.app_context():
             log.info('triggering run for stage %s, flow kind %d', stage_id, flow_kind)
@@ -712,7 +712,7 @@ def trigger_run(self, stage_id, flow_kind=consts.FLOW_KIND_CI, reason=None):
 @clry_app.task(base=BaseTask, bind=True)
 def trigger_flow(self, project_id, trigger_data=None):
     try:
-        app = _create_app()
+        app = _create_app('trigger_flow_%d' % project_id)
 
         with app.app_context():
             log.info('triggering flow for project %s', project_id)
@@ -809,7 +809,7 @@ def trigger_flow(self, project_id, trigger_data=None):
 @clry_app.task(base=BaseTask, bind=True)
 def refresh_schema_repo(self, stage_id):
     try:
-        app = _create_app()
+        app = _create_app('refresh_schema_repo_%d' % stage_id)
 
         with app.app_context():
             stage = Stage.query.filter_by(id=stage_id).one_or_none()
