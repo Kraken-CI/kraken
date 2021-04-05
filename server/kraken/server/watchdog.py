@@ -95,7 +95,7 @@ def _check_runs():
         if end_time > now:
             # no timeout yet
             continue
-        note = 'run %s timed out, deadline was: %s' % (str(run), str(end_time))
+        note = 'run %d timed out, deadline was: %s' % (run.id, str(end_time))
         log.info(note)
         run.note = note
 

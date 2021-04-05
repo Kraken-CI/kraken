@@ -735,7 +735,7 @@ def trigger_flow(self, project_id, trigger_data=None):
                 reason = dict(reason=trigger_data['trigger'])
             branch = Branch.query.filter_by(project=project, branch_name=branch_name).one_or_none()
             if branch is None:
-                log.error('cannot find branch by branch_name: %s', branch_name)
+                log.warning('cannot find branch by branch_name: %s', branch_name)
                 return
 
             q = Flow.query
