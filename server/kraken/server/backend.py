@@ -95,10 +95,10 @@ def _handle_get_job(agent):
         job['trigger_data'] = agent.job.run.flow.trigger_data
     elif agent.job.run.repo_data:
         # pick any repo for now (TODO: it should be more sophisticated and handle all repos)
-        url = list(agent.job.run.repo_data.keys())[0]
-        commits = agent.job.run.repo_data[url]
+        url = agent.job.run.repo_data[0]['repo']
+        commits = agent.job.run.repo_data[0]['commits']
         job['trigger_data'] = dict(repo=url,
-                                   after=commits[0]['commit'])
+                                   after=commits[0]['id'])
 
     # attach storage info to job
     job['flow_id'] = agent.job.run.flow_id

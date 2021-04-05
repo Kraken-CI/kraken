@@ -93,7 +93,7 @@
             </div>
           </p-tabPanel>
 
-          <p-tabPanel header="Repo Trigger" *ngIf="selectedNode.run && selectedNode.run.repo_data">
+          <p-tabPanel header="Repo Changes" *ngIf="selectedNode.run && selectedNode.run.repo_data">
             <div *ngFor="let r of selectedNode.run.repo_data">
               <app-repo-changes [changes]="r"></app-repo-changes>
             </div>
@@ -135,7 +135,7 @@
     </div>
   </p-tabPanel>
 
-  <p-tabPanel header="Repo Trigger" *ngIf="hasFlowCommits(flow)">
+  <p-tabPanel header="Repo Changes" *ngIf="hasFlowCommits(flow)">
     <app-repo-changes [changes]="flow.trigger"></app-repo-changes>
   </p-tabPanel>
 
