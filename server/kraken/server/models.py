@@ -298,7 +298,7 @@ class Run(db.Model, DatesMixin):
     __tablename__ = "runs"
     id = Column(Integer, primary_key=True)
     label = Column(Unicode(200))
-    started = Column(DateTime)    # time when the session got a first non-deleted job
+    started = Column(DateTime)    # time when the run got a first non-deleted job
     finished = Column(DateTime)    # time when all tasks finished first time
     finished_again = Column(DateTime)    # time when all tasks finished
     state = Column(Integer, default=consts.RUN_STATE_IN_PROGRESS)
@@ -402,7 +402,8 @@ class Run(db.Model, DatesMixin):
                     regr_cnt=self.regr_cnt,
                     fix_cnt=self.fix_cnt,
                     repo_data=self.repo_data,
-                    reason=self.reason['reason'])
+                    reason=self.reason['reason'],
+                    note=self.note)
 
         return data
 

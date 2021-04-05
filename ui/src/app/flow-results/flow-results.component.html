@@ -39,16 +39,49 @@
         </div>
         <p-tabView>
           <p-tabPanel header="Overview">
-            <div *ngIf="selectedNode.run">
-              <div style="font-size: 1.3em; font-weight: bold; margin-bottom: 0.8em;">State</div>
-              {{ selectedNode.run.state }}
-              <br>
-              {{ selectedNode.run.created | localtime }} &rarr; {{ selectedNode.run.started | localtime }} &rarr; {{ selectedNode.run.finished | localtime }}
-              <br>
-              {{ selectedNode.run.duration }}
-              <div style="font-size: 1.3em; font-weight: bold; margin: 1em 0 0.8em 0;">Trigger</div>
-              Reason: {{ selectedNode.run.reason }}
+            <div *ngIf="selectedNode.run" style="display: flex;">
+              <!-- created -->
+              <div class="round-shadow" style="background-color: #e1fbe1; margin-right: 1em;">
+                <div style="font-size: 1.3em; font-weight: bold; margin-bottom: 0.8em;">Created</div>
+                {{ selectedNode.run.created | localtime }}<br>
+                Reason: {{ selectedNode.run.reason }}
+              </div>
+
+              <!-- started -->
+              <div class="round-shadow" [ngStyle]="{ 'background-color': (selectedNode.run.started ? '#e1fbe1' : ''), 'margin-right': '1em' }">
+                <div style="font-size: 1.3em; font-weight: bold; margin-bottom: 0.8em;">Started</div>
+                {{ selectedNode.run.started ? (selectedNode.run.started | localtime) : 'not yet' }}
+              </div>
+
+              <!-- completed -->
+              <div class="round-shadow" [ngStyle]="{ 'background-color': (selectedNode.run.finished ? '#e1fbe1' : ''), 'margin-right': '1em' }">
+                <div style="font-size: 1.3em; font-weight: bold; margin-bottom: 0.8em;">Completed</div>
+                <div *ngIf="selectedNode.run.finished">
+                  {{ selectedNode.run.finished | localtime }}
+                  <br>
+                  Duration: {{ selectedNode.run.duration }}
+                </div>
+                <div *ngIf="!selectedNode.run.finished">
+                  not yet
+                </div>
+              </div>
+
+              <!-- processed -->
+              <div class="round-shadow"  [ngStyle]="{ 'background-color': (selectedNode.run.finished ? '#e1fbe1' : ''), 'margin-right': '1em' }">
+                <div style="font-size: 1.3em; font-weight: bold; margin-bottom: 0.8em;">Processed</div>
+                <div *ngIf="selectedNode.run.state == 'processed'">
+                  {{ selectedNode.run.started | localtime }}
+                </div>
+                <div *ngIf="selectedNode.run.state != 'processed'">
+                  not yet
+                </div>
+              </div>
             </div>
+
+            <div *ngIf="selectedNode.run && selectedNode.run.note" style="margin-top: 1em;">
+              <p-message severity="warn" text="Note: {{ selectedNode.run.note }}"></p-message>
+            </div>
+
             <div *ngIf="!selectedNode.run">
               Run not started
             </div>
