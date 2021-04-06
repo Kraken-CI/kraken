@@ -8,6 +8,7 @@ import { Component, Input, OnInit } from '@angular/core';
 export class RepoChangesComponent implements OnInit {
     @Input() changes: any
     @Input() repos: any
+    @Input() showFiles = false
 
     repoUrl = ''
     diffUrl = ''
@@ -42,4 +43,6 @@ export class RepoChangesComponent implements OnInit {
         }
     }
 
+    toggleFiles() {
+    }
 }

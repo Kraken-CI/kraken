@@ -10,10 +10,24 @@
       by <a href="mailto:{{ c.author.email }}">{{ c.author.name }}</a>
       at {{ c.timestamp | localtime }}<br>
       {{ c.message }}
-      <div style="font-size: 0.8em;">
-        <span *ngIf="c.modified && c.modified.length">modified {{ c.modified.length }}&nbsp;&nbsp;&nbsp;</span>
-        <span *ngIf="c.added && c.added.length">added {{ c.added.length }}&nbsp;&nbsp;&nbsp;</span>
-        <span *ngIf="c.removed && c.removed.length">removed {{ c.removed.length }}</span>
+      <div style="font-size: 0.9em;"> <!--  cursor: pointer; (click)="toggleFiles()" -->
+        <div>
+          <i class="pi pi-angle-right" style="font-weight: bold; color: #0270c6; vertical-align: sub;"></i>
+          <span *ngIf="c.modified && c.modified.length">modified {{ c.modified.length }}&nbsp;&nbsp;&nbsp;</span>
+          <span *ngIf="c.added && c.added.length">added {{ c.added.length }}&nbsp;&nbsp;&nbsp;</span>
+          <span *ngIf="c.removed && c.removed.length">removed {{ c.removed.length }}</span>
+        </div>
+        <div style="margin-left: 18px;" *ngIf="showFiles">
+          <div *ngFor="let f of c.added" style="color: #008900;">
+            A&nbsp;&nbsp;&nbsp; {{ f }}
+          </div>
+          <div *ngFor="let f of c.modified" style="color: #0254aa;">
+            M&nbsp;&nbsp;&nbsp; {{ f }}
+          </div>
+          <div *ngFor="let f of c.removed" style="color: #bd0000;">
+            D&nbsp;&nbsp;&nbsp; {{ f }}
+          </div>
+        </div>
       </div>
     </div>
   </div>

@@ -95,7 +95,7 @@
 
           <p-tabPanel header="Repo Changes" *ngIf="selectedNode.run && selectedNode.run.repo_data">
             <div *ngFor="let r of selectedNode.run.repo_data">
-              <app-repo-changes [changes]="r"></app-repo-changes>
+              <app-repo-changes [changes]="r" [showFiles]="true"></app-repo-changes>
             </div>
           </p-tabPanel>
 
