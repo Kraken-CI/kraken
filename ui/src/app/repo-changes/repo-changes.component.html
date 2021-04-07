@@ -12,7 +12,7 @@
       {{ c.message }}
       <div style="font-size: 0.9em;"> <!--  cursor: pointer; (click)="toggleFiles()" -->
         <div>
-          <i class="pi pi-angle-right" style="font-weight: bold; color: #0270c6; vertical-align: sub;"></i>
+          <i class="pi pi-angle-right" style="font-weight: bold; color: #0270c6; vertical-align: sub;" *ngIf="showFiles"></i>
           <span *ngIf="c.modified && c.modified.length">modified {{ c.modified.length }}&nbsp;&nbsp;&nbsp;</span>
           <span *ngIf="c.added && c.added.length">added {{ c.added.length }}&nbsp;&nbsp;&nbsp;</span>
           <span *ngIf="c.removed && c.removed.length">removed {{ c.removed.length }}</span>
