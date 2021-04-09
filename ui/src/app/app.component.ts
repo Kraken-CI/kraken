@@ -120,7 +120,31 @@ export class AppComponent implements OnInit {
     }
 
     login() {
-        this.auth.login(this.username, this.password, 'returnUrl')
+        if (!this.username) {
+            this.msgSrv.add({
+                severity: 'error',
+                summary: 'Login erred',
+                detail: 'Username cannot be empty',
+                life: 10000,
+            })
+            return
+        }
+        if (!this.password) {
+            this.msgSrv.add({
+                severity: 'error',
+                summary: 'Login erred',
+                detail: 'Password cannot be empty',
+                life: 10000,
+            })
+            return
+        }
+        this.auth.login(this.username, this.password, 'returnUrl').subscribe(
+            (msg) => {
+                if (msg) {
+                    this.msgSrv.add(msg)
+                }
+            }
+        )
     }
 
     passwdKeyUp(evKey) {

@@ -96,7 +96,6 @@ class Branch(db.Model, DatesMixin):
     sequences = relationship("BranchSequence", back_populates="branch")
 
     #base_branch = relationship('BaseBranch', uselist=False, primaryjoin="or_(Branch.id==BaseBranch.ci_branch_id, Branch.id==BaseBranch.dev_branch_id)")
-    #flows = relationship("Flow", back_populates="branch", order_by="desc(Flow.created)")
 
     def get_json(self, with_results=False, with_cfg=False):
         data = dict(id=self.id,
@@ -245,6 +244,15 @@ class Stage(db.Model, DatesMixin):
 # EXECUTION
 
 
+
+class RepoChanges(db.Model, DatesMixin):
+    __tablename__ = "repo_changes"
+    id = Column(Integer, primary_key=True)
+    data = Column(JSONB)
+    flow = relationship("Flow", back_populates="trigger_data")
+    runs = relationship("Run", back_populates="repo_data")
+
+
 class Flow(db.Model, DatesMixin):
     __tablename__ = "flows"
     id = Column(Integer, primary_key=True)
@@ -257,7 +265,8 @@ class Flow(db.Model, DatesMixin):
     branch = relationship('Branch')
     runs = relationship('Run', back_populates="flow", order_by="Run.created")
     args = Column(JSONB, nullable=False, default={})
-    trigger_data = Column(JSONB)
+    trigger_data_id = Column(Integer, ForeignKey('repo_changes.id'))
+    trigger_data = relationship('RepoChanges')
     artifacts = Column(JSONB, default={})
     artifacts_files = relationship('Artifact', back_populates="flow")
 
@@ -272,7 +281,7 @@ class Flow(db.Model, DatesMixin):
 
         trigger = None
         if self.trigger_data:
-            trigger = self.trigger_data
+            trigger = self.trigger_data.data
 
         return dict(id=self.id,
                     label=self.get_label(),
@@ -326,7 +335,8 @@ class Run(db.Model, DatesMixin):
     jobs_total = Column(Integer, default=0)
     issues_total = Column(Integer, default=0)
     issues_new = Column(Integer, default=0)
-    repo_data = Column(JSONB)
+    repo_data_id = Column(Integer, ForeignKey('repo_changes.id'))
+    repo_data = relationship('RepoChanges')
     reason = Column(JSONB, nullable=False)
 
     def get_json(self):
@@ -401,7 +411,7 @@ class Run(db.Model, DatesMixin):
                     no_change_cnt=self.no_change_cnt,
                     regr_cnt=self.regr_cnt,
                     fix_cnt=self.fix_cnt,
-                    repo_data=self.repo_data,
+                    repo_data=self.repo_data.data if self.repo_data else None,
                     reason=self.reason['reason'],
                     note=self.note)
 

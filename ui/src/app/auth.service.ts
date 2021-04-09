@@ -3,8 +3,6 @@ import { HttpClient } from '@angular/common/http'
 import { Router, ActivatedRoute } from '@angular/router'
 import { BehaviorSubject, Observable } from 'rxjs'
 
-import { MessageService } from 'primeng/api'
-
 import { UsersService } from './backend/api/users.service'
 
 @Injectable({
@@ -18,8 +16,7 @@ export class AuthService {
     constructor(
         private http: HttpClient,
         private api: UsersService,
-        private router: Router,
-        private msgSrv: MessageService
+        private router: Router
     ) {
         const session = localStorage.getItem('session')
         if (session) {
@@ -33,37 +30,40 @@ export class AuthService {
     }
 
     login(user, password, returnUrl) {
-        const credentials = { user, password }
-        this.api.login(credentials).subscribe(
-            (data) => {
-                this.session = data
+        return new Observable((observer) => {
+            const credentials = { user, password }
+            this.api.login(credentials).subscribe(
+                (data) => {
+                    this.session = data
 
-                if (this.session === null) {
-                    this.deleteLocalSession()
-                    this.msgSrv.add({
+                    if (this.session === null) {
+                        this.deleteLocalSession()
+                        observer.next({
+                            severity: 'error',
+                            summary: 'Invalid user or password',
+                        })
+                        return
+                    }
+
+                    this.currentSessionSubject.next(this.session)
+                    localStorage.setItem('session', JSON.stringify(this.session))
+                    // this.router.navigate([returnUrl])
+                    observer.next(null)
+                },
+                (err) => {
+                    let msg = err.statusText
+                    if (err.error && err.error.detail) {
+                        msg = err.error.detail
+                    }
+                    observer.next({
                         severity: 'error',
-                        summary: 'Invalid user or password',
+                        summary: 'Login erred',
+                        detail: msg,
+                        life: 10000,
                     })
-                    return
                 }
-
-                this.currentSessionSubject.next(this.session)
-                localStorage.setItem('session', JSON.stringify(this.session))
-                // this.router.navigate([returnUrl])
-            },
-            (err) => {
-                let msg = err.statusText
-                if (err.error && err.error.detail) {
-                    msg = err.error.detail
-                }
-                this.msgSrv.add({
-                    severity: 'error',
-                    summary: 'Login erred',
-                    detail: 'Login erred: ' + msg,
-                    life: 10000,
-                })
-            }
-        )
+            )
+        })
     }
 
     logout() {

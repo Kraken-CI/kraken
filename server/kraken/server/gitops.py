@@ -137,9 +137,9 @@ def get_repo_commits_since(branch_id, prev_run, repo_url, repo_branch):
 
         # get commits history
         cmd = "git log --no-merges --since='2 weeks ago' -n 20 --pretty=format:'commit:%H%nauthor:%an%nemail:%ae%ndate:%aI%nsubject:%s' --name-status"
-        if prev_run and prev_run.repo_data and repo_url in prev_run.repo_data:
+        if prev_run and prev_run.repo_data_id and prev_run.repo_data.data:
             base_commit = None
-            for rd in prev_run.repo_data:
+            for rd in prev_run.repo_data.data:
                 if rd['repo'] == repo_url:
                     base_commit = rd['commits'][0]['id']
                     break

@@ -46,13 +46,14 @@ def login(body):
     # find user for given name with given password
     user = _check_user_password(creds['user'], creds['password'])
     if user is None:
-        return None
+        raise Unauthorized('missing user or incorrect password')
 
     # prepare user session
     us = UserSession(user=user, token=uuid.uuid4().hex)
     db.session.commit()
 
-    return us.get_json(), 201
+    resp = us.get_json()
+    return resp, 201
 
 
 def logout(session_id):

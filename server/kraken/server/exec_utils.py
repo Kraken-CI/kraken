@@ -115,7 +115,7 @@ def start_run(stage, flow, reason, args=None, repo_data=None):
         # if currently there is not repo data copy it from previous run if it is there
         if not repo_data:
             prev_run = dbutils.get_prev_run(stage.id, flow.kind)
-            if prev_run and prev_run.repo_data:
+            if prev_run and prev_run.repo_data_id and prev_run.repo_data.data:
                 repo_data = prev_run.repo_data
                 log.info('new run, taken repo_data from prev run %s', prev_run)
 

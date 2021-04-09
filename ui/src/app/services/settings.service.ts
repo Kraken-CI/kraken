@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core'
 import { BehaviorSubject, Observable } from 'rxjs'
 import { map } from 'rxjs/operators'
 
+import { AuthService } from '../auth.service'
 import { ManagementService } from '../backend/api/management.service'
 
 @Injectable({
@@ -11,12 +12,20 @@ export class SettingsService {
     private settingsSubject: BehaviorSubject<any>
     public settings: Observable<any>
 
-    constructor(private managementService: ManagementService) {
+    constructor(
+        private auth: AuthService,
+        private managementService: ManagementService
+    ) {
         this.settingsSubject = new BehaviorSubject(null)
         this.settings = this.settingsSubject.asObservable()
 
-        this.managementService.getSettings().subscribe((settings) => {
-            this.settingsSubject.next(settings)
+        this.auth.currentSession.subscribe((session) => {
+            if (!session) {
+                return
+            }
+            this.managementService.getSettings().subscribe((settings) => {
+                this.settingsSubject.next(settings)
+            })
         })
     }
 
