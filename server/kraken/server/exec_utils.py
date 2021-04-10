@@ -133,6 +133,13 @@ def start_run(stage, flow, reason, args=None, repo_data=None):
     if run.state == consts.RUN_STATE_MANUAL:
         log.info('created manual run %s for stage %s of branch %s - no jobs started yet', run, stage, stage.branch)
     else:
+        # update pointer to last, incomplete, CI flow in the branch
+        if run.flow.kind == consts.FLOW_KIND_CI:
+            last_flow = run.flow.branch.ci_last_incomplete_flow
+            if last_flow is None or last_flow.created < run.flow.created:
+                run.flow.branch.ci_last_incomplete_flow = run.flow
+
+        # trigger jobs
         log.info('starting run %s for stage %s of branch %s', run, stage, stage.branch)
         # TODO: move triggering jobs to background tasks
         trigger_jobs(run, replay=replay)

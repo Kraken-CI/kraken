@@ -151,6 +151,23 @@ def analyze_run(self, run_id):
                 now = datetime.datetime.utcnow()
                 flow.finished = now
                 flow.state = consts.FLOW_STATE_COMPLETED
+
+                # update pointer to last, completed, CI flow in the branch
+                # and if needed then reset pointer to incomplete flow
+                if flow.kind == consts.FLOW_KIND_CI:
+                    # flush to db, otherwise there will be circular dependency between entities
+                    db.session.flush()
+
+                    # update completed
+                    last_flow = flow.branch.ci_last_completed_flow
+                    if last_flow is None or last_flow.created < flow.created:
+                        flow.branch.ci_last_completed_flow = flow
+
+                    # update incomplete
+                    last_flow = flow.branch.ci_last_incomplete_flow
+                    if last_flow and last_flow.id == flow.id:
+                        flow.branch.ci_last_incomplete_flow = None
+
                 db.session.commit()
 
             t = analyze_results_history.delay(run.id)

@@ -20,6 +20,7 @@ import xmlrpc.client
 
 from flask import abort
 from sqlalchemy.orm.attributes import flag_modified
+from sqlalchemy.orm import joinedload
 import pytimeparse
 
 from . import consts, srvcheck
@@ -78,6 +79,12 @@ def delete_project(project_id):
 def get_projects():
     q = Project.query
     q = q.filter_by(deleted=None)
+    q = q.options(joinedload('branches'),
+                  joinedload('branches.project'),
+                  joinedload('branches.ci_last_incomplete_flow'),
+                  joinedload('branches.ci_last_completed_flow'),
+                  joinedload('secrets'))
+
     projects = []
     for p in q.all():
         projects.append(p.get_json(with_last_results=True))

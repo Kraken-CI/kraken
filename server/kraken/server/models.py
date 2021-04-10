@@ -92,6 +92,10 @@ class Branch(db.Model, DatesMixin):
                             primaryjoin="and_(Branch.id==Flow.branch_id, Flow.kind==0)", viewonly=True)
     dev_flows = relationship("Flow", order_by="desc(Flow.created)",
                              primaryjoin="and_(Branch.id==Flow.branch_id, Flow.kind==1)", viewonly=True)
+    ci_last_incomplete_flow_id = Column(Integer, ForeignKey('flows.id'))
+    ci_last_incomplete_flow = relationship('Flow', foreign_keys=[ci_last_incomplete_flow_id])
+    ci_last_completed_flow_id = Column(Integer, ForeignKey('flows.id'))
+    ci_last_completed_flow = relationship('Flow', foreign_keys=[ci_last_completed_flow_id])
     stages = relationship("Stage", back_populates="branch", order_by="Stage.name")
     sequences = relationship("BranchSequence", back_populates="branch")
 
@@ -110,26 +114,24 @@ class Branch(db.Model, DatesMixin):
             data['dev_flows'] = [f.get_json() for f in self.dev_flows[:10]]
 
         if with_last_results:
-            completed_flow = None
-            incomplete_flow = None
-            if len(self.ci_flows) > 0:
-                for f in self.ci_flows:
-                    if completed_flow is None and f.state == consts.FLOW_STATE_COMPLETED:
-                        f_json = dict(id=f.id,
-                                      label=f.label,
-                                      finished=f.finished.strftime("%Y-%m-%dT%H:%M:%SZ") if f.finished else None,
-                                      errors=any((r.jobs_error > 0 for r in f.runs)))
-                        completed_flow = f_json
-                    if completed_flow is None and incomplete_flow is None and f.state != consts.FLOW_STATE_COMPLETED:
-                        f_json = dict(id=f.id,
-                                      label=f.label,
-                                      created=f.created.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                                      errors=any((r.jobs_error > 0 for r in f.runs)))
-                        incomplete_flow = f_json
-                    if completed_flow and incomplete_flow:
-                        break
-            data['last_completed_flow'] = completed_flow
-            data['last_incomplete_flow'] = incomplete_flow
+            data['last_completed_flow'] = None
+            data['last_incomplete_flow'] = None
+
+            f = self.ci_last_completed_flow
+            if f:
+                f_json = dict(id=f.id,
+                              label=f.label,
+                              finished=f.finished.strftime("%Y-%m-%dT%H:%M:%SZ") if f.finished else None,
+                              errors=any((r.jobs_error > 0 for r in f.runs)))
+                data['last_completed_flow'] = f_json
+
+            f = self.ci_last_incomplete_flow
+            if f:
+                f_json = dict(id=f.id,
+                              label=f.label,
+                              created=f.created.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                              errors=any((r.jobs_error > 0 for r in f.runs)))
+                data['last_incomplete_flow'] = f_json
 
         if with_cfg:
             data['stages'] = [s.get_json() for s in self.stages if s.deleted is None]
@@ -285,7 +287,7 @@ class Flow(db.Model, DatesMixin):
     kind = Column(Integer, default=consts.FLOW_KIND_CI)  # 0 - CI, 1 - dev
     branch_name = Column(Unicode(255))
     branch_id = Column(Integer, ForeignKey('branches.id'), nullable=False)
-    branch = relationship('Branch')
+    branch = relationship('Branch', foreign_keys=[branch_id])
     runs = relationship('Run', back_populates="flow", order_by="Run.created")
     args = Column(JSONB, nullable=False, default={})
     trigger_data_id = Column(Integer, ForeignKey('repo_changes.id'))
