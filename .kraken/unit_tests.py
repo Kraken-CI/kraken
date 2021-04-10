@@ -60,7 +60,8 @@ def stage(ctx):
             }, {
                 "tool": "shell",
                 "cmd": "poetry install",
-                "cwd": "kraken/server"
+                "cwd": "kraken/server",
+                "timeout": 240
             }, {
                 "tool": "pytest",
                 "pytest_exe": "poetry run pytest",
