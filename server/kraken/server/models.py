@@ -68,8 +68,8 @@ class Project(db.Model, DatesMixin):
     agents_groups = relationship("AgentsGroup", back_populates="project")
     webhooks = Column(JSONB)
 
-    def get_json(self, with_results=False):
-        branches = [b.get_json(with_results=with_results) for b in self.branches if b.deleted is None]
+    def get_json(self, with_results=False, with_last_results=False):
+        branches = [b.get_json(with_results=with_results, with_last_results=with_last_results) for b in self.branches if b.deleted is None]
         branches.sort(key=lambda b: b['name'])
         return dict(id=self.id,
                     created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,
@@ -97,7 +97,7 @@ class Branch(db.Model, DatesMixin):
 
     #base_branch = relationship('BaseBranch', uselist=False, primaryjoin="or_(Branch.id==BaseBranch.ci_branch_id, Branch.id==BaseBranch.dev_branch_id)")
 
-    def get_json(self, with_results=False, with_cfg=False):
+    def get_json(self, with_results=False, with_cfg=False, with_last_results=False):
         data = dict(id=self.id,
                     created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,
                     deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,
@@ -108,6 +108,27 @@ class Branch(db.Model, DatesMixin):
         if with_results:
             data['ci_flows'] = [f.get_json() for f in self.ci_flows[:10]]
             data['dev_flows'] = [f.get_json() for f in self.dev_flows[:10]]
+
+        if with_last_results:
+            completed_flow = None
+            incomplete_flow = None
+            if len(self.ci_flows) > 0:
+                for f in self.ci_flows:
+                    if completed_flow is None and f.state == consts.FLOW_STATE_COMPLETED:
+                        f_json = dict(id=f.id,
+                                      label=f.label,
+                                      errors=any((r.jobs_error > 0 for r in f.runs)))
+                        completed_flow = f_json
+                    if completed_flow is None and incomplete_flow is None and f.state != consts.FLOW_STATE_COMPLETED:
+                        f_json = dict(id=f.id,
+                                      label=f.label,
+                                      errors=any((r.jobs_error > 0 for r in f.runs)))
+                        incomplete_flow = f_json
+                    if completed_flow and incomplete_flow:
+                        break
+            data['last_completed_flow'] = completed_flow
+            data['last_incomplete_flow'] = incomplete_flow
+
         if with_cfg:
             data['stages'] = [s.get_json() for s in self.stages if s.deleted is None]
         return data

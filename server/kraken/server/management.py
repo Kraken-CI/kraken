@@ -80,7 +80,7 @@ def get_projects():
     q = q.filter_by(deleted=None)
     projects = []
     for p in q.all():
-        projects.append(p.get_json(with_results=False))
+        projects.append(p.get_json(with_last_results=True))
     return {'items': projects, 'total': len(projects)}, 200
 
 

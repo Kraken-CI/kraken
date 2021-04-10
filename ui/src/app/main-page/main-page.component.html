@@ -40,13 +40,34 @@
         </div>
       </div>
 
-      <div class="p-grid">
-        <div *ngFor="let branch of proj.branches" style="padding: 12px 0 0 12px;" class="p-col-4">
-          <div style="font-weight: bold; font-size: 1.5em; margin: 0 0 10px 0;">
-            <i class="fa fa-code-fork" style="vertical-align: bottom; font-size: 1.7em; margin-right: 10px;"></i>
-            <a routerLink="/branches/{{ branch.id }}/ci">
-              {{ branch.name }}
-            </a>
+      <div class="p-grid" style="margin: 6px 0 0 12px;">
+        <div *ngFor="let branch of proj.branches" style="padding: 0px 0 0 0px;" class="p-col-4">
+          <div style="margin: 0 0 10px 0; display: flex;">
+            <div style="font-weight: bold; font-size: 2.2rem; margin-right: 10px;">
+              <i class="fa fa-code-fork"></i>
+            </div>
+            <div>
+              <div style="font-weight: bold; font-size: 1.5em;border-bottom: 1px #ccc solid; margin-bottom: 6px;">
+                <a routerLink="/branches/{{ branch.id }}/ci">
+                  {{ branch.name }}
+                </a>
+              </div>
+              <div *ngIf="branch.last_completed_flow || branch.last_incomplete_flow">
+                <a *ngIf="branch.last_completed_flow" routerLink="/flows/{{ branch.last_completed_flow.id }}" style="padding-right: 1em;">
+                  {{ branch.last_completed_flow.label || branch.last_completed_flow.id }}
+                  <i *ngIf="!branch.last_completed_flow.errors" class="pi pi-thumbs-up" style="color: green;"></i>
+                  <i *ngIf="branch.last_completed_flow.errors" class="pi pi-times-circle" style="color: red; vertical-align: sub;"></i>
+                </a>
+                <a *ngIf="branch.last_incomplete_flow" routerLink="/flows/{{ branch.last_incomplete_flow.id }}">
+                  {{ branch.last_incomplete_flow.label || branch.last_incomplete_flow.id }}
+                  <i *ngIf="branch.last_incomplete_flow.errors" class="pi pi-times-circle" style="color: red; vertical-align: sub;"></i>
+                  <i class="pi pi-spin pi-spinner" style="color: grey;"></i>
+                </a>
+              </div>
+              <div *ngIf="!branch.last_completed_flow && !branch.last_incomplete_flow" style="color: #ccc;">
+                no flows yet
+              </div>
+            </div>
           </div>
         </div>
       </div>
