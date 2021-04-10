@@ -92,7 +92,7 @@ def _handle_get_job(agent):
 
     # attach trigger data to job
     if agent.job.run.flow.trigger_data:
-        job['trigger_data'] = agent.job.run.flow.trigger_data
+        job['trigger_data'] = agent.job.run.flow.trigger_data.data
     elif agent.job.run.repo_data_id:
         # pick any repo for now (TODO: it should be more sophisticated and handle all repos)
         url = agent.job.run.repo_data.data[0]['repo']

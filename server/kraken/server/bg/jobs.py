@@ -26,6 +26,7 @@ import pytimeparse
 
 from .clry import app as clry_app
 from ..models import db, Run, Job, TestCaseResult, Branch, Flow, Stage, Project, get_setting
+from ..models import RepoChanges
 from ..schema import prepare_new_planner_triggers
 from ..schema import check_and_correct_stage_schema
 from .. import exec_utils  # pylint: disable=cyclic-import
@@ -691,6 +692,8 @@ def trigger_run(self, stage_id, flow_kind=consts.FLOW_KIND_CI, reason=None):
             changes, repo_data = _check_repo_commits(stage, flow_kind)
             if not changes:
                 return
+            if repo_data:
+                repo_data = RepoChanges(data=repo_data)
             if repo_data and reason and reason['reason'] == 'repo_interval':
                 reason = dict(reason='commit to repo')
             if repo_data and new_flow:
@@ -774,6 +777,9 @@ def trigger_flow(self, project_id, trigger_data=None):
             # map runs to stages
             run_stages = {run.stage_id: run for run in last_flow.runs if not run.deleted}
             name_stages = {stage.name: stage for stage in branch.stages if not stage.deleted}
+
+            # change trigger_data into db record
+            trigger_data = RepoChanges(data=[trigger_data])
 
             # for stages that were not run while their parent was run, do run them
             started_something = False

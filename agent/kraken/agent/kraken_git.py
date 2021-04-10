@@ -133,8 +133,8 @@ def run(step, **kwargs):  # pylint: disable=unused-argument
             log.exception('problem with storing repo bundle, skipping it')
 
     # checkout commit that comes from trigger, otherwise checkout master/main
-    if 'trigger_data' in step and step['trigger_data']['repo'] == step['http_url']:
-        branch_or_commit = step['trigger_data']['after']
+    if 'trigger_data' in step and step['trigger_data'][0]['repo'] == step['http_url']:
+        branch_or_commit = step['trigger_data'][0]['after']
     else:
         branch_or_commit = step.get('branch', 'master')  # TODO: detect if there is master, if not then checkout main
 
