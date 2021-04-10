@@ -101,9 +101,18 @@
               <div>
                 Status: <i style="vertical-align: baseline;" [ngClass]="getStepStatusClass(step)"></i> {{ getStepStatus(step) }}
               </div>
+              <div *ngIf="step.result && step.result.duration >= 0">
+                Duration: {{ step.result.duration }}s
+              </div>
               <div *ngIf="step.result && step.result['reason']">
                 Reason: {{ step.result['reason'] }}
-                <pre>{{ step.result['msg'] }}</pre>
+                <div *ngIf="step.result['reason'] == 'step-timeout'">
+                  Timeout: {{ step.timeout || '60' }}s
+                  <br>
+                </div>
+                <div *ngIf="step.result['reason'] != 'step-timeout'">
+                  <pre>{{ step.result['msg'] }}</pre>
+                </div>
               </div>
             </div>
           </p-tabPanel>

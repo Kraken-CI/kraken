@@ -14,6 +14,7 @@
 
 import sys
 import json
+import time
 import socket
 import inspect
 import logging
@@ -107,6 +108,7 @@ def execute(sock, module, command, step_file_path):
 
         result = {'status': 'done'}
         ret = 0
+        t0 = time.time()
 
         if command == 'get_commands':
             func_list = [o[0] for o in inspect.getmembers(
@@ -141,7 +143,8 @@ def execute(sock, module, command, step_file_path):
         else:
             raise Exception('unknown command %s' % command)
 
-        log.info('step tool %s, cmd %s done with retcode %s', tool_name, command, ret)
+        duration = t0 - time.time()
+        log.info('step tool %s, cmd %s done with retcode %s in %dsecs', tool_name, command, ret, duration)
 
         if ret != 0:
             if ret == 10000:
