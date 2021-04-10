@@ -281,7 +281,7 @@ class Flow(db.Model, DatesMixin):
 
         trigger = None
         if self.trigger_data:
-            trigger = self.trigger_data.data
+            trigger = self.trigger_data.data[0]
 
         return dict(id=self.id,
                     label=self.get_label(),

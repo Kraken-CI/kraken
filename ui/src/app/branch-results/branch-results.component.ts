@@ -254,18 +254,19 @@ export class BranchResultsComponent implements OnInit, OnDestroy {
                 if (!run.repo_data) {
                     continue
                 }
-                for (const url of Object.keys(run.repo_data)) {
-                    const commits = run.repo_data[url]
+                for (const rd of run.repo_data) {
+                    const url = rd['repo']
+                    const commits = rd['commits']
                     html = `<p>`
                     html += `<a href="${url}" target="blank" style="font-size: 1.5em; font-weight: bold;">${url}</a>`
 
                     for (const c of commits.slice(0, 7)) {
                         html += '<div style="margin: 0 0 10px 12px;">'
-                        html += `<b>${c.commit.slice(0, 8)}</b>`
-                        html += ` by <a href="mailto:${c.email}">${c.author}</a>`
-                        const ts = datetimeToLocal(c.date, null)
+                        html += `<b>${c.id.slice(0, 8)}</b>`
+                        html += ` by <a href="mailto:${c.author.email}">${c.author.name}</a>`
+                        const ts = datetimeToLocal(c.timestamp, null)
                         html += ` at ${ts}<br>`
-                        html += `${c.subject}<br>`
+                        html += `${c.message}<br>`
                         html += '</div>'
                     }
                     html += `</p>`
