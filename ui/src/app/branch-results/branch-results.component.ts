@@ -255,8 +255,8 @@ export class BranchResultsComponent implements OnInit, OnDestroy {
                     continue
                 }
                 for (const rd of run.repo_data) {
-                    const url = rd['repo']
-                    const commits = rd['commits']
+                    const url = rd.repo
+                    const commits = rd.commits
                     html = `<p>`
                     html += `<a href="${url}" target="blank" style="font-size: 1.5em; font-weight: bold;">${url}</a>`
 
