@@ -254,6 +254,11 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
                 }, 100)
             }
 
+            // put back selection
+            if (this.selectedNode.stage.id) {
+                this.changeSelection(this.selectedNode.stage.id)
+            }
+
             // refresh data every 10secs
             this.refreshTimer = setTimeout(() => {
                 this.refresh()
@@ -343,14 +348,15 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
             })
     }
 
-    changeSelection(selectedNode) {
+    changeSelection(stageId) {
         for (const node of this.flatTree) {
-            if (node.stage.id !== selectedNode.stage.id) {
+            if (node.stage.id === stageId) {
+                node.selected = true
+                this.selectedNode = node
+            } else {
                 node.selected = false
             }
         }
-        selectedNode.selected = true
-        this.selectedNode = selectedNode
     }
 
     hasFlowCommits(flow) {

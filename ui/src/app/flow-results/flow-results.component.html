@@ -22,7 +22,7 @@
                              (stageRun)="onStageRun($event)"
                              [selectionEnabled]="true"
                              [selected]="n.selected"
-                             (boxSelect)="changeSelection(n)" style="flex: 1;">
+                             (boxSelect)="changeSelection(n.stage.id)" style="flex: 1;">
                 </app-run-box>
           </div>
         </div>
