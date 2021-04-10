@@ -52,17 +52,25 @@
                   {{ branch.name }}
                 </a>
               </div>
-              <div *ngIf="branch.last_completed_flow || branch.last_incomplete_flow">
-                <a *ngIf="branch.last_completed_flow" routerLink="/flows/{{ branch.last_completed_flow.id }}" style="padding-right: 1em;">
+              <div *ngIf="branch.last_completed_flow">
+                <a routerLink="/flows/{{ branch.last_completed_flow.id }}" style="padding-right: 1em;">
                   {{ branch.last_completed_flow.label || branch.last_completed_flow.id }}
                   <i *ngIf="!branch.last_completed_flow.errors" class="pi pi-thumbs-up" style="color: green;"></i>
                   <i *ngIf="branch.last_completed_flow.errors" class="pi pi-times-circle" style="color: red; vertical-align: sub;"></i>
                 </a>
-                <a *ngIf="branch.last_incomplete_flow" routerLink="/flows/{{ branch.last_incomplete_flow.id }}">
+                <span style="color: #bbb;">
+                  {{ branch.last_completed_flow.finished | localtime:'ago' }}
+                </span>
+              </div>
+              <div *ngIf="branch.last_incomplete_flow">
+                <a routerLink="/flows/{{ branch.last_incomplete_flow.id }}" style="padding-right: 1em;">
                   {{ branch.last_incomplete_flow.label || branch.last_incomplete_flow.id }}
                   <i *ngIf="branch.last_incomplete_flow.errors" class="pi pi-times-circle" style="color: red; vertical-align: sub;"></i>
                   <i class="pi pi-spin pi-spinner" style="color: grey;"></i>
                 </a>
+                <span style="color: #bbb;">
+                  {{ branch.last_incomplete_flow.created | localtime:'ago' }}
+                </span>
               </div>
               <div *ngIf="!branch.last_completed_flow && !branch.last_incomplete_flow" style="color: #ccc;">
                 no flows yet

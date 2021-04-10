@@ -117,11 +117,13 @@ class Branch(db.Model, DatesMixin):
                     if completed_flow is None and f.state == consts.FLOW_STATE_COMPLETED:
                         f_json = dict(id=f.id,
                                       label=f.label,
+                                      finished=f.finished.strftime("%Y-%m-%dT%H:%M:%SZ") if f.finished else None,
                                       errors=any((r.jobs_error > 0 for r in f.runs)))
                         completed_flow = f_json
                     if completed_flow is None and incomplete_flow is None and f.state != consts.FLOW_STATE_COMPLETED:
                         f_json = dict(id=f.id,
                                       label=f.label,
+                                      created=f.created.strftime("%Y-%m-%dT%H:%M:%SZ"),
                                       errors=any((r.jobs_error > 0 for r in f.runs)))
                         incomplete_flow = f_json
                     if completed_flow and incomplete_flow:

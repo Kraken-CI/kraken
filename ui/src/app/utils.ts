@@ -14,11 +14,15 @@ export function datetimeToLocal(d, fmt) {
             tz = ' UTC'
         }
 
-        if (!fmt) {
-            fmt = 'yyyy-LL-dd HH:mm:ss'
-        }
+        if (fmt === 'ago') {
+            return d.toRelative()
+        } else {
+            if (!fmt) {
+                fmt = 'yyyy-LL-dd HH:mm:ss'
+            }
 
-        return d.toFormat(fmt) + tz
+            return d.toFormat(fmt) + tz
+        }
     } catch (e) {
         return d
     }
