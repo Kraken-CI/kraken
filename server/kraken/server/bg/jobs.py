@@ -627,6 +627,8 @@ def _check_repo_commits(stage, flow_kind):
 
     if not changes:
         log.info('no commits since prev check')
+    else:
+        log.info('detected commits since prev check')
     return changes, repo_data
 
 

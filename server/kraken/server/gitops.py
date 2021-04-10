@@ -23,9 +23,9 @@ from . import minioops
 log = logging.getLogger(__name__)
 
 
-def _run(cmd, check=True, cwd=None):
+def _run(cmd, check=True, cwd=None, capture_output=False, text=None):
     log.info("execute '%s' in '%s'", cmd, cwd)
-    p = subprocess.run(cmd, shell=True, check=check, cwd=cwd)
+    p = subprocess.run(cmd, shell=True, check=check, cwd=cwd, capture_output=capture_output, text=text)
     return p
 
 
@@ -70,7 +70,7 @@ def _retrieve_git_repo(tmpdir, repo_url, mc, minio_bucket, minio_repo_bundle_pat
         # clone repo
         #cmd = "git clone --single-branch --branch %s '%s' repo" % (repo_branch, repo_url)
         cmd = "git clone '%s' repo" % repo_url
-        p = subprocess.run(cmd, shell=True, check=False, cwd=tmpdir, capture_output=True, text=True)
+        p = _run(cmd, check=False, cwd=tmpdir, capture_output=True, text=True)
         if p.returncode != 0:
             err = "command '%s' returned non-zero exit status %d\n" % (cmd, p.returncode)
             err += p.stdout.strip()[:140] + '\n'
@@ -120,6 +120,11 @@ def _collect_commits_from_git_log(text):
             else:
                 commit['modified'].append(fpath)
 
+    # add last non-empty entry
+    if 'id' in commit:
+        log.info('  %s', commit)
+        commits.append(commit)
+
     return commits
 
 
@@ -149,7 +154,7 @@ def get_repo_commits_since(branch_id, prev_run, repo_url, repo_branch):
         else:
             base_commit = None
             log.info('no base commit %s', repo_url)
-        p = subprocess.run(cmd, shell=True, check=True, cwd=repo_dir, capture_output=True, text=True)
+        p = _run(cmd, check=True, cwd=repo_dir, capture_output=True, text=True)
         text = p.stdout.strip()
 
         # bundle repo and cache it
@@ -174,7 +179,7 @@ def get_schema_from_repo(repo_url, repo_branch, repo_access_token, schema_file):
     with  tempfile.TemporaryDirectory(prefix='kraken-git-') as tmpdir:
         # clone repo
         cmd = "git clone --depth 1 --single-branch --branch %s '%s' repo" % (repo_branch, repo_url)
-        p = subprocess.run(cmd, shell=True, check=False, cwd=tmpdir, capture_output=True, text=True)
+        p = _run(cmd, check=False, cwd=tmpdir, capture_output=True, text=True)
         if p.returncode != 0:
             err = "command '%s' returned non-zero exit status %d\n" % (cmd, p.returncode)
             err += p.stdout.strip()[:140] + '\n'
@@ -186,7 +191,7 @@ def get_schema_from_repo(repo_url, repo_branch, repo_access_token, schema_file):
 
         # get last commit SHA
         cmd = 'git rev-parse --verify HEAD'
-        p = subprocess.run(cmd, shell=True, check=True, cwd=repo_dir, capture_output=True, text=True)
+        p = _run(cmd, check=True, cwd=repo_dir, capture_output=True, text=True)
         version = p.stdout.strip()
 
         # read schema code
