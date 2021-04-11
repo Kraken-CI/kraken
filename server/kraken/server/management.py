@@ -82,7 +82,9 @@ def get_projects():
     q = q.options(joinedload('branches'),
                   joinedload('branches.project'),
                   joinedload('branches.ci_last_incomplete_flow'),
+                  joinedload('branches.ci_last_incomplete_flow.runs'),
                   joinedload('branches.ci_last_completed_flow'),
+                  joinedload('branches.ci_last_completed_flow.runs'),
                   joinedload('secrets'))
 
     projects = []
