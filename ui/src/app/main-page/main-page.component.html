@@ -65,7 +65,7 @@
               <div *ngIf="branch.last_incomplete_flow">
                 <a routerLink="/flows/{{ branch.last_incomplete_flow.id }}" style="padding-right: 1em;">
                   {{ branch.last_incomplete_flow.label || branch.last_incomplete_flow.id }}
-                  <i *ngIf="branch.last_incomplete_flow.errors" class="pi pi-times-circle" style="color: red; vertical-align: sub;"></i>
+                  <i *ngIf="branch.last_incomplete_flow.errors" class="pi pi-times-circle" style="color: red; padding-right: 0.2em;"></i>
                   <i class="pi pi-spin pi-spinner" style="color: grey;"></i>
                 </a>
                 <span style="color: #bbb;">
