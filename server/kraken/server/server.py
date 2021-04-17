@@ -29,6 +29,7 @@ from . import webhooks
 from . import agentblob
 from . import storage
 from . import job_log
+from . import badge
 from .. import version
 
 log = logging.getLogger('server')
@@ -98,6 +99,9 @@ def create_app():
     # install webhooks
     webhooks_bp = webhooks.create_blueprint()
     app.register_blueprint(webhooks_bp, url_prefix='/webhooks')
+
+    # branch status badge
+    app.add_url_rule("/branch-badge/<branch_id>", view_func=badge.get_branch_badge, methods=['GET'])
 
     return connex_app
 

@@ -444,4 +444,14 @@ export class BranchMgmtComponent implements OnInit {
                 })
         }
     }
+
+    getBadgeUrl() {
+        return window.location.origin + '/branch-badge/' + this.branchId
+    }
+
+    copyBadgeUrl(badgeUrlEl) {
+        badgeUrlEl.select()
+        document.execCommand('copy')
+        badgeUrlEl.setSelectionRange(0, 0)
+    }
 }

@@ -240,6 +240,20 @@
       </tr>
     </table>
   </p-tabPanel>
+<!--
   <p-tabPanel header="Configs">
+  </p-tabPanel>
+-->
+  <p-tabPanel header="Status Badge">
+    <div style="margin: 20px;">
+      URL:
+      <input type="text" pInputText [value]="getBadgeUrl()" [size]="getBadgeUrl().length" style="border: none; font-family: monospace;" #badgeUrlEl>
+      <button type="button" pButton icon="pi pi-copy" class="p-button-outlined p-button-sm" (click)="copyBadgeUrl(badgeUrlEl)"></button>
+
+      <br><br>
+
+      Result:<br>
+      <img [src]="getBadgeUrl()">
+    </div>
   </p-tabPanel>
 </p-tabView>
