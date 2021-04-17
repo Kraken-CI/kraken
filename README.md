@@ -7,7 +7,7 @@
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/Kraken-CI/kraken.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/Kraken-CI/kraken/context:python)
 [![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/Kraken-CI/kraken.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/Kraken-CI/kraken/context:javascript)
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/Kraken-CI/kraken.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/Kraken-CI/kraken/alerts/)
-
+[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/4758/badge)](https://bestpractices.coreinfrastructure.org/projects/4758)
 
 Kraken CI is a continuous integration and testing system.
 
