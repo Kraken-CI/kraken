@@ -97,7 +97,7 @@ def prepare_initial_data():
 
     agents_group = AgentsGroup.query.filter_by(name="all").one_or_none()
     if agents_group is None:
-        agents_group = AgentsGroup(name='all')
+        AgentsGroup(name='all')
         db.session.commit()
         print("   created AgentsGroup record 'all'")
 

@@ -49,7 +49,6 @@ import {
 import { AppRoutingModule } from './app-routing.module'
 import { AppComponent } from './app.component'
 import { AuthInterceptor } from './auth.interceptor'
-import { AuthService } from './auth.service'
 import { LocaltimePipe } from './localtime.pipe'
 import { BreadcrumbsService } from './breadcrumbs.service'
 

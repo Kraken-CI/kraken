@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core'
-import { Router, ActivatedRoute, ParamMap } from '@angular/router'
+import { Router, ActivatedRoute } from '@angular/router'
 import { FormGroup, FormControl } from '@angular/forms'
 import { Title } from '@angular/platform-browser'
 

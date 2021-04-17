@@ -3,7 +3,6 @@ import {
     ActivatedRoute,
     ParamMap,
     Router,
-    NavigationEnd,
 } from '@angular/router'
 import { Title } from '@angular/platform-browser'
 

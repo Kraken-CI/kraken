@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core'
 import { HttpClient } from '@angular/common/http'
-import { Router, ActivatedRoute } from '@angular/router'
+import { Router } from '@angular/router'
 import { BehaviorSubject, Observable } from 'rxjs'
 
 import { UsersService } from './backend/api/users.service'

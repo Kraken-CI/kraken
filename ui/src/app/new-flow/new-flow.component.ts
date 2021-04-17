@@ -1,8 +1,6 @@
 import { Component, OnInit } from '@angular/core'
-import { Router, ActivatedRoute, ParamMap } from '@angular/router'
+import { Router, ActivatedRoute } from '@angular/router'
 
-import { TreeNode } from 'primeng/api'
-import { MenuItem } from 'primeng/api'
 import { MessageService } from 'primeng/api'
 
 import { AuthService } from '../auth.service'

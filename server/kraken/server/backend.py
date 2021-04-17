@@ -208,10 +208,10 @@ def _store_results(job, step, result):
         tc = tool_test_cases.get(tc_name, None)
         if tc is None:
             tc = TestCase(name=tc_name, tool=step.tool)
-        tcr = TestCaseResult(test_case=tc, job=step.job,
-                             cmd_line=tr['cmd'],
-                             result=tr['status'],
-                             values=tr['values'] if 'values' in tr else None)
+        TestCaseResult(test_case=tc, job=step.job,
+                       cmd_line=tr['cmd'],
+                       result=tr['status'],
+                       values=tr['values'] if 'values' in tr else None)
     db.session.commit()
     t2 = time.time()
     log.info('reporting %s new test records took %ss', len(results), (t2 - t1))

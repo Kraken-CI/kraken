@@ -177,7 +177,7 @@ class JsonSocket(socket.socket):
 class StdoutSock:
     def send_json(self, data):
         data = json.dumps(data) + '\n'
-        # log.info('tool response: %s', data[:200])
+        log.info('tool response: %s', data[:200])
 
 
 def check_integrity():

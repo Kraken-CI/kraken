@@ -1,7 +1,5 @@
 import os
 import alembic.config
-from alembic.config import Config
-from alembic import command
 from flask import Flask
 import sqlalchemy
 import psycopg2.errors
@@ -55,8 +53,6 @@ def main():
         models.db.create_all(app=app)
 
         # stamp the alembic version of db schema in db
-        #alembic_cfg = Config("kraken/migrations/alembic.ini")
-        #command.stamp(alembic_cfg, "head")
         alembic_args.extend(['stamp', 'head'])
         alembic.config.main(argv=alembic_args)
         print('alembic stamp completed')

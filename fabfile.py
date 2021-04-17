@@ -1,6 +1,3 @@
-import os
-import getpass
-import datetime
 from fabric import task
 
 

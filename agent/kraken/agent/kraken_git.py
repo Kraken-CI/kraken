@@ -121,11 +121,7 @@ def run(step, **kwargs):  # pylint: disable=unused-argument
     if ret != 0:
         log.warning('repo bundle failed, skipping it')
     else:
-        minio_addr = step['minio_addr']
-        minio_addr = os.environ.get('KRAKEN_MINIO_ADDR', minio_addr)
         minio_bucket = step['minio_bucket']
-        minio_access_key = step['minio_access_key']
-        minio_secret_key = step['minio_secret_key']
         log.info('store repo bundle %s -> %s / %s', repo_bundle_path, minio_bucket, minio_repo_bundle_path)
         try:
             mc.fput_object(minio_bucket, minio_repo_bundle_path, repo_bundle_path)

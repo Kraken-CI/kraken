@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core'
-import { ActivatedRoute, NavigationEnd, Router } from '@angular/router'
-import { distinctUntilChanged, filter, map, switchMap } from 'rxjs/operators'
+import { ActivatedRoute, Router } from '@angular/router'
 import { BehaviorSubject } from 'rxjs'
 
 import { MenuItem } from 'primeng/api'

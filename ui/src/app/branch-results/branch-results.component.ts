@@ -1,7 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core'
 import { Router, ActivatedRoute, ParamMap } from '@angular/router'
 import { Title } from '@angular/platform-browser'
-import { Observable } from 'rxjs'
 import { switchMap } from 'rxjs/operators'
 
 import { MessageService } from 'primeng/api'
@@ -10,7 +9,6 @@ import { AuthService } from '../auth.service'
 import { ManagementService } from '../backend/api/management.service'
 import { ExecutionService } from '../backend/api/execution.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
-import { Run } from '../backend/model/run'
 import { datetimeToLocal, humanBytes } from '../utils'
 
 @Component({

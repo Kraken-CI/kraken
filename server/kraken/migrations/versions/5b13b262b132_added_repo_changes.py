@@ -5,7 +5,6 @@ Revises: 770cfcc80cfb
 Create Date: 2021-04-07 06:02:59.604892
 
 """
-import json
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy import orm
@@ -21,7 +20,7 @@ depends_on = None
 
 def upgrade():
     conn = op.get_bind()
-    session = orm.Session(bind=conn)
+    orm.Session(bind=conn)
 
     rc_tbl = op.create_table('repo_changes',
                              sa.Column('id', sa.Integer(), nullable=False),
