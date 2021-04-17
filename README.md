@@ -2,6 +2,7 @@
 
 ![Release Version](https://img.shields.io/github/v/release/Kraken-CI/kraken)
 ![Release Date](https://img.shields.io/github/release-date/Kraken-CI/kraken)
+![Kraken Build](https://lab.kraken.ci/branch-badge/2)
 
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/be770bd29e374ece9e6f2782a1de99fc)](https://www.codacy.com/gh/Kraken-CI/kraken/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Kraken-CI/kraken&amp;utm_campaign=Badge_Grade)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/Kraken-CI/kraken.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/Kraken-CI/kraken/context:python)
