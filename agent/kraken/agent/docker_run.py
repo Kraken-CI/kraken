@@ -40,7 +40,7 @@ def detect_capabilities():
         client = docker.from_env()
         ver = client.version()
         return {'docker': ver['Version']}
-    except:
+    except Exception:
         return {}
 
 
@@ -78,7 +78,7 @@ class DockerExecContext:
             log.exception('problem with starting or initializing container')
             self.stop()
             return {'status': 'error', 'reason': 'job-timeout', 'msg': exc}
-        except:
+        except Exception:
             exc = traceback.format_exc()
             log.exception('problem with starting or initializing container')
             self.stop()
@@ -138,7 +138,7 @@ class DockerExecContext:
             self._async_run('locale-gen en_US.UTF-8', deadline)
             try:
                 self._async_run('getent passwd kraken', deadline)
-            except:
+            except Exception:
                 self._async_run('useradd kraken -d /opt/kraken -m -s /bin/bash -G sudo', deadline)
             self._async_run('echo "kraken ALL=NOPASSWD: ALL" > /etc/sudoers.d/kraken', deadline)
             self._async_run('echo \'Defaults    env_keep += "DEBIAN_FRONTEND"\' > /etc/sudoers.d/kraken_env_keep', deadline)
@@ -155,7 +155,7 @@ class DockerExecContext:
                 self._async_run('python3 -m pip install docker-py', deadline)
             try:
                 self._async_run('getent passwd kraken', deadline)
-            except:
+            except Exception:
                 self._async_run('useradd kraken -d /opt/kraken -m -s /bin/bash -G wheel --system', deadline)
             self._async_run('echo "kraken ALL=NOPASSWD: ALL" > /etc/sudoers.d/kraken', deadline)
             if os.path.exists(dkr_sock):
@@ -180,7 +180,7 @@ class DockerExecContext:
             # connect new container to lab_net
             try:
                 self.lab_net.connect(self.cntr)
-            except:
+            except Exception:
                 log.exception('problems with lab_net')
                 raise
 
@@ -213,11 +213,11 @@ class DockerExecContext:
         if self.cntr:
             try:
                 self.cntr.kill()
-            except:
+            except Exception:
                 log.exception('IGNORED EXCEPTION')
             try:
                 self.cntr.remove()
-            except:
+            except Exception:
                 log.exception('IGNORED EXCEPTION')
 
     def _async_run(self, cmd, deadline, cwd='/', env=None, user='root'):

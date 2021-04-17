@@ -97,7 +97,7 @@ def run(step, **kwargs):  # pylint: disable=unused-argument
             utils.execute('git pull', cwd=repo_dir, out_prefix='', timeout=timeout, raise_on_error=True)
 
             restore_ok = True
-        except:
+        except Exception:
             log.exception('cloning repo from bundle failed, skipping it')
             if os.path.exists(repo_dir):
                 shutil.rmtree(repo_dir)
@@ -125,7 +125,7 @@ def run(step, **kwargs):  # pylint: disable=unused-argument
         log.info('store repo bundle %s -> %s / %s', repo_bundle_path, minio_bucket, minio_repo_bundle_path)
         try:
             mc.fput_object(minio_bucket, minio_repo_bundle_path, repo_bundle_path)
-        except:
+        except Exception:
             log.exception('problem with storing repo bundle, skipping it')
 
     # checkout commit that comes from trigger, otherwise checkout master/main

@@ -81,7 +81,7 @@ def update_agent(version):
     # download binaries (kkagent and kktool) to prepared folder
     try:
         agent_path, tool_path = get_blobs(dest_dir)
-    except:
+    except Exception:
         log.exception('problem with downloading agent blob or writing it to disk, aborted agent update')
         return
     log.info('got blobs')
@@ -92,7 +92,7 @@ def update_agent(version):
         subprocess.run(cmd, check=True)
         cmd = [tool_path, 'check-integrity']
         subprocess.run(cmd, check=True)
-    except:
+    except Exception:
         log.exception('blobs integrity check failed, aborted agent update')
         return
     log.info('integrity check passed')

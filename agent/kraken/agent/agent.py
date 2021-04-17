@@ -74,7 +74,7 @@ def dispatch_job(srv, job):
         jobber.run(srv, job)
     except KeyboardInterrupt:
         raise
-    except:
+    except Exception:
         log.exception('job interrupted by exception')
         exc = traceback.format_exc()
         srv.report_step_result(job['id'], 0, {'status': 'error', 'reason': 'exception', 'msg': exc})
@@ -206,7 +206,7 @@ def main():
         except KeyboardInterrupt:
             log.exception('exiting due to ctrl-c')
             break
-        except:
+        except Exception:
             log.exception('ignored exception in agent main loop')
             time.sleep(5)
         log.reset_ctx()

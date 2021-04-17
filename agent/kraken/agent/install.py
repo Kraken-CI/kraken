@@ -63,7 +63,7 @@ def install_linux():
     # create kraken user
     try:
         pwd.getpwnam('kraken')
-    except:
+    except Exception:
         if dstr in ['ubuntu', 'debian']:
             run('sudo useradd kraken -d %s -m -s /bin/bash -G sudo' % consts.AGENT_DIR)
         elif dstr in ['fedora', 'centos']:

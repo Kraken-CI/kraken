@@ -55,7 +55,7 @@ def run_analysis(step, report_issue=None):
 
     try:
         git_url = _get_git_url(cwd)
-    except:
+    except Exception:
         git_url = None
 
     rcfile = step['rcfile']

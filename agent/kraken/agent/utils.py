@@ -204,7 +204,7 @@ def is_in_docker():
                 fields = line.strip().split('/')
                 if 'docker' in fields[1]:
                     return True
-    except:
+    except Exception:
         log.exception('IGNORED')
     return False
 
@@ -216,6 +216,6 @@ def is_in_lxc():
                 fields = line.strip().split('/')
                 if '.lxc' in fields[1]:
                     return True
-    except:
+    except Exception:
         log.exception('IGNORED')
     return False

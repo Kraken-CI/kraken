@@ -882,7 +882,7 @@ def refresh_schema_repo(self, stage_id):
             # start schema refresh job
             try:
                 interval = int(stage.repo_refresh_interval)
-            except:
+            except Exception:
                 interval = int(pytimeparse.parse(stage.repo_refresh_interval))
             job = planner.add_job('kraken.server.pljobs:refresh_schema_repo', 'interval', (stage_id,), None,
                                   None, None, None, None, None, None, False, dict(seconds=interval))

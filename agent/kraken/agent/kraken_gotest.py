@@ -28,7 +28,7 @@ def _process_output(q, text):
     for l in text.splitlines():
         try:
             data = json.loads(l)
-        except:
+        except Exception:
             log.error('failed parsing: %s', l)
             log.exception('IGNORED EXCEPTION')
             continue

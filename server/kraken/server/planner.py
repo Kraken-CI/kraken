@@ -91,7 +91,7 @@ class Planner:
         try:
             job = self.scheduler.add_job(func, **all_kw_args)
             log.info('add_job job:%s', job)
-        except:
+        except Exception:
             log.exception('some problem')
             raise
         return self._job_to_dict(job)
@@ -101,7 +101,7 @@ class Planner:
             jobs = []
             for j in self.scheduler.get_jobs():
                 jobs.append(self._job_to_dict(j))
-        except:
+        except Exception:
             log.exception('some problem')
             raise
         return jobs
@@ -115,7 +115,7 @@ class Planner:
         try:
             job = self.scheduler.reschedule_job(job_id, trigger=trigger, **trigger_args)
             log.info('reschedule_job job:%s', job)
-        except:
+        except Exception:
             log.exception('some problem')
             raise
         return self._job_to_dict(job)
@@ -126,7 +126,7 @@ class Planner:
         try:
             self.scheduler.remove_job(job_id)
             log.info('remove_job done')
-        except:
+        except Exception:
             log.exception('some problem')
             # raise
 

@@ -24,7 +24,7 @@ def _is_service_open(addr, port, sock_type):
         s.connect((addr, int(port)))
         s.shutdown(socket.SHUT_RDWR)
         return True
-    except:
+    except Exception:
         return False
     finally:
         s.close()

@@ -68,7 +68,7 @@ def _send_http_request(url, data):
         except ConnectionError as e:
             log.warning('connection problem to %s: %s, trying one more time in 5s', url, str(e))
             time.sleep(5)
-        except:
+        except Exception:
             log.exception('some problem with connecting to server to %s', url)
             log.info('trying one more time in 5s')
             time.sleep(5)

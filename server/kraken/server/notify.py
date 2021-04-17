@@ -251,19 +251,19 @@ def notify(run, event):
     slack = notification.get('slack', None)
     try:
         _notify_slack(run, event, slack)
-    except:
+    except Exception:
         log.exception('IGNORED EXCEPTION')
 
     # email
     email = notification.get('email', None)
     try:
         _notify_email(run, event, email)
-    except:
+    except Exception:
         log.exception('IGNORED EXCEPTION')
 
     # github
     github = notification.get('github', None)
     try:
         _notify_github(run, event, github)
-    except:
+    except Exception:
         log.exception('IGNORED EXCEPTION')

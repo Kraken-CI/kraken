@@ -142,7 +142,7 @@ class RequestHandler():
                 data = data.decode()
                 #log.info("received %s from %s", data, addr)
                 data = json.loads(data)
-            except:
+            except Exception:
                 log.exception('problem with decoding data %s from %s', data, addr)
                 return
 
@@ -404,7 +404,7 @@ def run(srv, job):
                 last_status, cancel = _run_step(srv, exec_ctx, job_dir, job['id'], idx, step, tools, job['deadline'])
             except KeyboardInterrupt:
                 raise
-            except:
+            except Exception:
                 log.exception('step interrupted by exception')
                 exc = traceback.format_exc()
                 srv.report_step_result(job['id'], idx, {'status': 'error', 'reason': 'exception', 'msg': exc})

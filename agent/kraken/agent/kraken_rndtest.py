@@ -107,7 +107,7 @@ def run_tests(step, report_result=None):
                     val['cv'] = pstdev / pmean
                     try:
                         val['mode'] = statistics.mode(population)
-                    except:
+                    except Exception:
                         pass
                 result['values'][name] = val
 

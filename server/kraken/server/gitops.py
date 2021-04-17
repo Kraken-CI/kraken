@@ -57,7 +57,7 @@ def _retrieve_git_repo(tmpdir, repo_url, mc, minio_bucket, minio_repo_bundle_pat
             _run('git pull', check=True, cwd=repo_dir)
 
             restore_ok = True
-        except:
+        except Exception:
             log.exception('cloning repo from bundle failed, skipping it')
             if os.path.exists(repo_dir):
                 shutil.rmtree(repo_dir)
@@ -166,7 +166,7 @@ def get_repo_commits_since(branch_id, prev_run, repo_url, repo_branch):
             log.info('store repo bundle %s -> %s / %s', repo_bundle_path, minio_bucket, minio_repo_bundle_path)
             try:
                 mc.fput_object(minio_bucket, minio_repo_bundle_path, repo_bundle_path)
-            except:
+            except Exception:
                 log.exception('problem with storing repo bundle, skipping it')
 
     # collect commits from git log

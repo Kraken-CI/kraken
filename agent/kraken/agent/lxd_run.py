@@ -38,7 +38,7 @@ def detect_capabilities():
         client = pylxd.Client()
         info = client.host_info
         return {'lxd': info['environment']['server_version']}
-    except:
+    except Exception:
         return {}
 
 
@@ -126,7 +126,7 @@ class LxdExecContext:
             log.exception('problem with starting or initializing container')
             self.stop()
             return {'status': 'error', 'reason': 'job-timeout', 'msg': exc}
-        except:
+        except Exception:
             exc = traceback.format_exc()
             log.exception('problem with starting or initializing container')
             self.stop()
@@ -138,11 +138,11 @@ class LxdExecContext:
         if self.cntr:
             try:
                 self.cntr.stop(wait=True)
-            except:
+            except Exception:
                 log.exception('IGNORED EXCEPTION')
             try:
                 self.cntr.delete(wait=True)
-            except:
+            except Exception:
                 log.exception('IGNORED EXCEPTION')
 
     def get_return_ip_addr(self):

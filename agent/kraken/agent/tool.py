@@ -153,7 +153,7 @@ def execute(sock, module, command, step_file_path):
                 result.update({'status': 'error', 'reason': 'retcode', 'retcode': ret, 'msg': msg})
 
         sock.send_json(result)
-    except:
+    except Exception:
         log.exception('tool interrupted by exception')
         exc = traceback.format_exc()
         sock.send_json({'status': 'error', 'reason': 'exception', 'msg': exc})
@@ -164,7 +164,7 @@ class JsonSocket(socket.socket):
         socket.socket.__init__(self, socket.AF_INET, socket.SOCK_STREAM)
         try:
             self.connect((address[0], int(address[1])))
-        except:
+        except Exception:
             log.error('problem with connecting to %s:%s', address[0], address[1])
             raise
 

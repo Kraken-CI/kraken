@@ -27,7 +27,7 @@ def create_empty_db(db_name, drop_exisiting=False):
         connection.execute('select 1')
         connection.close()
         db_exists = True
-    except:
+    except Exception:
         pass
 
     engine = sqlalchemy.create_engine(db_root_url, echo=False)

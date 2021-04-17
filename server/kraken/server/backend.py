@@ -315,7 +315,7 @@ def _handle_step_result(agent, req):
         if status not in list(consts.STEP_STATUS_TO_INT.keys()):
             log.set_ctx(job=None)
             raise ValueError("unknown status: %s" % status)
-    except:
+    except Exception:
         log.exception('problems with parsing request')
         log.set_ctx(job=None)
         return response
@@ -416,7 +416,7 @@ def _handle_dispatch_tests(agent, req):
         tests = req['tests']
         step_idx = req['step_idx']
         step = job.steps[step_idx]
-    except:
+    except Exception:
         log.exception('problems with parsing request')
         return {}
 
