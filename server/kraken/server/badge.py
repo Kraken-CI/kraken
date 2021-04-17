@@ -39,11 +39,13 @@ def get_branch_badge(branch_id):
 
     errors = any((r.jobs_error > 0 for r in flow.runs))
 
-    msg = '%s success' % flow.get_label()
+    msg = '%s ' % flow.get_label()
     if errors:
         color = 'critical'
+        msg += 'failed'
     else:
         color = 'success'
+        msg += 'success'
 
     url = 'https://img.shields.io/badge/%s-%s-%s' % (label, msg, color)
     return redirect(url)
