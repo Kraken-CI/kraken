@@ -245,15 +245,24 @@
   </p-tabPanel>
 -->
   <p-tabPanel header="Status Badge">
-    <div style="margin: 20px;">
-      URL:
-      <input type="text" pInputText [value]="getBadgeUrl()" [size]="getBadgeUrl().length" style="border: none; font-family: monospace;" #badgeUrlEl>
-      <button type="button" pButton icon="pi pi-copy" class="p-button-outlined p-button-sm" (click)="copyBadgeUrl(badgeUrlEl)"></button>
+    <div style="margin: 10px;">
+      <div style="margin: 5px;">
+        <input type="text" pInputText [value]="getBadgeUrl(null)" [size]="getBadgeUrl('issues').length" style="font-family: monospace;" #badgeUrlEl>
+        <button type="button" pButton icon="pi pi-copy" class="p-button-outlined p-button-sm" (click)="copyBadgeUrl(badgeUrlEl)" style="margin: 0 3em 0 2em;"></button>
+        <img [src]="getBadgeUrl(null)">
+      </div>
 
-      <br><br>
+      <div style="margin: 5px;">
+        <input type="text" pInputText [value]="getBadgeUrl('tests')" [size]="getBadgeUrl('issues').length" style="font-family: monospace;" #badgeUrlEl>
+        <button type="button" pButton icon="pi pi-copy" class="p-button-outlined p-button-sm" (click)="copyBadgeUrl(badgeUrlEl)" style="margin: 0 3em 0 2em;"></button>
+        <img [src]="getBadgeUrl('tests')">
+      </div>
 
-      Result:<br>
-      <img [src]="getBadgeUrl()">
+      <div style="margin: 5px;">
+        <input type="text" pInputText [value]="getBadgeUrl('issues')" [size]="getBadgeUrl('issues').length" style="font-family: monospace;" #badgeUrlEl>
+        <button type="button" pButton icon="pi pi-copy" class="p-button-outlined p-button-sm" (click)="copyBadgeUrl(badgeUrlEl)" style="margin: 0 3em 0 2em;"></button>
+        <img [src]="getBadgeUrl('issues')">
+      </div>
     </div>
   </p-tabPanel>
 </p-tabView>

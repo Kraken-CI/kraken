@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import json
 import logging
 import datetime
 import xmlrpc.client
@@ -23,6 +24,7 @@ from sqlalchemy.sql.expression import asc, desc
 from sqlalchemy.orm.attributes import flag_modified
 import giturlparse
 import pytimeparse
+import redis
 
 from .clry import app as clry_app
 from ..models import db, Run, Job, TestCaseResult, Branch, Flow, Stage, Project, get_setting
@@ -99,6 +101,65 @@ def _trigger_stages(run):
             log.info('stage %s not started because it is disabled', stage.name)
 
 
+def _prepare_flow_summary(flow):
+    if flow.kind != consts.FLOW_KIND_CI:
+        return
+
+    # update pointer to last, completed, CI flow in the branch
+    # and if needed then reset pointer to incomplete flow
+
+    # flush to db, otherwise there will be circular dependency between entities
+    db.session.flush()
+
+    # update completed
+    last_flow = flow.branch.ci_last_completed_flow
+    if last_flow is None or last_flow.created < flow.created:
+        flow.branch.ci_last_completed_flow = flow
+
+    # update incomplete
+    last_flow = flow.branch.ci_last_incomplete_flow
+    if last_flow and last_flow.id == flow.id:
+        flow.branch.ci_last_incomplete_flow = None
+
+    # get flow summary and store it in redis to cache it;
+    # it will be used e.g. to provide badge info
+
+    # get redis reference
+    redis_addr = os.environ.get('KRAKEN_REDIS_ADDR', consts.DEFAULT_REDIS_ADDR)
+    rds = redis.Redis(host=redis_addr, port=6379, db=1)
+
+    # prepare flow summary
+    errors = False
+    tests_passed = 0
+    tests_total = 0
+    tests_regr = 0
+    tests_fix = 0
+    issues_total = 0
+    issues_new = 0
+    for r in flow.runs:
+        if r.jobs_error > 0:
+            errors = True
+        tests_passed += r.tests_passed
+        tests_total += r.tests_total
+        tests_regr += r.regr_cnt
+        tests_fix += r.fix_cnt
+        issues_total += r.issues_total
+        issues_new += r.issues_new
+    val = dict(id=flow.id,
+               label=flow.get_label(),
+               errors=errors,
+               tests_passed=tests_passed,
+               tests_total=tests_total,
+               tests_regr=tests_regr,
+               tests_fix=tests_fix,
+               issues_total=issues_total,
+               issues_new=issues_new)
+
+    # store in redis flow state
+    key = 'branch-%d' % flow.branch_id
+    rds.set(key, json.dumps(val))
+
+
 @clry_app.task(base=BaseTask, bind=True)
 def analyze_run(self, run_id):
     try:
@@ -152,21 +213,7 @@ def analyze_run(self, run_id):
                 flow.finished = now
                 flow.state = consts.FLOW_STATE_COMPLETED
 
-                # update pointer to last, completed, CI flow in the branch
-                # and if needed then reset pointer to incomplete flow
-                if flow.kind == consts.FLOW_KIND_CI:
-                    # flush to db, otherwise there will be circular dependency between entities
-                    db.session.flush()
-
-                    # update completed
-                    last_flow = flow.branch.ci_last_completed_flow
-                    if last_flow is None or last_flow.created < flow.created:
-                        flow.branch.ci_last_completed_flow = flow
-
-                    # update incomplete
-                    last_flow = flow.branch.ci_last_incomplete_flow
-                    if last_flow and last_flow.id == flow.id:
-                        flow.branch.ci_last_incomplete_flow = None
+                _prepare_flow_summary(flow)
 
                 db.session.commit()
 

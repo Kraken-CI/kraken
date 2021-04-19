@@ -101,7 +101,8 @@ def create_app():
     app.register_blueprint(webhooks_bp, url_prefix='/webhooks')
 
     # branch status badge
-    app.add_url_rule("/branch-badge/<branch_id>", view_func=badge.get_branch_badge, methods=['GET'])
+    app.add_url_rule("/branch-badge/<branch_id>", view_func=badge.get_branch_badge, methods=['GET'], defaults={'what': None})
+    app.add_url_rule("/branch-badge/<branch_id>/<what>", view_func=badge.get_branch_badge, methods=['GET'])
 
     return connex_app
 

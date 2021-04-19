@@ -12,40 +12,77 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+import json
 
+import redis
 from flask import abort, Response, redirect
 
-from .models import Branch
+from . import consts
 
+def get_branch_badge(branch_id, what=None):
+    # get redis reference
+    redis_addr = os.environ.get('KRAKEN_REDIS_ADDR', consts.DEFAULT_REDIS_ADDR)
+    rds = redis.Redis(host=redis_addr, port=6379, db=1)
 
-def get_branch_badge(branch_id):
-    branch = Branch.query.filter_by(id=branch_id).one_or_none()
-    if branch is None:
-        abort(404, "Branch not found")
+    try:
+        int(branch_id)
+    except Exception:
+        abort(400, 'wrong branch id')
 
-    label = 'Kraken Build of %s' % branch.name
-    label = label.replace('-', '_')
+    if what is None:
+        label = 'Kraken Build'
+    elif what == 'tests':
+        label = 'Kraken Tests'
+    elif what == 'issues':
+        label = 'Kraken Issues'
 
-    flow = branch.ci_last_completed_flow
+    key = 'branch-%s' % branch_id
+    data = rds.get(key)
+    if not data:
+         url = 'https://img.shields.io/badge/%s-%s-%s' % (label, 'no data', 'inactive')
+         return redirect(url)
 
-    if not flow:
-        url = 'https://img.shields.io/badge/%s-%s-%s' % (label, 'no flows yet', 'informational')
-        return redirect(url)
+    data = json.loads(data)
 
+    msg = '%s ' % data['label']
 
-    if not flow.runs:
-        url = 'https://img.shields.io/badge/%s-%s-%s' % (label, 'no runs', 'informational')
-        return redirect(url)
+    if what is None:
+        # flow status
+        if data['errors']:
+            color = 'critical'
+            msg += 'failed'
+        else:
+            color = 'success'
+            msg += 'success'
 
-    errors = any((r.jobs_error > 0 for r in flow.runs))
+    elif what == 'tests':
+        # flow tests
+        if data['tests_total'] == 0:
+            msg += 'no tests'
+            color = 'informational'
+        else:
+            color = 'success'
+            if data['tests_passed'] < data['tests_total']:
+                color = 'important'
+            pass_ratio = 100 * data['tests_passed'] / data['tests_total']
+            msg += 'passed %.1f%%25 total %d' % (pass_ratio, data['tests_total'])
+            if data['tests_regr'] > 0:
+                msg += ' regressions %d' % data['tests_regr']
+            if data['tests_fix'] > 0:
+                msg += ' fixes %d' % data['tests_fix']
 
-    msg = '%s ' % flow.get_label()
-    if errors:
-        color = 'critical'
-        msg += 'failed'
-    else:
+    elif what == 'issues':
+        # flow issues
         color = 'success'
-        msg += 'success'
+        if data['issues_total'] == 0:
+            msg += 'no issues'
+        else:
+            msg += 'issues %d' % data['issues_total']
+            color = 'important'
+        if data['issues_new'] > 0:
+            msg += 'new %d' % data['issues_new']
+            color = 'critical'
 
     url = 'https://img.shields.io/badge/%s-%s-%s' % (label, msg, color)
     return redirect(url)

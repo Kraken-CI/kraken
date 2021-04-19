@@ -445,8 +445,14 @@ export class BranchMgmtComponent implements OnInit {
         }
     }
 
-    getBadgeUrl() {
-        return window.location.origin + '/branch-badge/' + this.branchId
+    getBadgeUrl(what) {
+        let url = window.location.origin + '/branch-badge/' + this.branchId
+        if (what === 'tests') {
+            return url + '/tests'
+        } else if (what === 'issues') {
+            return url + '/issues'
+        }
+        return url
     }
 
     copyBadgeUrl(badgeUrlEl) {
