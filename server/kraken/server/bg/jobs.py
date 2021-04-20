@@ -225,7 +225,13 @@ def analyze_run(self, run_id):
         raise self.retry(exc=exc)
 
 
-def _analyze_ci_test_case_result(job_tcr):
+def _analyze_ci_test_case_result(job, job_tcr):
+    # history stats
+    new_cnt = 0
+    no_change_cnt = 0
+    regr_cnt = 0
+    fix_cnt = 0
+
     # get previous 10 results
     q = TestCaseResult.query
     q = q.filter(TestCaseResult.id != job_tcr.id)
@@ -290,8 +296,16 @@ def _analyze_ci_test_case_result(job_tcr):
         job_tcr.relevancy += 1
     # TODO: +1 no comment
 
+    return new_cnt, no_change_cnt, regr_cnt, fix_cnt
 
-def _analyze_dev_test_case_result(job_tcr):
+
+def _analyze_dev_test_case_result(job, job_tcr):
+    # history stats
+    new_cnt = 0
+    no_change_cnt = 0
+    regr_cnt = 0
+    fix_cnt = 0
+
     # get reference result from CI flow
     q = TestCaseResult.query
     q = q.filter_by(test_case_id=job_tcr.test_case_id)
@@ -323,28 +337,24 @@ def _analyze_dev_test_case_result(job_tcr):
         job_tcr.change = consts.TC_RESULT_CHANGE_NEW
         new_cnt += 1
 
+    return new_cnt, no_change_cnt, regr_cnt, fix_cnt
+
 
 def _analyze_job_results_history(job):
     # TODO: if branch is forked from another base branch take base branch results into account
-
-    # history stats
-    new_cnt = 0
-    no_change_cnt = 0
-    regr_cnt = 0
-    fix_cnt = 0
 
     for job_tcr in job.results:
         # analyze history
         log.info('Analyze result %s %s', job_tcr, job_tcr.test_case.name)
 
         if job.run.flow.kind == 0:  # CI
-            _analyze_ci_test_case_result(job_tcr)
+            counts = _analyze_ci_test_case_result(job, job_tcr)
         else:  # DEV
-            _analyze_dev_test_case_result(job_tcr)
+            counts = _analyze_dev_test_case_result(job, job_tcr)
 
         db.session.commit()
 
-    return new_cnt, no_change_cnt, regr_cnt, fix_cnt
+    return counts
 
 
 def _analyze_job_issues_history(job):
