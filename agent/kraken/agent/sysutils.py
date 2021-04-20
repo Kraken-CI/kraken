@@ -1,4 +1,4 @@
-# Copyright 2020 The Kraken Authors
+# Copyright 2020-2021 The Kraken Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,14 +22,14 @@ def get_ifaces():
     max_possible = 128 # arbitrary. raise if needed.
     obytes = max_possible * 32
     deb = b'\0'
-
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     names = array.array('B', deb * obytes)
-    outbytes = struct.unpack('iL', fcntl.ioctl(
-        s.fileno(),
-        0x8912,  # SIOCGIFCONF
-        struct.pack('iL', obytes, names.buffer_info()[0])
-    ))[0]
+
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+        outbytes = struct.unpack('iL', fcntl.ioctl(
+            s.fileno(),
+            0x8912,  # SIOCGIFCONF
+            struct.pack('iL', obytes, names.buffer_info()[0])
+        ))[0]
 
     namestr = names.tostring()
 
@@ -45,13 +45,11 @@ def get_ifaces():
 
 
 def get_my_ip(dest_addr):
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    try:
-        # doesn't even have to be reachable
-        s.connect((dest_addr, 1))
-        ip = s.getsockname()[0]
-    except Exception:
-        ip = None
-    finally:
-        s.close()
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+        try:
+            # doesn't even have to be reachable
+            s.connect((dest_addr, 1))
+            ip = s.getsockname()[0]
+        except Exception:
+            ip = None
     return ip

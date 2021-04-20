@@ -16,7 +16,7 @@ import os
 import json
 
 import redis
-from flask import abort, Response, redirect
+from flask import abort, redirect
 
 from . import consts
 

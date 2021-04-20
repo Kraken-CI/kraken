@@ -18,16 +18,14 @@ from urllib.parse import urlparse
 
 
 def _is_service_open(addr, port, sock_type):
-    s = socket.socket(socket.AF_INET, sock_type)
-    s.settimeout(1)
-    try:
-        s.connect((addr, int(port)))
-        s.shutdown(socket.SHUT_RDWR)
-        return True
-    except Exception:
-        return False
-    finally:
-        s.close()
+    with socket.socket(socket.AF_INET, sock_type) as s:
+        s.settimeout(1)
+        try:
+            s.connect((addr, int(port)))
+            s.shutdown(socket.SHUT_RDWR)
+            return True
+        except Exception:
+            return False
 
 
 def is_addr_open(url, default_port=None):
