@@ -20,6 +20,7 @@ from flask import abort, Response, redirect
 
 from . import consts
 
+
 def get_branch_badge(branch_id, what=None):
     # get redis reference
     redis_addr = os.environ.get('KRAKEN_REDIS_ADDR', consts.DEFAULT_REDIS_ADDR)
@@ -40,8 +41,8 @@ def get_branch_badge(branch_id, what=None):
     key = 'branch-%s' % branch_id
     data = rds.get(key)
     if not data:
-         url = 'https://img.shields.io/badge/%s-%s-%s' % (label, 'no data', 'inactive')
-         return redirect(url)
+        url = 'https://img.shields.io/badge/%s-%s-%s' % (label, 'no data', 'inactive')
+        return redirect(url)
 
     data = json.loads(data)
 

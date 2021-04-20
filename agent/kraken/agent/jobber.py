@@ -402,8 +402,6 @@ def run(srv, job):
 
             try:
                 last_status, cancel = _run_step(srv, exec_ctx, job_dir, job['id'], idx, step, tools, job['deadline'])
-            except KeyboardInterrupt:
-                raise
             except Exception:
                 log.exception('step interrupted by exception')
                 exc = traceback.format_exc()

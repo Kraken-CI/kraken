@@ -225,6 +225,105 @@ def analyze_run(self, run_id):
         raise self.retry(exc=exc)
 
 
+def _analyze_ci_test_case_result(job_tcr):
+    # get previous 10 results
+    q = TestCaseResult.query
+    q = q.filter(TestCaseResult.id != job_tcr.id)
+    q = q.filter_by(test_case_id=job_tcr.test_case_id)
+    q = q.join('job')
+    q = q.filter_by(covered=False)
+    q = q.filter_by(agents_group=job.agents_group)
+    q = q.filter_by(system=job.system)
+    q = q.join('job', 'run', 'flow', 'branch')
+    q = q.filter(Branch.id == job.run.flow.branch_id)
+    q = q.filter(Flow.kind == 0)  # CI
+    q = q.filter(Flow.created < job.run.flow.created)
+    q = q.order_by(desc(Flow.created))
+    q = q.limit(10)
+
+    tcrs = q.all()
+    tcrs.reverse() # sort from oldest to latest
+    # determine instability
+    for idx, tcr in enumerate(tcrs):
+        log.info('TCR: %s %s %s', tcr, tcr.test_case.name, tcr.job.run.flow.created)
+        if idx == 0:
+            job_tcr.instability = 0
+        elif tcr.result != tcrs[idx - 1].result:
+            job_tcr.instability += 1
+
+    # determine age and change
+    if len(tcrs) > 0:
+        prev_tcr = tcrs[-1]
+        if prev_tcr.result == job_tcr.result:
+            job_tcr.age = prev_tcr.age + 1
+            no_change_cnt += 1
+        else:
+            job_tcr.instability += 1
+            job_tcr.age = 0
+            if job_tcr.result == consts.TC_RESULT_PASSED and prev_tcr.result != consts.TC_RESULT_PASSED:
+                job_tcr.change = consts.TC_RESULT_CHANGE_FIX
+                fix_cnt += 1
+            elif job_tcr.result != consts.TC_RESULT_PASSED and prev_tcr.result == consts.TC_RESULT_PASSED:
+                job_tcr.change = consts.TC_RESULT_CHANGE_REGR
+                regr_cnt += 1
+    else:
+        job_tcr.change = consts.TC_RESULT_CHANGE_NEW
+        new_cnt += 1
+
+    # determine relevancy
+    # 0 initial
+    job_tcr.relevancy = 0
+    # +1 not pass
+    if job_tcr.result != consts.TC_RESULT_PASSED:
+        job_tcr.relevancy += 1
+    # +1 failure
+    if job_tcr.result == consts.TC_RESULT_FAILED:
+        job_tcr.relevancy += 1
+    # +1 instability <= 3
+    if job_tcr.instability <= 3:
+        job_tcr.relevancy += 1
+    # +1 age < 5
+    if job_tcr.age < 5:
+        job_tcr.relevancy += 1
+    # +1 regression (age=0)
+    if job_tcr.change == consts.TC_RESULT_CHANGE_REGR:
+        job_tcr.relevancy += 1
+    # TODO: +1 no comment
+
+
+def _analyze_dev_test_case_result(job_tcr):
+    # get reference result from CI flow
+    q = TestCaseResult.query
+    q = q.filter_by(test_case_id=job_tcr.test_case_id)
+    q = q.join('job')
+    q = q.filter_by(covered=False)
+    q = q.filter_by(agents_group=job_tcr.job.agents_group)
+    q = q.filter_by(system=job.system)
+    q = q.filter_by(state=consts.JOB_STATE_COMPLETED)
+    q = q.join('job', 'run', 'flow', 'branch')
+    q = q.filter(Branch.id == job.run.flow.branch_id)
+    q = q.filter(Flow.kind == 0)  # CI
+    q = q.order_by(desc(Flow.created))
+
+    ref_tcr = q.first()
+    log.info('REF TCR: %s %s %s %s', ref_tcr, ref_tcr.test_case.name, ref_tcr.job.run.flow, ref_tcr.job.run.flow.created)
+
+    # determine change
+    if ref_tcr:
+        if ref_tcr.result == job_tcr.result:
+            no_change_cnt += 1
+        else:
+            if job_tcr.result == consts.TC_RESULT_PASSED and ref_tcr.result != consts.TC_RESULT_PASSED:
+                job_tcr.change = consts.TC_RESULT_CHANGE_FIX
+                fix_cnt += 1
+            elif job_tcr.result != consts.TC_RESULT_PASSED and ref_tcr.result == consts.TC_RESULT_PASSED:
+                job_tcr.change = consts.TC_RESULT_CHANGE_REGR
+                regr_cnt += 1
+    else:
+        job_tcr.change = consts.TC_RESULT_CHANGE_NEW
+        new_cnt += 1
+
+
 def _analyze_job_results_history(job):
     # TODO: if branch is forked from another base branch take base branch results into account
 
@@ -238,102 +337,10 @@ def _analyze_job_results_history(job):
         # analyze history
         log.info('Analyze result %s %s', job_tcr, job_tcr.test_case.name)
 
-        # CI flow: either get previous 10 results
         if job.run.flow.kind == 0:  # CI
-            q = TestCaseResult.query
-            q = q.filter(TestCaseResult.id != job_tcr.id)
-            q = q.filter_by(test_case_id=job_tcr.test_case_id)
-            q = q.join('job')
-            q = q.filter_by(covered=False)
-            q = q.filter_by(agents_group=job.agents_group)
-            q = q.filter_by(system=job.system)
-            q = q.join('job', 'run', 'flow', 'branch')
-            q = q.filter(Branch.id == job.run.flow.branch_id)
-            q = q.filter(Flow.kind == 0)  # CI
-            q = q.filter(Flow.created < job.run.flow.created)
-            q = q.order_by(desc(Flow.created))
-            q = q.limit(10)
-
-            tcrs = q.all()
-            tcrs.reverse() # sort from oldest to latest
-            # determine instability
-            for idx, tcr in enumerate(tcrs):
-                log.info('TCR: %s %s %s', tcr, tcr.test_case.name, tcr.job.run.flow.created)
-                if idx == 0:
-                    job_tcr.instability = 0
-                elif tcr.result != tcrs[idx - 1].result:
-                    job_tcr.instability += 1
-
-            # determine age and change
-            if len(tcrs) > 0:
-                prev_tcr = tcrs[-1]
-                if prev_tcr.result == job_tcr.result:
-                    job_tcr.age = prev_tcr.age + 1
-                    no_change_cnt += 1
-                else:
-                    job_tcr.instability += 1
-                    job_tcr.age = 0
-                    if job_tcr.result == consts.TC_RESULT_PASSED and prev_tcr.result != consts.TC_RESULT_PASSED:
-                        job_tcr.change = consts.TC_RESULT_CHANGE_FIX
-                        fix_cnt += 1
-                    elif job_tcr.result != consts.TC_RESULT_PASSED and prev_tcr.result == consts.TC_RESULT_PASSED:
-                        job_tcr.change = consts.TC_RESULT_CHANGE_REGR
-                        regr_cnt += 1
-            else:
-                job_tcr.change = consts.TC_RESULT_CHANGE_NEW
-                new_cnt += 1
-
-            # determine relevancy
-            # 0 initial
-            job_tcr.relevancy = 0
-            # +1 not pass
-            if job_tcr.result != consts.TC_RESULT_PASSED:
-                job_tcr.relevancy += 1
-            # +1 failure
-            if job_tcr.result == consts.TC_RESULT_FAILED:
-                job_tcr.relevancy += 1
-            # +1 instability <= 3
-            if job_tcr.instability <= 3:
-                job_tcr.relevancy += 1
-            # +1 age < 5
-            if job_tcr.age < 5:
-                job_tcr.relevancy += 1
-            # +1 regression (age=0)
-            if job_tcr.change == consts.TC_RESULT_CHANGE_REGR:
-                job_tcr.relevancy += 1
-            # TODO: +1 no comment
-
-        # DEV flow: get reference result from CI flow
-        else:
-            q = TestCaseResult.query
-            q = q.filter_by(test_case_id=job_tcr.test_case_id)
-            q = q.join('job')
-            q = q.filter_by(covered=False)
-            q = q.filter_by(agents_group=job_tcr.job.agents_group)
-            q = q.filter_by(system=job.system)
-            q = q.filter_by(state=consts.JOB_STATE_COMPLETED)
-            q = q.join('job', 'run', 'flow', 'branch')
-            q = q.filter(Branch.id == job.run.flow.branch_id)
-            q = q.filter(Flow.kind == 0)  # CI
-            q = q.order_by(desc(Flow.created))
-
-            ref_tcr = q.first()
-            log.info('REF TCR: %s %s %s %s', ref_tcr, ref_tcr.test_case.name, ref_tcr.job.run.flow, ref_tcr.job.run.flow.created)
-
-            # determine change
-            if ref_tcr:
-                if ref_tcr.result == job_tcr.result:
-                    no_change_cnt += 1
-                else:
-                    if job_tcr.result == consts.TC_RESULT_PASSED and ref_tcr.result != consts.TC_RESULT_PASSED:
-                        job_tcr.change = consts.TC_RESULT_CHANGE_FIX
-                        fix_cnt += 1
-                    elif job_tcr.result != consts.TC_RESULT_PASSED and ref_tcr.result == consts.TC_RESULT_PASSED:
-                        job_tcr.change = consts.TC_RESULT_CHANGE_REGR
-                        regr_cnt += 1
-            else:
-                job_tcr.change = consts.TC_RESULT_CHANGE_NEW
-                new_cnt += 1
+            _analyze_ci_test_case_result(job_tcr)
+        else:  # DEV
+            _analyze_dev_test_case_result(job_tcr)
 
         db.session.commit()
 

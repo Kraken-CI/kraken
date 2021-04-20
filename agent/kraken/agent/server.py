@@ -53,8 +53,6 @@ def _send_http_request(url, data):
         try:
             with urllib.request.urlopen(req) as f:
                 resp = f.read().decode('utf-8')
-        except KeyboardInterrupt:
-            raise
         # except socket.error as e:
         #     if e.errno in connection_errors:
         #         # TODO: just warn and sleep for a moment

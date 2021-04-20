@@ -72,8 +72,6 @@ def dispatch_job(srv, job):
         t1 = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(deadline))
         log.info('job now: %s, deadline: %s, time: %ss', t0, t1, job['timeout'])
         jobber.run(srv, job)
-    except KeyboardInterrupt:
-        raise
     except Exception:
         log.exception('job interrupted by exception')
         exc = traceback.format_exc()
