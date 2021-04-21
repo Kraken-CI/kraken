@@ -2,7 +2,6 @@ import sys
 from unittest.mock import patch
 
 from kraken.agent import jobber
-import kraken.agent.config
 
 
 def test__load_tools_list_1():

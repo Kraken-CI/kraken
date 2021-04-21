@@ -1,10 +1,6 @@
-import sys
-import json
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
-
-import pytest
 
 from kraken.agent import kraken_artifacts
 
@@ -80,7 +76,7 @@ def test_run_artifacts_download():
             o.is_dir = True
             mlist.return_value = [o]
 
-            res, msg = kraken_artifacts.run_artifacts(step, report_artifact=None)
+            _, msg = kraken_artifacts.run_artifacts(step, report_artifact=None)
 
             assert be.called
 

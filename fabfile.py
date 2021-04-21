@@ -1,15 +1,6 @@
 from fabric import task
 
 
-def missing(f):
-    return not files.exists(f)
-
-def apti(pkg):
-    sudo("apt -y install %s" % pkg)
-
-def pip(cmd):
-    run("pyve/bin/pip %s" % cmd)
-
 def banner(txt):
     print("========================== %s ==========================" % txt)
 

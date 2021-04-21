@@ -1,8 +1,6 @@
 import json
 from unittest.mock import patch, MagicMock
 
-import pytest
-
 from kraken.server import notify, consts
 
 class SecretStub:

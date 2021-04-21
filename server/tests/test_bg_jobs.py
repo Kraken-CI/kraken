@@ -1,6 +1,4 @@
-import sys
 import logging
-from unittest.mock import patch
 
 import pytest
 
@@ -11,7 +9,6 @@ from kraken.server import consts
 from kraken.server.models import db, Run, Job, TestCaseResult, Branch, Flow, Stage, Project, Issue, System, AgentsGroup, TestCase, Tool
 
 from kraken.server.bg import jobs
-#import kraken.agent.config
 
 log = logging.getLogger(__name__)
 
@@ -287,7 +284,6 @@ def test__analyze_job_issues_history():
         system = System()
         agents_group = AgentsGroup()
         tool = Tool(fields={})
-        test_case = TestCase(tool=tool)
         db.session.commit()
 
         def new_issue(line, issue_type, completion_status=consts.JOB_CMPLT_ALL_OK):
