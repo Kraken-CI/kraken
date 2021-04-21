@@ -76,7 +76,7 @@ def test_run_artifacts_download():
             o.is_dir = True
             mlist.return_value = [o]
 
-            _, msg = kraken_artifacts.run_artifacts(step, report_artifact=None)
+            kraken_artifacts.run_artifacts(step, report_artifact=None)
 
             assert be.called
 
