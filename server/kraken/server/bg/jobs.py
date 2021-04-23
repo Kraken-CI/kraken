@@ -343,6 +343,7 @@ def _analyze_dev_test_case_result(job, job_tcr):
 def _analyze_job_results_history(job):
     # TODO: if branch is forked from another base branch take base branch results into account
 
+    counts = [0, 0, 0, 0]
     for job_tcr in job.results:
         # analyze history
         log.info('Analyze result %s %s', job_tcr, job_tcr.test_case.name)

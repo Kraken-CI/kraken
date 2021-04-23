@@ -101,7 +101,7 @@ def stage(ctx):
                 "tool": "shell",
                 "cmd": "npm install",
                 "cwd": "kraken/ui",
-                "timeout": 240
+                "timeout": 400
             }, {
                 "tool": "nglint",
                 "cwd": "kraken/ui"

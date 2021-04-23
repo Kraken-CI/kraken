@@ -116,7 +116,7 @@ def _collect_commits_from_git_log(text):
             if flag == 'A':
                 commit['added'].append(fpath)
             elif flag == 'D':
-                commit['deleted'].append(fpath)
+                commit['removed'].append(fpath)
             else:
                 commit['modified'].append(fpath)
 
