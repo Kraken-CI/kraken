@@ -62,7 +62,8 @@ def prepare_db():
 
     db_name = 'kkdb'
 
-    db_root_url, db_exists = create_empty_db(db_name)
+    # db_root_url, db_exists = create_empty_db(db_name)
+    db_root_url, _ = create_empty_db(db_name)
 
     # prepare connection, create any missing tables
     #clean_db()
@@ -283,7 +284,6 @@ def test__analyze_job_issues_history():
         stage = Stage(branch=branch, schema={})
         system = System()
         agents_group = AgentsGroup()
-        tool = Tool(fields={})
         db.session.commit()
 
         def new_issue(line, issue_type, completion_status=consts.JOB_CMPLT_ALL_OK):

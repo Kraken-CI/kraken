@@ -14,7 +14,7 @@ docker run -d -p 9000:9000 -p 8000:8000 --name portainer --restart always -v /va
 docker swarm init || true
 
 # docker login to google registry by given user
-cat kraken-34dc43122cd9.json | docker login -u _json_key --password-stdin https://eu.gcr.io
+docker login -u _json_key --password-stdin https://eu.gcr.io < kraken-34dc43122cd9.json
 
 # start kraken
-docker stack deploy --with-registry-auth -c kraken-docker-stack-${KK_VER}.yaml kraken
+docker stack deploy --with-registry-auth -c "kraken-docker-stack-${KK_VER}.yaml" kraken

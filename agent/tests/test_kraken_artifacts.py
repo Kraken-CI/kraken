@@ -35,7 +35,7 @@ def test_run_artifacts_upload():
         )
 
         with patch('minio.Minio.bucket_exists', return_value=True) as be, patch('minio.Minio.fput_object') as fput:
-            res, msg = kraken_artifacts.run_artifacts(step, report_artifact=report_artifact)
+            res, _ = kraken_artifacts.run_artifacts(step, report_artifact=report_artifact)
             assert res == 0
 
             assert be.called
