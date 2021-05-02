@@ -9,7 +9,7 @@ OPENAPI_GENERATOR_VER = '5.0.0'
 OPENAPI_GENERATOR = "#{TOOLS_DIR}/swagger-codegen-cli-#{OPENAPI_GENERATOR_VER}.jar"
 SWAGGER_FILE = File.expand_path("server/kraken/server/swagger.yml")
 
-DOCKER_COMPOSE_VER = '1.27.4'
+DOCKER_COMPOSE_VER = '1.29.1'
 DOCKER_COMPOSE = "#{TOOLS_DIR}/docker-compose-#{DOCKER_COMPOSE_VER}"
 ENV['DOCKER_BUILDKIT']='1'
 ENV['COMPOSE_DOCKER_CLI_BUILD']='1'
@@ -29,10 +29,19 @@ file DOCKER_COMPOSE do
 end
 
 # prepare env
-task :prepare_env do
-  sh 'sudo DEBIAN_FRONTEND=noninteractive apt-get install -y default-jre python3-venv npm libpq-dev libpython3-dev'
-  sh 'python3 -m venv venv && ./venv/bin/pip install -U pip'
+file './venv/bin/python3' do
+  sh 'python3 -m venv venv'
+  sh './venv/bin/pip install -U pip'
   sh './venv/bin/pip install -r requirements.txt'
+end
+
+file './agent/venv/bin/python3' do
+  sh 'python3 -m venv agent/venv'
+  sh './agent/venv/bin/pip install -U pip'
+end
+
+task :prepare_env => ['venv/bin/python3', './agent/venv/bin/python3'] do
+  sh 'sudo DEBIAN_FRONTEND=noninteractive apt-get install -y default-jre python3-venv npm libpq-dev libpython3-dev'
   sh 'cd server && ../venv/bin/poetry install'
 end
 
@@ -99,27 +108,20 @@ end
 
 # BACKEND
 
-file './venv/bin/python3' do
-  sh 'python3 -m venv venv'
-  sh './venv/bin/pip install -U pip'
-end
 
-file './server/venv/bin/python3' do
-  sh 'python3 -m venv server/venv'
-  sh './server/venv/bin/pip install -U pip'
-end
+# TODO TODEL
+#file './server/venv/bin/python3' do
+#  sh 'python3 -m venv server/venv'
+#  sh './server/venv/bin/pip install -U pip'
+#end
 
-file './agent/venv/bin/python3' do
-  sh 'python3 -m venv agent/venv'
-  sh './agent/venv/bin/pip install -U pip'
-end
-
-def setup_py_develop
-  Dir.chdir('server') do
-    sh './venv/bin/pip install -r requirements.txt'
-    sh './venv/bin/python3 setup.py develop --upgrade'
-  end
-end
+# TODO TODEL
+#def setup_py_develop
+#  Dir.chdir('server') do
+#    sh './venv/bin/pip install -r requirements.txt'
+#    sh './venv/bin/python3 setup.py develop --upgrade'
+#  end
+#end
 
 file KRAKEN_VERSION_FILE do
   sh 'rm -f kraken-version-*.txt'
