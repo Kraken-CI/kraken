@@ -81,7 +81,7 @@ def install_linux():
     run('sudo mkdir -p %s' % dest_dir)
     data_dir = Path(consts.AGENT_DIR) / 'data'
     run('sudo mkdir -p %s' % data_dir)
-    run('sudo chown kraken:kraken %s' % dest_dir)
+    run('sudo chown -R kraken:kraken %s' % consts.AGENT_DIR)
     tmp_dir = Path(tempfile.gettempdir())
     agent_path, tool_path = update.get_blobs(tmp_dir)
     run('sudo mv %s %s %s' % (agent_path, tool_path, dest_dir))
