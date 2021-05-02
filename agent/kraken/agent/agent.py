@@ -54,6 +54,7 @@ def parse_args():
     pi = subparsers.add_parser('install',
                                help='Install Kraken Agent in the system as a systemd service',
                                description='Install Kraken Agent in the system as a systemd service.')
+    pi.add_argument('-s', '--server', help='Server URL')
 
     pci = subparsers.add_parser('check-integrity',
                                 help='Check if current installation of Kraken Agent is integral ie. is complete and should work ok',
