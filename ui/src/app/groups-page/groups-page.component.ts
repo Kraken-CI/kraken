@@ -12,6 +12,11 @@ import { AuthService } from '../auth.service'
 import { ManagementService } from '../backend/api/management.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
 
+interface DeploymentMethod {
+    name: string,
+    val: number
+}
+
 @Component({
     selector: 'app-groups-page',
     templateUrl: './groups-page.component.html',
@@ -36,6 +41,8 @@ export class GroupsPageComponent implements OnInit {
     activeItem: MenuItem
     openedGroups: any
     groupTab: any
+    deploymentMethods: DeploymentMethod[]
+    deploymentMethod: DeploymentMethod
 
     constructor(
         private route: ActivatedRoute,
@@ -45,7 +52,17 @@ export class GroupsPageComponent implements OnInit {
         protected managementService: ManagementService,
         protected breadcrumbService: BreadcrumbsService,
         private titleService: Title
-    ) {}
+    ) {
+        this.deploymentMethods = [
+            {name: 'Manual', val: 0},
+            //{name: 'SSH', val: 1},
+            {name: 'Amazon Web Services', val: 2},
+            //{name: 'Google Cloud Platform', val: 3},
+            //{name: 'Digital Ocean', val: 4},
+            //{name: 'Linode', val: 5},
+        ]
+        this.deploymentMethod = this.deploymentMethods[0]
+    }
 
     switchToTab(index) {
         if (this.activeTabIdx === index) {
@@ -278,16 +295,12 @@ export class GroupsPageComponent implements OnInit {
         }
     }
 
-    saveGroup(groupTab) {
-        console.info(groupTab)
-        if (groupTab.name === groupTab.group.name) {
-            return
-        }
-        const g = { name: groupTab.name }
-        this.managementService.updateGroup(groupTab.group.id, g).subscribe(
+    saveGroup() {
+        const g = { name: this.groupTab.name }
+        this.managementService.updateGroup(this.groupTab.group.id, g).subscribe(
             (data) => {
                 console.info('updated', data)
-                groupTab.group.name = data.name
+                this.groupTab.group.name = data.name
                 this.msgSrv.add({
                     severity: 'success',
                     summary: 'Group updated',
@@ -311,7 +324,7 @@ export class GroupsPageComponent implements OnInit {
 
     groupNameKeyDown(event, groupTab) {
         if (event.key === 'Enter') {
-            this.saveGroup(groupTab)
+            this.saveGroup()
         }
     }
 }

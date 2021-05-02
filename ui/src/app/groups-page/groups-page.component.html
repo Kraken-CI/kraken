@@ -109,29 +109,42 @@
 </div>
 
 <!-- Single group tab -->
-<div *ngIf="activeTabIdx != 0" class="p-component">
-  <table style="margin-top: 10px;">
-    <tr>
-      <th style="width: 8rem;"></th>
-      <th style="width: 8rem;"></th>
-    </tr>
+<div *ngIf="activeTabIdx != 0" class="p-component" style="margin: 8px;">
+  <div style="margin: 12px 0;">
+    <h3>
+    <span>Group Name: {{ groupTab.group.name }}</span>
+    <span style="padding-left: 20px;">Project: {{ groupTab.group.project_name ? groupTab.group.project_name : 'any' }}</span>
+    </h3>
+  </div>
 
-    <tr>
-      <td style="text-align: right; padding-right: 10px;">
-        Group Name
-      </td>
-      <td>
-        {{ groupTab.group.name }}
-      </td>
-    </tr>
+  <h3>Agents Deployment</h3>
+  <p-selectButton [options]="deploymentMethods" [(ngModel)]="deploymentMethod" optionLabel="name"></p-selectButton>
 
-    <tr>
-      <td style="text-align: right; padding-right: 10px;">
-        Project
-      </td>
-      <td>
-        {{ groupTab.group.project_name }}
-      </td>
-    </tr>
-  </table>
+  <div style="margin: 12px 6px 18px 6px;">
+    <div *ngIf="deploymentMethod.val == 0">
+      <i>No extra configuration needed.</i>
+    </div>
+
+    <div *ngIf="deploymentMethod.val == 2">
+      <h5>Horizontal and Fixed Width</h5>
+      <div class="p-field p-grid">
+        <label for="region" class="p-col-fixed" style="width:100px">Region</label>
+        <div class="p-col">
+          <input id="region" type="text" pInputText>
+        </div>
+      </div>
+      <div class="p-field p-grid">
+        <label for="instanceType" class="p-col-fixed" style="width:100px">Instance Type</label>
+        <div class="p-col">
+          <input id="instanceType" type="text" pInputText>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <p-button label="Save" icon="pi pi-check" (onClick)="saveGroup()"
+            [disabled]="!auth.hasPermission('manage')"
+            [pTooltip]="auth.permTip('manage')"></p-button>
+
 </div>

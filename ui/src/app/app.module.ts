@@ -37,6 +37,7 @@ import { InputNumberModule } from 'primeng/inputnumber'
 import { PasswordModule } from 'primeng/password'
 import { TooltipModule } from 'primeng/tooltip'
 import { ToggleButtonModule } from 'primeng/togglebutton'
+import { FieldsetModule } from 'primeng/fieldset';
 
 // REST API
 import {
@@ -144,6 +145,7 @@ export function cfgFactory() {
         PasswordModule,
         TooltipModule,
         ToggleButtonModule,
+        FieldsetModule,
     ],
     providers: [
         Title,
