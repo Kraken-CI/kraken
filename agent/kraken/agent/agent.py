@@ -13,13 +13,13 @@
 # limitations under the License.
 
 import os
-import sys
 import time
 import logging
 import platform
 import traceback
 
 import distro
+import pkg_resources
 
 from . import logs
 from . import utils
@@ -91,6 +91,8 @@ def check_integrity():
 
 
 def run():
+    kraken_version = pkg_resources.get_distribution('kraken-agent').version
+
     # allow running kktool from current dir in container
     os.environ["PATH"] += os.pathsep + os.getcwd()
     os.environ["PATH"] += os.pathsep + os.path.abspath(__file__)
