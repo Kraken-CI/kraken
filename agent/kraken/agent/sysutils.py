@@ -31,7 +31,7 @@ def get_ifaces():
             struct.pack('iL', obytes, names.buffer_info()[0])
         ))[0]
 
-    namestr = names.tostring()
+    namestr = names.tobytes()
 
     lst = []
     for i in range(0, outbytes, 40):

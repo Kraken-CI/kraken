@@ -82,7 +82,7 @@ def check_integrity():
 @click.option('-t', '--tools-dirs', envvar='KRAKEN_TOOLS_DIRS', help='List of tools directories')
 @click.option('-m', '--minio-addr', envvar='KRAKEN_MINIO_ADDR', help='MinIO address (host:port)')
 @click.option('-c', '--clickhouse-addr', envvar='KRAKEN_CLICKHOUSE_ADDR', help='ClickHouse address (host:port)')
-@click.option('--no-update', default=False, help='Do not update agent automatically (useful in agent development)')
+@click.option('--no-update', default=False, is_flag=True, help='Do not update agent automatically (useful in agent development)')
 def run(server, data_dir, tools_dirs, minio_addr, clickhouse_addr, no_update):
     'Start Kraken Agent service'
     _intro()
