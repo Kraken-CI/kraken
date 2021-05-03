@@ -1,0 +1,105 @@
+#!/usr/bin/env python3
+
+# Copyright 2020-2021 The Kraken Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import os
+import logging
+
+import click
+import pkg_resources
+
+from . import logs
+from . import agent
+from . import consts
+from . import config
+from . import install as inst
+
+
+log = logging.getLogger('agent')
+
+
+def _get_default_data_dir():
+    return os.path.join(consts.AGENT_DIR, 'data')
+
+
+def _intro():
+    logs.setup_logging('agent')
+    kraken_version = pkg_resources.get_distribution('kraken-agent').version
+    log.info('Starting Kraken Agent, version %s', kraken_version)
+
+
+def _load_cfg(**kwargs):
+    config.set_config(kwargs)
+
+
+@click.group()
+def main():
+    'Kraken Agent'
+    #print('missing command - please, provide one of commands: run, install, check-integrity')
+    #sys.exit(1)
+
+
+@click.command()
+@click.option('-s', '--server', envvar='KRAKEN_SERVER_ADDR', required=True, help='Server URL')
+@click.option('-d', '--data-dir', envvar='KRAKEN_DATA_DIR', default=_get_default_data_dir(), help='Directory for presistent data')
+@click.option('-t', '--tools-dirs', envvar='KRAKEN_TOOLS_DIR', help='List of tools directories')
+@click.option('-m', '--minio-addr', envvar='KRAKEN_MINIO_ADDR', help='MinIO address (host:port)')
+@click.option('-c', '--clickhouse-addr', envvar='KRAKEN_CLICKHOUSE_ADDR', help='ClickHouse address (host:port)')
+def install(server, data_dir, tools_dirs, minio_addr, clickhouse_addr):
+    'Install Kraken Agent in the system as a systemd service'
+    _intro()
+    _load_cfg(server=server,
+              data_dir=data_dir,
+              tools_dirs=tools_dirs,
+              minio_addr=minio_addr,
+              clickhouse_addr=clickhouse_addr)
+
+    inst.install()
+
+
+@click.command(short_help='Check if current installation of Kraken Agent is integral')
+def check_integrity():
+    'Check if current installation of Kraken Agent is integral ie. is complete and should work ok'
+    _intro()
+    agent.check_integrity()
+
+
+@click.command()
+@click.option('-s', '--server', envvar='KRAKEN_SERVER_ADDR', required=True, help='Server URL')
+@click.option('-d', '--data-dir', envvar='KRAKEN_DATA_DIR', default=_get_default_data_dir(), help='Directory for presistent data')
+@click.option('-t', '--tools-dirs', envvar='KRAKEN_TOOLS_DIRS', help='List of tools directories')
+@click.option('-m', '--minio-addr', envvar='KRAKEN_MINIO_ADDR', help='MinIO address (host:port)')
+@click.option('-c', '--clickhouse-addr', envvar='KRAKEN_CLICKHOUSE_ADDR', help='ClickHouse address (host:port)')
+@click.option('--no-update', default=False, help='Do not update agent automatically (useful in agent development)')
+def run(server, data_dir, tools_dirs, minio_addr, clickhouse_addr, no_update):
+    'Start Kraken Agent service'
+    _intro()
+    _load_cfg(server=server,
+              data_dir=data_dir,
+              tools_dirs=tools_dirs,
+              minio_addr=minio_addr,
+              clickhouse_addr=clickhouse_addr,
+              no_update=no_update)
+
+    agent.run()
+
+
+main.add_command(install)
+main.add_command(check_integrity)
+main.add_command(run)
+
+
+if __name__ == '__main__':
+    main()

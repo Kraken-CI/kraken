@@ -169,7 +169,7 @@ task :run_agent_in_docker do
 end
 
 task :run_agent_in_lxd_all do
-#  Rake::Task["build_agent"].invoke
+  Rake::Task["build_agent"].invoke
   Dir.chdir('agent') do
     systems = [
       ['ubuntu:20.04', 'u20'],  # images:ubuntu/focal/amd64
@@ -203,9 +203,8 @@ task :run_agent_in_lxd_all do
       if sys.include?('opensuse/15.2')
         sh "lxc exec #{cntr_name} -- zypper install -y curl python3 sudo system-group-wheel"
       end
-      sh "lxc exec #{cntr_name} -- curl -o agent http://#{LOCALHOST_IP}:8080/install/agent"
-      sh "lxc exec #{cntr_name} -- chmod a+x agent"
-      sh "lxc exec #{cntr_name} -- ./agent -s http://#{LOCALHOST_IP}:8080 install"
+      sh "lxc file push agent/kkagent #{cntr_name}/root/kkagent"
+      sh "lxc exec #{cntr_name} -- ./kkagent install -s http://#{LOCALHOST_IP}:8080"
       sh "lxc exec #{cntr_name} -- journalctl -u kraken-agent.service"
       #sh "lxc exec #{cntr_name} -- journalctl -f -u kraken-agent.service'
     end
@@ -248,7 +247,7 @@ task :run_agent_in_lxd do
 
       sh "lxc exec #{cntr_name} -- curl -o agent http://#{LOCALHOST_IP}:8080/install/agent"
       sh "lxc exec #{cntr_name} -- chmod a+x agent"
-      sh "lxc exec #{cntr_name} -- ./agent -s http://#{LOCALHOST_IP}:8080 install"
+      sh "lxc exec #{cntr_name} -- ./agent install -s http://#{LOCALHOST_IP}:8080"
       #sh "lxc exec #{cntr_name} -- journalctl -u kraken-agent.service"
       sh "lxc exec #{cntr_name} -- journalctl -f -u kraken-agent.service"
     end

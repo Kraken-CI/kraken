@@ -21,9 +21,10 @@ from pathlib import Path
 import distro
 import pkg_resources
 
-from . import config
 from . import update
 from . import consts
+from . import config
+
 
 SYSTEMD_SERVICE = '''[Unit]
 Description=Kraken Agent
@@ -33,7 +34,7 @@ After=time-sync.target
 
 [Service]
 User=kraken
-ExecStart=/opt/kraken/kkagent run -s %s -d %s
+ExecStart=/opt/kraken/kkagent run
 Restart=on-failure
 RestartSec=5s
 EnvironmentFile=/opt/kraken/kraken.env
@@ -42,11 +43,20 @@ EnvironmentFile=/opt/kraken/kraken.env
 WantedBy=multi-user.target
 '''
 
-KRAKEN_ENV = '''# address of clickhouse-proxy, used for sending logs there
-KRAKEN_CLICKHOUSE_ADDR=
+KRAKEN_ENV = '''# address of kraken server
+KRAKEN_SERVER_ADDR={server_addr}
+
+# address of clickhouse-proxy, used for sending logs there
+KRAKEN_CLICKHOUSE_ADDR={clickhouse_addr}
 
 # address of minio, used for storing and retrieving build artifacts and for a cache
-KRAKEN_MINIO_ADDR=
+KRAKEN_MINIO_ADDR={minio_addr}
+
+# directory with data dir, optional
+KRAKEN_DATA_DIR={data_dir}
+
+# directory with tools for Kraken, optional
+KRAKEN_TOOLS_DIRS={tools_dirs}
 '''
 
 def run(cmd):
@@ -79,7 +89,9 @@ def install_linux():
     if dest_dir.exists():
         run('sudo rm -rf %s' % dest_dir)
     run('sudo mkdir -p %s' % dest_dir)
-    data_dir = Path(consts.AGENT_DIR) / 'data'
+    data_dir = config.get('data_dir')
+    if not data_dir:
+        data_dir = Path(consts.AGENT_DIR) / 'data'
     run('sudo mkdir -p %s' % data_dir)
     run('sudo chown -R kraken:kraken %s' % consts.AGENT_DIR)
     tmp_dir = Path(tempfile.gettempdir())
@@ -87,7 +99,12 @@ def install_linux():
     run('sudo mv %s %s %s' % (agent_path, tool_path, dest_dir))
 
     # prepare kraken env file
-    run('sudo bash -c \'echo "%s" > /opt/kraken/kraken.env\'' % KRAKEN_ENV)
+    kenv = KRAKEN_ENV.format(server_addr=config.get('server'),
+                             data_dir=data_dir,
+                             tools_dirs=config.get('tools_dirs') or '',
+                             minio_addr=config.get('minio_addr') or '',
+                             clickhouse_addr=config.get('clickhouse_addr') or '')
+    run('sudo bash -c \'echo "%s" > /opt/kraken/kraken.env\'' % kenv)
 
     run('sudo chown kraken:kraken %s/* /opt/kraken/*' % dest_dir)
 
@@ -96,11 +113,10 @@ def install_linux():
     run('sudo chown kraken:kraken /opt/kraken/*')
 
     # setup kraken agent service in systemd
-    svc = SYSTEMD_SERVICE % (config.get('server'), data_dir)
     sysd_dest = '/lib/systemd/system'
     if 'suse' in dstr:
         sysd_dest = '/usr/lib/systemd/system'
-    run('sudo bash -c \'echo "%s" > %s/kraken-agent.service\'' % (svc, sysd_dest))
+    run('sudo bash -c \'echo "%s" > %s/kraken-agent.service\'' % (SYSTEMD_SERVICE, sysd_dest))
     run('sudo systemctl daemon-reload')
     run('sudo systemctl enable kraken-agent.service')
     run('sudo systemctl start kraken-agent.service')

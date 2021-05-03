@@ -8,7 +8,7 @@ setup(
     packages=find_packages(),
     entry_points={
         'console_scripts': [
-            'kkagent = kraken.agent.agent:main',
+            'kkagent = kraken.agent.main:main',
             'kktool = kraken.agent.tool:main',
         ],
         'kraken.tools': [

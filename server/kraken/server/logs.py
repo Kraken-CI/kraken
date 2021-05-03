@@ -200,9 +200,9 @@ def setup_logging(service, clickhouse_addr=None):
         g_clickhouse_handler = None
 
     ch_addr = os.environ.get('KRAKEN_CLICKHOUSE_ADDR', None)
-    if ch_addr is None:
+    if not ch_addr:
         ch_addr = clickhouse_addr
-    if ch_addr is None:
+    if not ch_addr:
         ch_addr = consts.DEFAULT_CLICKHOUSE_ADDR
     host, port = ch_addr.split(':')
     g_clickhouse_handler = ClickhouseHandler(host, int(port), fqdn=True)
