@@ -43,9 +43,9 @@
       <tr>
         <th style="width: 60px;">ID</th>
         <th style="width: 120px;">Address</th>
-        <th style="width: 120px;">Name</th>
+        <th style="width: 160px;">Name</th>
         <th style="width: 120px;">IP Address</th>
-        <th style="width: 60px;">State</th>
+        <!-- <th style="width: 60px;">State</th> -->
         <th style="width: 80px;">Disabled</th>
         <th style="width: 120px;">Last Seen</th>
         <th style="width: 10%;">Groups</th>
@@ -63,7 +63,7 @@
         <td>{{agent.address}}</td>
         <td><a routerLink="/agents/{{agent.id}}">{{agent.name}}</a></td>
         <td>{{agent.ip_address}}</td>
-        <td>{{ agent.state }}</td>
+        <!-- <td>{{ agent.state }}</td> -->
         <td>
           <p-inputSwitch [(ngModel)]="agent.disabled" (onChange)="changeAgentDisable($event, agent)"
                          [disabled]="!auth.hasPermission('manage')"

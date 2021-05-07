@@ -65,7 +65,7 @@ def assign_jobs_to_agents():
         log.info('job %s, executor %s', j, j.system.executor)
         # find idle agent from given agents group
         best_agent = None
-        if j.system.executor == 'local' and j.system.name != 'any':
+        if j.system.executor == 'local' and j.system.name != 'any' and not j.agents_group.deployment:
             key = (j.agents_group_id, j.system.name)
             idle_agents = idle_agents_by_sys_group.get(key, [])
         else:

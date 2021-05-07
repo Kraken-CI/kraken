@@ -31,7 +31,7 @@ import boto3
 
 from .clry import app as clry_app
 from ..models import db, Run, Job, TestCaseResult, Branch, Flow, Stage, Project, get_setting
-from ..models import AgentsGroup, Agent, System
+from ..models import AgentsGroup, Agent, AgentAssignment, System
 from ..models import RepoChanges
 from ..schema import prepare_new_planner_triggers
 from ..schema import check_and_correct_stage_schema
@@ -1074,9 +1074,11 @@ def spawn_new_agents(self, agents_needed):
                          'Tags': [{'Key': 'kraken-group', 'Value': '%d' % ag_id}]}]
 
                 boot_script = """#!/usr/bin/env bash
-echo 'hello world'
-touch /root/hello
+wget -O agent http://%s:8080/install/agent
+chmod a+x agent
+./agent install -s http://%s:8080/
 """
+                boot_script %= (my_ip, my_ip)
                 resp = ec2.run_instances(
                     ImageId=ami_id,
                     MinCount=num,
@@ -1087,9 +1089,25 @@ touch /root/hello
                     TagSpecifications=tags,
                     UserData=boot_script)
 
-                # ec2-instance-connect
-
                 log.info('SPAWNING NEW AGENT %s', resp)
+
+                now = datetime.datetime.utcnow()
+                instances = resp['Instances']
+                for i in instances:
+                    i = ec2_res.Instance(i['InstanceId'])
+                    try:
+                        i.wait_until_running()
+                    except:
+                        log.exception('IGNORED EXCEPTION')
+                        continue
+                    name = '.'.join(i.public_dns_name.split('.')[:2])
+                    a = Agent(name=name,
+                              address=i.private_ip_address,
+                              ip_address=i.public_ip_address,
+                              authorized=True,
+                              last_seen=now)
+                    aa = AgentAssignment(agent=a, agents_group=ag)
+                    db.session.commit()
 
             #db.session.commit()
 
