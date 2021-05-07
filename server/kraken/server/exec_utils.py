@@ -14,6 +14,7 @@
 
 import logging
 import datetime
+from collections import defaultdict
 
 from sqlalchemy.orm.attributes import flag_modified
 
@@ -263,6 +264,8 @@ def trigger_jobs(run, replay=False):
     # count how many agents are in each group, if there is 0 for given job then return an error
     agents_count = {}
 
+    agents_needed = defaultdict(int)
+
     # trigger new jobs based on jobs defined in stage schema
     all_started_erred = True
     now = datetime.datetime.utcnow()
@@ -336,6 +339,9 @@ def trigger_jobs(run, replay=False):
                         job.completion_status = consts.JOB_CMPLT_MISSING_AGENTS_GROUP
                         job.notes = "cannot find agents group '%s' in database" % env['agents_group']
                     erred_job = True
+                elif agents_group.deployment and agents_group.deployment['method'] > 0:
+                    key = (agents_group.id, system.id if executor == 'local' else 0)
+                    agents_needed[key] += 1
                 elif agents_count[agents_group.name] == 0:
                     if job.state != consts.JOB_STATE_COMPLETED:
                         job.state = consts.JOB_STATE_COMPLETED
@@ -368,8 +374,16 @@ def trigger_jobs(run, replay=False):
     run.state = consts.RUN_STATE_IN_PROGRESS  # need to be set in case of replay
     db.session.commit()
 
-    # notify
     from .bg import jobs as bg_jobs  # pylint: disable=import-outside-toplevel
+
+    # spawn new agents if needed
+    log.info('AGENTS_NEEDED============================= %s', agents_needed)
+    if agents_needed:
+        agents_needed = list(agents_needed.items())
+        t = bg_jobs.spawn_new_agents.delay(agents_needed)
+        log.info('enqueued spawning new agents for run %s, bg processing: %s', run, t)
+
+    # notify
     t = bg_jobs.notify_about_started_run.delay(run.id)
     log.info('enqueued notification about start of run %s, bg processing: %s', run, t)
 

@@ -2,3 +2,5 @@ poetry
 shiv
 wheel
 fabric
+boto3
+awscli

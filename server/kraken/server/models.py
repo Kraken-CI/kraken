@@ -709,15 +709,24 @@ class AgentsGroup(db.Model, DatesMixin):
     # agents = relationship("Agent", back_populates="agents_group")  # static assignments
     agents = relationship('AgentAssignment', back_populates="agents_group")
     jobs = relationship("Job", back_populates="agents_group")
+    deployment = Column(JSONB)
+    extra_attrs = Column(JSONB)
 
     def get_json(self):
+        deployment = self.deployment
+        if not deployment:
+            deployment = dict(
+                method=0,
+                aws=dict(region='', instance_type='', instances_limit=0, default_image=''))
+
         return dict(id=self.id,
                     created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,
                     deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,
                     name=self.name,
                     project_id=self.project_id,
                     project_name=self.project.name if self.project else None,
-                    agents_count=len(self.agents))
+                    agents_count=len(self.agents),
+                    deployment=deployment)
 
 
 class Agent(db.Model, DatesMixin):
@@ -734,6 +743,7 @@ class Agent(db.Model, DatesMixin):
     last_seen = Column(DateTime)
     host_info = Column(JSONB)
     user_attrs = Column(JSONB)
+    extra_attrs = Column(JSONB)
     agents_groups = relationship('AgentAssignment', back_populates="agent")
     job_id = Column(Integer, ForeignKey('jobs.id'))
     job = relationship('Job', back_populates="agent", foreign_keys=[job_id])

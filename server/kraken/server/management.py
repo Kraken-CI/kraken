@@ -515,8 +515,24 @@ def create_group(body):
     return group.get_json(), 201
 
 
-def update_group():
-    pass
+def update_group(group_id, body):
+    group = AgentsGroup.query.filter_by(id=group_id).one_or_none()
+    if group_id is None:
+        abort(404, "Group not found")
+
+    #if 'groups' in body:
+    log.info('GROUP %s', body)
+
+    if 'name' in body:
+        group.name = body['name']
+
+    if 'deployment' in body:
+        # TODO: destroy resources connected with previous deployment
+        group.deployment = body['deployment']
+
+    db.session.commit()
+
+    return group.get_json(), 200
 
 
 def delete_group(group_id):

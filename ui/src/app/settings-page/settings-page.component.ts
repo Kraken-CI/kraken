@@ -33,6 +33,11 @@ export class SettingsPageComponent implements OnInit {
         sentry_dsn: new FormControl(''),
     })
 
+    cloudForm = new FormGroup({
+        aws_access_key: new FormControl(''),
+        aws_secret_access_key: new FormControl(''),
+    })
+
     constructor(
         public auth: AuthService,
         private msgSrv: MessageService,
@@ -60,6 +65,7 @@ export class SettingsPageComponent implements OnInit {
             this.generalForm.setValue(settings.general)
             this.notificationForm.setValue(settings.notification)
             this.monitoringForm.setValue(settings.monitoring)
+            this.cloudForm.setValue(settings.cloud)
         })
     }
 
@@ -68,6 +74,7 @@ export class SettingsPageComponent implements OnInit {
             general: this.generalForm.value,
             notification: this.notificationForm.value,
             monitoring: this.monitoringForm.value,
+            cloud: this.cloudForm.value,
         }
         this.settingsService.updateSettings(settings).subscribe(
             (settings2) => {

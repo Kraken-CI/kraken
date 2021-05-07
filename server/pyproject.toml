@@ -27,6 +27,7 @@ clickhouse-driver = "^0.1.5"
 minio = "^7.0.0"
 passlib = "^1.7.4"
 sentry-sdk = {extras = ["flask"], version = "^0.20.0"}
+boto3 = "^1.17.62"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

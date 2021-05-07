@@ -42,7 +42,6 @@ export class GroupsPageComponent implements OnInit {
     openedGroups: any
     groupTab: any
     deploymentMethods: DeploymentMethod[]
-    deploymentMethod: DeploymentMethod
 
     constructor(
         private route: ActivatedRoute,
@@ -61,7 +60,6 @@ export class GroupsPageComponent implements OnInit {
             //{name: 'Digital Ocean', val: 4},
             //{name: 'Linode', val: 5},
         ]
-        this.deploymentMethod = this.deploymentMethods[0]
     }
 
     switchToTab(index) {
@@ -296,11 +294,32 @@ export class GroupsPageComponent implements OnInit {
     }
 
     saveGroup() {
-        const g = { name: this.groupTab.name }
+        // prepare deployment data
+        const deployment = {
+            method: this.groupTab.group.deployment.method,
+            aws: null,
+        }
+        switch (deployment.method) {
+        case 0: // manual
+        case 2:
+            deployment.aws = {
+                region: this.groupTab.group.deployment.aws.region,
+                instance_type: this.groupTab.group.deployment.aws.instance_type,
+                instances_limit: this.groupTab.group.deployment.aws.instances_limit,
+                default_image: this.groupTab.group.deployment.aws.default_image,
+            }
+        }
+
+        // assemble whole group data
+        const g = {
+            name: this.groupTab.name,
+            deployment: deployment,
+        }
         this.managementService.updateGroup(this.groupTab.group.id, g).subscribe(
             (data) => {
                 console.info('updated', data)
-                this.groupTab.group.name = data.name
+                this.groupTab.group = data
+                this.groupTab.name = data.name
                 this.msgSrv.add({
                     severity: 'success',
                     summary: 'Group updated',

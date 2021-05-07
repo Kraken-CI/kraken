@@ -118,25 +118,36 @@
   </div>
 
   <h3>Agents Deployment</h3>
-  <p-selectButton [options]="deploymentMethods" [(ngModel)]="deploymentMethod" optionLabel="name"></p-selectButton>
+  <p-selectButton [options]="deploymentMethods" [(ngModel)]="groupTab.group.deployment.method" optionLabel="name" optionValue="val" dataKey="val"></p-selectButton>
 
   <div style="margin: 12px 6px 18px 6px;">
-    <div *ngIf="deploymentMethod.val == 0">
+    <div *ngIf="groupTab.group.deployment.method == 0">
       <i>No extra configuration needed.</i>
     </div>
 
-    <div *ngIf="deploymentMethod.val == 2">
-      <h5>Horizontal and Fixed Width</h5>
+    <div *ngIf="groupTab.group.deployment.method == 2">
       <div class="p-field p-grid">
         <label for="region" class="p-col-fixed" style="width:100px">Region</label>
         <div class="p-col">
-          <input id="region" type="text" pInputText>
+          <input id="region" type="text" [(ngModel)]="groupTab.group.deployment.aws.region" pInputText>
         </div>
       </div>
       <div class="p-field p-grid">
         <label for="instanceType" class="p-col-fixed" style="width:100px">Instance Type</label>
         <div class="p-col">
-          <input id="instanceType" type="text" pInputText>
+          <input id="instanceType" type="text" [(ngModel)]="groupTab.group.deployment.aws.instance_type" pInputText>
+        </div>
+      </div>
+      <div class="p-field p-grid">
+        <label for="instancesLimit" class="p-col-fixed" style="width:100px">Instances Limit</label>
+        <div class="p-col">
+          <input id="instancesLimit" type="text" [(ngModel)]="groupTab.group.deployment.aws.instances_limit" pInputText>
+        </div>
+      </div>
+      <div class="p-field p-grid">
+        <label for="defaultImage" class="p-col-fixed" style="width:100px">Default Image</label>
+        <div class="p-col">
+          <input id="defaultImage" type="text" [(ngModel)]="groupTab.group.deployment.aws.default_image" pInputText>
         </div>
       </div>
     </div>

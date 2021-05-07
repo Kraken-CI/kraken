@@ -88,5 +88,6 @@ def serve_agent_blob(blob):
         resp.headers.set("Content-Disposition", "attachment", filename="kraken-agent-install.sh")
         return resp
 
+    log.info('CWD: %s', os.getcwd())
     p = os.path.join(KKAGENT_DIR, 'kk' + blob)
     return send_file(p)

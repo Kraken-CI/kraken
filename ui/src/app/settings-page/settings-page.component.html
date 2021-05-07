@@ -46,6 +46,21 @@
         </label>
       </form>
   </p-tabPanel>
+
+  <p-tabPanel header="Cloud">
+    <!-- https://www.sanwebe.com/2014/08/css-html-forms-designs -->
+    <p-fieldset legend="Amazon Web Services" [toggleable]="true">
+      <form [formGroup]="cloudForm" class="form-style-2">
+        <label for="aws_access_key"><span>Access Key</span>
+          <input class="input-field" name="aws_access_key" formControlName="aws_access_key"/>
+        </label>
+        <label for="aws_secret_access_key"><span>Secret Access Key</span>
+          <input type="password" class="input-field" name="aws_secret_access_key" pPassword [feedback]="false" formControlName="aws_secret_access_key"/>
+        </label>
+      </form>
+    </p-fieldset>
+  </p-tabPanel>
+
 </p-tabView>
 
 <div style="margin: 8px 0 0 4px;">

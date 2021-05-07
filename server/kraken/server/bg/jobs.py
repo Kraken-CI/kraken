@@ -25,9 +25,13 @@ from sqlalchemy.orm.attributes import flag_modified
 import giturlparse
 import pytimeparse
 import redis
+import requests
+import botocore
+import boto3
 
 from .clry import app as clry_app
 from ..models import db, Run, Job, TestCaseResult, Branch, Flow, Stage, Project, get_setting
+from ..models import AgentsGroup, Agent, System
 from ..models import RepoChanges
 from ..schema import prepare_new_planner_triggers
 from ..schema import check_and_correct_stage_schema
@@ -954,6 +958,140 @@ def refresh_schema_repo(self, stage_id):
 
             stage.repo_refresh_job_id = job['id']
             db.session.commit()
+
+    except Exception as exc:
+        log.exception('will retry')
+        raise self.retry(exc=exc)
+
+
+@clry_app.task(base=BaseTask, bind=True)
+def spawn_new_agents(self, agents_needed):
+    try:
+        app = _create_app('spawn_new_agents')
+
+        log.info('AGENTS NEEDED %s', agents_needed)
+
+        rsp = requests.get('https://checkip.amazonaws.com')
+        my_ip = rsp.text.strip()
+
+        with app.app_context():
+
+            for (ag_id, sys_id), needed_count in agents_needed:
+                log.info('agents group %d, system id %d: needed %d', ag_id, sys_id, needed_count)
+
+                ag = AgentsGroup.query.filter_by(id=ag_id).one_or_none()
+                if ag is None:
+                    log.warning('cannot find agents group id:%d', ag_id)
+                    continue
+
+                # only AWS supported
+                if ag.deployment['method'] != 2:
+                    log.warning('deployment method %d in agents group id:%d not implemented', ag.deployment['method'], ag_id)
+                    continue
+
+                aws = ag.deployment['aws']
+
+                # check if limit of agents is reached
+                agents_count = len(ag.agents)
+                limit = aws.get('instances_limit', 0)
+                if limit > 0 and agents_count >= limit:
+                    log.warning('in agents group id:%d cannot spawn more agents, limit %d reached', ag_id, limit)
+                    continue
+
+                # find system info
+                if sys_id != 0:
+                    system = System.query.filter_by(id=sys_id).one_or_none()
+                    if system is None:
+                        log.warning('cannot find system id:%d', sys_id)
+                        continue
+                else:
+                    system = System.query.filter_by(name=aws['default_image']).one_or_none()
+                    if system is None:
+                        log.warning('cannot find system id:%d', sys_id)
+                        continue
+
+                # check if there is enough idle agents with proper system
+                idle_agents = Agent.query.filter_by(job=None, authorized=True, disabled=False).all()
+                idle_agents_count = 0
+                for a in idle_agents:
+                    if a.extra_attrs and 'system' in a.extra_attrs and a.extra_attrs['system'] == sys_id:
+                        idle_agents_count += 1
+                num = needed_count - idle_agents_count
+                if num <= 0:
+                    log.info('enough agents')
+                    continue
+
+                region = aws['region']
+                ec2 = boto3.client("ec2", region_name=region)
+                ec2_res = boto3.resource('ec2')
+
+                # get key pair
+                if not ag.extra_attrs:
+                    ag.extra_attrs = {}
+                if 'aws' not in ag.extra_attrs:
+                    ag.extra_attrs['aws'] = {}
+                if 'key-pair' not in ag.extra_attrs['aws']:
+                    key_name = 'kraken-%s' % ag.name
+                    try:
+                        key_pair = ec2.create_key_pair(KeyName=key_name)
+                    except botocore.exceptions.ClientError as ex:
+                        if ex.response['Error']['Code'] == 'InvalidKeyPair.Duplicate':
+                            ec2.delete_key_pair(KeyName=key_name)
+                            key_pair = ec2.create_key_pair(KeyName=key_name)
+                        else:
+                            log.exception('problem with creating AWS key pair')
+                            continue
+                    ag.extra_attrs['aws']['key-pair'] = key_pair
+                    flag_modified(ag, 'extra_attrs')
+                    db.session.commit()
+                else:
+                    key_name = ag.extra_attrs['aws']['key-pair']['KeyName']
+
+                # prepare security group
+                grp_name = 'kraken-%s' % ag.name
+                sec_grp = None
+                try:
+                    sec_grp = ec2.describe_security_groups(GroupNames=[grp_name])
+                except:
+                    pass
+                if not sec_grp:
+                    default_vpc = list(ec2_res.vpcs.filter(Filters=[{'Name': 'isDefault', 'Values': ['true']}]))[0]
+                    sec_grp = default_vpc.create_security_group(GroupName=grp_name,
+                                                                Description='kraken sec group that allows only incomming ssh')
+                    ip_perms = [{
+                        # SSH ingress open to only the specified IP address
+                        'IpProtocol': 'tcp', 'FromPort': 22, 'ToPort': 22,
+                        'IpRanges': [{'CidrIp': '%s/32' % my_ip}]}]
+                    sec_grp.authorize_ingress(IpPermissions=ip_perms)
+                    sec_grp_id = sec_grp.id
+                else:
+                    sec_grp_id = sec_grp['SecurityGroups'][0]['GroupId']
+
+                # get AMI ID
+                ami_id = system.name
+
+                tags = [{'ResourceType': 'instance',
+                         'Tags': [{'Key': 'kraken-group', 'Value': '%d' % ag_id}]}]
+
+                boot_script = """#!/usr/bin/env bash
+echo 'hello world'
+touch /root/hello
+"""
+                resp = ec2.run_instances(
+                    ImageId=ami_id,
+                    MinCount=num,
+                    MaxCount=num,
+                    InstanceType=aws['instance_type'],
+                    KeyName=key_name,
+                    SecurityGroupIds=[sec_grp_id],
+                    TagSpecifications=tags,
+                    UserData=boot_script)
+
+                # ec2-instance-connect
+
+                log.info('SPAWNING NEW AGENT %s', resp)
+
+            #db.session.commit()
 
     except Exception as exc:
         log.exception('will retry')
