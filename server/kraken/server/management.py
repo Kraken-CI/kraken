@@ -473,7 +473,12 @@ def delete_agent(agent_id):
 
     agent.deleted = datetime.datetime.utcnow()
     agent.authorized = False
+    agent.disabled = True
     db.session.commit()
+
+    from .bg import jobs as bg_jobs  # pylint: disable=import-outside-toplevel
+    t = bg_jobs.destroy_machine.delay(agent.id)
+    log.info('destroy machine with agent %s, bg processing: %s', agent.id, t)
 
     return {}, 200
 

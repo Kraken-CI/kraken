@@ -969,12 +969,11 @@ def spawn_new_agents(self, agents_needed):
     try:
         app = _create_app('spawn_new_agents')
 
-        log.info('AGENTS NEEDED %s', agents_needed)
-
         rsp = requests.get('https://checkip.amazonaws.com')
         my_ip = rsp.text.strip()
 
         with app.app_context():
+            server_url = get_setting('general', 'server_url')
 
             for (ag_id, sys_id), needed_count in agents_needed:
                 log.info('agents group %d, system id %d: needed %d', ag_id, sys_id, needed_count)
@@ -985,16 +984,19 @@ def spawn_new_agents(self, agents_needed):
                     continue
 
                 # only AWS supported
-                if ag.deployment['method'] != 2:
+                if ag.deployment['method'] != consts.AGENT_DEPLOYMENT_METHOD_AWS:
                     log.warning('deployment method %d in agents group id:%d not implemented', ag.deployment['method'], ag_id)
                     continue
 
                 aws = ag.deployment['aws']
 
                 # check if limit of agents is reached
-                agents_count = len(ag.agents)
+                q = Agent.query.filter_by(authorized=True, disabled=False, deleted=None)
+                q = q.join('agents_groups')
+                q = q.filter_by(agents_group=ag)
+                agents_count = q.count()
                 limit = aws.get('instances_limit', 0)
-                if limit > 0 and agents_count >= limit:
+                if agents_count >= limit:
                     log.warning('in agents group id:%d cannot spawn more agents, limit %d reached', ag_id, limit)
                     continue
 
@@ -1070,46 +1072,116 @@ def spawn_new_agents(self, agents_needed):
                 # get AMI ID
                 ami_id = system.name
 
+                # define tags
                 tags = [{'ResourceType': 'instance',
                          'Tags': [{'Key': 'kraken-group', 'Value': '%d' % ag_id}]}]
 
-                boot_script = """#!/usr/bin/env bash
-wget -O agent http://%s:8080/install/agent
-chmod a+x agent
-./agent install -s http://%s:8080/
-"""
-                boot_script %= (my_ip, my_ip)
-                resp = ec2.run_instances(
+                # prepare init script
+                # TODO: fix http/https and hardcoded 8080 port
+                init_script = """#!/usr/bin/env bash
+                                 exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+                                 wget -O agent %s/install/agent
+                                 chmod a+x agent
+                                 ./agent install -s %s
+                              """
+                init_script %= (server_url, server_url)
+                if aws.get('init_script', False):
+                    init_script += aws['init_script']
+
+                # CPU Credits spec
+                if aws.get('cpu_credits_unlimited', False):
+                    cpu_credits = 'unlimited'
+                else:
+                    cpu_credits = 'standard'
+
+                # spot instance
+                instance_market_opts = {}
+                if aws.get('spot_instance', False):
+                    instance_market_opts = {
+                        'MarketType': 'spot',
+                    }
+
+                instances = ec2_res.create_instances(
                     ImageId=ami_id,
                     MinCount=num,
                     MaxCount=num,
-                    InstanceType=aws['instance_type'],
                     KeyName=key_name,
                     SecurityGroupIds=[sec_grp_id],
                     TagSpecifications=tags,
-                    UserData=boot_script)
+                    InstanceType=aws['instance_type'],
+                    Monitoring={'Enabled': aws.get('monitoring', False)},
+                    CreditSpecification={'CpuCredits': cpu_credits},
+                    InstanceMarketOptions=instance_market_opts,
+                    UserData=init_script)
 
-                log.info('SPAWNING NEW AGENT %s', resp)
+                log.info('spawning new agents %s', instances)
 
                 now = datetime.datetime.utcnow()
-                instances = resp['Instances']
                 for i in instances:
-                    i = ec2_res.Instance(i['InstanceId'])
                     try:
                         i.wait_until_running()
                     except:
                         log.exception('IGNORED EXCEPTION')
                         continue
+                    i.load()
                     name = '.'.join(i.public_dns_name.split('.')[:2])
                     a = Agent(name=name,
                               address=i.private_ip_address,
                               ip_address=i.public_ip_address,
+                              extra_attrs=dict(system=sys_id, instance_id=i.id),
                               authorized=True,
                               last_seen=now)
                     aa = AgentAssignment(agent=a, agents_group=ag)
                     db.session.commit()
 
-            #db.session.commit()
+    except Exception as exc:
+        log.exception('will retry')
+        raise self.retry(exc=exc)
+
+
+@clry_app.task(base=BaseTask, bind=True)
+def destroy_machine(self, agent_id):
+    try:
+        app = _create_app('destroy_machine_%s' % agent_id)
+
+        rsp = requests.get('https://checkip.amazonaws.com')
+        my_ip = rsp.text.strip()
+
+        with app.app_context():
+            agent = Agent.query.filter_by(id=int(agent_id)).one_or_none()
+            if agent is None:
+                log.error('cannot find agent id:%d', agent_id)
+                return
+
+            ag = None
+            for aa in agent.agents_groups:
+                ag = aa.agents_group
+                if ag.deployment and ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS and 'aws' in ag.deployment:
+                    break
+                else:
+                    ag = None
+
+            if not ag:
+                log.error('cannot find agent group for agent id:%d', agent_id)
+                return
+
+            aws = ag.deployment['aws']
+
+            ec2 = boto3.resource('ec2')
+
+            if not agent.extra_attrs:
+                log.warning('missing extra_attrs in agent %s', agent)
+                return
+
+            instance_id = agent.extra_attrs['instance_id']
+            i = ec2.Instance(instance_id)
+            i.terminate()
+
+            log.info('terminate %s', i)
+
+            agent.deleted = datetime.datetime.utcnow()
+            agent.disabled = True
+            db.session.commit()
 
     except Exception as exc:
         log.exception('will retry')

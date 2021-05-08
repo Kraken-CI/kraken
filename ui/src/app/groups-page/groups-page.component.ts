@@ -57,8 +57,9 @@ export class GroupsPageComponent implements OnInit {
             //{name: 'SSH', val: 1},
             {name: 'Amazon Web Services', val: 2},
             //{name: 'Google Cloud Platform', val: 3},
-            //{name: 'Digital Ocean', val: 4},
-            //{name: 'Linode', val: 5},
+            //{name: 'Microsoft Azure', val: 4},
+            //{name: 'Digital Ocean', val: 5},
+            //{name: 'Linode', val: 6},
         ]
     }
 
@@ -294,26 +295,10 @@ export class GroupsPageComponent implements OnInit {
     }
 
     saveGroup() {
-        // prepare deployment data
-        const deployment = {
-            method: this.groupTab.group.deployment.method,
-            aws: null,
-        }
-        switch (deployment.method) {
-        case 0: // manual
-        case 2:
-            deployment.aws = {
-                region: this.groupTab.group.deployment.aws.region,
-                instance_type: this.groupTab.group.deployment.aws.instance_type,
-                instances_limit: this.groupTab.group.deployment.aws.instances_limit,
-                default_image: this.groupTab.group.deployment.aws.default_image,
-            }
-        }
-
-        // assemble whole group data
+        // group data
         const g = {
             name: this.groupTab.name,
-            deployment: deployment,
+            deployment: this.groupTab.group.deployment,
         }
         this.managementService.updateGroup(this.groupTab.group.id, g).subscribe(
             (data) => {

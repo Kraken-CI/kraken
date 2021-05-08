@@ -377,7 +377,6 @@ def trigger_jobs(run, replay=False):
     from .bg import jobs as bg_jobs  # pylint: disable=import-outside-toplevel
 
     # spawn new agents if needed
-    log.info('AGENTS_NEEDED============================= %s', agents_needed)
     if agents_needed:
         agents_needed = list(agents_needed.items())
         t = bg_jobs.spawn_new_agents.delay(agents_needed)

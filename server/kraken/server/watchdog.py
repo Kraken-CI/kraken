@@ -20,13 +20,15 @@ import logging
 import datetime
 
 from flask import Flask
+from sqlalchemy.sql.expression import desc
 
 from . import logs
-from .models import db, Agent, Run, Job, get_setting
+from .models import db, Agent, AgentsGroup, Run, Job, get_setting
 from . import consts
 from . import srvcheck
 from .. import version
 from . import exec_utils
+from .bg import jobs as bg_jobs
 
 log = logging.getLogger('watchdog')
 
@@ -111,7 +113,7 @@ def _check_runs():
             exec_utils.complete_run(run, now)
 
 
-def _check_agents():
+def _check_agents_keep_alive():
     now = datetime.datetime.utcnow()
     five_mins_ago = now - datetime.timedelta(seconds=consts.AGENT_TIMEOUT)
 
@@ -120,10 +122,46 @@ def _check_agents():
     q = q.filter(Agent.last_seen < five_mins_ago)
 
     for e in q.all():
-        e.disable = True
+        e.disabled = True
         e.status_line = 'agent was not seen for last 5 minutes, disabled'
         db.session.commit()
         log.info('agent %s not seen for 5 minutes, disabled', e)
+
+
+def _check_agents_to_destroy():
+    q = Agent.query.filter_by(deleted=None, job=None)
+    q = q.join('agents_groups', 'agents_group')
+    q = q.filter_by(deleted=None)
+    q = q.filter(AgentsGroup.deployment.isnot(None))
+
+    for agent in q.all():
+        now = datetime.datetime.utcnow()
+        ag = agent.agents_groups[0].agents_group
+        if ag.deployment['method'] != consts.AGENT_DEPLOYMENT_METHOD_AWS or 'aws' not in ag.deployment or not ag.deployment['aws']:
+            continue
+
+        aws = ag.deployment['aws']
+        if aws['destruction_rule'] != consts.DESTRUCTION_RULE_IDLE_TIME:
+            continue
+
+        last_job = Job.query.filter_by(agent_used=agent).order_by(desc(Job.finished)).first()
+        if not last_job:
+            continue
+
+        dt = now - last_job.finished
+        if dt < datetime.timedelta(seconds=60 * int(aws['idle_time'])):
+            continue
+
+        log.info('destroying machine with agent %s due idle time', agent)
+        agent.disabled = True
+        db.session.commit()
+        t = bg_jobs.destroy_machine.delay(agent.id)
+        log.info('destroy machine with agent %s, bg processing: %s', agent, t)
+
+
+def _check_agents():
+    _check_agents_keep_alive()
+    _check_agents_to_destroy()
 
 
 def main():

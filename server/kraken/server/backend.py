@@ -365,6 +365,18 @@ def _handle_step_result(agent, req):
         job.state = consts.JOB_STATE_EXECUTING_FINISHED
         job.finished = datetime.datetime.utcnow()
         agent.job = None
+        aws = None
+        for aa in agent.agents_groups:
+            ag = aa.agents_group
+            if ag.deployment and ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS and 'aws' in ag.deployment:
+                aws = ag.deployment['aws']
+
+        if aws and aws['destruction_rule'] == consts.DESTRUCTION_RULE_MAX_JOBS:
+            jobs_num = Job.query.filter_by(agent_used=agent).count()
+            if jobs_num >= aws.get('max_jobs', 1):
+                agent.disabled = True
+                t = bg_jobs.destroy_machine.delay(agent.id)
+                log.info('job %s destroy machine with agent %s, bg processing: %s', job, agent, t)
         db.session.commit()
         t = bg_jobs.job_completed.delay(job.id)
         log.info('job %s finished by %s, bg processing: %s', job, agent, t)

@@ -120,34 +120,118 @@
   <h3>Agents Deployment</h3>
   <p-selectButton [options]="deploymentMethods" [(ngModel)]="groupTab.group.deployment.method" optionLabel="name" optionValue="val" dataKey="val"></p-selectButton>
 
-  <div style="margin: 12px 6px 18px 6px;">
+  <div style="margin: 12px 6px 18px 12px;">
     <div *ngIf="groupTab.group.deployment.method == 0">
       <i>No extra configuration needed.</i>
     </div>
 
-    <div *ngIf="groupTab.group.deployment.method == 2">
-      <div class="p-field p-grid">
-        <label for="region" class="p-col-fixed" style="width:100px">Region</label>
-        <div class="p-col">
-          <input id="region" type="text" [(ngModel)]="groupTab.group.deployment.aws.region" pInputText>
+    <!-- AWS -->
+    <div *ngIf="groupTab.group.deployment.method == 2" class="p-d-flex p-ai-start">
+      <!-- column 1 -->
+      <div class="p-mr-4">
+        <h4>General</h4>
+        <div class="p-field p-grid">
+          <label for="region" class="p-col-fixed" style="width:100px">Region</label>
+          <div class="p-col">
+            <input id="region" type="text" [(ngModel)]="groupTab.group.deployment.aws.region" pInputText>
+          </div>
+        </div>
+        <div class="p-field p-grid">
+          <label for="instancesLimit" class="p-col-fixed" style="width:100px">Instances Limit</label>
+          <div class="p-col">
+            <p-inputNumber [(ngModel)]="groupTab.group.deployment.aws.instances_limit" [showButtons]="true"
+                           inputId="instancesLimit"
+                           buttonLayout="horizontal"
+                           spinnerMode="horizontal"
+                           [min]="0"
+                           size="4"
+                           maxlength="5"
+                           decrementButtonClass="p-button-secondary p-button-outlined"
+                           incrementButtonClass="p-button-secondary p-button-outlined"
+                           incrementButtonIcon="pi pi-plus"
+                           decrementButtonIcon="pi pi-minus">
+            </p-inputNumber>
+
+          </div>
+        </div>
+        <div class="p-field p-grid">
+          <label for="defaultImage" class="p-col-fixed" style="width:100px">Default AMI Image</label>
+          <div class="p-col">
+            <input id="defaultImage" type="text" [(ngModel)]="groupTab.group.deployment.aws.default_image" pInputText>
+          </div>
         </div>
       </div>
-      <div class="p-field p-grid">
-        <label for="instanceType" class="p-col-fixed" style="width:100px">Instance Type</label>
-        <div class="p-col">
-          <input id="instanceType" type="text" [(ngModel)]="groupTab.group.deployment.aws.instance_type" pInputText>
+
+      <!-- column 2 -->
+      <div class="p-mr-4">
+        <h4>VM Options</h4>
+        <div class="p-field p-grid">
+          <label for="instanceType" class="p-col-fixed" style="width:100px">Instance Type</label>
+          <div class="p-col">
+            <input id="instanceType" type="text" [(ngModel)]="groupTab.group.deployment.aws.instance_type" pInputText>
+          </div>
+        </div>
+        <div class="p-field-checkbox">
+          <p-checkbox [(ngModel)]="groupTab.group.deployment.aws.spot_instance" binary="true" inputId="spotInstance"></p-checkbox>
+          <label for="spotInstance">Spot Instance</label>
+        </div>
+        <div class="p-field-checkbox">
+          <p-checkbox [(ngModel)]="groupTab.group.deployment.aws.monitoring" binary="true" inputId="monitoring"></p-checkbox>
+          <label for="monitoring">Monitoring</label>
+        </div>
+        <div class="p-field-checkbox">
+          <p-checkbox [(ngModel)]="groupTab.group.deployment.aws.cpu_credits_unlimited" binary="true" inputId="cpuCreditsUnlimited"></p-checkbox>
+          <label for="cpuCreditsUnlimited">CPU Credits Unlimited</label>
         </div>
       </div>
-      <div class="p-field p-grid">
-        <label for="instancesLimit" class="p-col-fixed" style="width:100px">Instances Limit</label>
-        <div class="p-col">
-          <input id="instancesLimit" type="text" [(ngModel)]="groupTab.group.deployment.aws.instances_limit" pInputText>
-        </div>
+
+      <!-- column 3 -->
+      <div class="p-mr-4">
+        <h4>Init Script</h4>
+        <textarea [(ngModel)]="groupTab.group.deployment.aws.init_script" [rows]="10" [cols]="50" style="font-family: monospace;" pInputTextarea></textarea>
       </div>
-      <div class="p-field p-grid">
-        <label for="defaultImage" class="p-col-fixed" style="width:100px">Default Image</label>
-        <div class="p-col">
-          <input id="defaultImage" type="text" [(ngModel)]="groupTab.group.deployment.aws.default_image" pInputText>
+
+      <!-- column 4 -->
+      <div>
+        <h4>Destruction</h4>
+        <div class="p-field-radiobutton">
+          <p-radioButton name="destructionRule" value="1" [(ngModel)]="groupTab.group.deployment.aws.destruction_rule" inputId="keepForever"></p-radioButton>
+          <label for="keepForever">Keep VM for forever (pay for it for forever)</label>
+        </div>
+        <div class="p-field-radiobutton">
+          <p-radioButton name="destructionRule" value="2" [(ngModel)]="groupTab.group.deployment.aws.destruction_rule" inputId="maxJobs"></p-radioButton>
+          <label for="maxJobs">Destroy VM after
+            <p-inputNumber [(ngModel)]="groupTab.group.deployment.aws.max_jobs" [showButtons]="true"
+                           inputId="maxJobsIn"
+                           buttonLayout="horizontal"
+                           spinnerMode="horizontal"
+                           [min]="1"
+                           size="2"
+                           maxlength="4"
+                           decrementButtonClass="p-button-secondary p-button-outlined"
+                           incrementButtonClass="p-button-secondary p-button-outlined"
+                           incrementButtonIcon="pi pi-plus"
+                           decrementButtonIcon="pi pi-minus">
+            </p-inputNumber>
+            jobs</label>
+        </div>
+        <div class="p-field-radiobutton">
+          <p-radioButton name="destructionRule" value="3" [(ngModel)]="groupTab.group.deployment.aws.destruction_rule" inputId="idleTime"></p-radioButton>
+          <label for="idleTime">Destroy VM after
+            <p-inputNumber [(ngModel)]="groupTab.group.deployment.aws.idle_time" [showButtons]="true"
+                           inputId="idleTimeIn"
+                           buttonLayout="horizontal"
+                           spinnerMode="horizontal"
+                           [min]="0"
+                           [step]="5"
+                           size="2"
+                           maxlength="5"
+                           decrementButtonClass="p-button-secondary p-button-outlined"
+                           incrementButtonClass="p-button-secondary p-button-outlined"
+                           incrementButtonIcon="pi pi-plus"
+                           decrementButtonIcon="pi pi-minus">
+            </p-inputNumber>
+            minutes of idle time</label>
         </div>
       </div>
     </div>
