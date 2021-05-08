@@ -206,7 +206,7 @@ task :run_agent_in_lxd_all do
       sh "lxc file push agent/kkagent #{cntr_name}/root/kkagent"
       sh "lxc exec #{cntr_name} -- ./kkagent install -s http://#{LOCALHOST_IP}:8080"
       sh "lxc exec #{cntr_name} -- journalctl -u kraken-agent.service"
-      #sh "lxc exec #{cntr_name} -- journalctl -f -u kraken-agent.service'
+      # sh "lxc exec #{cntr_name} -- journalctl -f -u kraken-agent.service'
     end
   end
 end
