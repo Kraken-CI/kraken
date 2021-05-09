@@ -974,6 +974,8 @@ def spawn_new_agents(self, agents_needed):
 
         with app.app_context():
             server_url = get_setting('general', 'server_url')
+            access_key = get_setting('cloud', 'aws_access_key')
+            secret_access_key = get_setting('cloud', 'aws_secret_access_key')
 
             for (ag_id, sys_id), needed_count in agents_needed:
                 log.info('agents group %d, system id %d: needed %d', ag_id, sys_id, needed_count)
@@ -1024,8 +1026,8 @@ def spawn_new_agents(self, agents_needed):
                     continue
 
                 region = aws['region']
-                ec2 = boto3.client("ec2", region_name=region)
-                ec2_res = boto3.resource('ec2')
+                ec2 = boto3.client("ec2", region_name=region, aws_access_key_id=access_key, aws_secret_access_key=secret_access_key)
+                ec2_res = boto3.resource('ec2', region_name=region, aws_access_key_id=access_key, aws_secret_access_key=secret_access_key)
 
                 # get key pair
                 if not ag.extra_attrs:
@@ -1154,7 +1156,23 @@ def destroy_machine(self, agent_id):
                 log.warning('missing extra_attrs in agent %s', agent)
                 return
 
-            ec2 = boto3.resource('ec2')
+            # find agents group to get region for aws login
+            aws = None
+            for aa in agent.agents_groups:
+                ag = aa.agents_group
+                if ag.deployment and ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS and 'aws' in ag.deployment:
+                    aws = ag.deployment['aws']
+                    break
+
+            if not aws:
+                log.error('cannot find AWS region for agent %s', agent_id)
+                return
+
+            region = aws['region']
+            access_key = get_setting('cloud', 'aws_access_key')
+            secret_access_key = get_setting('cloud', 'aws_secret_access_key')
+            ec2 = boto3.resource('ec2', region_name=region, aws_access_key_id=access_key, aws_secret_access_key=secret_access_key)
+
             instance_id = agent.extra_attrs['instance_id']
             i = ec2.Instance(instance_id)
             i.terminate()
