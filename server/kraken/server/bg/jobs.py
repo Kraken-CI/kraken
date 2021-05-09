@@ -1131,7 +1131,7 @@ def spawn_new_agents(self, agents_needed):
                               extra_attrs=dict(system=sys_id, instance_id=i.id),
                               authorized=True,
                               last_seen=now)
-                    aa = AgentAssignment(agent=a, agents_group=ag)
+                    AgentAssignment(agent=a, agents_group=ag)
                     db.session.commit()
 
     except Exception as exc:
@@ -1144,40 +1144,22 @@ def destroy_machine(self, agent_id):
     try:
         app = _create_app('destroy_machine_%s' % agent_id)
 
-        rsp = requests.get('https://checkip.amazonaws.com')
-        my_ip = rsp.text.strip()
-
         with app.app_context():
             agent = Agent.query.filter_by(id=int(agent_id)).one_or_none()
             if agent is None:
                 log.error('cannot find agent id:%d', agent_id)
                 return
 
-            ag = None
-            for aa in agent.agents_groups:
-                ag = aa.agents_group
-                if ag.deployment and ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS and 'aws' in ag.deployment:
-                    break
-                else:
-                    ag = None
-
-            if not ag:
-                log.error('cannot find agent group for agent id:%d', agent_id)
-                return
-
-            aws = ag.deployment['aws']
-
-            ec2 = boto3.resource('ec2')
-
             if not agent.extra_attrs:
                 log.warning('missing extra_attrs in agent %s', agent)
                 return
 
+            ec2 = boto3.resource('ec2')
             instance_id = agent.extra_attrs['instance_id']
             i = ec2.Instance(instance_id)
             i.terminate()
 
-            log.info('terminate %s', i)
+            log.info('terminate machine %s', i)
 
             agent.deleted = datetime.datetime.utcnow()
             agent.disabled = True

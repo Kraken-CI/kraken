@@ -54,12 +54,12 @@ export class GroupsPageComponent implements OnInit {
     ) {
         this.deploymentMethods = [
             {name: 'Manual', val: 0},
-            //{name: 'SSH', val: 1},
+            // {name: 'SSH', val: 1},
             {name: 'Amazon Web Services', val: 2},
-            //{name: 'Google Cloud Platform', val: 3},
-            //{name: 'Microsoft Azure', val: 4},
-            //{name: 'Digital Ocean', val: 5},
-            //{name: 'Linode', val: 6},
+            // {name: 'Google Cloud Platform', val: 3},
+            // {name: 'Microsoft Azure', val: 4},
+            // {name: 'Digital Ocean', val: 5},
+            // {name: 'Linode', val: 6},
         ]
     }
 
