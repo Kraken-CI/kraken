@@ -974,6 +974,8 @@ def spawn_new_agents(self, agents_needed):
 
         with app.app_context():
             server_url = get_setting('general', 'server_url')
+            minio_addr = get_setting('general', 'minio_addr')
+            clickhouse_addr = get_setting('general', 'clickhouse_addr')
             access_key = get_setting('cloud', 'aws_access_key')
             secret_access_key = get_setting('cloud', 'aws_secret_access_key')
 
@@ -1082,11 +1084,11 @@ def spawn_new_agents(self, agents_needed):
                 # TODO: fix http/https and hardcoded 8080 port
                 init_script = """#!/usr/bin/env bash
                                  exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
-                                 wget -O agent %s/install/agent
+                                 wget -O agent {server_url}/install/agent
                                  chmod a+x agent
-                                 ./agent install -s %s
+                                 ./agent install -s {server_url} -m {minio_addr} -c {clickhouse_addr}
                               """
-                init_script %= (server_url, server_url)
+                init_script = init_script.format(server_url=server_url, minio_addr=minio_addr, clickhouse_addr=clickhouse_addr)
                 if aws.get('init_script', False):
                     init_script += aws['init_script']
 
@@ -1174,10 +1176,12 @@ def destroy_machine(self, agent_id):
             ec2 = boto3.resource('ec2', region_name=region, aws_access_key_id=access_key, aws_secret_access_key=secret_access_key)
 
             instance_id = agent.extra_attrs['instance_id']
-            i = ec2.Instance(instance_id)
-            i.terminate()
-
-            log.info('terminate machine %s', i)
+            log.info('terminate machine %s', instance_id)
+            try:
+                i = ec2.Instance(instance_id)
+                i.terminate()
+            except Exception:
+                log.exception('IGNORED EXCEPTION')
 
             agent.deleted = datetime.datetime.utcnow()
             agent.disabled = True

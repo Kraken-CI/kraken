@@ -16,8 +16,12 @@ import { SettingsService } from '../services/settings.service'
 export class SettingsPageComponent implements OnInit {
     settings: any
 
+    tabIndex = 0
+
     generalForm = new FormGroup({
         server_url: new FormControl(''),
+        minio_addr: new FormControl(''),
+        clickhouse_addr: new FormControl(''),
     })
 
     notificationForm = new FormGroup({
@@ -70,12 +74,28 @@ export class SettingsPageComponent implements OnInit {
     }
 
     saveSettings() {
-        const settings = {
-            general: this.generalForm.value,
-            notification: this.notificationForm.value,
-            monitoring: this.monitoringForm.value,
-            cloud: this.cloudForm.value,
+        const settings: any = {}
+
+        // save settings from current tab
+        switch (this.tabIndex) {
+        case 0:
+            settings.general = this.generalForm.value
+            break
+        case 1:
+            settings.notification = this.notificationForm.value
+            break
+        case 2:
+            settings.monitoring = this.monitoringForm.value
+            break
+        case 3:
+            settings.cloud = this.cloudForm.value
+            break
         }
+
+        console.info('IDX', this.tabIndex)
+        console.info('settings', settings)
+        return
+
         this.settingsService.updateSettings(settings).subscribe(
             (settings2) => {
                 this.settings = settings2
