@@ -50,6 +50,7 @@ def _create_app(task_name):
     db_url = os.environ.get('KRAKEN_DB_URL', consts.DEFAULT_DB_URL)
 
     logs.setup_logging('celery')
+    log.set_ctx(tool=task_name)
 
     # Create  Flask app instance
     app = Flask('Kraken Background')
