@@ -214,8 +214,8 @@ def _notify_github(run, event, gh):
     server_url = _get_srv_url()
     run_url = urljoin(server_url, '/runs/%d' % run.id)
 
-    head = run.flow.trigger_data['after']
-    repo_parts = run.flow.trigger_data['repo'].split('/')
+    head = run.flow.trigger_data.data[0]['after']
+    repo_parts = run.flow.trigger_data.data[0]['repo'].split('/')
     org = repo_parts[-2]
     repo_name = repo_parts[-1]
     if repo_name.endswith('.git'):
