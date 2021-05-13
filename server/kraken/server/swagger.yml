@@ -1247,6 +1247,33 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
+  /celery-logs/{task_name}:
+    get:
+      tags:
+      - Management
+      summary: Get celery logs
+      description: Get celery logs
+      operationId: get_celery_logs
+      parameters:
+      - name: task_name
+        in: path
+        required: true
+        description: ID of pet to return
+        schema:
+          type: string
+      responses:
+        200:
+          description: A paged array of logs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CeleryLogs'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
   /agents:
     get:
       tags:
@@ -1801,6 +1828,32 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Log'
+        total:
+          type: integer
+          format: int64
+        bookmarks:
+          type: object
+          properties:
+            first:
+              type: string
+            last:
+              type: string
+        job:
+          $ref: '#/components/schemas/Job'
+    CeleryLog:
+      type: object
+      properties:
+        time:
+          type: string
+        message:
+          type: string
+    CeleryLogs:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CeleryLog'
         total:
           type: integer
           format: int64

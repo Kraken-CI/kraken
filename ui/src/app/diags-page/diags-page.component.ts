@@ -10,7 +10,8 @@ import { ManagementService } from '../backend/api/management.service'
     styleUrls: ['./diags-page.component.sass'],
 })
 export class DiagsPageComponent implements OnInit {
-    data = {}
+    data: any = {celery: {}}
+    celeryLogs: any = []
 
     constructor(
         protected breadcrumbService: BreadcrumbsService,
@@ -32,6 +33,11 @@ export class DiagsPageComponent implements OnInit {
 
         this.managementService.getDiagnostics().subscribe((data) => {
             this.data = data
+        })
+    }
+    showCeleryLogs(taskName) {
+        this.managementService.getCeleryLogs(taskName).subscribe((data) => {
+            this.celeryLogs = data.items
         })
     }
 }

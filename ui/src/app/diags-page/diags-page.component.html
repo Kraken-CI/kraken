@@ -10,7 +10,37 @@
         <i *ngIf="s.value.open === 'true'" class="pi pi-times-circle" style="font-size: 2em; color: red;"></i>
       </div>
     </div>
+  </p-tabPanel>
 
+  <p-tabPanel header="Celery">
+    <div>
+      <h3>Current Tasks</h3>
+      <div *ngFor="let t of data.celery.current_tasks">
+        {{ t }}
+      </div>
+
+      <h3>Last Tasks Logs</h3>
+      <div style="display: flex;">
+        <table style="margin-right: 30px;">
+          <tr *ngFor="let t of data.celery.last_tasks">
+
+            <td style="padding-right: 2em;">{{ t[0] | localtime }}</td>
+            <td style="padding-right: 2em;">{{ t[1] }}</td>
+            <td>
+              <p-button label="Show {{ t[2] }} lines" icon="pi pi-trash" styleClass="p-button-sm p-button-outlined" (onClick)="showCeleryLogs(t[1])"></p-button>
+            </td>
+          </tr>
+        </table>
+
+        <div style="height: 500px; width: 80em; font-family: monospace; font-size: 0.8em; color: #eee; background-color: #222; padding: 10px; overflow-y: scroll;">
+          <div *ngFor="let l of celeryLogs">
+            <span style="padding-right: 2em;"> {{ l.time | localtime }}</span>
+            {{ l.message }}
+          </div>
+        </div>
+      </div>
+
+    </div>
   </p-tabPanel>
 
 </p-tabView>

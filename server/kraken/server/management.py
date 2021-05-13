@@ -17,17 +17,20 @@ import json
 import logging
 import datetime
 import xmlrpc.client
+from urllib.parse import urlparse
 
 from flask import abort
 from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy.orm import joinedload
 import pytimeparse
+import clickhouse_driver
 
 from . import consts, srvcheck
 from .models import db, Branch, Stage, Agent, AgentsGroup, Secret, AgentAssignment, Setting
 from .models import Project, BranchSequence
 from .schema import check_and_correct_stage_schema, SchemaError, execute_schema_code
 from .schema import prepare_new_planner_triggers
+from .bg.clry import app as clryapp
 
 log = logging.getLogger(__name__)
 
@@ -599,9 +602,6 @@ def get_branch_sequences(branch_id):
 def get_diagnostics():
     diags = {}
 
-    # check clickhouse
-    # TODO
-
     # check postgresql
     pgsql_addr = os.environ.get('KRAKEN_DB_URL', consts.DEFAULT_DB_URL)
     pgsql_open = srvcheck.is_addr_open(pgsql_addr)
@@ -611,11 +611,21 @@ def get_diagnostics():
         'open': pgsql_open
     }
 
+    # check clickhouse
+    ch_url = os.environ.get('KRAKEN_CLICKHOUSE_URL', consts.DEFAULT_CLICKHOUSE_URL)
+    ch_open = srvcheck.is_addr_open(ch_url)
+    diags['clickhouse'] = {
+        'name': 'ClickHouse',
+        'address': ch_url,
+        'open': ch_open
+    }
+
     # check redis
     rds_addr = os.environ.get('KRAKEN_REDIS_ADDR', consts.DEFAULT_REDIS_ADDR)
     rds_open = srvcheck.is_addr_open(rds_addr, 6379)
     diags['redis'] = {
         'name': 'Redis',
+        'address': rds_addr,
         'open': rds_open
     }
 
@@ -628,4 +638,51 @@ def get_diagnostics():
         'open': plnr_open
     }
 
+    # celery overview
+    diags['celery'] = {
+        'name': 'Celery',
+        'address': '',
+        'open': True,
+    }
+
+    # get current celery tasks
+    with clryapp.pool.acquire(block=True) as conn:
+        tasks = conn.default_channel.client.lrange('celery', 0, -1)
+    diags['celery']['current_tasks'] = []
+    for task in tasks:
+        t = json.loads(task)
+        diags['celery']['current_tasks'].append(t)
+
+    # get the last celery tasks
+    if ch_open:
+        o = urlparse(ch_url)
+        ch = clickhouse_driver.Client(host=o.hostname)
+
+        now = datetime.datetime.utcnow()
+        start_date = now - datetime.timedelta(hours=12)
+        start_date = start_date.strftime("%Y-%m-%d %H:%M:%S.0000")
+        # start_date = '2021-05-06 03:20:00.0000'
+        query = "select min(time) as mt, tool, count(*) from logs where service = 'celery' and tool != '' group by tool having mt > '%s' limit 100;" % start_date
+        resp = ch.execute(query)
+        diags['celery']['last_tasks'] = resp
+    else:
+        diags['celery']['last_tasks'] = []
+
     return diags
+
+
+def  get_celery_logs(task_name):
+    ch_url = os.environ.get('KRAKEN_CLICKHOUSE_URL', consts.DEFAULT_CLICKHOUSE_URL)
+    o = urlparse(ch_url)
+    ch = clickhouse_driver.Client(host=o.hostname)
+
+    query = "select time,message from logs where service = 'celery' and tool = '%s' order by time asc, seq asc limit 1000;" % task_name
+    rows = ch.execute(query)
+
+    logs = []
+    for r in rows:
+        entry = dict(time=r[0],
+                     message=r[1])
+        logs.append(entry)
+
+    return {'items': logs, 'total': len(logs)}, 200
