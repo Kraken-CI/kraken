@@ -659,16 +659,14 @@ def get_diagnostics():
         ch = clickhouse_driver.Client(host=o.hostname)
 
         now = datetime.datetime.utcnow()
-        start_date = now - datetime.timedelta(hours=12)
-        start_date = start_date.strftime("%Y-%m-%d %H:%M:%S.0000")
-        # start_date = '2021-05-06 03:20:00.0000'
+        start_date = now - datetime.timedelta(hours=1112)
         query = "select max(time) as mt, tool, count(*) from logs "
         query += "where service = 'celery' and tool != '' "
         query += "group by tool "
-        query += "having mt > '%s' " % start_date
+        query += "having mt > %(start_date)s "
         query += "order by mt desc "
         query += "limit 100;"
-        resp = ch.execute(query)
+        resp = ch.execute(query, {'start_date': start_date})
         diags['celery']['last_tasks'] = resp
     else:
         diags['celery']['last_tasks'] = []
@@ -681,11 +679,11 @@ def  get_celery_logs(task_name):
     o = urlparse(ch_url)
     ch = clickhouse_driver.Client(host=o.hostname)
 
-    query = "select time,message from logs where service = 'celery' and tool = '%s' order by time asc, seq asc limit 1000;" % task_name
-    rows = ch.execute(query)
+    query = "select time,message from logs where service = 'celery' and tool = %(task_name)s order by time desc, seq desc limit 1000;"
+    rows = ch.execute(query, {'task_name': task_name})
 
     logs = []
-    for r in rows:
+    for r in reversed(rows):
         entry = dict(time=r[0],
                      message=r[1])
         logs.append(entry)
