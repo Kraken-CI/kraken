@@ -17,10 +17,11 @@ def test_notify_github_start():
             }
         }
     }
-    run.flow.trigger_data = {
+    run.flow.trigger_data = MagicMock()
+    run.flow.trigger_data.data = [{
         'after': 'sha1',
         'repo': 'http://gh.com/Kraken-CI/kraken.git',
-    }
+    }]
     s = SecretStub()
     s.deleted = False
     s.kind = consts.SECRET_KIND_SIMPLE
@@ -56,10 +57,11 @@ def test_notify_github_end():
             }
         }
     }
-    run.flow.trigger_data = {
+    run.flow.trigger_data = MagicMock()
+    run.flow.trigger_data.data = [{
         'after': 'sha1',
         'repo': 'http://gh.com/Kraken-CI/kraken.git',
-    }
+    }]
 
     with patch('requests.post') as rp, patch('kraken.server.notify._get_srv_url', return_value='http://aa.pl'):
         notify.notify(run, 'end')

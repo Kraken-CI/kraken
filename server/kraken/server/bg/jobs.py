@@ -1060,7 +1060,7 @@ def spawn_new_agents(self, agents_needed):
                 try:
                     sec_grp = ec2.describe_security_groups(GroupNames=[grp_name])
                 except:
-                    pass
+                    log.exception('IGNORED EXCEPTION')
                 if not sec_grp:
                     default_vpc = list(ec2_res.vpcs.filter(Filters=[{'Name': 'isDefault', 'Values': ['true']}]))[0]
                     sec_grp = default_vpc.create_security_group(GroupName=grp_name,
