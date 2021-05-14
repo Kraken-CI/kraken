@@ -1059,7 +1059,7 @@ def spawn_new_agents(self, agents_needed):
                 sec_grp = None
                 try:
                     sec_grp = ec2.describe_security_groups(GroupNames=[grp_name])
-                except:
+                except Exception:
                     log.exception('IGNORED EXCEPTION')
                 if not sec_grp:
                     default_vpc = list(ec2_res.vpcs.filter(Filters=[{'Name': 'isDefault', 'Values': ['true']}]))[0]
@@ -1125,7 +1125,7 @@ def spawn_new_agents(self, agents_needed):
                 for i in instances:
                     try:
                         i.wait_until_running()
-                    except:
+                    except Exception:
                         log.exception('IGNORED EXCEPTION')
                         continue
                     i.load()

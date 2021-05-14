@@ -92,10 +92,6 @@ export class SettingsPageComponent implements OnInit {
             break
         }
 
-        console.info('IDX', this.tabIndex)
-        console.info('settings', settings)
-        return
-
         this.settingsService.updateSettings(settings).subscribe(
             (settings2) => {
                 this.settings = settings2
