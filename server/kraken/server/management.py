@@ -662,8 +662,12 @@ def get_diagnostics():
         start_date = now - datetime.timedelta(hours=12)
         start_date = start_date.strftime("%Y-%m-%d %H:%M:%S.0000")
         # start_date = '2021-05-06 03:20:00.0000'
-        query = "select min(time) as mt, tool, count(*) from logs "
-        query += "where service = 'celery' and tool != '' group by tool having mt > '%s' limit 100;" % start_date
+        query = "select max(time) as mt, tool, count(*) from logs "
+        query += "where service = 'celery' and tool != '' "
+        query += "group by tool "
+        query += "having mt > '%s' " % start_date
+        query += "order by mt desc "
+        query += "limit 100;"
         resp = ch.execute(query)
         diags['celery']['last_tasks'] = resp
     else:

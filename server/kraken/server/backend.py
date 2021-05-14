@@ -365,14 +365,19 @@ def _handle_step_result(agent, req):
         job.state = consts.JOB_STATE_EXECUTING_FINISHED
         job.finished = datetime.datetime.utcnow()
         agent.job = None
+
+        # check if aws machine should be destroyed now
         aws = None
         for aa in agent.agents_groups:
             ag = aa.agents_group
             if ag.deployment and ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS and 'aws' in ag.deployment:
                 aws = ag.deployment['aws']
+        log.info('JOB %s, aws %s', job.id, aws)
 
         if aws and aws['destruction_rule'] == consts.DESTRUCTION_RULE_MAX_JOBS:
+            log.info('JOB %s, destruction_rule %s', job.id, aws['destruction_rule'])
             jobs_num = Job.query.filter_by(agent_used=agent).count()
+            log.info('JOB %s, num %d, max %d', job.id, jobs_num, aws.get('max_jobs', 1))
             if jobs_num >= aws.get('max_jobs', 1):
                 agent.disabled = True
                 t = bg_jobs.destroy_machine.delay(agent.id)
