@@ -16,16 +16,3 @@ import logging
 import functools
 
 log = logging.getLogger(__name__)
-
-
-def log_wrap(name):
-    def _outer(func):
-        @functools.wraps(func)
-        def _inner(*args, **kwargs):
-            log.set_ctx(tool=name)
-            try:
-                return func(*args, **kwargs)
-            finally:
-                log.set_ctx(tool=None)
-        return _inner
-    return _outer

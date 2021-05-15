@@ -19,6 +19,7 @@ import logging
 
 import connexion
 from connexion.resolver import Resolver
+from flask import request
 
 from . import logs
 from . import models
@@ -42,20 +43,37 @@ class MyResolver(Resolver):
         name = 'kraken.server.{}.{}'.format(tags[0].lower(), operation_id)
         return name
 
-    def resolve_function_from_operation_id(self, op_id):
-        func = super().resolve_function_from_operation_id(op_id)
-        def _inner(*args, **kwargs):
-            log.set_ctx(tool='api')
-            try:
-                if 'user' in kwargs:
-                    del kwargs['user']
-                if 'token_info' in kwargs:
-                    del kwargs['token_info']
-                return func(*args, **kwargs)
-            finally:
-                log.set_ctx(tool=None)
 
-        return _inner
+def _set_log_ctx():
+    if request.path.startswith('/api'):
+        name = 'api'
+    elif request.path.startswith('/backend'):
+        name = 'backend'
+    elif request.path.startswith('/install'):
+        name = 'install'
+    elif request.path.startswith('/artifacts'):
+        name = 'artifacts'
+    elif request.path.startswith('/job_log'):
+        name = 'job-log'
+    elif request.path.startswith('/branch-badge'):
+        name = 'badge'
+    elif request.path.startswith('/webhooks'):
+        name = 'webhooks'
+    else:
+        name = 'other'
+
+    try:
+        log.set_ctx(tool=None)
+    except Exception:
+        pass
+
+
+def _clear_log_ctx(a):
+    try:
+        log.set_ctx(tool=None)
+    except Exception:
+        pass
+
 
 def create_app():
     # addresses
@@ -117,6 +135,9 @@ def create_app():
     # branch status badge
     app.add_url_rule("/branch-badge/<branch_id>", view_func=badge.get_branch_badge, methods=['GET'], defaults={'what': None})
     app.add_url_rule("/branch-badge/<branch_id>/<what>", view_func=badge.get_branch_badge, methods=['GET'])
+
+    app.before_request(_set_log_ctx)
+    app.teardown_request(_clear_log_ctx)
 
     return connex_app
 

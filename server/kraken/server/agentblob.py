@@ -18,7 +18,6 @@ import logging
 from flask import send_file, abort, make_response
 
 from .models import get_setting
-from .utils import log_wrap
 
 log = logging.getLogger(__name__)
 
@@ -74,7 +73,6 @@ echo 'Kraken Agent installed'
 '''
 
 
-@log_wrap('install')
 def serve_agent_blob(blob):
     if blob not in ['agent', 'tool', 'kraken-agent-install.sh']:
         abort(404)

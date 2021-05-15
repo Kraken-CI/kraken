@@ -32,7 +32,6 @@ from . import consts
 from .bg import jobs as bg_jobs
 from . import minioops
 from .. import version
-from .utils import log_wrap
 
 log = logging.getLogger(__name__)
 
@@ -508,7 +507,6 @@ def _handle_unknown_agent(address, ip_address):
     db.session.commit()
 
 
-@log_wrap('backend')
 def serve_agent_request():
     req = request.get_json()
     # log.info('request headers: %s', request.headers)
@@ -564,5 +562,3 @@ def serve_agent_request():
 
     log.info('sending response: %s', str(response)[:200])
     return json.dumps(response)
-
-    log.set_ctx(job=agent.job_id)

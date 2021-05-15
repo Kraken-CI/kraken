@@ -30,6 +30,7 @@ export class DiagsPageComponent implements OnInit {
             {name: 'server/install', value: 'server/install'},
             {name: 'server/job-log', value: 'server/job-log'},
             {name: 'server/badge', value: 'server/badge'},
+            {name: 'server/other', value: 'server/other'},
             {name: 'celery', value: 'celery'},
             {name: 'scheduler', value: 'scheduler'},
             {name: 'planner', value: 'planner'},

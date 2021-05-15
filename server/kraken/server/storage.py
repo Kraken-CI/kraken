@@ -25,7 +25,6 @@ import minio
 
 from .models import Run, Flow
 from . import consts
-from .utils import log_wrap
 
 
 log = logging.getLogger('storage')
@@ -108,11 +107,9 @@ def serve_artifact(store_type, flow_id, run_id, path):
     return resp
 
 
-@log_wrap('artifacts')
 def serve_flow_artifact(store_type, flow_id, path):
     return serve_artifact(store_type, flow_id, None, path)
 
 
-@log_wrap('artifacts')
 def serve_run_artifact(store_type, run_id, path):
     return serve_artifact(store_type, None, run_id, path)
