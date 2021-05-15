@@ -717,7 +717,7 @@ class AgentsGroup(db.Model, DatesMixin):
         if not deployment:
             deployment = dict(
                 method=0,
-                aws=dict(region='', instances_limit=5, default_image='', instance_type='', destruction_rule=2, max_jobs=1, idle_time=0))
+                aws=dict(region='', instances_limit=5, default_image='', instance_type='', destruction_rule="2", max_jobs=1, idle_time=0))
 
         return dict(id=self.id,
                     created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,

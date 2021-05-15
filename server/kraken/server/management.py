@@ -714,8 +714,6 @@ def  get_services_logs(services):
         where = " or ".join(where)
         query += "where " + where + " "
     query += "order by time desc, seq desc limit 1000"
-    log.info(query)
-    log.info(params)
     rows = ch.execute(query, params)
 
     logs = []

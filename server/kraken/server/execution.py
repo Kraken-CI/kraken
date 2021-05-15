@@ -374,7 +374,7 @@ def  get_job_logs(job_id, start=0, limit=200, order=None, internals=False, filte
 
     internal_clause = ''
     if not internals:
-        internal_clause = "and tool != '' and service != 'celery'"
+        internal_clause = "and tool != '' and service = 'agent'"
 
     query = "select count(*) from logs where job = %%(job_id)d %s" % internal_clause
     params = dict(job_id=job_id)
@@ -387,8 +387,6 @@ def  get_job_logs(job_id, start=0, limit=200, order=None, internals=False, filte
     query = "select time,message,service,host,level,job,tool,step from logs where job = %%(job_id)d %s order by time %s, seq %s limit %%(start)d, %%(limit)d"
     query %= (internal_clause, order, order)
     params = dict(job_id=job_id, start=start, limit=limit)
-
-    log.info(query)
 
     rows = ch.execute(query, params)
 

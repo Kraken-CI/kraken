@@ -1284,7 +1284,6 @@ paths:
       parameters:
       - name: services
         in: query
-        required: true
         description: ID of pet to return
         schema:
           type: array
