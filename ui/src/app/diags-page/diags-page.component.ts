@@ -12,12 +12,30 @@ import { ManagementService } from '../backend/api/management.service'
 export class DiagsPageComponent implements OnInit {
     data: any = {celery: {}}
     celeryLogs: any = []
+    logServices: any = []
+    logServicesSelected: string[] = []
+    servicesLogs: any = []
 
     constructor(
         protected breadcrumbService: BreadcrumbsService,
         protected managementService: ManagementService,
         private titleService: Title
-    ) {}
+    ) {
+        this.logServices = [
+            {name: 'server', value: 'server'},
+            {name: 'server/api', value: 'server/api'},
+            {name: 'server/backend', value: 'server/backend'},
+            {name: 'server/webhooks', value: 'server/webhooks'},
+            {name: 'server/artifacts', value: 'server/artifacts'},
+            {name: 'server/install', value: 'server/install'},
+            {name: 'server/job-log', value: 'server/job-log'},
+            {name: 'server/badge', value: 'server/badge'},
+            {name: 'celery', value: 'celery'},
+            {name: 'scheduler', value: 'scheduler'},
+            {name: 'planner', value: 'planner'},
+            {name: 'watchdog', value: 'watchdog'},
+        ]
+    }
 
     ngOnInit() {
         this.titleService.setTitle('Kraken - Diagnostics')
@@ -38,6 +56,12 @@ export class DiagsPageComponent implements OnInit {
     showCeleryLogs(taskName) {
         this.managementService.getCeleryLogs(taskName).subscribe((data) => {
             this.celeryLogs = data.items
+        })
+    }
+
+    loadServicesLogs() {
+        this.managementService.getServicesLogs(this.logServicesSelected).subscribe((data) => {
+            this.servicesLogs = data.items
         })
     }
 }

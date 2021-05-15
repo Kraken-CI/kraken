@@ -1,4 +1,4 @@
-# Copyright 2020 The Kraken Authors
+# Copyright 2020-2021 The Kraken Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import clickhouse_driver
 
 from . import consts
 from .models import Job
+from .utils import log_wrap
 
 
 log = logging.getLogger(__name__)
@@ -63,6 +64,7 @@ class JobLogDownloader:
         return self.send_logs()
 
 
+@log_wrap('job-log')
 def serve_job_log(job_id):
     job = Job.query.filter_by(id=job_id).one_or_none()
     if job is None:

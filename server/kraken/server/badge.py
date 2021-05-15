@@ -19,8 +19,10 @@ import redis
 from flask import abort, redirect
 
 from . import consts
+from .utils import log_wrap
 
 
+@log_wrap('badge')
 def get_branch_badge(branch_id, what=None):
     # get redis reference
     redis_addr = os.environ.get('KRAKEN_REDIS_ADDR', consts.DEFAULT_REDIS_ADDR)

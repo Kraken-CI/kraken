@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright 2020 The Kraken Authors
+# Copyright 2020-2021 The Kraken Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -42,6 +42,20 @@ class MyResolver(Resolver):
         name = 'kraken.server.{}.{}'.format(tags[0].lower(), operation_id)
         return name
 
+    def resolve_function_from_operation_id(self, op_id):
+        func = super().resolve_function_from_operation_id(op_id)
+        def _inner(*args, **kwargs):
+            log.set_ctx(tool='api')
+            try:
+                if 'user' in kwargs:
+                    del kwargs['user']
+                if 'token_info' in kwargs:
+                    del kwargs['token_info']
+                return func(*args, **kwargs)
+            finally:
+                log.set_ctx(tool=None)
+
+        return _inner
 
 def create_app():
     # addresses

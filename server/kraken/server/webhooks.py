@@ -21,10 +21,12 @@ from flask import Blueprint, request, abort
 
 from .models import Project
 from .bg import jobs as bg_jobs
+from .utils import log_wrap
 
 log = logging.getLogger(__name__)
 
 
+@log_wrap('webhooks')
 def handle_github_webhook(project_id):
     payload = request.get_data()
     log.info('GITHUB for project_id:%s, payload: %s', project_id, payload)

@@ -689,3 +689,43 @@ def  get_celery_logs(task_name):
         logs.append(entry)
 
     return {'items': logs, 'total': len(logs)}, 200
+
+
+def  get_services_logs(services):
+    ch_url = os.environ.get('KRAKEN_CLICKHOUSE_URL', consts.DEFAULT_CLICKHOUSE_URL)
+    o = urlparse(ch_url)
+    ch = clickhouse_driver.Client(host=o.hostname)
+
+    query = "select time,message,service,host,level,tool from logs "
+    where = []
+    params = {}
+    for idx, s in enumerate(services):
+        param = 'service%d' % idx
+        if '/' in s:
+            s, t = s.split('/')
+            tparam = 'tool%d' % idx
+            where.append("(service = %%(%s)s and tool = %%(%s)s)" % (param, tparam))
+            params[param] = s
+            params[tparam] = t
+        else:
+            where.append("service = %%(%s)s" % param)
+            params[param] = s
+    if where:
+        where = " or ".join(where)
+        query += "where " + where + " "
+    query += "order by time desc, seq desc limit 1000"
+    log.info(query)
+    log.info(params)
+    rows = ch.execute(query, params)
+
+    logs = []
+    for r in reversed(rows):
+        entry = dict(time=r[0],
+                     message=r[1],
+                     service=r[2],
+                     host=r[3],
+                     level=r[4],
+                     tool=r[5])
+        logs.append(entry)
+
+    return {'items': logs, 'total': len(logs)}, 200

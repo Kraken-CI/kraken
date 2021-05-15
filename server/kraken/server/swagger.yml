@@ -1274,6 +1274,35 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
+  /services-logs:
+    get:
+      tags:
+      - Management
+      summary: Get services logs
+      description: Get services logs
+      operationId: get_services_logs
+      parameters:
+      - name: services
+        in: query
+        required: true
+        description: ID of pet to return
+        schema:
+          type: array
+          items:
+            type: string
+      responses:
+        200:
+          description: A paged array of logs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServicesLogs'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
   /agents:
     get:
       tags:
@@ -1854,6 +1883,40 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CeleryLog'
+        total:
+          type: integer
+          format: int64
+        bookmarks:
+          type: object
+          properties:
+            first:
+              type: string
+            last:
+              type: string
+        job:
+          $ref: '#/components/schemas/Job'
+    ServicesLog:
+      type: object
+      properties:
+        time:
+          type: string
+        message:
+          type: string
+        service:
+          type: string
+        host:
+          type: string
+        level:
+          type: string
+        tool:
+          type: string
+    ServicesLogs:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServicesLog'
         total:
           type: integer
           format: int64

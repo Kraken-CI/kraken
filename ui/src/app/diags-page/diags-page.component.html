@@ -27,7 +27,7 @@
             <td style="padding-right: 2em;">{{ t[0] | localtime }}</td>
             <td style="padding-right: 2em;">{{ t[1] }}</td>
             <td>
-              <p-button label="Show {{ t[2] }} lines" icon="pi pi-trash" styleClass="p-button-sm p-button-outlined" (onClick)="showCeleryLogs(t[1])"></p-button>
+              <p-button label="Show {{ t[2] }} lines" icon="pi pi-refresh" styleClass="p-button-sm p-button-outlined" (onClick)="showCeleryLogs(t[1])"></p-button>
             </td>
           </tr>
         </table>
@@ -40,6 +40,24 @@
         </div>
       </div>
 
+    </div>
+  </p-tabPanel>
+
+  <p-tabPanel header="Logs">
+    <div style="display: flex;">
+      <p-selectButton [options]="logServices" [(ngModel)]="logServicesSelected" multiple="multiple" optionLabel="name" optionValue="value" (onChange)="loadServicesLogs()"></p-selectButton>
+      <p-button label="Refresh" icon="pi pi-refresh" (onClick)="loadServicesLogs()" [style]="{'margin-left': '30px'}"></p-button>
+    </div>
+
+    <div style="height: 700px; width: 140em; font-family: monospace; font-size: 0.8em; color: #eee; background-color: #222; padding: 10px; overflow-y: scroll; margin-top: 20px;">
+      <div *ngFor="let l of servicesLogs" style="display: flex;">
+        <div style="width: 13em; margin-right: 1em; flex: none;"> {{ l.time | localtime }}</div>
+        <div style="width: 7em; margin-right: 1em; flex: none;"> {{ l.host }}</div>
+        <div style="width: 7em; margin-right: 1em; flex: none;"> {{ l.service }}</div>
+        <div style="width: 9em; margin-right: 1em; flex: none; overflow-x: hidden;"> {{ l.tool }}</div>
+        <div style="width: 4em; margin-right: 1em; flex: none;" [ngClass]="'level-' + l.level.slice(0, 4).toLowerCase()"> {{ l.level.slice(0, 4) }}</div>
+        <div style="white-space: pre-wrap; word-break: break-word;">{{ l.message }}</div>
+      </div>
     </div>
   </p-tabPanel>
 
