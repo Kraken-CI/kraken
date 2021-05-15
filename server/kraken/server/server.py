@@ -63,7 +63,7 @@ def _set_log_ctx():
         name = 'other'
 
     try:
-        log.set_ctx(tool=None)
+        log.set_ctx(tool=name)
     except Exception:
         pass
 
