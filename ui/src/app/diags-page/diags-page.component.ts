@@ -13,7 +13,6 @@ import { ManagementService } from '../backend/api/management.service'
 export class DiagsPageComponent implements OnInit {
     tabIndex = 0
     data: any = {celery: {}}
-    celeryLogs: any = []
     logServices: any = []
     logServicesSelected: string[] = []
     servicesLogs: any = []
@@ -22,6 +21,9 @@ export class DiagsPageComponent implements OnInit {
     // services logs filtering
     logLevels: any[]
     logLevel: any
+
+    celeryTasks: any[]
+    celeryTask: any = 'all'
 
     constructor(
         private route: ActivatedRoute,
@@ -50,6 +52,8 @@ export class DiagsPageComponent implements OnInit {
             {label: 'Warning', value: 'warning'},
             {label: 'Error', value: 'error'},
         ]
+
+        this.celeryTasks = [{label: '-- all --', value: 'all'}]
     }
 
     ngOnInit() {
@@ -64,21 +68,22 @@ export class DiagsPageComponent implements OnInit {
             },
         ])
 
-        this.managementService.getDiagnostics().subscribe((data) => {
-            this.data = data
-        })
-
         this.route.queryParamMap.subscribe(
             (params) => {
-                if (params.get('tab') == 'logs') {
-                    this.tabIndex = 2
+                if (params.get('tab') === 'logs') {
+                    this.tabIndex = 1
+                    this.loadLastCeleryTaskNames()
+
+                    const level = params.get('level')
+                    if (['info', 'warning', 'error'].includes(level) && this.logLevel !== level) {
+                        this.logLevel = level
+                        this.loadServicesLogs()
+                    }
                 } else {
                     this.tabIndex = 0
-                }
-                const level = params.get('level')
-                if (['info', 'warning', 'error'].includes(level) && this.logLevel !== level) {
-                    this.logLevel = level
-                    this.loadServicesLogs()
+                    this.managementService.getDiagnostics().subscribe((data) => {
+                        this.data = data
+                    })
                 }
             },
             (error) => {
@@ -86,9 +91,13 @@ export class DiagsPageComponent implements OnInit {
             }
         )
     }
-    showCeleryLogs(taskName) {
-        this.managementService.getCeleryLogs(taskName).subscribe((data) => {
-            this.celeryLogs = data.items
+
+    loadLastCeleryTaskNames() {
+        this.managementService.getLastCeleryTaskNames().subscribe((data) => {
+            this.celeryTasks = [{label: '-- all --', value: 'all'}]
+            for (let t of data.items) {
+                this.celeryTasks.push({label: t.name, value: t.name})
+            }
         })
     }
 
@@ -97,7 +106,18 @@ export class DiagsPageComponent implements OnInit {
 
         let services = ['all']
         if (this.logServicesSelected.length > 0) {
-            services = this.logServicesSelected
+            if (this.celeryTask && this.celeryTask !== 'all') {
+                services = []
+                for (let s of this.logServicesSelected) {
+                    if (s === 'celery') {
+                        s = 'celery/' + this.celeryTask
+                    }
+                    services.push(s)
+
+                }
+            } else {
+                services = this.logServicesSelected
+            }
         }
 
         this.managementService.getServicesLogs(services, this.logLevel).subscribe((data) => {
@@ -110,5 +130,14 @@ export class DiagsPageComponent implements OnInit {
         if (ev.index === 2) {
             this.loadServicesLogs()
         }
+    }
+
+    isCelerySelected() {
+        for (let s of this.logServicesSelected) {
+            if (s === 'celery') {
+                return true
+            }
+        }
+        return false
     }
 }

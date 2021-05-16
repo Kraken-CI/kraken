@@ -654,42 +654,29 @@ def get_diagnostics():
         t = json.loads(task)
         diags['celery']['current_tasks'].append(t)
 
-    # get the last celery tasks
-    if ch_open:
-        o = urlparse(ch_url)
-        ch = clickhouse_driver.Client(host=o.hostname)
-
-        now = datetime.datetime.utcnow()
-        start_date = now - datetime.timedelta(hours=12)
-        query = "select max(time) as mt, tool, count(*) from logs "
-        query += "where service = 'celery' and tool != '' "
-        query += "group by tool "
-        query += "having mt > %(start_date)s "
-        query += "order by mt desc "
-        query += "limit 100;"
-        resp = ch.execute(query, {'start_date': start_date})
-        diags['celery']['last_tasks'] = resp
-    else:
-        diags['celery']['last_tasks'] = []
-
     return diags
 
 
-def  get_celery_logs(task_name):
+def get_last_celery_task_names():
+    # get the last celery tasks
     ch_url = os.environ.get('KRAKEN_CLICKHOUSE_URL', consts.DEFAULT_CLICKHOUSE_URL)
     o = urlparse(ch_url)
     ch = clickhouse_driver.Client(host=o.hostname)
 
-    query = "select time,message from logs where service = 'celery' and tool = %(task_name)s order by time desc, seq desc limit 1000;"
-    rows = ch.execute(query, {'task_name': task_name})
+    now = datetime.datetime.utcnow()
+    start_date = now - datetime.timedelta(hours=12111)
+    query = "select max(time) as mt, tool, count(*) from logs "
+    query += "where service = 'celery' and tool != '' "
+    query += "group by tool "
+    query += "having mt > %(start_date)s "
+    query += "order by mt desc "
+    query += "limit 100;"
+    resp = ch.execute(query, {'start_date': start_date})
+    task_names = []
+    for row in resp:
+        task_names.append(dict(time=row[0], name=row[1], lines=row[2]))
 
-    logs = []
-    for r in reversed(rows):
-        entry = dict(time=r[0],
-                     message=r[1])
-        logs.append(entry)
-
-    return {'items': logs, 'total': len(logs)}, 200
+    return {'items': task_names}, 200
 
 
 def  get_services_logs(services, level=None):

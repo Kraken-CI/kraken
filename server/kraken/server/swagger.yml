@@ -1247,27 +1247,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
-  /celery-logs/{task_name}:
+  /last-celery-tasks:
     get:
       tags:
       - Management
       summary: Get celery logs
-      description: Get celery logs
-      operationId: get_celery_logs
-      parameters:
-      - name: task_name
-        in: path
-        required: true
-        description: ID of pet to return
-        schema:
-          type: string
+      description: Get last celery task names
+      operationId: get_last_celery_task_names
       responses:
         200:
           description: A paged array of logs
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CeleryLogs'
+                $ref: '#/components/schemas/CeleryTaskNames'
         default:
           description: unexpected error
           content:
@@ -1901,23 +1894,21 @@ components:
               type: string
         job:
           $ref: '#/components/schemas/Job'
-    CeleryLog:
-      type: object
-      properties:
-        time:
-          type: string
-        message:
-          type: string
-    CeleryLogs:
+    CeleryTaskNames:
       type: object
       properties:
         items:
           type: array
           items:
-            $ref: '#/components/schemas/CeleryLog'
-        total:
-          type: integer
-          format: int64
+            type: object
+            properties:
+              time:
+                type: string
+              name:
+                type: string
+              lines:
+                type: integer
+                format: int64
     ServicesLog:
       type: object
       properties:

@@ -98,7 +98,7 @@ export class AppComponent implements OnInit {
                 icon: 'fa fa-smile-o',
                 routerLink: '/diagnostics',
                 queryParams: {tab: 'logs', level: 'error'},
-                //badge: '0' TODO: it does not work
+                // badge: '0' TODO: it does not work
                 title: '0 errors in the last hour',
                 styleClass: ''
             },

@@ -39,6 +39,7 @@ import { TooltipModule } from 'primeng/tooltip'
 import { ToggleButtonModule } from 'primeng/togglebutton'
 import { FieldsetModule } from 'primeng/fieldset'
 import { RadioButtonModule } from 'primeng/radiobutton'
+import { CardModule } from 'primeng/card'
 
 // REST API
 import {
@@ -148,6 +149,7 @@ export function cfgFactory() {
         ToggleButtonModule,
         FieldsetModule,
         RadioButtonModule,
+        CardModule,
     ],
     providers: [
         Title,
