@@ -18,9 +18,12 @@ import os
 import time
 import logging
 import datetime
+from urllib.parse import urlparse
 
 from flask import Flask
 from sqlalchemy.sql.expression import desc
+import clickhouse_driver
+import redis
 
 from . import logs
 from .models import db, Agent, AgentsGroup, Run, Job, get_setting
@@ -164,12 +167,31 @@ def _check_agents():
     _check_agents_to_destroy()
 
 
+def _check_for_errors_in_logs():
+    ch_url = os.environ.get('KRAKEN_CLICKHOUSE_URL', consts.DEFAULT_CLICKHOUSE_URL)
+    o = urlparse(ch_url)
+    ch = clickhouse_driver.Client(host=o.hostname)
+
+    now = datetime.datetime.utcnow()
+    start_date = now - datetime.timedelta(hours=1)
+
+    query = "select count(*) from logs where level = 'ERROR' and time > %(start_date)s;"
+    rows = ch.execute(query, {'start_date': start_date})
+    errors_count = rows[0][0]
+
+    redis_addr = os.environ.get('KRAKEN_REDIS_ADDR', consts.DEFAULT_REDIS_ADDR)
+    rds = redis.Redis(host=redis_addr, port=6379, db=1)
+
+    rds.set('error-logs-count', errors_count)
+    #log.info('updated errors count to %s', errors_count)
+
+
 def main():
     app = create_app()
 
     with app.app_context():
 
-        t0_jobs = t0_runs = t0_agents = time.time()
+        t0_log_errs = t0_jobs = t0_runs = t0_agents = time.time()
 
         while True:
             # check jobs every 5 seconds
@@ -177,6 +199,12 @@ def main():
             if dt > 5:
                 _check_jobs()
                 t0_jobs = time.time()
+
+            # check for error in logs every 15 seconds
+            dt = time.time() - t0_log_errs
+            if dt > 15:
+                _check_for_errors_in_logs()
+                t0_log_errs = time.time()
 
             # check runs every 30 seconds
             dt = time.time() - t0_runs

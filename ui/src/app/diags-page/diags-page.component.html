@@ -1,4 +1,4 @@
-<p-tabView>
+<p-tabView [(activeIndex)]="tabIndex" (onChange)="handleTabChange($event)">
   <p-tabPanel header="Overview">
     <div *ngFor="let s of data | keyvalue" style="display: flex;">
       <div style="width: 20em; margin: 0 0 20px 0;">
@@ -46,10 +46,19 @@
   <p-tabPanel header="Logs">
     <div style="display: flex;">
       <p-selectButton [options]="logServices" [(ngModel)]="logServicesSelected" multiple="multiple" optionLabel="name" optionValue="value" (onChange)="loadServicesLogs()"></p-selectButton>
-      <p-button label="Refresh" icon="pi pi-refresh" (onClick)="loadServicesLogs()" [style]="{'margin-left': '30px'}"></p-button>
+      <p-button label="Refresh" icon="pi pi-refresh" (onClick)="loadServicesLogs()" [style]="{'margin-left': '30px'}" [loading]="servicesLogsAreLoading"></p-button>
     </div>
 
-    <div style="height: 700px; width: 140em; font-family: monospace; font-size: 0.8em; color: #eee; background-color: #222; padding: 10px; overflow-y: scroll; margin-top: 20px;">
+    <div style="display: flex; margin: 6px 0 0 6px;">
+      <div class="p-field p-grid">
+        <label for="log-level" class="p-col-fixed" style="width:100px">Log Level</label>
+        <div class="p-col">
+          <p-dropdown id="log-level"  [options]="logLevels" [(ngModel)]="logLevel" (onChange)="loadServicesLogs()"></p-dropdown>
+        </div>
+      </div>
+    </div>
+
+    <div style="height: calc(100vh - 24em); width: 100%; font-family: monospace; font-size: 0.8em; color: #eee; background-color: #222; padding: 10px; overflow-y: scroll;">
       <div *ngFor="let l of servicesLogs" style="display: flex;">
         <div style="width: 13em; margin-right: 1em; flex: none;"> {{ l.time | localtime }}</div>
         <div style="width: 7em; margin-right: 1em; flex: none;"> {{ l.host }}</div>

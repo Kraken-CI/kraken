@@ -25,10 +25,10 @@
         "chartjs-plugin-error-bars": "^1.2.3",
         "codemirror": "^5.60.0",
         "font-awesome": "^4.7.0",
-        "luxon": "^1.26.0",
+        "luxon": "^1.27.0",
         "primeflex": "^2.0.0",
         "primeicons": "^4.1.0",
-        "primeng": "^11.0.0",
+        "primeng": "^11.4.2",
         "rxjs": "^6.6.6",
         "tslib": "^2.0.0",
         "zone.js": "^0.11.4"

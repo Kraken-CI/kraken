@@ -1,5 +1,6 @@
-import { Component, OnInit } from '@angular/core'
+import { Component, OnInit, ViewChild } from '@angular/core'
 
+import { Menubar } from 'primeng/menubar'
 import { MenuItem } from 'primeng/api'
 import { MessageService } from 'primeng/api'
 
@@ -7,6 +8,7 @@ import { environment } from './../environments/environment'
 
 import { AuthService } from './auth.service'
 import { UsersService } from './backend/api/users.service'
+import { ManagementService } from './backend/api/management.service'
 import { SettingsService } from './services/settings.service'
 
 @Component({
@@ -19,6 +21,7 @@ export class AppComponent implements OnInit {
     logoClass = 'logo1'
     krakenVersion = '0.4'
 
+    @ViewChild('topmenubar') topmenubar: Menubar;
     topMenuItems: MenuItem[]
     logoutMenuItems: MenuItem[]
 
@@ -33,10 +36,13 @@ export class AppComponent implements OnInit {
     passwordNew1: string
     passwordNew2: string
 
+    errorsInLogsCount = 0
+
     constructor(
         private auth: AuthService,
         private api: UsersService,
         private settingsService: SettingsService,
+        protected managementService: ManagementService,
         private msgSrv: MessageService
     ) {
         this.logoClass = 'logo' + (Math.floor(Math.random() * 9) + 1)
@@ -88,6 +94,15 @@ export class AppComponent implements OnInit {
                 routerLink: '/diagnostics',
             },
             {
+                label: '0',
+                icon: 'fa fa-smile-o',
+                routerLink: '/diagnostics',
+                queryParams: {tab: 'logs', level: 'error'},
+                //badge: '0' TODO: it does not work
+                title: '0 errors in the last hour',
+                styleClass: ''
+            },
+            {
                 label: 'Settings',
                 icon: 'fa fa-wrench',
                 routerLink: '/settings',
@@ -108,6 +123,8 @@ export class AppComponent implements OnInit {
                 title: this.auth.permTip('manage'),
             },
         ]
+
+        this.checkForErrors()
     }
 
     randomLogoFont() {
@@ -248,5 +265,30 @@ export class AppComponent implements OnInit {
         document.body.appendChild(link)
         link.click()
         link.remove()
+    }
+
+    checkForErrors() {
+        this.managementService.getErrorsInLogsCount().subscribe((data) => {
+            // change menu with errors indicator if needed
+            if (this.errorsInLogsCount !== data.errors_count) {
+                this.errorsInLogsCount = data.errors_count
+                this.topMenuItems[2].label = '' + this.errorsInLogsCount
+                this.topMenuItems[2].title = '' + this.errorsInLogsCount + ' errors in the last hour'
+                if (this.errorsInLogsCount > 0) {
+                    this.topMenuItems[2].icon = 'pi pi-exclamation-triangle'
+                    this.topMenuItems[2].styleClass = 'error-indicator'
+                } else {
+                    this.topMenuItems[2].icon = 'fa fa-smile-o'
+                    this.topMenuItems[2].styleClass = ''
+                }
+
+                // force detection change in menu
+                this.topmenubar.cd.markForCheck()
+            }
+
+            setTimeout(() => {
+                this.checkForErrors()
+            }, 15000)
+        })
     }
 }

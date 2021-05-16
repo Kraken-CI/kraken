@@ -24,6 +24,7 @@ from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy.orm import joinedload
 import pytimeparse
 import clickhouse_driver
+import redis
 
 from . import consts, srvcheck
 from .models import db, Branch, Stage, Agent, AgentsGroup, Secret, AgentAssignment, Setting
@@ -659,7 +660,7 @@ def get_diagnostics():
         ch = clickhouse_driver.Client(host=o.hostname)
 
         now = datetime.datetime.utcnow()
-        start_date = now - datetime.timedelta(hours=1112)
+        start_date = now - datetime.timedelta(hours=12)
         query = "select max(time) as mt, tool, count(*) from logs "
         query += "where service = 'celery' and tool != '' "
         query += "group by tool "
@@ -691,7 +692,7 @@ def  get_celery_logs(task_name):
     return {'items': logs, 'total': len(logs)}, 200
 
 
-def  get_services_logs(services):
+def  get_services_logs(services, level=None):
     ch_url = os.environ.get('KRAKEN_CLICKHOUSE_URL', consts.DEFAULT_CLICKHOUSE_URL)
     o = urlparse(ch_url)
     ch = clickhouse_driver.Client(host=o.hostname)
@@ -700,6 +701,8 @@ def  get_services_logs(services):
     where = []
     params = {}
     for idx, s in enumerate(services):
+        if s == 'all':
+            continue
         param = 'service%d' % idx
         if '/' in s:
             s, t = s.split('/')
@@ -712,8 +715,16 @@ def  get_services_logs(services):
             params[param] = s
     if where:
         where = " or ".join(where)
-        query += "where " + where + " "
-    query += "order by time desc, seq desc limit 1000"
+        where = "where (" + where + ") "
+    if level:
+        params['level'] = level.upper()
+        if where:
+            where += "and level = %(level)s "
+        else:
+            where = "where level = %(level)s "
+    if where:
+        query += where
+    query += " order by time desc, seq desc limit 1000"
     rows = ch.execute(query, params)
 
     logs = []
@@ -727,3 +738,16 @@ def  get_services_logs(services):
         logs.append(entry)
 
     return {'items': logs, 'total': len(logs)}, 200
+
+
+def get_errors_in_logs_count():
+    redis_addr = os.environ.get('KRAKEN_REDIS_ADDR', consts.DEFAULT_REDIS_ADDR)
+    rds = redis.Redis(host=redis_addr, port=6379, db=1)
+
+    errors_count = rds.get('error-logs-count')
+    if errors_count:
+        errors_count = int(errors_count)
+    else:
+        errors_count = 0
+
+    return {'errors_count': errors_count}, 200
