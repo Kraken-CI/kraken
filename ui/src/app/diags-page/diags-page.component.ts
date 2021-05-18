@@ -95,7 +95,7 @@ export class DiagsPageComponent implements OnInit {
     loadLastCeleryTaskNames() {
         this.managementService.getLastCeleryTaskNames().subscribe((data) => {
             this.celeryTasks = [{label: '-- all --', value: 'all'}]
-            for (let t of data.items) {
+            for (const t of data.items) {
                 this.celeryTasks.push({label: t.name, value: t.name})
             }
         })
@@ -133,10 +133,8 @@ export class DiagsPageComponent implements OnInit {
     }
 
     isCelerySelected() {
-        for (let s of this.logServicesSelected) {
-            if (s === 'celery') {
-                return true
-            }
+        if (this.logServicesSelected.includes('celery')) {
+            return true
         }
         return false
     }

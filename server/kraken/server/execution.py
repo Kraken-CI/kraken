@@ -35,7 +35,10 @@ def create_flow(branch_id, kind, body):
     if branch is None:
         abort(404, "Branch not found")
 
-    flow = exec_utils.create_a_flow(branch, kind, body)
+    try:
+        flow = exec_utils.create_a_flow(branch, kind, body)
+    except SchemaError:
+        abort(400, str(e))
 
     data = flow.get_json()
 
