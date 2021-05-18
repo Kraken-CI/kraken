@@ -73,7 +73,7 @@ def stage(ctx):
                 "system": "krakenci/bld-kraken",
                 "executor": "docker",
                 "agents_group": "all",
-                "config": "c1"
+                "config": "default"
             }]
         }],
         "notification": {

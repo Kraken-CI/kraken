@@ -1,4 +1,13 @@
 def stage(ctx):
+    envs = [{
+        # "system": "krakenci/ubuntu:20.04",
+        # "agents_group": "docker",
+        # "executor": "docker",
+        "system": "ami-0f45ae09956943738", # my made by packer
+        "agents_group": "aws-t2-micro",
+        "config": "default"
+    }]
+
     return {
         "parent": "Tarball",
         "triggers": {
@@ -36,12 +45,7 @@ def stage(ctx):
                 "modules_or_packages": "agent/kraken/agent",
                 "cwd": "kraken"
             }],
-            "environments": [{
-                "system": "krakenci/ubuntu:20.04",
-                "agents_group": "docker",
-                "executor": "docker",
-                "config": "c1"
-            }]
+            "environments": envs
         }, {
             "name": "pylint server",
             "steps": [{
@@ -78,12 +82,7 @@ def stage(ctx):
                 "modules_or_packages": "kraken/server",
                 "cwd": "kraken/server"
             }],
-            "environments": [{
-                "system": "krakenci/ubuntu:20.04",
-                "agents_group": "docker",
-                "executor": "docker",
-                "config": "c1"
-            }]
+            "environments": envs
         }, {
             "name": "ng lint",
             "steps": [{
@@ -106,12 +105,7 @@ def stage(ctx):
                 "tool": "nglint",
                 "cwd": "kraken/ui"
             }],
-            "environments": [{
-                "system": "krakenci/ubuntu:20.04",
-                "agents_group": "docker",
-                "executor": "docker",
-                "config": "c1"
-            }]
+            "environments": envs
         }, {
             "name": "cloc",
             "steps": [{
@@ -131,12 +125,7 @@ def stage(ctx):
                 "exclude-dir": "docker-elk",
                 "cwd": "kraken"
             }],
-            "environments": [{
-                "system": "krakenci/ubuntu:20.04",
-                "agents_group": "docker",
-                "executor": "docker",
-                "config": "c1"
-            }]
+            "environments": envs
         }],
         "notification": {
             "slack": {"channel": "kk-results"},
