@@ -37,7 +37,7 @@ def create_flow(branch_id, kind, body):
 
     try:
         flow = exec_utils.create_a_flow(branch, kind, body)
-    except SchemaError:
+    except SchemaError as e:
         abort(400, str(e))
 
     data = flow.get_json()
