@@ -520,7 +520,7 @@ def serve_agent_request():
         address = request.remote_addr
     # log.info('agent address: %s', address)
 
-    agent = Agent.query.filter_by(address=address).one_or_none()
+    agent = Agent.query.filter_by(deleted=None, address=address).one_or_none()
     if agent is None:
         log.warning('unknown agent %s', address)
         _handle_unknown_agent(address, request.remote_addr)
