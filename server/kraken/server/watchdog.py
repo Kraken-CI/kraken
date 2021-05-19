@@ -169,13 +169,12 @@ def _delete_if_missing_in_aws(agent, ag):
     try:
         i = ec2.Instance(instance_id)
         i.state
-    except botocore.exceptions.ClientError as ex:
-        if ex.response['Error']['Code'] == 'InvalidInstanceID.NotFound':
-            agent.deleted = datetime.datetime.utcnow()
-            agent.disabled = True
-            db.session.commit()
-            log.info('deleted dangling agent %d', agent.id)
-            return True
+    except Exception:
+        agent.deleted = datetime.datetime.utcnow()
+        agent.disabled = True
+        db.session.commit()
+        log.info('deleted dangling agent %d', agent.id)
+        return True
 
     return False
 
@@ -206,7 +205,7 @@ def _check_agents_to_destroy():
     if outdated_count > 0:
         log.info('destroyed and deleted %d aws ec2 instances and agents', outdated_count)
     if dangling_count > 0:
-        log.info('deleted %d dangling agents wiout any aws ec2 instance', dangling_count)
+        log.info('deleted %d dangling agents without any aws ec2 instance', dangling_count)
 
 
 def _check_machines_with_no_agent():
@@ -228,7 +227,7 @@ def _check_machines_with_no_agent():
 
         now = datetime.datetime.utcnow()
 
-        instances = ec2_res.instances.filter(Filters=[{'Name': 'tag:kraken-group', 'Values': ['%d' % ag.id]}])
+        instances = ec2.instances.filter(Filters=[{'Name': 'tag:kraken-group', 'Values': ['%d' % ag.id]}])
         for i in instances:
             # if terminated then skip it
             if i.state['Name'] == 'terminated':

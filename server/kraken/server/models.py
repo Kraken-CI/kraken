@@ -766,6 +766,7 @@ class Agent(db.Model, DatesMixin):
                     status_line=self.status_line,
                     host_info=self.host_info,
                     user_attrs=self.user_attrs,
+                    extra_attrs=self.extra_attrs,
                     groups=[dict(id=a.agents_group.id, name=a.agents_group.name) for a in self.agents_groups],
                     job=self.job.get_json() if self.job else None)
 

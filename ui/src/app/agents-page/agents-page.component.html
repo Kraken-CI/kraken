@@ -113,6 +113,7 @@
 <div *ngIf="activeTabIdx != 0" class="p-component">
   <div class="p-grid"  style="margin-top: 10px;">
     <div class="p-col-4">
+      <h3>General</h3>
       <table>
         <tr>
           <th style="width: 8rem;"></th>
@@ -177,7 +178,9 @@
                 [disabled]="!auth.hasPermission('manage')"
                 [pTooltip]="auth.permTip('manage')"></p-button>
     </div>
+
     <div class="p-col-4">
+      <h3>Host Info</h3>
       <table>
         <tr>
           <th style="width: 8rem;"></th>
@@ -194,5 +197,25 @@
         </tr>
       </table>
     </div>
+
+    <div *ngIf="agentTab.agent.extra_attrs" class="p-col-4">
+      <h3>Other</h3>
+      <table>
+        <tr>
+          <th style="width: 8rem;"></th>
+          <th style="width: 12rem;"></th>
+        </tr>
+
+        <tr *ngFor="let ea of agentTab.agent.extra_attrs | keyvalue">
+          <td style="text-align: right; padding-right: 10px;">
+            {{ ea.key }}
+          </td>
+          <td>
+            {{ ea.value }}
+          </td>
+        </tr>
+      </table>
+    </div>
+
   </div>
 </div>
