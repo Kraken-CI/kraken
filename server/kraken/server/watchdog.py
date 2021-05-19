@@ -24,6 +24,8 @@ from flask import Flask
 from sqlalchemy.sql.expression import desc
 import clickhouse_driver
 import redis
+import botocore
+import boto3
 
 from . import logs
 from .models import db, Agent, AgentsGroup, Run, Job, get_setting
@@ -131,40 +133,140 @@ def _check_agents_keep_alive():
         log.info('agent %s not seen for 5 minutes, disabled', e)
 
 
+def _destroy_and_delete_if_outdated(agent, ag):
+    aws = ag.deployment['aws']
+    if aws['destruction_rule'] != consts.DESTRUCTION_RULE_IDLE_TIME:
+        return False
+
+    last_job = Job.query.filter_by(agent_used=agent).order_by(desc(Job.finished)).first()
+    if not last_job:
+        return False
+
+    now = datetime.datetime.utcnow()
+    dt = now - last_job.finished
+    if dt < datetime.timedelta(seconds=60 * int(aws['idle_time'])):
+        return False
+
+    log.info('destroying machine with agent %s due idle time', agent)
+    agent.disabled = True
+    db.session.commit()
+    t = bg_jobs.destroy_machine.delay(agent.id)
+    log.info('destroy machine with agent %s, bg processing: %s', agent, t)
+    return True
+
+
+def _delete_if_missing_in_aws(agent, ag):
+    if not agent.extra_attrs or 'instance_id' not in agent.extra_attrs:
+        return False
+
+    aws = ag.deployment['aws']
+    region = aws['region']
+    access_key = get_setting('cloud', 'aws_access_key')
+    secret_access_key = get_setting('cloud', 'aws_secret_access_key')
+    ec2 = boto3.resource('ec2', region_name=region, aws_access_key_id=access_key, aws_secret_access_key=secret_access_key)
+
+    instance_id = agent.extra_attrs['instance_id']
+    try:
+        i = ec2.Instance(instance_id)
+        i.state
+    except botocore.exceptions.ClientError as ex:
+        if ex.response['Error']['Code'] == 'InvalidInstanceID.NotFound':
+            agent.deleted = datetime.datetime.utcnow()
+            agent.disabled = True
+            db.session.commit()
+            log.info('deleted dangling agent %d', agent.id)
+            return True
+
+    return False
+
+
 def _check_agents_to_destroy():
     q = Agent.query.filter_by(deleted=None, job=None)
     q = q.join('agents_groups', 'agents_group')
     q = q.filter_by(deleted=None)
     q = q.filter(AgentsGroup.deployment.isnot(None))
 
+    outdated_count = 0
+    dangling_count = 0
     for agent in q.all():
-        now = datetime.datetime.utcnow()
         ag = agent.agents_groups[0].agents_group
         if ag.deployment['method'] != consts.AGENT_DEPLOYMENT_METHOD_AWS or 'aws' not in ag.deployment or not ag.deployment['aws']:
             continue
 
+        deleted = _destroy_and_delete_if_outdated(agent, ag)
+        if deleted:
+            outdated_count += 1
+            continue
+
+        deleted = _delete_if_missing_in_aws(agent, ag)
+        if deleted:
+            dangling_count += 1
+            continue
+
+    if outdated_count > 0:
+        log.info('destroyed and deleted %d aws ec2 instances and agents', outdated_count)
+    if dangling_count > 0:
+        log.info('deleted %d dangling agents wiout any aws ec2 instance', dangling_count)
+
+
+def _check_machines_with_no_agent():
+    access_key = get_setting('cloud', 'aws_access_key')
+    secret_access_key = get_setting('cloud', 'aws_secret_access_key')
+
+    q = AgentsGroup.query
+    q = q.filter_by(deleted=None)
+    q = q.filter(AgentsGroup.deployment.isnot(None))
+
+    count = 0
+    for ag in q.all():
+        if ag.deployment['method'] != consts.AGENT_DEPLOYMENT_METHOD_AWS or 'aws' not in ag.deployment or not ag.deployment['aws']:
+            continue
+
         aws = ag.deployment['aws']
-        if aws['destruction_rule'] != consts.DESTRUCTION_RULE_IDLE_TIME:
-            continue
+        region = aws['region']
+        ec2 = boto3.resource('ec2', region_name=region, aws_access_key_id=access_key, aws_secret_access_key=secret_access_key)
 
-        last_job = Job.query.filter_by(agent_used=agent).order_by(desc(Job.finished)).first()
-        if not last_job:
-            continue
+        now = datetime.datetime.utcnow()
 
-        dt = now - last_job.finished
-        if dt < datetime.timedelta(seconds=60 * int(aws['idle_time'])):
-            continue
+        instances = ec2_res.instances.filter(Filters=[{'Name': 'tag:kraken-group', 'Values': ['%d' % ag.id]}])
+        for i in instances:
+            # if terminated then skip it
+            if i.state['Name'] == 'terminated':
+                continue
 
-        log.info('destroying machine with agent %s due idle time', agent)
-        agent.disabled = True
-        db.session.commit()
-        t = bg_jobs.destroy_machine.delay(agent.id)
-        log.info('destroy machine with agent %s, bg processing: %s', agent, t)
+            # if assigned to some agent then skip it
+            assigned = False
+            for aa in ag.agents:
+                agent = aa.agent
+                if agent.extra_attrs and 'instance_id' in agent.extra_attrs and agent.extra_attrs['instance_id'] == i.id:
+                    assigned = True
+                    break
+            if assigned:
+                continue
+
+            # instances have to be old enough to avoid race condition with
+            # case when instances are being created but not yet assigned to agents
+            if now - i.launch_time < datetime.timedelta(minutes=10):
+                continue
+
+            # the instance is not terminated, not assigned, old enough
+            # so delete it as it seems to be a lost instance
+            log.info('terminating lost aws ec2 instance %s', i.id)
+            try:
+                i.terminate()
+            except Exception:
+                log.exception('IGNORED EXCEPTION')
+
+            count += 1
+
+    if count > 0:
+        log.info('terminated %d lost aws ec2 instances', count)
 
 
 def _check_agents():
     _check_agents_keep_alive()
     _check_agents_to_destroy()
+    _check_machines_with_no_agent()
 
 
 def _check_for_errors_in_logs():

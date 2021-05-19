@@ -1155,6 +1155,10 @@ def destroy_machine(self, agent_id):
                 log.error('cannot find agent id:%d', agent_id)
                 return
 
+            agent.deleted = datetime.datetime.utcnow()
+            agent.disabled = True
+            db.session.commit()
+
             if not agent.extra_attrs:
                 log.warning('missing extra_attrs in agent %s', agent)
                 return
@@ -1183,10 +1187,6 @@ def destroy_machine(self, agent_id):
                 i.terminate()
             except Exception:
                 log.exception('IGNORED EXCEPTION')
-
-            agent.deleted = datetime.datetime.utcnow()
-            agent.disabled = True
-            db.session.commit()
 
     except Exception as exc:
         log.exception('will retry')
