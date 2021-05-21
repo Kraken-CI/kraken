@@ -704,11 +704,17 @@ def  get_services_logs(services, level=None):
         where = " or ".join(where)
         where = "where (" + where + ") "
     if level:
-        params['level'] = level.upper()
-        if where:
-            where += "and level = %(level)s "
+        level = level.upper()
+        if level == 'ERROR':
+            lq = "level = 'ERROR'"
+        elif level == 'WARNING':
+            lq = "level in ('WARNING', 'ERROR')"
         else:
-            where = "where level = %(level)s "
+            lq = "level in ('INFO', 'WARNING', 'ERROR')"
+        if where:
+            where += "and %s " % lq
+        else:
+            where = "where %s " % lq
     if where:
         query += where
     query += " order by time desc, seq desc limit 1000"
