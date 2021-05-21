@@ -83,6 +83,11 @@ def install_linux():
         else:
             raise Exception('distro %s is not supported yet' % dstr)  # pylint: disable=raise-missing-from
 
+    # kraken user with no sudo password and disabled requiretty
+    run("sudo sed -i 's/^.*requiretty/Defaults !requiretty/' /etc/sudoers")
+    run("sudo bash -c \"echo 'Defaults !requiretty' >> /etc/sudoers\"")
+    run("sudo bash -c \"echo 'kraken ALL = NOPASSWD: ALL' > /etc/sudoers.d/kraken\"")
+
     # install bin files
     kraken_version = pkg_resources.get_distribution('kraken-agent').version
     dest_dir = update.get_dest_dir(kraken_version)
