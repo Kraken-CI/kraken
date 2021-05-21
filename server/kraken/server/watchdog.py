@@ -227,7 +227,12 @@ def _check_machines_with_no_agent():
 
         now = datetime.datetime.utcnow()
 
-        instances = ec2.instances.filter(Filters=[{'Name': 'tag:kraken-group', 'Values': ['%d' % ag.id]}])
+        try:
+            instances = ec2.instances.filter(Filters=[{'Name': 'tag:kraken-group', 'Values': ['%d' % ag.id]}])
+        except Exception:
+            log.exception()
+            continue
+
         for i in instances:
             # if terminated then skip it
             if i.state['Name'] == 'terminated':
