@@ -70,9 +70,11 @@ def stage(ctx):
             "timeout": 5000,
             "steps": steps,
             "environments": [{
-                "system": "krakenci/bld-kraken",
-                "executor": "docker",
-                "agents_group": "all",
+                # "system": "krakenci/bld-kraken",
+                # "executor": "docker",
+                # "agents_group": "all",
+                "system": "ami-0105cb2bedc5e13c9", # my made by packer
+                "agents_group": "aws-t3-micro",
                 "config": "default"
             }]
         }],
