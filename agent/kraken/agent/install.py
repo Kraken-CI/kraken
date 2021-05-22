@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import pwd
+import grp
 import tempfile
 import platform
 import subprocess
@@ -87,6 +88,20 @@ def install_linux():
     run("sudo sed -i 's/^.*requiretty/Defaults !requiretty/' /etc/sudoers")
     run("sudo bash -c \"echo 'Defaults !requiretty' >> /etc/sudoers\"")
     run("sudo bash -c \"echo 'kraken ALL = NOPASSWD: ALL' > /etc/sudoers.d/kraken\"")
+
+    # add to docker group if present
+    try:
+        grp.getgrnam('docker')
+        if dstr in ['ubuntu', 'debian']:
+            run('sudo usermod -a -G docker kraken')
+        elif dstr in ['fedora', 'centos']:
+            run('sudo usermod -aG docker kraken')
+        else:
+            raise Exception('distro %s is not supported yet' % dstr)
+    except KeyError:
+        print('no docker group')
+
+    # TODO: add to lxd group if present
 
     # install bin files
     kraken_version = pkg_resources.get_distribution('kraken-agent').version
