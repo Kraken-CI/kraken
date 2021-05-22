@@ -269,12 +269,13 @@ def update_stage(stage_id, body):
         flag_modified(stage, 'triggers')
         log.info('new schema: %s', stage.schema)
 
-    db.session.commit()
-
     if 'schema_from_repo_enabled' in body:
         schema_from_repo_enabled = body['schema_from_repo_enabled']
     else:
         schema_from_repo_enabled = stage.schema_from_repo_enabled
+
+    stage.schema_from_repo_enabled = schema_from_repo_enabled
+    db.session.commit()
 
     if schema_from_repo_enabled:
         if 'repo_url' in body:
@@ -313,6 +314,7 @@ def update_stage(stage_id, body):
         log.info('refresh schema repo %s, bg processing: %s', body, t)
 
     result = stage.get_json()
+
     return result, 200
 
 
