@@ -23,6 +23,7 @@ export class BranchResultsComponent implements OnInit, OnDestroy {
     start = 0
     limit = 10
     refreshTimer: any = null
+    refreshing = false
 
     flows: any[]
 
@@ -113,6 +114,8 @@ export class BranchResultsComponent implements OnInit, OnDestroy {
     refresh() {
         this.cancelRefreshTimer()
 
+        this.refreshing = true
+
         this.route.paramMap
             .pipe(
                 switchMap((params: ParamMap) =>
@@ -125,6 +128,8 @@ export class BranchResultsComponent implements OnInit, OnDestroy {
                 )
             )
             .subscribe((data) => {
+                this.refreshing = false
+
                 let flows = []
                 const stages = new Set<string>()
                 this.totalFlows = data.total

@@ -36,6 +36,7 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
     loadingArtifacts = false
 
     refreshTimer: any = null
+    refreshing = false
 
     selectedNode: any = {
         stage: {
@@ -150,7 +151,10 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
     }
 
     refresh() {
+        this.refreshing = true
         this.executionService.getFlow(this.flowId).subscribe((flow) => {
+            this.refreshing = false
+
             this.flow = flow
             const crumbs = [
                 {

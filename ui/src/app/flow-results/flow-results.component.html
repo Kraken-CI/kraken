@@ -2,7 +2,7 @@
   <div style="font-size: 2.5em; font-weight: bold; width: 10em;">
     Flow {{ flow ? flow.label : flowId }}
   </div>
-  <p-button label="Refresh" icon="pi pi-refresh" (onClick)="refresh()" styleClass="p-button-sm"></p-button>
+  <p-button label="Refresh" icon="pi pi-refresh" (onClick)="refresh()" styleClass="p-button-sm" [loading]="refreshing"></p-button>
 </div>
 
 <p-tabView [activeIndex]="activeTabIndex">
