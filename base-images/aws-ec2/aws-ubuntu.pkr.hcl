@@ -8,7 +8,7 @@ packer {
 }
 
 source "amazon-ebs" "ubuntu" {
-  ami_name      = "kraken-ubuntu-20.04-2"
+  ami_name      = "kraken-ubuntu-20.04-3"
   instance_type = "t2.micro"
   region        = "ca-central-1"
   source_ami_filter {
@@ -34,7 +34,6 @@ build {
     ]
     inline = [
       "set -x",
-      "whoami",
       "sudo systemctl disable apt-daily.timer",
       "sudo systemctl disable apt-daily-upgrade.timer",
       "sudo systemctl stop unattended-upgrades.service",
@@ -45,15 +44,24 @@ build {
       "sudo apt-get update -y",
       "sudo apt-get dist-upgrade -y",
       "sudo apt-get install -y --no-install-recommends locales openssh-client ca-certificates sudo git unzip zip gnupg curl wget make net-tools python3 python3-pytest python3-venv python3-docker python3-setuptools",
-      "sudo rm -rf /var/lib/apt/lists/*",
+
       # Set timezone to UTC by default
       "sudo ln -sf /usr/share/zoneinfo/Etc/UTC /etc/localtime",
+
       # Use unicode
       "sudo locale-gen en_US.UTF-8",
+
       # prepare sudo
       "sudo sed -i 's/^.*requiretty/Defaults !requiretty/' /etc/sudoers",
       "sudo bash -c \"echo 'Defaults !requiretty' >> /etc/sudoers\"",
       "sudo bash -c \"echo 'kraken ALL = NOPASSWD: ALL' > /etc/sudoers.d/kraken\"",
+
+      # install docker stuff
+      "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -",
+      "sudo add-apt-repository 'deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable'",
+      "sudo apt update",
+      "sudo apt-get install -y docker-ce",
+
       # Setup kraken agent
       #"wget http://lab.kraken.ci/install/kraken-agent-install.sh",
       #"chmod a+x kraken-agent-install.sh",
@@ -62,6 +70,9 @@ build {
       #"chmod a+x kkagent",
       #"./kkagent install -s https://lab.kraken.ci",
       #"systemctl status kraken-agent"
+
+      # cleanup
+      "sudo rm -rf /var/lib/apt/lists/*",
     ]
   }
 }
