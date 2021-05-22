@@ -229,6 +229,7 @@ def _check_machines_with_no_agent():
 
         try:
             instances = ec2.instances.filter(Filters=[{'Name': 'tag:kraken-group', 'Values': ['%d' % ag.id]}])
+            instances = list(instances)
         except Exception:
             log.exception()
             continue
