@@ -1130,14 +1130,25 @@ def spawn_new_agents(self, agents_needed):
                         continue
                     i.load()
                     name = '.'.join(i.public_dns_name.split('.')[:2])
-                    a = Agent(name=name,
-                              address=i.private_ip_address,
-                              ip_address=i.public_ip_address,
-                              extra_attrs=dict(system=sys_id, instance_id=i.id),
-                              authorized=True,
-                              last_seen=now)
-                    AgentAssignment(agent=a, agents_group=ag)
-                    db.session.commit()
+                    address = i.private_ip_address
+                    a = None
+                    params = dict(name=name,
+                                  address=address,
+                                  ip_address=i.public_ip_address,
+                                  extra_attrs=dict(system=sys_id, instance_id=i.id),
+                                  authorized=True,
+                                  last_seen=now)
+                    try:
+                        a = Agent(**params)
+                        db.session.commit()
+                    except Exception:
+                        a = Agent.query.filter_by(deleted=None, address=address).one_or_none()
+                        if not a:
+                            a.update(params)
+                            db.session.commit()
+                    if a:
+                        AgentAssignment(agent=a, agents_group=ag)
+                        db.session.commit()
 
     except Exception as exc:
         log.exception('will retry')

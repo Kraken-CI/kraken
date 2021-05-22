@@ -503,8 +503,11 @@ def _handle_keep_alive(agent, req):  # pylint: disable=unused-argument
 
 
 def _handle_unknown_agent(address, ip_address):
-    Agent(name=address, address=address, authorized=False, ip_address=ip_address, last_seen=datetime.datetime.utcnow())
-    db.session.commit()
+    try:
+        Agent(name=address, address=address, authorized=False, ip_address=ip_address, last_seen=datetime.datetime.utcnow())
+        db.session.commit()
+    except Exception as e:
+        log.warning('IGNORED EXCEPTION: %s', str(e))
 
 
 def serve_agent_request():
