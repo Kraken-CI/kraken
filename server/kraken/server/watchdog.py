@@ -231,7 +231,7 @@ def _check_machines_with_no_agent():
             instances = ec2.instances.filter(Filters=[{'Name': 'tag:kraken-group', 'Values': ['%d' % ag.id]}])
             instances = list(instances)
         except Exception:
-            log.exception()
+            log.exception('IGNORED EXCEPTION')
             continue
 
         for i in instances:
@@ -294,7 +294,7 @@ def _check_for_errors_in_logs():
     #log.info('updated errors count to %s', errors_count)
 
 
-def _main_loop()
+def _main_loop():
     t0_log_errs = t0_jobs = t0_runs = t0_agents = time.time()
 
     while True:
