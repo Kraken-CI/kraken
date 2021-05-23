@@ -1142,6 +1142,7 @@ def spawn_new_agents(self, agents_needed):
                         a = Agent(**params)
                         db.session.commit()
                     except Exception:
+                        db.session.rollback()
                         a = Agent.query.filter_by(deleted=None, address=address).one_or_none()
                         if not a:
                             a.update(params)
