@@ -20,7 +20,7 @@ from sqlalchemy.orm.attributes import flag_modified
 
 from . import consts
 from .models import db, BranchSequence, Flow, Run, Job, Step, AgentsGroup, Tool, Agent, AgentAssignment, System
-from .schema import check_and_correct_stage_schema, prepare_secrets, substitute_vars
+from .schema import check_and_correct_stage_schema, prepare_secrets, substitute_vars, substitute_val
 from . import dbutils
 
 log = logging.getLogger(__name__)
@@ -285,9 +285,7 @@ def trigger_jobs(run, replay=False):
         envs = j['environments']
         for env in envs:
             # get agents group
-            ag_name = env['agents_group']
-            fields = substitute_vars({'ag_name': ag_name}, run.args)
-            ag_name = fields['ag_name']
+            ag_name = substitute_val(env['agents_group'], run.args)
             q = AgentsGroup.query
             q = q.filter_by(project=run.stage.branch.project, name=ag_name)
             agents_group = q.one_or_none()
@@ -308,9 +306,9 @@ def trigger_jobs(run, replay=False):
                 agents_count[agents_group.name] = cnt
 
             if not isinstance(env['system'], list):
-                systems = [env['system']]
+                systems = [substitute_val(env['system'], run.args)]
             else:
-                systems = env['system']
+                systems = [substitute_val(s, run.args) for s in env['system']]
 
             for system_name in systems:
                 # prepare system and executor
