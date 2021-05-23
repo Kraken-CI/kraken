@@ -66,7 +66,7 @@ def stage(ctx):
         "parameters": [{
             "name": "AMI",
             "type": "string",
-            "default": "ami-02fd3964327072a17",
+            "default": "ami-0967f290f3533e5a8",
             "description": "AMI for Building"
         }],
         "configs": [],
