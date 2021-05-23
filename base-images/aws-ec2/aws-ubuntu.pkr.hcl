@@ -8,7 +8,7 @@ packer {
 }
 
 source "amazon-ebs" "ubuntu" {
-  ami_name      = "kraken-ubuntu-20.04-3"
+  ami_name      = "kraken-ubuntu-20.04-4"
   instance_type = "t2.micro"
   region        = "ca-central-1"
   source_ami_filter {
@@ -70,6 +70,12 @@ build {
       #"chmod a+x kkagent",
       #"./kkagent install -s https://lab.kraken.ci",
       #"systemctl status kraken-agent"
+
+      # kraken build deps
+      "sudo apt-get install -y rake xz-utils openjdk-13-jre-headless apt-transport-https software-properties-common nodejs npm",
+      "wget https://github.com/mikefarah/yq/releases/download/v4.2.0/yq_linux_amd64",
+      "sudo mv yq_linux_amd64 /usr/bin/yq",
+      "sudo chmod a+x /usr/bin/yq",
 
       # cleanup
       "sudo rm -rf /var/lib/apt/lists/*",
