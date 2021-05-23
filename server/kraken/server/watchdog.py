@@ -251,7 +251,8 @@ def _check_machines_with_no_agent():
 
             # instances have to be old enough to avoid race condition with
             # case when instances are being created but not yet assigned to agents
-            if now - i.launch_time < datetime.timedelta(minutes=10):
+            lt = i.launch_time.replace(tzinfo=None)
+            if now - lt < datetime.timedelta(minutes=10):
                 continue
 
             # the instance is not terminated, not assigned, old enough
