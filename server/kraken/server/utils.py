@@ -13,6 +13,5 @@
 # limitations under the License.
 
 import logging
-import functools
 
 log = logging.getLogger(__name__)

@@ -24,7 +24,6 @@ from flask import Flask
 from sqlalchemy.sql.expression import desc
 import clickhouse_driver
 import redis
-import botocore
 import boto3
 
 from . import logs
@@ -168,7 +167,7 @@ def _delete_if_missing_in_aws(agent, ag):
     instance_id = agent.extra_attrs['instance_id']
     try:
         i = ec2.Instance(instance_id)
-        i.state
+        i.state  # pylint: disable=pointless-statement
     except Exception:
         agent.deleted = datetime.datetime.utcnow()
         agent.disabled = True

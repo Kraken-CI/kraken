@@ -316,7 +316,7 @@ export class ProjectSettingsComponent implements OnInit {
     getOrGenerateSecret() {
         if (!this.project.webhooks.github_secret) {
             // generate random string, 20 chars
-            var arr = new Uint8Array(20)
+            const arr = new Uint8Array(20)
             window.crypto.getRandomValues(arr)
             const rndStr = Array.from(arr, c => Math.round(36*c/255).toString(36)).join('')
             this.project.webhooks.github_secret = rndStr

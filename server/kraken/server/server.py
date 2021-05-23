@@ -68,7 +68,7 @@ def _set_log_ctx():
         pass
 
 
-def _clear_log_ctx(a):
+def _clear_log_ctx(a):  # pylint: disable=unused-argument
     try:
         log.set_ctx(tool=None)
     except Exception:
