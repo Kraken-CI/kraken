@@ -725,7 +725,7 @@ class AgentsGroup(db.Model, DatesMixin):
                     name=self.name,
                     project_id=self.project_id,
                     project_name=self.project.name if self.project else None,
-                    agents_count=len(self.agents),
+                    agents_count=len([a for a in self.agents if not a.agent.deleted]),
                     deployment=deployment)
 
 
