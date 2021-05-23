@@ -285,14 +285,17 @@ def trigger_jobs(run, replay=False):
         envs = j['environments']
         for env in envs:
             # get agents group
+            ag_name = env['agents_group']
+            fields = substitute_vars({'ag_name': ag_name}, run.args)
+            ag_name = fields['ag_name']
             q = AgentsGroup.query
-            q = q.filter_by(project=run.stage.branch.project, name=env['agents_group'])
+            q = q.filter_by(project=run.stage.branch.project, name=ag_name)
             agents_group = q.one_or_none()
 
             if agents_group is None:
-                agents_group = AgentsGroup.query.filter_by(name=env['agents_group']).one_or_none()
+                agents_group = AgentsGroup.query.filter_by(name=ag_name).one_or_none()
                 if agents_group is None:
-                    log.warning("cannot find agents group '%s'", env['agents_group'])
+                    log.warning("cannot find agents group '%s'", ag_name)
 
             # get count of agents in the group
             if agents_group is not None and agents_group.name not in agents_count:
@@ -337,7 +340,7 @@ def trigger_jobs(run, replay=False):
                     if job.state != consts.JOB_STATE_COMPLETED:
                         job.state = consts.JOB_STATE_COMPLETED
                         job.completion_status = consts.JOB_CMPLT_MISSING_AGENTS_GROUP
-                        job.notes = "cannot find agents group '%s' in database" % env['agents_group']
+                        job.notes = "cannot find agents group '%s' in database" % ag_name
                     erred_job = True
                 elif agents_group.deployment and agents_group.deployment['method'] > 0:
                     key = (agents_group.id, system.id if executor == 'local' else 0)
