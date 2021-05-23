@@ -293,39 +293,45 @@ def _check_for_errors_in_logs():
     #log.info('updated errors count to %s', errors_count)
 
 
+def _main_loop()
+    t0_log_errs = t0_jobs = t0_runs = t0_agents = time.time()
+
+    while True:
+        # check jobs every 5 seconds
+        dt = time.time() - t0_jobs
+        if dt > 5:
+            _check_jobs()
+            t0_jobs = time.time()
+
+        # check for error in logs every 15 seconds
+        dt = time.time() - t0_log_errs
+        if dt > 15:
+            _check_for_errors_in_logs()
+            t0_log_errs = time.time()
+
+        # check runs every 30 seconds
+        dt = time.time() - t0_runs
+        if dt > 30:
+            _check_runs()
+            t0_runs = time.time()
+
+        # check agents every 30 seconds
+        dt = time.time() - t0_agents
+        if dt > 30:
+            _check_agents()
+            t0_agents = time.time()
+
+        time.sleep(1)
+
 def main():
     app = create_app()
 
     with app.app_context():
-
-        t0_log_errs = t0_jobs = t0_runs = t0_agents = time.time()
-
-        while True:
-            # check jobs every 5 seconds
-            dt = time.time() - t0_jobs
-            if dt > 5:
-                _check_jobs()
-                t0_jobs = time.time()
-
-            # check for error in logs every 15 seconds
-            dt = time.time() - t0_log_errs
-            if dt > 15:
-                _check_for_errors_in_logs()
-                t0_log_errs = time.time()
-
-            # check runs every 30 seconds
-            dt = time.time() - t0_runs
-            if dt > 30:
-                _check_runs()
-                t0_runs = time.time()
-
-            # check agents every 30 seconds
-            dt = time.time() - t0_agents
-            if dt > 30:
-                _check_agents()
-                t0_agents = time.time()
-
-            time.sleep(1)
+        try:
+            _main_loop()
+        except Exception:
+            log.exception('IGNORED EXCEPTION')
+            time.sleep(10)
 
 
 if __name__ == "__main__":
