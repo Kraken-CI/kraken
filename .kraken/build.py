@@ -63,7 +63,12 @@ def stage(ctx):
         "triggers": {
             "parent": True,
         },
-        "parameters": [],
+        "parameters": [{
+            "name": "AMI",
+            "type": "string",
+            "default": "ami-02fd3964327072a17",
+            "description": "AMI for Building"
+        }],
         "configs": [],
         "jobs": [{
             "name": "build",
@@ -73,7 +78,7 @@ def stage(ctx):
                 # "system": "krakenci/bld-kraken",
                 # "executor": "docker",
                 # "agents_group": "all",
-                "system": "ami-0105cb2bedc5e13c9", # my made by packer
+                "system": "#{AMI}", # my made by packer
                 "agents_group": "aws-t3-micro",
                 "config": "default"
             }]
