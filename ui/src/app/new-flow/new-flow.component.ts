@@ -20,6 +20,8 @@ export class NewFlowComponent implements OnInit {
     params: any[]
     args: any
 
+    waiting = false
+
     constructor(
         private route: ActivatedRoute,
         private router: Router,
@@ -93,10 +95,12 @@ export class NewFlowComponent implements OnInit {
         const flow = {
             args: this.args,
         }
+        this.waiting = true
         this.executionService
             .createFlow(this.branchId, this.kind, flow)
             .subscribe(
                 (data) => {
+                    this.waiting = false
                     this.msgSrv.add({
                         severity: 'success',
                         summary: 'Flow started',
@@ -105,6 +109,7 @@ export class NewFlowComponent implements OnInit {
                     this.router.navigate(['/flows/' + data.id])
                 },
                 (err) => {
+                    this.waiting = false
                     let msg = err.statusText
                     if (err.error && err.error.detail) {
                         msg = err.error.detail
