@@ -25,10 +25,11 @@ from sqlalchemy.orm import joinedload
 import pytimeparse
 import clickhouse_driver
 import redis
+import boto3
 
 from . import consts, srvcheck
 from .models import db, Branch, Stage, Agent, AgentsGroup, Secret, AgentAssignment, Setting
-from .models import Project, BranchSequence
+from .models import Project, BranchSequence, get_setting
 from .schema import check_and_correct_stage_schema, SchemaError, execute_schema_code
 from .schema import prepare_new_planner_triggers
 from .bg.clry import app as clryapp
@@ -555,6 +556,24 @@ def delete_group(group_id):
     db.session.commit()
 
     return {}, 200
+
+
+def get_aws_ec2_regions():
+    access_key = get_setting('cloud', 'aws_access_key')
+    secret_access_key = get_setting('cloud', 'aws_secret_access_key')
+    ec2 = boto3.client('ec2', aws_access_key_id=access_key, aws_secret_access_key=secret_access_key)
+    resp = ec2.describe_regions()
+    return {'items': resp['Regions'], 'total': len(resp['Regions'])}, 200
+
+
+def get_aws_ec2_instance_types(region):
+    access_key = get_setting('cloud', 'aws_access_key')
+    secret_access_key = get_setting('cloud', 'aws_secret_access_key')
+    ec2 = boto3.client('ec2', aws_access_key_id=access_key, aws_secret_access_key=secret_access_key)
+    resp = ec2.describe_instance_type_offerings(Filters=[{'Name': 'location', 'Values':[region]}])
+    types = resp['InstanceTypeOfferings']
+    types.sort(key=lambda x: x['InstanceType'])
+    return {'items': types, 'total': len(types)}, 200
 
 
 def get_settings():

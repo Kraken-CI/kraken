@@ -43,6 +43,10 @@ export class GroupsPageComponent implements OnInit {
     groupTab: any
     deploymentMethods: DeploymentMethod[]
 
+    // aws
+    regions: any[]
+    instanceTypes: any[]
+
     constructor(
         private route: ActivatedRoute,
         private router: Router,
@@ -71,6 +75,7 @@ export class GroupsPageComponent implements OnInit {
         this.activeItem = this.tabs[index]
         if (index > 0) {
             this.groupTab = this.openedGroups[index - 1]
+            this.deploymentMethodChange()
         }
     }
 
@@ -330,5 +335,32 @@ export class GroupsPageComponent implements OnInit {
         if (event.key === 'Enter') {
             this.saveGroup()
         }
+    }
+
+    getAwsEc2Regions() {
+        this.managementService.getAwsEc2Regions().subscribe(
+            (data) => {
+                this.regions = data.items
+
+                if (this.groupTab.group.deployment.aws.region) {
+                    this.regionChange()
+                }
+            }
+        )
+    }
+
+    deploymentMethodChange() {
+        if (this.groupTab.group.deployment.method === 2) {
+            this.getAwsEc2Regions()
+        }
+    }
+
+    regionChange() {
+        const region = this.groupTab.group.deployment.aws.region
+        this.managementService.getAwsEc2InstanceTypes(region).subscribe(
+            (data) => {
+                this.instanceTypes = data.items
+            }
+        )
     }
 }

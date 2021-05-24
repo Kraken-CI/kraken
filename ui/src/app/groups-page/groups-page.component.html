@@ -118,7 +118,12 @@
   </div>
 
   <h3>Agents Deployment</h3>
-  <p-selectButton [options]="deploymentMethods" [(ngModel)]="groupTab.group.deployment.method" optionLabel="name" optionValue="val" dataKey="val"></p-selectButton>
+  <p-selectButton [options]="deploymentMethods"
+                  [(ngModel)]="groupTab.group.deployment.method"
+                  optionLabel="name"
+                  optionValue="val"
+                  dataKey="val"
+                  (onChange)="deploymentMethodChange()"></p-selectButton>
 
   <div style="margin: 12px 6px 18px 12px;">
     <div *ngIf="groupTab.group.deployment.method == 0">
@@ -133,7 +138,14 @@
         <div class="p-field p-grid">
           <label for="region" class="p-col-fixed" style="width:100px">Region</label>
           <div class="p-col">
-            <input id="region" type="text" [(ngModel)]="groupTab.group.deployment.aws.region" pInputText>
+            <p-dropdown id="region"
+                        [options]="regions"
+                        [(ngModel)]="groupTab.group.deployment.aws.region"
+                        optionLabel="RegionName"
+                        optionValue="RegionName"
+                        [style]="{width: '100%'}"
+                        [filter]="true"
+                        (onChange)="regionChange()"></p-dropdown>
           </div>
         </div>
         <div class="p-field p-grid">
@@ -168,7 +180,14 @@
         <div class="p-field p-grid">
           <label for="instanceType" class="p-col-fixed" style="width:100px">Instance Type</label>
           <div class="p-col">
-            <input id="instanceType" type="text" [(ngModel)]="groupTab.group.deployment.aws.instance_type" pInputText>
+            <p-dropdown id="instanceType"
+                        [options]="instanceTypes"
+                        [(ngModel)]="groupTab.group.deployment.aws.instance_type"
+                        optionLabel="InstanceType"
+                        optionValue="InstanceType"
+                        [style]="{width: '10em'}"
+                        scrollHeight="300px"
+                        [filter]="true"></p-dropdown>
           </div>
         </div>
         <div class="p-field-checkbox">

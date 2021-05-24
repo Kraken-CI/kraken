@@ -1571,6 +1571,41 @@ paths:
         200:
           description: Successfully
           content: {}
+  /aws-ec2-regions:
+    get:
+      tags:
+      - Management
+      summary: Get settings
+      description: Get settings details
+      operationId: get_aws_ec2_regions
+      responses:
+        200:
+          description: Settings details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AwsEc2Regions'
+  /aws-ec2-instance-types/{region}:
+    get:
+      tags:
+      - Management
+      summary: Get settings
+      description: Get settings details
+      operationId: get_aws_ec2_instance_types
+      parameters:
+      - name: region
+        in: path
+        description: ID of group
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Settings details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AwsEc2InstanceTypes'
   /settings:
     get:
       tags:
@@ -2234,6 +2269,36 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Group'
+        total:
+          type: integer
+          format: int64
+    AwsEc2Regions:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              Endpoint:
+                type: string
+              RegionName:
+                type: string
+              OptInStatus:
+                type: string
+        total:
+          type: integer
+          format: int64
+    AwsEc2InstanceTypes:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              InstanceType:
+                type: string
         total:
           type: integer
           format: int64
