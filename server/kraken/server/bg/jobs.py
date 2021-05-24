@@ -1106,18 +1106,23 @@ def spawn_new_agents(self, agents_needed):
                         'MarketType': 'spot',
                     }
 
-                instances = ec2_res.create_instances(
-                    ImageId=ami_id,
-                    MinCount=num,
-                    MaxCount=num,
-                    KeyName=key_name,
-                    SecurityGroupIds=[sec_grp_id],
-                    TagSpecifications=tags,
-                    InstanceType=aws['instance_type'],
-                    Monitoring={'Enabled': aws.get('monitoring', False)},
-                    CreditSpecification={'CpuCredits': cpu_credits},
-                    InstanceMarketOptions=instance_market_opts,
-                    UserData=init_script)
+                # collect all params
+                params = dict(ImageId=ami_id,
+                              MinCount=num,
+                              MaxCount=num,
+                              KeyName=key_name,
+                              SecurityGroupIds=[sec_grp_id],
+                              TagSpecifications=tags,
+                              InstanceType=aws['instance_type'],
+                              Monitoring={'Enabled': aws.get('monitoring', False)},
+                              InstanceMarketOptions=instance_market_opts,
+                              UserData=init_script)
+
+                if 't2' in aws['instance_type'] or 't3' in aws['instance_type']:
+                    params['CreditSpecification'] = {'CpuCredits': cpu_credits}
+
+                # create AWS EC2 instances
+                instances = ec2_res.create_instances(**params)
 
                 log.info('spawning new agents %s', instances)
 
