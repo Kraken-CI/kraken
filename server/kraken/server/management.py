@@ -569,7 +569,7 @@ def get_aws_ec2_regions():
 def get_aws_ec2_instance_types(region):
     access_key = get_setting('cloud', 'aws_access_key')
     secret_access_key = get_setting('cloud', 'aws_secret_access_key')
-    ec2 = boto3.client('ec2', region_name='us-east-1', aws_access_key_id=access_key, aws_secret_access_key=secret_access_key)
+    ec2 = boto3.client('ec2', region_name=region, aws_access_key_id=access_key, aws_secret_access_key=secret_access_key)
     resp = ec2.describe_instance_type_offerings(Filters=[{'Name': 'location', 'Values':[region]}])
     types = resp['InstanceTypeOfferings']
     types.sort(key=lambda x: x['InstanceType'])
