@@ -62,12 +62,12 @@ def update_project(project_id, body):
     return result, 200
 
 
-def get_project(project_id):
+def get_project(project_id, with_results):
     project = Project.query.filter_by(id=project_id).one_or_none()
     if project is None:
         abort(400, "Project with id %s does not exist" % project_id)
 
-    return project.get_json(with_results=True), 200
+    return project.get_json(with_results=with_results), 200
 
 
 def delete_project(project_id):

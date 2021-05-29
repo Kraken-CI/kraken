@@ -116,7 +116,7 @@ export class BreadcrumbsComponent implements OnInit {
                     this.branches[this.currProjectId].length === 0)
             ) {
                 const projId = this.currProjectId
-                this.managementService.getProject(projId).subscribe((proj) => {
+                this.managementService.getProject(projId, false).subscribe((proj) => {
                     this.branches[projId] = proj.branches
                 })
             }

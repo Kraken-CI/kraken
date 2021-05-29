@@ -60,7 +60,7 @@ export class ProjectSettingsComponent implements OnInit {
 
     refresh() {
         this.managementService
-            .getProject(this.projectId)
+            .getProject(this.projectId, true)
             .subscribe((project) => {
                 this.project = project
                 this.titleService.setTitle(
