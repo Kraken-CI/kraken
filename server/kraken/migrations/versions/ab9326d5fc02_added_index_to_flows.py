@@ -18,31 +18,33 @@ depends_on = None
 
 INDEXES = [
     # create INDEX ix_flows_branch_id_kind on flows(branch_id, kind);
-    ['ix_flows_branch_id_kind', 'flows', ['branch_id', 'kind']],
+    ['ix_flows_branch_id_kind', 'flows', 'branch_id, kind'],
     # create INDEX ix_flows_created on flows(created);
-    ['ix_flows_created', 'flows', ['created']],
+    ['ix_flows_created', 'flows', 'created'],
     # create INDEX ix_runs_flow_id on runs(flow_id);
-    ['ix_runs_flow_id', 'runs', ['flow_id']],
+    ['ix_runs_flow_id', 'runs', 'flow_id'],
     # create INDEX ix_artifacts_run_id on artifacts(run_id);
-    ['ix_artifacts_run_id', 'artifacts', ['run_id']],
+    ['ix_artifacts_run_id', 'artifacts', 'run_id'],
     # create INDEX ix_artifacts_flow_id on artifacts(flow_id);
-    ['ix_artifacts_flow_id', 'artifacts', ['flow_id']],
+    ['ix_artifacts_flow_id', 'artifacts', 'flow_id'],
 ]
 
 
 def upgrade():
+    conn = op.get_bind()
     for name, table, columns in INDEXES:
-        try:
-            print('creating index %s' % name)
-            op.create_index(name, table, columns)
-        except Exception:
-            pass
+        print('creating index %s' % name)
+        cmd = "CREATE INDEX IF NOT EXISTS %s ON %s (%s);" % (name, table, columns)
+        conn.execute(cmd)
+        #op.create_index(name, table, columns)
+    print('migration completed')
 
 
 def downgrade():
+    conn = op.get_bind()
     for name, table, _ in INDEXES:
-        try:
-            print('dropping index %s' % name)
-            op.drop_index(name, table_name=table)
-        except Exception:
-            pass
+        print('dropping index %s' % name)
+        cmd = "DROP INDEX IF EXISTS %s;" % name
+        conn.execute(cmd)
+        #op.drop_index(name, table_name=table)
+    print('migration completed')
