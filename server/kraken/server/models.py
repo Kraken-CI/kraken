@@ -219,15 +219,13 @@ class Stage(db.Model, DatesMixin):
     sequences = relationship("BranchSequence", back_populates="stage")
     # services
 
-    def get_json(self):
-        return dict(id=self.id,
+    def get_json(self, with_schema=True):
+        data = dict(id=self.id,
                     created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,
                     deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,
                     name=self.name,
                     description=self.description,
                     enabled=self.enabled,
-                    schema=self.schema,
-                    schema_code=self.schema_code,
                     schema_from_repo_enabled=self.schema_from_repo_enabled,
                     repo_url=self.repo_url,
                     repo_branch=self.repo_branch,
@@ -237,6 +235,12 @@ class Stage(db.Model, DatesMixin):
                     repo_refresh_interval=self.repo_refresh_interval,
                     repo_version=self.repo_version,
                     schema_file=self.schema_file)
+
+        if with_schema:
+            data['schema'] = self.schema
+            data['schema_code'] = self.schema_code
+
+        return data
 
     def __repr__(self):
         return "<Stage %s, '%s'>" % (self.id, self.name)
@@ -298,7 +302,7 @@ class Flow(db.Model, DatesMixin):
     def get_label(self):
         return self.label if self.label else ("%d." % self.id)
 
-    def get_json(self):
+    def get_json(self, with_project=True, with_branch=True):
         if self.state == consts.FLOW_STATE_COMPLETED:
             duration = self.finished - self.created
         else:
@@ -308,7 +312,7 @@ class Flow(db.Model, DatesMixin):
         if self.trigger_data:
             trigger = self.trigger_data.data[0]
 
-        return dict(id=self.id,
+        data = dict(id=self.id,
                     label=self.get_label(),
                     created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,
                     finished=self.finished.strftime("%Y-%m-%dT%H:%M:%SZ") if self.finished else None,
@@ -316,16 +320,22 @@ class Flow(db.Model, DatesMixin):
                     state=consts.FLOW_STATES_NAME[self.state],
                     kind='ci' if self.kind == 0 else 'dev',
                     duration=duration_to_txt(duration),
-                    branch_id=self.branch_id,
-                    base_branch_name=self.branch.name,
                     branch_name=self.branch_name,
-                    project_id=self.branch.project_id,
-                    project_name=self.branch.project.name,
                     args=self.args,
-                    stages=[s.get_json() for s in self.branch.stages if s.deleted is None],
-                    runs=[r.get_json() for r in self.runs],
+                    stages=[s.get_json(with_schema=False) for s in self.branch.stages if s.deleted is None],
+                    runs=[r.get_json(with_project=False, with_branch=False, with_artifacts=False) for r in self.runs],
                     trigger=trigger,
                     artifacts=self.artifacts)
+
+        if with_project:
+            data['project_id'] = self.branch.project_id
+            data['project_name'] = self.branch.project.name
+
+        if with_branch:
+            data['branch_id'] = self.branch_id
+            data['base_branch_name'] = self.branch.name
+
+        return data
 
 
 class Run(db.Model, DatesMixin):
@@ -364,7 +374,7 @@ class Run(db.Model, DatesMixin):
     repo_data = relationship('RepoChanges')
     reason = Column(JSONB, nullable=False)
 
-    def get_json(self):
+    def get_json(self, with_project=True, with_branch=True, with_artifacts=True):
         jobs_processing = 0
         jobs_executing = 0
         jobs_waiting = 0
@@ -416,10 +426,6 @@ class Run(db.Model, DatesMixin):
                     stage_id=self.stage_id,
                     flow_id=self.flow_id,
                     flow_kind='ci' if self.flow.kind == 0 else 'dev',
-                    branch_id=self.flow.branch_id,
-                    branch_name=self.flow.branch.name,
-                    project_id=self.flow.branch.project_id,
-                    project_name=self.flow.branch.project.name,
                     args=self.args,
                     jobs_total=jobs_total,
                     jobs_waiting=jobs_waiting,
@@ -431,7 +437,6 @@ class Run(db.Model, DatesMixin):
                     tests_not_run=self.tests_not_run,
                     issues_total=self.issues_total,
                     issues_new=self.issues_new,
-                    artifacts_total=len(self.artifacts_files),
                     new_cnt=self.new_cnt,
                     no_change_cnt=self.no_change_cnt,
                     regr_cnt=self.regr_cnt,
@@ -439,6 +444,17 @@ class Run(db.Model, DatesMixin):
                     repo_data=self.repo_data.data if self.repo_data else None,
                     reason=self.reason['reason'],
                     note=self.note)
+
+        if with_project:
+            data['project_id'] = self.flow.branch.project_id
+            data['project_name'] = self.flow.branch.project.name
+
+        if with_branch:
+            data['branch_id'] = self.flow.branch_id
+            data['branch_name'] = self.flow.branch.name
+
+        if with_artifacts:
+            data['artifacts_total'] = len(self.artifacts_files)
 
         return data
 

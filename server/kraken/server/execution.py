@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import time
 import logging
 from urllib.parse import urljoin, urlparse
 
@@ -46,6 +47,8 @@ def create_flow(branch_id, kind, body):
 
 
 def get_flows(branch_id, kind, start=0, limit=10, middle=None):
+    t0 = time.time()
+
     flows = []
     if kind == 'dev':
         kind = 1
@@ -53,31 +56,36 @@ def get_flows(branch_id, kind, start=0, limit=10, middle=None):
         kind = 0
     q = Flow.query.filter_by(branch_id=branch_id, kind=kind)
     q = q.options(joinedload('branch'),
-                  joinedload('branch.project'),
+                  # joinedload('branch.project'),
                   joinedload('branch.stages'),
                   joinedload('artifacts_files'),
-                  joinedload('runs'),
-                  joinedload('runs.artifacts_files'))
+                  joinedload('runs'))
+                  # joinedload('runs.artifacts_files'))
     if middle is None:
+        # log.info('A' * 120)
         total = q.count()
         q = q.order_by(desc(Flow.created))
         q = q.offset(start).limit(limit)
         for flow in q.all():
-            flows.append(flow.get_json())
+            flows.append(flow.get_json(with_project=False, with_branch=False))
+
+        # log.info('B' * 120)
     else:
         q1 = q.filter(Flow.id >= middle)
         q1 = q1.order_by(asc(Flow.created))
         q1 = q1.offset(0).limit(limit)
         for flow in reversed(q1.all()):
-            flows.append(flow.get_json())
+            flows.append(flow.get_json(with_project=False, with_branch=False))
 
         q2 = q.filter(Flow.id < middle)
         q2 = q2.order_by(desc(Flow.created))
         q2 = q2.offset(0).limit(limit)
         for flow in q2.all():
-            flows.append(flow.get_json())
+            flows.append(flow.get_json(with_project=False, with_branch=False))
 
         total = 0
+
+    log.info('get_flows time %s', time.time() - t0)
 
     return {'items': flows, 'total': total}, 200
 
