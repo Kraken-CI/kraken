@@ -73,7 +73,8 @@ def check_auth_token(token):
     return resp
 
 
-def change_password(user_id, user_password):
+def change_password(user_id, body):
+    user_password = body
     if 'password_new' not in user_password or not user_password['password_new']:
         raise BadRequest('new password cannot be empty')
 

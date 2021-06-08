@@ -76,7 +76,7 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/UserPassword'
-        required: true
+        required: false
       responses:
         201:
           description: Successfully

@@ -33,6 +33,7 @@ jsonschema = "^3.2.0"
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
 pylint = "^2.6.0"
+pudb = "^2021.1"
 
 [tool.poetry.scripts]
 # kkserver = 'kraken.server.server:main' # this does not work due to flask problems
