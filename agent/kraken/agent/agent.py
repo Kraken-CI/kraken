@@ -97,9 +97,24 @@ def run():
     os.environ["PATH"] += os.pathsep + os.getcwd()
     os.environ["PATH"] += os.pathsep + os.path.abspath(__file__)
 
+    # check server address
+    srv_addr = config.get('server')
+    if not srv_addr:
+        raise Exception('missing server address')
+    if not srv_addr.startswith('http'):
+        raise Exception('incorrect server URL (no http/https schema): %s' % srv_addr)
+    log.info('server address: %s', srv_addr)
+
+    # check minio address
+    minio_addr = config.get('minio_addr')
+    if not minio_addr:
+        raise Exception('missing MinIO address')
+    log.info('MinIO address: %s', minio_addr)
+
     data_dir = config.get('data_dir')
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
+    log.info('data dir: %s', data_dir)
     jobs_dir = os.path.join(data_dir, 'jobs')
     if not os.path.exists(jobs_dir):
         os.makedirs(jobs_dir)
