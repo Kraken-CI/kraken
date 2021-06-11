@@ -165,7 +165,7 @@ task :run_agent_in_docker do
   Dir.chdir('agent') do
     sh 'docker build -f docker-agent.txt -t kkagent .'
   end
-  sh "docker run --rm -ti  -v /var/run/docker.sock:/var/run/docker.sock -v /var/snap/lxd/common/lxd/unix.socket:/var/snap/lxd/common/lxd/unix.socket -v `pwd`/agent:/agent -e KRAKEN_AGENT_SLOT=7 -e KRAKEN_SERVER_ADDR=#{LOCALHOST_IP}:8080  kkagent run"
+  sh "docker run --rm -ti  -v /var/run/docker.sock:/var/run/docker.sock -v /var/snap/lxd/common/lxd/unix.socket:/var/snap/lxd/common/lxd/unix.socket -v `pwd`/agent:/agent -e KRAKEN_AGENT_SLOT=7 -e KRAKEN_CLICKHOUSE_ADDR=#{CLICKHOUSE_ADDR} -e KRAKEN_MINIO_ADDR=#{MINIO_ADDR} kkagent /opt/kraken/kkagent run -s http://#{LOCALHOST_IP}:8080"
 end
 
 task :run_agent_in_lxd_all do
