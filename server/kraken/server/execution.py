@@ -67,7 +67,7 @@ def get_flows(branch_id, kind, start=0, limit=10, middle=None):
         q = q.order_by(desc(Flow.created))
         q = q.offset(start).limit(limit)
         for flow in q.all():
-            flows.append(flow.get_json(with_project=False, with_branch=False))
+            flows.append(flow.get_json(with_project=False, with_branch=False, with_schema=False))
 
         # log.info('B' * 120)
     else:
@@ -75,13 +75,13 @@ def get_flows(branch_id, kind, start=0, limit=10, middle=None):
         q1 = q1.order_by(asc(Flow.created))
         q1 = q1.offset(0).limit(limit)
         for flow in reversed(q1.all()):
-            flows.append(flow.get_json(with_project=False, with_branch=False))
+            flows.append(flow.get_json(with_project=False, with_branch=False, with_schema=False))
 
         q2 = q.filter(Flow.id < middle)
         q2 = q2.order_by(desc(Flow.created))
         q2 = q2.offset(0).limit(limit)
         for flow in q2.all():
-            flows.append(flow.get_json(with_project=False, with_branch=False))
+            flows.append(flow.get_json(with_project=False, with_branch=False, with_schema=False))
 
         total = 0
 

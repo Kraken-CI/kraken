@@ -302,7 +302,7 @@ class Flow(db.Model, DatesMixin):
     def get_label(self):
         return self.label if self.label else ("%d." % self.id)
 
-    def get_json(self, with_project=True, with_branch=True):
+    def get_json(self, with_project=True, with_branch=True, with_schema=True):
         if self.state == consts.FLOW_STATE_COMPLETED:
             duration = self.finished - self.created
         else:
@@ -322,7 +322,7 @@ class Flow(db.Model, DatesMixin):
                     duration=duration_to_txt(duration),
                     branch_name=self.branch_name,
                     args=self.args,
-                    stages=[s.get_json(with_schema=False) for s in self.branch.stages if s.deleted is None],
+                    stages=[s.get_json(with_schema=with_schema) for s in self.branch.stages if s.deleted is None],
                     runs=[r.get_json(with_project=False, with_branch=False, with_artifacts=False) for r in self.runs],
                     trigger=trigger,
                     artifacts=self.artifacts)
