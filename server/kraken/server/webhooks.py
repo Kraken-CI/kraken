@@ -21,6 +21,7 @@ from flask import Blueprint, request, abort
 
 from .models import Project
 from .bg import jobs as bg_jobs
+from . import kkrq
 
 log = logging.getLogger(__name__)
 
@@ -67,7 +68,7 @@ def handle_github_webhook(project_id):
 
     req = json.loads(payload)
 
-    # trigger running the project flow via celery
+    # trigger running the project flow via rq
     if event == 'push':
         trigger_data = dict(trigger='github-' + event,
                             ref=req['ref'],
@@ -102,8 +103,7 @@ def handle_github_webhook(project_id):
                             after=after,
                             repo=req['repository']['clone_url'],
                             sender=req['sender'])
-    t = bg_jobs.trigger_flow.delay(project.id, trigger_data)
-    log.info('triggering run for project %s, bg processing: %s', project_id, t)
+    kkrq.enq(bg_jobs.trigger_flow, project.id, trigger_data)
     return "", 204
 
 

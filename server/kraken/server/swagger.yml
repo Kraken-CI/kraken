@@ -1252,20 +1252,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
-  /last-celery-tasks:
+  /last-rq-jobs:
     get:
       tags:
       - Management
-      summary: Get celery logs
-      description: Get last celery task names
-      operationId: get_last_celery_task_names
+      summary: Get rq logs
+      description: Get last rq jobs names
+      operationId: get_last_rq_jobs_names
       responses:
         200:
           description: A paged array of logs
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CeleryTaskNames'
+                $ref: '#/components/schemas/RQJobNames'
         default:
           description: unexpected error
           content:
@@ -1934,7 +1934,7 @@ components:
               type: string
         job:
           $ref: '#/components/schemas/Job'
-    CeleryTaskNames:
+    RQJobNames:
       type: object
       properties:
         items:

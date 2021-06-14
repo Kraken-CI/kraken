@@ -24,7 +24,7 @@ from . import consts
 def get_branch_badge(branch_id, what=None):
     # get redis reference
     redis_addr = os.environ.get('KRAKEN_REDIS_ADDR', consts.DEFAULT_REDIS_ADDR)
-    rds = redis.Redis(host=redis_addr, port=6379, db=1)
+    rds = redis.Redis(host=redis_addr, port=6379, db=consts.REDIS_KRAKEN_DB)
 
     try:
         int(branch_id)

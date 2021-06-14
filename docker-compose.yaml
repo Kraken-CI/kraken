@@ -28,7 +28,7 @@ services:
     depends_on:
       - postgres
       - controller
-      - celery
+      - rq
       - clickhouse
       - clickhouse-proxy
 
@@ -50,16 +50,16 @@ services:
     networks:
       - db_net
     depends_on:
-      - celery
+      - rq
       - postgres
       - clickhouse-proxy
 
-  celery:
+  rq:
     restart: always
-    image: 127.0.0.1:5000/kkcelery:kk_ver
+    image: 127.0.0.1:5000/kkrq:kk_ver
     build:
       context: server
-      target: celery
+      target: rq
     environment:
       - KRAKEN_REDIS_ADDR
       - KRAKEN_DB_URL

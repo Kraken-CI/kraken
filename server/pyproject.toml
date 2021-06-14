@@ -6,12 +6,11 @@ authors = ["Michal Nowikowski <godfryd@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.7"
-celery = "^4.3.0"
 connexion = "^2.7.0"
 Flask = "^1.1.0"
 Flask-SQLAlchemy = "^2.4.0"
 psycopg2-binary = "^2.8"
-redis = "3.3.8"
+redis = "3.5.3"
 requests = "2.25.0"
 SQLAlchemy = "^1.3.0"
 swagger-ui-bundle = "^0.0.8"
@@ -29,6 +28,7 @@ passlib = "^1.7.4"
 sentry-sdk = {extras = ["flask"], version = "^0.20.0"}
 boto3 = "^1.17.62"
 jsonschema = "^3.2.0"
+rq = "^1.8.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
@@ -40,7 +40,8 @@ pudb = "^2021.1"
 kkscheduler = 'kraken.server.scheduler:main'
 kkplanner = 'kraken.server.planner:main'
 kkwatchdog = 'kraken.server.watchdog:main'
-kkcelery = 'kraken.server.kkcelery:main'
+kkrq = 'kraken.server.kkrq:main'
+kkqneck = 'kraken.server.qneck:main'
 kkdbmigrate = 'kraken.migrations.apply:main'
 
 [build-system]

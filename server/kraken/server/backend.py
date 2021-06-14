@@ -32,6 +32,7 @@ from . import consts
 from .bg import jobs as bg_jobs
 from . import minioops
 from .. import version
+from . import kkrq
 
 log = logging.getLogger(__name__)
 
@@ -379,11 +380,11 @@ def _handle_step_result(agent, req):
             log.info('JOB %s, num %d, max %d', job.id, jobs_num, aws.get('max_jobs', 1))
             if jobs_num >= aws.get('max_jobs', 1):
                 agent.disabled = True
-                t = bg_jobs.destroy_machine.delay(agent.id)
-                log.info('job %s destroy machine with agent %s, bg processing: %s', job, agent, t)
+                kkrq.enq(bg_jobs.destroy_machine, agent.id)
+
         db.session.commit()
-        t = bg_jobs.job_completed.delay(job.id)
-        log.info('job %s finished by %s, bg processing: %s', job, agent, t)
+        kkrq.enq(bg_jobs.job_completed, job.id)
+        log.info('job %s finished by %s', job, agent)
     else:
         response['timeout'] = _left_time(job)
 

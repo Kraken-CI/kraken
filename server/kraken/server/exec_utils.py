@@ -14,7 +14,6 @@
 
 import logging
 import datetime
-from collections import defaultdict
 
 from sqlalchemy.orm.attributes import flag_modified
 
@@ -22,6 +21,7 @@ from . import consts
 from .models import db, BranchSequence, Flow, Run, Job, Step, AgentsGroup, Tool, Agent, AgentAssignment, System
 from .schema import check_and_correct_stage_schema, prepare_secrets, substitute_vars, substitute_val
 from . import dbutils
+from . import kkrq
 
 log = logging.getLogger(__name__)
 
@@ -34,8 +34,8 @@ def complete_run(run, now):
     log.info('completed run %s, now: %s', run, run.finished)
 
     # trigger run analysis
-    t = bg_jobs.analyze_run.delay(run.id)
-    log.info('run %s completed, analyze run: %s', run, t)
+    kkrq.enq(bg_jobs.analyze_run, run.id)
+    log.info('run %s completed', run)
 
 
 def cancel_job(job, note, cmplt_status):
@@ -48,8 +48,8 @@ def cancel_job(job, note, cmplt_status):
     if note:
         job.notes = note
     db.session.commit()
-    t = bg_jobs.job_completed.delay(job.id)
-    log.info('job %s timed out or canceled, bg processing: %s', job, t, job=job.id)
+    kkrq.enq(bg_jobs.job_completed, job.id)
+    log.info('job %s timed out or canceled', job, job=job.id)
 
 
 def _increment_sequences(branch, stage, kind):
@@ -264,7 +264,7 @@ def trigger_jobs(run, replay=False):
     # count how many agents are in each group, if there is 0 for given job then return an error
     agents_count = {}
 
-    agents_needed = defaultdict(int)
+    agents_needed = set()
 
     # trigger new jobs based on jobs defined in stage schema
     all_started_erred = True
@@ -341,8 +341,7 @@ def trigger_jobs(run, replay=False):
                         job.notes = "cannot find agents group '%s' in database" % ag_name
                     erred_job = True
                 elif agents_group.deployment and agents_group.deployment['method'] > 0:
-                    key = (agents_group.id, system.id if executor == 'local' else 0)
-                    agents_needed[key] += 1
+                    agents_needed.add(agents_group.id)
                 elif agents_count[agents_group.name] == 0:
                     if job.state != consts.JOB_STATE_COMPLETED:
                         job.state = consts.JOB_STATE_COMPLETED
@@ -379,13 +378,13 @@ def trigger_jobs(run, replay=False):
 
     # spawn new agents if needed
     if agents_needed:
-        agents_needed = list(agents_needed.items())
-        t = bg_jobs.spawn_new_agents.delay(agents_needed)
-        log.info('enqueued spawning new agents for run %s, bg processing: %s', run, t)
+        for ag_id in agents_needed:
+            kkrq.enq_neck(bg_jobs.spawn_new_agents, ag_id)
+        log.info('enqueued spawning new agents for run %s', run)
 
     # notify
-    t = bg_jobs.notify_about_started_run.delay(run.id)
-    log.info('enqueued notification about start of run %s, bg processing: %s', run, t)
+    kkrq.enq(bg_jobs.notify_about_started_run, run.id)
+    log.info('enqueued notification about start of run %s', run)
 
     if len(schema['jobs']) == 0 or all_started_erred:
         complete_run(run, now)

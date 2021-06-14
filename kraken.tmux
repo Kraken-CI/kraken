@@ -2,7 +2,7 @@ set-option -g mouse on
 set-option -g pane-border-status bottom
 set-option -g allow-rename off
 
-rename-window '... ui server sched celery ...'
+rename-window '... ui server sched rq qneck ...'
 
 # ui
 splitw -h -p 50
@@ -16,11 +16,17 @@ selectp -t 1
 send-keys 'rake run_server' Enter
 select-pane -T SERVER
 
-# celery
+# rq
+selectp -t 2
+splitw -v -p 33
+send-keys 'rake run_rq' Enter
+select-pane -T RQ
+
+# qneck
 selectp -t 2
 splitw -v -p 50
-send-keys 'rake run_celery' Enter
-select-pane -T CELERY
+send-keys 'rake run_qneck' Enter
+select-pane -T QNECK
 
 # scheduler
 selectp -t 2

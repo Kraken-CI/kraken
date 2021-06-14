@@ -254,10 +254,16 @@ task :run_agent_in_lxd do
   end
 end
 
-task :run_celery => './server/kraken/version.py' do
+task :run_rq => './server/kraken/version.py' do
   sh 'cp dot.env .env'
   Dir.chdir('server') do
-    sh "KRAKEN_CLICKHOUSE_ADDR=#{CLICKHOUSE_ADDR} KRAKEN_MINIO_ADDR=#{MINIO_ADDR} MINIO_ACCESS_KEY='UFSEHRCFU4ACUEWHCHWU' MINIO_SECRET_KEY='HICSHuhIIUhiuhMIUHIUhGFfUHugy6fGJuyyfiGY' ../venv/bin/poetry run kkcelery"
+    sh "KRAKEN_CLICKHOUSE_ADDR=#{CLICKHOUSE_ADDR} KRAKEN_MINIO_ADDR=#{MINIO_ADDR} MINIO_ACCESS_KEY='UFSEHRCFU4ACUEWHCHWU' MINIO_SECRET_KEY='HICSHuhIIUhiuhMIUHIUhGFfUHugy6fGJuyyfiGY' ../venv/bin/poetry run kkrq"
+  end
+end
+
+task :run_qneck => './server/kraken/version.py' do
+  Dir.chdir('server') do
+    sh "KRAKEN_CLICKHOUSE_ADDR=#{CLICKHOUSE_ADDR} KRAKEN_MINIO_ADDR=#{MINIO_ADDR} MINIO_ACCESS_KEY='UFSEHRCFU4ACUEWHCHWU' MINIO_SECRET_KEY='HICSHuhIIUhiuhMIUHIUhGFfUHugy6fGJuyyfiGY' ../venv/bin/poetry run kkqneck"
   end
 end
 

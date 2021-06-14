@@ -31,7 +31,7 @@ def redeploy(c, kk_ver):
     c.run('docker service update --force kraken_ui')
     c.run('docker service update --force kraken_controller')
     c.run('docker service update --force kraken_server')
-    c.run('docker service update --force kraken_celery')
+    c.run('docker service update --force kraken_rq')
     c.run('docker service update --force kraken_agent')
     time.sleep(10)
     c.run('docker service update --force kraken_minio')

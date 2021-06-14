@@ -16,7 +16,7 @@ setup(
             'kkscheduler = kraken.server.scheduler:main',
             'kkplanner = kraken.server.planner:main',
             'kkwatchdog = kraken.server.watchdog:main',
-            'kkcelery = kraken.server.kkcelery:main',
+            'kkrq = kraken.server.kkrq:main',
             'kkdbmigrate = migrations.apply:main',
         ],
     },

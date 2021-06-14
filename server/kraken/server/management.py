@@ -27,12 +27,12 @@ import clickhouse_driver
 import redis
 import boto3
 
-from . import consts, srvcheck
+from . import consts, srvcheck, kkrq
 from .models import db, Branch, Stage, Agent, AgentsGroup, Secret, AgentAssignment, Setting
 from .models import Project, BranchSequence, get_setting
 from .schema import check_and_correct_stage_schema, SchemaError, execute_schema_code
 from .schema import prepare_new_planner_triggers
-from .bg.clry import app as clryapp
+
 
 log = logging.getLogger(__name__)
 
@@ -311,8 +311,7 @@ def update_stage(stage_id, body):
             db.session.commit()
 
         from .bg import jobs as bg_jobs  # pylint: disable=import-outside-toplevel
-        t = bg_jobs.refresh_schema_repo.delay(stage.id)
-        log.info('refresh schema repo %s, bg processing: %s', body, t)
+        kkrq.enq_neck(bg_jobs.refresh_schema_repo, stage.id)
 
     result = stage.get_json()
 
@@ -484,8 +483,7 @@ def delete_agent(agent_id):
     db.session.commit()
 
     from .bg import jobs as bg_jobs  # pylint: disable=import-outside-toplevel
-    t = bg_jobs.destroy_machine.delay(agent.id)
-    log.info('destroy machine with agent %s, bg processing: %s', agent.id, t)
+    kkrq.enq(bg_jobs.destroy_machine, agent.id)
 
     return {}, 200
 
@@ -660,26 +658,31 @@ def get_diagnostics():
         'open': plnr_open
     }
 
-    # celery overview
-    diags['celery'] = {
-        'name': 'Celery',
+    # rq overview
+    diags['rq'] = {
+        'name': 'RQ',
         'address': '',
         'open': True,
     }
 
-    # get current celery tasks
-    with clryapp.pool.acquire(block=True) as conn:
-        tasks = conn.default_channel.client.lrange('celery', 0, -1)
-    diags['celery']['current_tasks'] = []
-    for task in tasks:
-        t = json.loads(task)
-        diags['celery']['current_tasks'].append(t)
+    # get current RQ jobs: TODO
+    jobs = kkrq.get_jobs()
+    diags['rq']['current_jobs'] = []
+    for job in jobs:
+        job = dict(id=job.id,
+                   created_at=job.created_at,
+                   ended_at=job.ended_at,
+                   enqueued_at=job.enqueued_at,
+                   func_name=job.func_name,
+                   description=job.description,
+                   status=job.get_status(refresh=False))
+        diags['rq']['current_jobs'].append(job)
 
     return diags
 
 
-def get_last_celery_task_names():
-    # get the last celery tasks
+def get_last_rq_jobs_names():
+    # get the last RQ jobs
     ch_url = os.environ.get('KRAKEN_CLICKHOUSE_URL', consts.DEFAULT_CLICKHOUSE_URL)
     o = urlparse(ch_url)
     ch = clickhouse_driver.Client(host=o.hostname)
@@ -687,7 +690,7 @@ def get_last_celery_task_names():
     now = datetime.datetime.utcnow()
     start_date = now - datetime.timedelta(hours=12111)
     query = "select max(time) as mt, tool, count(*) from logs "
-    query += "where service = 'celery' and tool != '' "
+    query += "where service = 'rq' and tool != '' "
     query += "group by tool "
     query += "having mt > %(start_date)s "
     query += "order by mt desc "
@@ -756,7 +759,7 @@ def  get_services_logs(services, level=None):
 
 def get_errors_in_logs_count():
     redis_addr = os.environ.get('KRAKEN_REDIS_ADDR', consts.DEFAULT_REDIS_ADDR)
-    rds = redis.Redis(host=redis_addr, port=6379, db=1)
+    rds = redis.Redis(host=redis_addr, port=6379, db=consts.REDIS_KRAKEN_DB)
 
     errors_count = rds.get('error-logs-count')
     if errors_count:

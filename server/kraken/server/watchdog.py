@@ -33,6 +33,7 @@ from . import srvcheck
 from .. import version
 from . import exec_utils
 from .bg import jobs as bg_jobs
+from . import kkrq
 
 log = logging.getLogger('watchdog')
 
@@ -149,8 +150,7 @@ def _destroy_and_delete_if_outdated(agent, ag):
     log.info('destroying machine with agent %s due idle time', agent)
     agent.disabled = True
     db.session.commit()
-    t = bg_jobs.destroy_machine.delay(agent.id)
-    log.info('destroy machine with agent %s, bg processing: %s', agent, t)
+    kkrq.enq(bg_jobs.destroy_machine, agent.id)
     return True
 
 
@@ -287,7 +287,7 @@ def _check_for_errors_in_logs():
     errors_count = rows[0][0]
 
     redis_addr = os.environ.get('KRAKEN_REDIS_ADDR', consts.DEFAULT_REDIS_ADDR)
-    rds = redis.Redis(host=redis_addr, port=6379, db=1)
+    rds = redis.Redis(host=redis_addr, port=6379, db=consts.REDIS_KRAKEN_DB)
 
     rds.set('error-logs-count', errors_count)
     #log.info('updated errors count to %s', errors_count)

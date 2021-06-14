@@ -12,7 +12,7 @@ import { ManagementService } from '../backend/api/management.service'
 })
 export class DiagsPageComponent implements OnInit {
     tabIndex = 0
-    data: any = {celery: {}}
+    data: any = {rq: {}}
     logServices: any = []
     logServicesSelected: string[] = []
     servicesLogs: any = []
@@ -22,8 +22,8 @@ export class DiagsPageComponent implements OnInit {
     logLevels: any[]
     logLevel: any
 
-    celeryTasks: any[]
-    celeryTask: any = 'all'
+    rqJobs: any[]
+    rqJob: any = 'all'
 
     constructor(
         private route: ActivatedRoute,
@@ -41,7 +41,7 @@ export class DiagsPageComponent implements OnInit {
             {name: 'server/job-log', value: 'server/job-log'},
             {name: 'server/badge', value: 'server/badge'},
             {name: 'server/other', value: 'server/other'},
-            {name: 'celery', value: 'celery'},
+            {name: 'rq', value: 'rq'},
             {name: 'scheduler', value: 'scheduler'},
             {name: 'planner', value: 'planner'},
             {name: 'watchdog', value: 'watchdog'},
@@ -53,7 +53,7 @@ export class DiagsPageComponent implements OnInit {
             {label: 'Error', value: 'error'},
         ]
 
-        this.celeryTasks = [{label: '-- all --', value: 'all'}]
+        this.rqJobs = [{label: '-- all --', value: 'all'}]
     }
 
     ngOnInit() {
@@ -72,7 +72,7 @@ export class DiagsPageComponent implements OnInit {
             (params) => {
                 if (params.get('tab') === 'logs') {
                     this.tabIndex = 1
-                    this.loadLastCeleryTaskNames()
+                    this.loadLastRQJobsNames()
 
                     const level = params.get('level')
                     if (['info', 'warning', 'error'].includes(level) && this.logLevel !== level) {
@@ -92,11 +92,11 @@ export class DiagsPageComponent implements OnInit {
         )
     }
 
-    loadLastCeleryTaskNames() {
-        this.managementService.getLastCeleryTaskNames().subscribe((data) => {
-            this.celeryTasks = [{label: '-- all --', value: 'all'}]
+    loadLastRQJobsNames() {
+        this.managementService.getLastRqJobsNames().subscribe((data) => {
+            this.rqJobs = [{label: '-- all --', value: 'all'}]
             for (const t of data.items) {
-                this.celeryTasks.push({label: t.name, value: t.name})
+                this.rqJobs.push({label: t.name, value: t.name})
             }
         })
     }
@@ -106,11 +106,11 @@ export class DiagsPageComponent implements OnInit {
 
         let services = ['all']
         if (this.logServicesSelected.length > 0) {
-            if (this.celeryTask && this.celeryTask !== 'all') {
+            if (this.rqJob && this.rqJob !== 'all') {
                 services = []
                 for (let s of this.logServicesSelected) {
-                    if (s === 'celery') {
-                        s = 'celery/' + this.celeryTask
+                    if (s === 'rq') {
+                        s = 'rq/' + this.rqJob
                     }
                     services.push(s)
 
@@ -132,8 +132,8 @@ export class DiagsPageComponent implements OnInit {
         }
     }
 
-    isCelerySelected() {
-        if (this.logServicesSelected.includes('celery')) {
+    isRQSelected() {
+        if (this.logServicesSelected.includes('rq')) {
             return true
         }
         return false

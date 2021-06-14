@@ -12,13 +12,13 @@
             {{ s.value.address }}
           </ng-template>
 
-          <div *ngIf="s.key === 'celery'">
-            <b>Current Tasks:</b>
-            <div *ngFor="let t of s.value.current_tasks">
-              {{ t }}
+          <div *ngIf="s.key === 'rq'">
+            <b>Current Jobs:</b>
+            <div *ngFor="let t of s.value.current_jobs">
+              {{ t.description }}
             </div>
-            <div *ngIf="!s.value.current_tasks || s.value.current_tasks.length === 0">
-              no tasks
+            <div *ngIf="!s.value.current_jobs || s.value.current_jobs.length === 0">
+              no jobs
             </div>
           </div>
 
@@ -41,12 +41,12 @@
         </div>
       </div>
 
-      <div *ngIf="isCelerySelected()" class="p-field p-grid" style="margin-left: 3em;">
-        <label for="celery-tasks" class="p-col-fixed" style="width: 9em;">Backgroud Tasks</label>
+      <div *ngIf="isRQSelected()" class="p-field p-grid" style="margin-left: 3em;">
+        <label for="rq-jobs" class="p-col-fixed" style="width: 9em;">Backgroud Tasks</label>
         <div class="p-col">
           <div class="p-inputgroup">
-            <p-dropdown id="celery-tasks"  [options]="celeryTasks" [(ngModel)]="celeryTask" (onChange)="loadServicesLogs()"></p-dropdown>
-            <button type="button" pButton pRipple icon="pi pi-refresh" styleClass="p-button-warn" (click)="loadLastCeleryTaskNames()"></button>
+            <p-dropdown id="rq-jobs"  [options]="rqJobs" [(ngModel)]="rqJob" (onChange)="loadServicesLogs()"></p-dropdown>
+            <button type="button" pButton pRipple icon="pi pi-refresh" styleClass="p-button-warn" (click)="loadLastRQJobsNames()"></button>
           </div>
         </div>
       </div>

@@ -39,12 +39,12 @@ LABEL kkver=${kkver} kkname=server
 
 
 ##############################################################################################################
-FROM krakenci/srv-base as celery
+FROM krakenci/srv-base as rq
 RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates && rm -rf /var/lib/apt/lists/*
 WORKDIR /server
 RUN groupadd user && useradd --create-home --home-dir /home/user -g user user
 USER user
 COPY --from=builder /venv /venv
-CMD /venv/bin/python3 -m kraken.server.kkcelery
+CMD /venv/bin/python3 -m kraken.server.kkrq
 ARG kkver=0.0
 LABEL kkver=${kkver} kkname=server
