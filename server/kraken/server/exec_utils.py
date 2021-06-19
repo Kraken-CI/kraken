@@ -265,6 +265,7 @@ def trigger_jobs(run, replay=False):
     agents_count = {}
 
     agents_needed = set()
+    created_systems = {}
 
     # trigger new jobs based on jobs defined in stage schema
     all_started_erred = True
@@ -317,9 +318,14 @@ def trigger_jobs(run, replay=False):
                 else:
                     executor = 'local'
                 system = System.query.filter_by(name=system_name, executor=executor).one_or_none()
+                sys_key = (system_name, executor)
+                if system is None:
+                    system = created_systems.get(sys_key, None)
                 if system is None:
                     system = System(name=system_name, executor=executor)
                     db.session.flush()
+                    # this is to avoid doing flush for the same system
+                    created_systems[sys_key] = system
 
                 # get timeout
                 timeout = _establish_timeout_for_job(j, run, system, agents_group)

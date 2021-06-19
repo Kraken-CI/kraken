@@ -192,4 +192,9 @@ def prepare_initial_data():
         db.session.commit()
         print("   created User record 'demo'")
 
+    # common systems
+    system = System(name='any', executor='local')
+    db.session.commit()
+
+    # preferences
     _prepare_initial_preferences()
