@@ -213,14 +213,9 @@
       <!-- column 4 -->
       <div>
         <h4>Destruction</h4>
-        <div class="p-field-radiobutton">
-          <p-radioButton name="destructionRule" value="1" [(ngModel)]="groupTab.group.deployment.aws.destruction_rule" inputId="keepForever"></p-radioButton>
-          <label for="keepForever">Keep VM for forever (pay for it for forever)</label>
-        </div>
-        <div class="p-field-radiobutton">
-          <p-radioButton name="destructionRule" value="2" [(ngModel)]="groupTab.group.deployment.aws.destruction_rule" inputId="maxJobs"></p-radioButton>
-          <label for="maxJobs">Destroy VM after
-            <p-inputNumber [(ngModel)]="groupTab.group.deployment.aws.max_jobs" [showButtons]="true"
+        <div style="margin: 5px;">
+          <label for="maxJobsIn">Destroy VM after
+            <p-inputNumber [(ngModel)]="groupTab.group.deployment.aws.destruction_after_jobs" [showButtons]="true"
                            inputId="maxJobsIn"
                            buttonLayout="horizontal"
                            spinnerMode="horizontal"
@@ -232,12 +227,12 @@
                            incrementButtonIcon="pi pi-plus"
                            decrementButtonIcon="pi pi-minus">
             </p-inputNumber>
-            jobs</label>
+            jobs (0 means disabled)
+          </label>
         </div>
-        <div class="p-field-radiobutton">
-          <p-radioButton name="destructionRule" value="3" [(ngModel)]="groupTab.group.deployment.aws.destruction_rule" inputId="idleTime"></p-radioButton>
-          <label for="idleTime">Destroy VM after
-            <p-inputNumber [(ngModel)]="groupTab.group.deployment.aws.idle_time" [showButtons]="true"
+        <div style="margin: 5px;">
+          <label for="idleTimeIn">Destroy VM after
+            <p-inputNumber [(ngModel)]="groupTab.group.deployment.aws.destruction_after_time" [showButtons]="true"
                            inputId="idleTimeIn"
                            buttonLayout="horizontal"
                            spinnerMode="horizontal"
@@ -250,7 +245,8 @@
                            incrementButtonIcon="pi pi-plus"
                            decrementButtonIcon="pi pi-minus">
             </p-inputNumber>
-            minutes of idle time</label>
+            minutes of idle time (0 means disabled)
+          </label>
         </div>
       </div>
     </div>

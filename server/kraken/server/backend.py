@@ -374,11 +374,11 @@ def _handle_step_result(agent, req):
                 aws = ag.deployment['aws']
         log.info('JOB %s, aws %s', job.id, aws)
 
-        if aws and aws['destruction_rule'] == consts.DESTRUCTION_RULE_MAX_JOBS:
-            log.info('JOB %s, destruction_rule %s', job.id, aws['destruction_rule'])
+        if aws and 'destruction_after_jobs' in aws and int(aws['destruction_after_jobs']) > 0:
+            max_jobs = int(aws['destruction_after_jobs'])
             jobs_num = Job.query.filter_by(agent_used=agent).count()
-            log.info('JOB %s, num %d, max %d', job.id, jobs_num, aws.get('max_jobs', 1))
-            if jobs_num >= aws.get('max_jobs', 1):
+            log.info('JOB %s, num %d, max %d', job.id, jobs_num, max_jobs)
+            if jobs_num >= max_jobs:
                 agent.disabled = True
                 kkrq.enq(bg_jobs.destroy_machine, agent.id)
 
