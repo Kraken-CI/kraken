@@ -699,7 +699,6 @@ class System(db.Model):
     name = Column(Unicode(150))
     executor = Column(Unicode(20))
     jobs = relationship('Job', back_populates="system")
-    #__table_args__ = (UniqueConstraint('name', 'executor', name='uq_system_name_executor'),)
     UniqueConstraint(name, executor, name='uq_system_name_executor')
 
 

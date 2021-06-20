@@ -193,8 +193,10 @@ def prepare_initial_data():
         print("   created User record 'demo'")
 
     # common systems
-    system = System(name='any', executor='local')
-    db.session.commit()
+    system = System.query.filter_by(name='any', executor='local').one_or_none()
+    if system is None:
+        system = System(name='any', executor='local')
+        db.session.commit()
 
     # preferences
     _prepare_initial_preferences()

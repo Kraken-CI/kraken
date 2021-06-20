@@ -63,7 +63,6 @@ def _create_app(task_name):
 
     # initialize SqlAlchemy
     db.init_app(app)
-    db.create_all(app=app)
 
     # setup sentry
     with app.app_context():
