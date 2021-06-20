@@ -921,6 +921,12 @@ def spawn_new_agents(agents_group_id):
         clickhouse_addr = get_setting('general', 'clickhouse_addr')
         access_key = get_setting('cloud', 'aws_access_key')
         secret_access_key = get_setting('cloud', 'aws_secret_access_key')
+        settings = ['server_url', 'minio_addr', 'clickhouse_addr', 'access_key', 'secret_access_key']
+        for s in settings:
+            val = locals()[s]
+            if not val:
+                log.error('%s is empty, please set it in global general or cloud settings', s)
+                return
 
         ag = AgentsGroup.query.filter_by(id=agents_group_id).one_or_none()
         if ag is None:

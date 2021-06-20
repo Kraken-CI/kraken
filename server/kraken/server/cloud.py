@@ -83,7 +83,6 @@ def allocate_ec2_vms(aws, access_key, secret_access_key,
              'Tags': [{'Key': 'kraken-group', 'Value': '%d' % ag.id}]}]
 
     # prepare init script
-    # TODO: fix http/https and hardcoded 8080 port
     init_script = """#!/usr/bin/env bash
                      exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
                      wget -O agent {server_url}/install/agent
