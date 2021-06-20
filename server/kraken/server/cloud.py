@@ -15,6 +15,7 @@
 import logging
 import datetime
 
+from sqlalchemy.orm.attributes import flag_modified
 import botocore
 import boto3
 
