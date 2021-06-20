@@ -36,11 +36,12 @@ def enq(func, *args, **kwargs):
     return j
 
 
-def enq_neck(func, *args):
+def enq_neck(func, *args, ignore_args=None):
     redis_addr = os.environ.get('KRAKEN_REDIS_ADDR', consts.DEFAULT_REDIS_ADDR)
     rds = redis.Redis(host=redis_addr, port=6379, db=consts.REDIS_RQ_DB)
     data = dict(func=func.__name__,
-                args=args)
+                args=args,
+                ignore_args=ignore_args)
     data = json.dumps(data)
     rds.publish('qneck', data)
 

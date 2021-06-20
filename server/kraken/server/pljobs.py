@@ -28,7 +28,7 @@ def trigger_run(stage_id, flow_kind=consts.FLOW_KIND_CI, reason=None):
     args = (stage_id, flow_kind, reason)
 
     log.info('trigger run for stage %s', stage_id)
-    kkrq.enq_neck(bg_jobs.trigger_run, *args)
+    kkrq.enq_neck(bg_jobs.trigger_run, *args, ignore_args=[2])
 
 
 def refresh_schema_repo(stage_id):

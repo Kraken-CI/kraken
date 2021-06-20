@@ -92,9 +92,18 @@ def _main_loop():
             data = json.loads(msg['data'])
             func_name = data['func']
             args = tuple(data['args'])
+            ignore_args = data['ignore_args']
             func = getattr(bg_jobs, func_name)
 
-            key = (func, *args)
+            if ignore_args:
+                key = [func]
+                for idx, a in enumerate(args):
+                    if idx in ignore_args:
+                        continue
+                    key.append(a)
+                key = tuple(key)
+            else:
+                key = (func, *args)
 
             # if the same jobs as received one is waiting
             # then drop this one - we keep only one waiting job
