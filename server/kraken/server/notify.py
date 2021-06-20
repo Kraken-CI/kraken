@@ -165,6 +165,13 @@ def _notify_email(run, event, email):
     if smtp_user and smtp_password:
         server.login(smtp_user, smtp_password)
 
+
+    log.info("sending email, server: '%s:%s', TLS: %s, user: '%s', password: '%s'",
+             smtp_server, str(smtp_port),
+             'yes' if smtp_tls else 'no',
+             smtp_user if smtp_user else '',
+             '*' * len(smtp_password) if smtp_password else '')
+
     server.sendmail(smtp_from, recipients, message.as_string())
 
     server.close()
