@@ -20,9 +20,13 @@ import logging
 
 import rq
 import redis
+from flask import Flask
 
 from . import srvcheck
 from . import consts
+from . import logs
+from .. import version
+from .models import db, get_setting
 
 log = logging.getLogger('rq')
 
@@ -56,7 +60,12 @@ def get_jobs():
     return jobs
 
 
+def _exception_handler(job, exc_type, exc_value, traceback):
+    log.exception('IGNORED')
+
+
 def main():
+    # check deps
     planner_url = os.environ.get('KRAKEN_PLANNER_URL', consts.DEFAULT_PLANNER_URL)
     srvcheck.check_url('planner', planner_url, 7997)
 
@@ -64,7 +73,27 @@ def main():
     srvcheck.check_tcp_service('redis', redis_addr, 6379)
     rds = redis.Redis(host=redis_addr, port=6379, db=consts.REDIS_RQ_DB)
 
-    worker = rq.Worker('kq', connection=rds)
+    db_url = os.environ.get('KRAKEN_DB_URL', consts.DEFAULT_DB_URL)
+    srvcheck.check_postgresql(db_url)
+
+    logs.setup_logging('rq')
+    log.info('Kraken RQ started, version %s', version.version)
+
+    # Create Flask app instance
+    app = Flask('Kraken RQ')
+    app.config["SQLALCHEMY_ECHO"] = False
+    app.config["SQLALCHEMY_DATABASE_URI"] = db_url + '?application_name=rq'
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+    # initialize SqlAlchemy
+    db.init_app(app)
+
+    # setup sentry
+    with app.app_context():
+        sentry_url = get_setting('monitoring', 'sentry_dsn')
+        logs.setup_sentry(sentry_url)
+
+    worker = rq.Worker('kq', connection=rds, exception_handlers=[_exception_handler])
     worker.work()
 
 
