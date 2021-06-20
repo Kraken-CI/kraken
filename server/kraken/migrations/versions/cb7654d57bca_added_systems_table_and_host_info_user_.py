@@ -74,21 +74,22 @@ def upgrade():
             upd['system_id'] = s_id
             jobs_updts.append(upd)
 
-    # update all jobs
-    jobs_tbl = sa.sql.table(
-        'jobs',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('system_id', sa.Integer(), nullable=True),
-        # Other columns not needed for the data migration
-    )
-    stmt = jobs_tbl.update()
-    stmt = stmt.where(jobs_tbl.c.id == bindparam('_id'))
-    stmt = stmt.values({
-        'system_id': bindparam('system_id')
-    })
-    conn.execute(stmt, jobs_updts)
+    if jobs_updts:
+        # update all jobs
+        jobs_tbl = sa.sql.table(
+            'jobs',
+            sa.Column('id', sa.Integer(), nullable=False),
+            sa.Column('system_id', sa.Integer(), nullable=True),
+            # Other columns not needed for the data migration
+        )
+        stmt = jobs_tbl.update()
+        stmt = stmt.where(jobs_tbl.c.id == bindparam('_id'))
+        stmt = stmt.values({
+            'system_id': bindparam('system_id')
+        })
+        conn.execute(stmt, jobs_updts)
 
-    #op.drop_column('jobs', 'system')
+    op.drop_column('jobs', 'system')
 
 
 def downgrade():

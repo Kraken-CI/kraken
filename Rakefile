@@ -310,8 +310,14 @@ end
 task :build_all => [:build_py, :build_ui]
 
 task :server_ut do
+  at_exit {
+    sh "docker rm -f -v kk-ut-pgsql"
+  }
+  sh "docker run --name kk-ut-pgsql -d -p 15432:5432 -e POSTGRES_DB=kkut -e POSTGRES_USER=kkut -e POSTGRES_PASSWORD=kkut postgres:11 && sleep 5"
+
+  ENV['POSTGRES_URL'] = "postgresql://kkut:kkut@localhost:15432/"
   Dir.chdir('server') do
-    sh "../venv/bin/poetry run pytest -s -v"
+    sh "../venv/bin/poetry run pytest -s -v #{ENV['test']}"
   end
 end
 

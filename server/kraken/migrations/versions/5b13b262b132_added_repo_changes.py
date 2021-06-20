@@ -23,10 +23,10 @@ def upgrade():
     orm.Session(bind=conn)
 
     rc_tbl = op.create_table('repo_changes',
-                             sa.Column('id', sa.Integer(), nullable=False),
                              sa.Column('created', sa.DateTime(), nullable=False),
                              sa.Column('updated', sa.DateTime(), nullable=False),
                              sa.Column('deleted', sa.DateTime(), nullable=True),
+                             sa.Column('id', sa.Integer(), nullable=False),
                              sa.Column('data', postgresql.JSONB(astext_type=sa.Text()), nullable=False),
                              sa.PrimaryKeyConstraint('id')
     )

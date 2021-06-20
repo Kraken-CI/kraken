@@ -17,7 +17,7 @@ import logging
 
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Column, Boolean, DateTime, ForeignKey, Integer, String, Text, Unicode, UnicodeText
-from sqlalchemy import event, UniqueConstraint
+from sqlalchemy import event, UniqueConstraint, Index
 from sqlalchemy.orm import relationship, mapper
 from sqlalchemy.dialects.postgresql import JSONB, DOUBLE_PRECISION, BYTEA
 
@@ -92,10 +92,10 @@ class Branch(db.Model, DatesMixin):
                             primaryjoin="and_(Branch.id==Flow.branch_id, Flow.kind==0)", viewonly=True)
     dev_flows = relationship("Flow", order_by="desc(Flow.created)",
                              primaryjoin="and_(Branch.id==Flow.branch_id, Flow.kind==1)", viewonly=True)
-    ci_last_incomplete_flow_id = Column(Integer, ForeignKey('flows.id'))
-    ci_last_incomplete_flow = relationship('Flow', foreign_keys=[ci_last_incomplete_flow_id])
     ci_last_completed_flow_id = Column(Integer, ForeignKey('flows.id'))
     ci_last_completed_flow = relationship('Flow', foreign_keys=[ci_last_completed_flow_id])
+    ci_last_incomplete_flow_id = Column(Integer, ForeignKey('flows.id'))
+    ci_last_incomplete_flow = relationship('Flow', foreign_keys=[ci_last_incomplete_flow_id])
     stages = relationship("Stage", back_populates="branch", order_by="Stage.name")
     sequences = relationship("BranchSequence", back_populates="branch")
 
@@ -203,18 +203,18 @@ class Stage(db.Model, DatesMixin):
     enabled = Column(Boolean, default=True)
     schema = Column(JSONB, nullable=False)
     schema_code = Column(UnicodeText)
-    schema_from_repo_enabled = Column(Boolean, default=False)
-    repo_url = Column(UnicodeText)
-    repo_branch = Column(UnicodeText)
-    repo_access_token = Column(UnicodeText)
-    repo_state = Column(Integer, default=consts.REPO_STATE_OK)
-    repo_error = Column(UnicodeText)
-    repo_version = Column(UnicodeText)
-    repo_refresh_interval = Column(UnicodeText)
-    repo_refresh_job_id = Column(UnicodeText)
-    schema_file = Column(UnicodeText)
     triggers = Column(JSONB)
     timeouts = Column(JSONB)
+    repo_access_token = Column(UnicodeText)
+    repo_branch = Column(UnicodeText)
+    repo_url = Column(UnicodeText)
+    schema_file = Column(UnicodeText)
+    schema_from_repo_enabled = Column(Boolean, default=False)
+    repo_error = Column(UnicodeText)
+    repo_refresh_interval = Column(UnicodeText)
+    repo_refresh_job_id = Column(UnicodeText)
+    repo_state = Column(Integer, default=consts.REPO_STATE_OK)
+    repo_version = Column(UnicodeText)
     runs = relationship('Run', back_populates="stage")
     sequences = relationship("BranchSequence", back_populates="stage")
     # services
@@ -277,7 +277,7 @@ class Stage(db.Model, DatesMixin):
 class RepoChanges(db.Model, DatesMixin):
     __tablename__ = "repo_changes"
     id = Column(Integer, primary_key=True)
-    data = Column(JSONB)
+    data = Column(JSONB, nullable=False)
     flow = relationship("Flow", back_populates="trigger_data")
     runs = relationship("Run", back_populates="repo_data")
 
@@ -285,7 +285,6 @@ class RepoChanges(db.Model, DatesMixin):
 class Flow(db.Model, DatesMixin):
     __tablename__ = "flows"
     id = Column(Integer, primary_key=True)
-    label = Column(Unicode(200))
     finished = Column(DateTime)
     state = Column(Integer, default=consts.FLOW_STATE_IN_PROGRESS)
     kind = Column(Integer, default=consts.FLOW_KIND_CI)  # 0 - CI, 1 - dev
@@ -294,10 +293,12 @@ class Flow(db.Model, DatesMixin):
     branch = relationship('Branch', foreign_keys=[branch_id])
     runs = relationship('Run', back_populates="flow", order_by="Run.created")
     args = Column(JSONB, nullable=False, default={})
+    artifacts = Column(JSONB, default={})
+    label = Column(Unicode(200))
     trigger_data_id = Column(Integer, ForeignKey('repo_changes.id'))
     trigger_data = relationship('RepoChanges')
-    artifacts = Column(JSONB, default={})
     artifacts_files = relationship('Artifact', back_populates="flow")
+    Index('ix_flows_branch_id_kind', branch_id, kind)
 
     def get_label(self):
         return self.label if self.label else ("%d." % self.id)
@@ -338,10 +339,12 @@ class Flow(db.Model, DatesMixin):
         return data
 
 
+Index('ix_flows_created', Flow.created)
+
+
 class Run(db.Model, DatesMixin):
     __tablename__ = "runs"
     id = Column(Integer, primary_key=True)
-    label = Column(Unicode(200))
     started = Column(DateTime)    # time when the run got a first non-deleted job
     finished = Column(DateTime)    # time when all tasks finished first time
     finished_again = Column(DateTime)    # time when all tasks finished
@@ -350,29 +353,30 @@ class Run(db.Model, DatesMixin):
     note = Column(UnicodeText)
     stage_id = Column(Integer, ForeignKey('stages.id'), nullable=False)
     stage = relationship('Stage', back_populates="runs")
-    flow_id = Column(Integer, ForeignKey('flows.id'), nullable=False)
+    flow_id = Column(Integer, ForeignKey('flows.id'), nullable=False, index=True)
     flow = relationship('Flow', back_populates="runs")
     jobs = relationship('Job', back_populates="run")
-    artifacts = Column(JSONB, default={})
     artifacts_files = relationship('Artifact', back_populates="run")
     hard_timeout_reached = Column(DateTime)
     soft_timeout_reached = Column(DateTime)
     args = Column(JSONB, nullable=False, default={})
     # stats - result changes
+    fix_cnt = Column(Integer, default=0)
     new_cnt = Column(Integer, default=0)
     no_change_cnt = Column(Integer, default=0)
     regr_cnt = Column(Integer, default=0)
-    fix_cnt = Column(Integer, default=0)
-    tests_total = Column(Integer, default=0)
-    tests_passed = Column(Integer, default=0)
-    tests_not_run = Column(Integer, default=0)
+    issues_new = Column(Integer, default=0)
+    issues_total = Column(Integer, default=0)
     jobs_error = Column(Integer, default=0)
     jobs_total = Column(Integer, default=0)
-    issues_total = Column(Integer, default=0)
-    issues_new = Column(Integer, default=0)
+    tests_not_run = Column(Integer, default=0)
+    tests_passed = Column(Integer, default=0)
+    tests_total = Column(Integer, default=0)
+    artifacts = Column(JSONB, default={})
+    label = Column(Unicode(200))
+    reason = Column(JSONB, nullable=False)
     repo_data_id = Column(Integer, ForeignKey('repo_changes.id'))
     repo_data = relationship('RepoChanges')
-    reason = Column(JSONB, nullable=False)
 
     def get_json(self, with_project=True, with_branch=True, with_artifacts=True):
         jobs_processing = 0
@@ -499,17 +503,17 @@ class Job(db.Model, DatesMixin):
     steps = relationship("Step", back_populates="job", order_by="Step.index")
     state = Column(Integer, default=consts.JOB_STATE_QUEUED)
     completion_status = Column(Integer)
-    timeout = Column(Integer)
     covered = Column(Boolean, default=False)
     notes = Column(Unicode(2048))
-    system_id = Column(Integer, ForeignKey('systems.id'), nullable=False)
-    system = relationship('System', back_populates="jobs")
     agent = relationship('Agent', uselist=False, back_populates="job",
                             foreign_keys="Agent.job_id", post_update=True)
-    agents_group_id = Column(Integer, ForeignKey('agents_groups.id'), nullable=False)
-    agents_group = relationship('AgentsGroup', back_populates="jobs")
     agent_used_id = Column(Integer, ForeignKey('agents.id'))
     agent_used = relationship('Agent', foreign_keys=[agent_used_id], post_update=True)
+    agents_group_id = Column(Integer, ForeignKey('agents_groups.id'), nullable=False)
+    agents_group = relationship('AgentsGroup', back_populates="jobs")
+    timeout = Column(Integer)
+    system_id = Column(Integer, ForeignKey('systems.id', name='fk_systems_jobs'), nullable=False) # match name fk_systems_jobs with name in alembic migration
+    system = relationship('System', back_populates="jobs")
     results = relationship('TestCaseResult', back_populates="job")
     issues = relationship('Issue', back_populates="job")
 
@@ -558,6 +562,7 @@ class Job(db.Model, DatesMixin):
 
 class TestCase(db.Model, DatesMixin):
     __tablename__ = "test_cases"
+    __test__ = False  # do not treat this class as a test by pytest
     id = Column(Integer, primary_key=True)
     name = Column(Unicode(255), unique=True)
     tool_id = Column(Integer, ForeignKey('tools.id'), nullable=False)
@@ -567,6 +572,7 @@ class TestCase(db.Model, DatesMixin):
 
 class TestCaseResult(db.Model):
     __tablename__ = "test_case_results"
+    __test__ = False  # do not treat this class as a test by pytest
     id = Column(Integer, primary_key=True)
     test_case_id = Column(Integer, ForeignKey('test_cases.id'), nullable=False)
     test_case = relationship('TestCase', back_populates="results")
@@ -625,10 +631,10 @@ class Issue(db.Model):
     path = Column(Unicode(512))
     symbol = Column(Unicode(64))
     message = Column(Unicode(512))
-    extra = Column(JSONB)
-    age = Column(Integer, default=0)
     job_id = Column(Integer, ForeignKey('jobs.id'), nullable=False)
     job = relationship('Job', back_populates="issues")
+    extra = Column(JSONB)
+    age = Column(Integer, default=0)
 
     def get_json(self):
         data = dict(id=self.id,
@@ -662,9 +668,9 @@ class Artifact(db.Model):
     id = Column(Integer, primary_key=True)
     file_id = Column(Integer, ForeignKey('files.id'), nullable=False)
     file = relationship('File', back_populates="artifacts")
-    flow_id = Column(Integer, ForeignKey('flows.id'), nullable=False)
+    flow_id = Column(Integer, ForeignKey('flows.id'), nullable=False, index=True)
     flow = relationship('Flow', back_populates="artifacts_files")
-    run_id = Column(Integer, ForeignKey('runs.id'), nullable=False)
+    run_id = Column(Integer, ForeignKey('runs.id'), nullable=False, index=True)
     run = relationship('Run', back_populates="artifacts_files")
     size = Column(Integer, default=0)
     section = Column(Integer, default=0)
@@ -690,10 +696,11 @@ class APSchedulerJob(db.Model):
 class System(db.Model):
     __tablename__ = "systems"
     id = Column(Integer, primary_key=True)
-    name = Column(Unicode(150), unique=True)
-    executor = Column(Unicode(20), unique=True)
+    name = Column(Unicode(150))
+    executor = Column(Unicode(20))
     jobs = relationship('Job', back_populates="system")
-    UniqueConstraint('name', 'executor', name='uq_system_name_executor')
+    #__table_args__ = (UniqueConstraint('name', 'executor', name='uq_system_name_executor'),)
+    UniqueConstraint(name, executor, name='uq_system_name_executor')
 
 
 class Tool(db.Model, DatesMixin):
@@ -756,19 +763,19 @@ class Agent(db.Model, DatesMixin):
     id = Column(Integer, primary_key=True)
     name = Column(Unicode(50), nullable=False)
     address = Column(Unicode(25), index=True, nullable=False)
-    authorized = Column(Boolean, default=False)
     ip_address = Column(Unicode(50))
     state = Column(Integer, default=0)
     disabled = Column(Boolean, default=False)
     comment = Column(Text)
     status_line = Column(Text)
+    job_id = Column(Integer, ForeignKey('jobs.id'))
+    job = relationship('Job', back_populates="agent", foreign_keys=[job_id])
+    authorized = Column(Boolean, default=False)
     last_seen = Column(DateTime)
     host_info = Column(JSONB)
     user_attrs = Column(JSONB)
     extra_attrs = Column(JSONB)
     agents_groups = relationship('AgentAssignment', back_populates="agent")
-    job_id = Column(Integer, ForeignKey('jobs.id'))
-    job = relationship('Job', back_populates="agent", foreign_keys=[job_id])
 
     def __repr__(self):
         return "<Agent %s, job:%s>" % (self.id, self.job_id)
@@ -793,13 +800,16 @@ class Agent(db.Model, DatesMixin):
                     job=self.job.get_json() if self.job else None)
 
 
+Index('ix_agents_address_not_deleted', Agent.address, postgresql_where=Agent.deleted.is_(None), unique=True)
+
+
 class Setting(db.Model):
     __tablename__ = "settings"
     id = Column(Integer, primary_key=True)
-    group = Column(Unicode(50))
     name = Column(Unicode(50))
     value = Column(Text)
     val_type = Column(String(8))  # integer, text, boolean, password
+    group = Column(Unicode(50))
 
     def get_json(self):
         return {

@@ -15,7 +15,7 @@
 from passlib.hash import pbkdf2_sha256
 
 from .models import db, Branch, Stage, AgentsGroup, Setting, Tool, Project
-from .models import User, BranchSequence
+from .models import User, BranchSequence, System
 from .schema import execute_schema_code
 from . import consts
 
