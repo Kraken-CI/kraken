@@ -125,7 +125,7 @@ def allocate_ec2_vms(aws, access_key, secret_access_key,
     # create AWS EC2 instances
     instances = ec2_res.create_instances(**params)
 
-    log.info('spawning new agents %s', instances)
+    log.info('spawning new EC2 VMs for agents %s', instances)
 
     sys_id = system.id if system.executor == 'local' else 0
 
@@ -152,9 +152,12 @@ def allocate_ec2_vms(aws, access_key, secret_access_key,
         except Exception:
             db.session.rollback()
             a = Agent.query.filter_by(deleted=None, address=address).one_or_none()
-            if not a:
+            if a:
                 a.update(params)
                 db.session.commit()
-        if a:
-            AgentAssignment(agent=a, agents_group=ag)
-            db.session.commit()
+            else:
+                raise
+
+        AgentAssignment(agent=a, agents_group=ag)
+        db.session.commit()
+        log.info('spawned new agent %s on EC2 instance %s', a, i)
