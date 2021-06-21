@@ -15,9 +15,10 @@
 import logging
 import datetime
 
-from sqlalchemy.orm.attributes import flag_modified
-import botocore
 import boto3
+import botocore
+import requests
+from sqlalchemy.orm.attributes import flag_modified
 
 from .models import db
 from .models import Agent, AgentAssignment
@@ -63,6 +64,9 @@ def allocate_ec2_vms(aws, access_key, secret_access_key,
     except Exception:
         log.exception('IGNORED EXCEPTION')
     if not sec_grp:
+        rsp = requests.get('https://checkip.amazonaws.com')
+        my_ip = rsp.text.strip()
+
         default_vpc = list(ec2_res.vpcs.filter(Filters=[{'Name': 'isDefault', 'Values': ['true']}]))[0]
         sec_grp = default_vpc.create_security_group(GroupName=grp_name,
                                                     Description='kraken sec group that allows only incomming ssh')

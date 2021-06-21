@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
 import logging
 
 from .bg import jobs as bg_jobs
@@ -33,8 +32,6 @@ def trigger_run(stage_id, flow_kind=consts.FLOW_KIND_CI, reason=None):
 
 def refresh_schema_repo(stage_id):
     logging.basicConfig(format=consts.LOG_FMT, level=logging.INFO)
-
-    args = (stage_id,)
 
     log.info('refresh stage %s schema from repo', stage_id)
     kkrq.enq_neck(bg_jobs.refresh_schema_repo, stage_id)

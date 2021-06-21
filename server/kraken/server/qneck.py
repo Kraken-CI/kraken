@@ -18,7 +18,6 @@ import os
 import time
 import json
 import logging
-import datetime
 
 import redis
 
@@ -61,6 +60,7 @@ def _check_jobs(waiting_jobs, executing_jobs):
 
 def _main_loop():
     redis_addr = os.environ.get('KRAKEN_REDIS_ADDR', consts.DEFAULT_REDIS_ADDR)
+    srvcheck.check_tcp_service('redis', redis_addr, 6379)
     rds = redis.Redis(host=redis_addr, port=6379, db=consts.REDIS_RQ_DB)
 
     ps = rds.pubsub()

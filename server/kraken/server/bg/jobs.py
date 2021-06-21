@@ -25,12 +25,9 @@ from sqlalchemy.orm.attributes import flag_modified
 import giturlparse
 import pytimeparse
 import redis
-import requests
-import botocore
-import boto3
 
 from ..models import db, Run, Job, TestCaseResult, Branch, Flow, Stage, Project, get_setting
-from ..models import AgentsGroup, Agent, AgentAssignment, System
+from ..models import AgentsGroup, Agent, System
 from ..models import RepoChanges
 from ..schema import prepare_new_planner_triggers
 from ..schema import check_and_correct_stage_schema
@@ -632,7 +629,7 @@ def job_completed(job_id):
             if is_completed:
                 exec_utils.complete_run(run, now)
 
-    except Exception as exc:
+    except Exception:
         log.set_ctx(job=None)
         raise
 
@@ -911,9 +908,6 @@ def refresh_schema_repo(stage_id):
 
 def spawn_new_agents(agents_group_id):
     app = _create_app('spawn_new_agents_%d' % agents_group_id)
-
-    rsp = requests.get('https://checkip.amazonaws.com')
-    my_ip = rsp.text.strip()
 
     with app.app_context():
         server_url = get_setting('general', 'server_url')
