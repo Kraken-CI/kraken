@@ -761,7 +761,7 @@ class Agent(db.Model, DatesMixin):
     __tablename__ = "agents"
     id = Column(Integer, primary_key=True)
     name = Column(Unicode(50), nullable=False)
-    address = Column(Unicode(25), index=True, nullable=False)
+    address = Column(Unicode(25), index=True, nullable=False, unique=True)
     ip_address = Column(Unicode(50))
     state = Column(Integer, default=0)
     disabled = Column(Boolean, default=False)
