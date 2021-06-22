@@ -68,7 +68,7 @@ def create_app():
     return app
 
 
-def _check_jobs():
+def _check_jobs_if_expired():
     now = datetime.datetime.utcnow()
 
     q = Job.query.filter_by(state=consts.JOB_STATE_ASSIGNED)
@@ -84,6 +84,23 @@ def _check_jobs():
             log.warning('time %ss for job %s expired, canceling', timeout, job)
             note = 'time %ss for job expired' % timeout
             exec_utils.cancel_job(job, note, consts.JOB_CMPLT_SERVER_TIMEOUT)
+
+
+def _check_jobs_if_missing_agents():
+    groups = set()
+    q = Job.query.filter_by(covered=False, deleted=None, state=consts.JOB_STATE_QUEUED)
+    for job in q.all():
+        ag = job.agents_group
+        if ag.deployment and ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS and 'aws' in ag.deployment:
+            groups.add(ag.id)
+
+    for ag_id in groups:
+        kkrq.enq_neck(bg_jobs.spawn_new_agents, ag_id)
+
+
+def _check_jobs():
+    _check_jobs_if_expired()
+    _check_jobs_if_missing_agents()
 
 
 def _check_runs():
@@ -138,7 +155,10 @@ def _destroy_and_delete_if_outdated(agent, ag):
     if 'destruction_after_time' not in aws or int(aws['destruction_after_time']) == 0:
         return False
 
-    last_job = Job.query.filter_by(agent_used=agent).order_by(desc(Job.finished)).first()
+    q = Job.query.filter_by(agent_used=agent)
+    q = q.filter(Job.finished.isnot(None))
+    q = q.order_by(desc(Job.finished))
+    last_job = q.first()
     if not last_job:
         return False
 
@@ -208,6 +228,8 @@ def _check_agents_to_destroy():
 
 
 def _check_machines_with_no_agent():
+    # look for AWS EC2 machines that do not have agents in database
+    # and destroy such machines
     access_key = get_setting('cloud', 'aws_access_key')
     secret_access_key = get_setting('cloud', 'aws_secret_access_key')
 
@@ -217,7 +239,7 @@ def _check_machines_with_no_agent():
 
     count = 0
     for ag in q.all():
-        if ag.deployment['method'] != consts.AGENT_DEPLOYMENT_METHOD_AWS or 'aws' not in ag.deployment or not ag.deployment['aws']:
+        if not ag.deployment or ag.deployment['method'] != consts.AGENT_DEPLOYMENT_METHOD_AWS or 'aws' not in ag.deployment or not ag.deployment['aws']:
             continue
 
         aws = ag.deployment['aws']
@@ -327,11 +349,12 @@ def main():
     app = create_app()
 
     with app.app_context():
-        try:
-            _main_loop()
-        except Exception:
-            log.exception('IGNORED EXCEPTION')
-            time.sleep(10)
+        while True:
+            try:
+                _main_loop()
+            except Exception:
+                log.exception('IGNORED EXCEPTION')
+                time.sleep(10)
 
 
 if __name__ == "__main__":
