@@ -60,7 +60,7 @@ def get_jobs():
     return jobs
 
 
-def _exception_handler(job, exc_type, exc_value, traceback):
+def _exception_handler(job, exc_type, exc_value, traceback):  # pylint: disable=unused-argument
     log.exception('IGNORED')
 
 
