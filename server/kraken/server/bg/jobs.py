@@ -25,6 +25,7 @@ from sqlalchemy.orm.attributes import flag_modified
 import giturlparse
 import pytimeparse
 import redis
+import boto3
 
 from ..models import db, Run, Job, TestCaseResult, Branch, Flow, Stage, Project, get_setting
 from ..models import AgentsGroup, Agent, System
@@ -968,15 +969,18 @@ def spawn_new_agents(agents_group_id):
                     log.warning('cannot find system id:%d', sys_id)
                     continue
 
-            # check if there is enough idle agents with proper system
-            idle_agents = Agent.query.filter_by(job=None, authorized=True, disabled=False).all()
-            idle_agents_count = 0
-            for a in idle_agents:
+            # check if there is enough agents with proper system
+            q = Agent.query.filter_by(authorized=True, disabled=False, deleted=None)
+            q = q.join('agents_groups')
+            q = q.filter_by(agents_group=ag)
+            agents = q.all()
+            agents_count = 0
+            for a in agents:
                 if a.extra_attrs and 'system' in a.extra_attrs and a.extra_attrs['system'] == sys_id:
-                    idle_agents_count += 1
-            num = needed_count - idle_agents_count
+                    agents_count += 1
+            num = needed_count - agents_count
             if num <= 0:
-                log.info('enough agents')
+                log.info('enough agents, avail: %d, needed: %d', agents_count, needed_count)
                 continue
 
             cloud.allocate_ec2_vms(aws, access_key, secret_access_key,
