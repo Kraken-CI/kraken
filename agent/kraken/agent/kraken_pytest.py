@@ -33,7 +33,10 @@ def collect_tests(step):
         pypath = ':' + pypath
 
     cmd = 'PYTHONPATH=`pwd`%s %s --collect-only -q %s  | head -n -2' % (pypath, pytest_exe, params)
-    _, out = utils.execute(cmd, cwd=cwd, out_prefix='')
+    ret, out = utils.execute(cmd, cwd=cwd, out_prefix='')
+    if ret != 0:
+        log.error('problem with collecting tests:\n%s', out)
+        raise Exception('problem with collecting tests')
     tests = out
     tests = tests.splitlines()
     tests2 = []
