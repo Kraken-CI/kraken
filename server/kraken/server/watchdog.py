@@ -201,14 +201,13 @@ def _delete_if_missing_in_aws(agent, ag):
 def _check_agents_to_destroy():
     q = Agent.query.filter_by(deleted=None, job=None)
     q = q.join('agents_groups', 'agents_group')
-    q = q.filter_by(deleted=None)
     q = q.filter(AgentsGroup.deployment.isnot(None))
 
     outdated_count = 0
     dangling_count = 0
     for agent in q.all():
         ag = agent.agents_groups[0].agents_group
-        if ag.deployment['method'] != consts.AGENT_DEPLOYMENT_METHOD_AWS or 'aws' not in ag.deployment or not ag.deployment['aws']:
+        if not ag.deployment or ag.deployment['method'] != consts.AGENT_DEPLOYMENT_METHOD_AWS or 'aws' not in ag.deployment or not ag.deployment['aws']:
             continue
 
         deleted = _destroy_and_delete_if_outdated(agent, ag)
