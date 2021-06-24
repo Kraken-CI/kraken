@@ -37,4 +37,8 @@ export class SettingsService {
             })
         )
     }
+
+    checkResourceWorkingState(resource) {
+        return this.managementService.getSettingsWorkingState(resource)
+    }
 }

@@ -274,3 +274,40 @@ def notify(run, event):
         _notify_github(run, event, github)
     except Exception:
         log.exception('IGNORED EXCEPTION')
+
+
+def check_email_settings():
+    smtp_server = get_setting('notification', 'smtp_server')
+    if not smtp_server:
+        return 'STMP server address is empty'
+
+    if ':' in smtp_server:
+        smtp_server, smtp_port = smtp_server.split(':')
+        smtp_port = int(smtp_port)
+    else:
+        smtp_port = 0
+    smtp_user = get_setting('notification', 'smtp_user')
+    smtp_password = get_setting('notification', 'smtp_password')
+    smtp_tls = get_setting('notification', 'smtp_tls')
+    try:
+        if smtp_tls:
+            server = smtplib.SMTP_SSL(smtp_server, smtp_port)
+        else:
+            server = smtplib.SMTP(smtp_server, smtp_port)
+            server.ehlo()
+        if smtp_user and smtp_password:
+            server.login(smtp_user, smtp_password)
+    except Exception as ex:
+        return str(ex)
+
+    return 'ok'
+
+
+def check_slack_settings():
+    slack_token = get_setting('notification', 'slack_token')
+    if not slack_token:
+        return 'Slack token is empty'
+
+    # TODO
+
+    return 'ok'

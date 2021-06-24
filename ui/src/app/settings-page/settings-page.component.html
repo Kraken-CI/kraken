@@ -37,10 +37,27 @@
           <input type="password" class="input-field" name="smtp_password" pPassword [feedback]="false" formControlName="smtp_password"/>
         </label>
 
+        <p-button label="Test Access" icon="pi pi-check"
+                  (onClick)="checkResourceWorkingState('email')"
+                  [loading]="emailChecking"
+                  styleClass="p-button-outlined p-button-secondary p-button-sm"></p-button>
+        <span [ngStyle]="{ 'color': (emailState === 'ok' ? '#2bc62b' : 'red'), 'font-size': '1.2rem', 'font-weight': 'bold', 'padding-left': '2em'  }">
+            {{ emailState }}
+        </span>
+
         <div class="form-style-2-heading" style="padding-top: 20px;">Slack</div>
         <label for="slack_token"><span>Access Token</span>
           <input type="password" class="input-field" name="slack_token" pPassword [feedback]="false" formControlName="slack_token"/>
         </label>
+<!--
+        <p-button label="Test Access" icon="pi pi-check"
+                  (onClick)="checkResourceWorkingState('slack')"
+                  [loading]="slackChecking"
+                  styleClass="p-button-outlined p-button-secondary p-button-sm"></p-button>
+        <span [ngStyle]="{ 'color': (slackState === 'ok' ? '#2bc62b' : 'red'), 'font-size': '1.2rem', 'font-weight': 'bold', 'padding-left': '2em'  }">
+            {{ slackState }}
+        </span>
+-->
       </form>
   </p-tabPanel>
 
@@ -66,6 +83,15 @@
           <input type="password" class="input-field" name="aws_secret_access_key" pPassword [feedback]="false" formControlName="aws_secret_access_key"/>
         </label>
       </form>
+
+      <p-button label="Test Access" icon="pi pi-check"
+                (onClick)="checkResourceWorkingState('aws')"
+                [loading]="awsChecking"
+                styleClass="p-button-outlined p-button-secondary p-button-sm"></p-button>
+      <span [ngStyle]="{ 'color': (awsState === 'ok' ? '#2bc62b' : 'red'), 'font-size': '1.2rem', 'font-weight': 'bold', 'padding-left': '2em'  }">
+          {{ awsState }}
+      </span>
+
     </p-fieldset>
   </p-tabPanel>
 

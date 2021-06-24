@@ -18,6 +18,13 @@ export class SettingsPageComponent implements OnInit {
 
     tabIndex = 0
 
+    emailState = ''
+    emailChecking = false
+    slackState = ''
+    slackChecking = false
+    awsState = ''
+    awsChecking = false
+
     generalForm = new FormGroup({
         server_url: new FormControl(''),
         minio_addr: new FormControl(''),
@@ -110,6 +117,41 @@ export class SettingsPageComponent implements OnInit {
                     severity: 'error',
                     summary: 'Settings update erred',
                     detail: 'Settings update operation erred: ' + msg,
+                    life: 10000,
+                })
+            }
+        )
+    }
+
+    checkResourceWorkingState(resource) {
+        switch (resource) {
+        case 'email': this.emailChecking = true; break;
+        case 'slack': this.slackChecking = true; break;
+        case 'aws': this.awsChecking = true; break;
+        }
+        this.settingsService.checkResourceWorkingState(resource).subscribe(
+            (data) => {
+                console.info(data)
+                switch (resource) {
+                case 'email': this.emailState = data.state; this.emailChecking = false; break;
+                case 'slack': this.slackState = data.state; this.slackChecking = false; break;
+                case 'aws': this.awsState = data.state; this.awsChecking = false; break;
+                }
+            },
+            (err) => {
+                switch (resource) {
+                case 'email': this.emailChecking = false; break;
+                case 'slack': this.slackChecking = false; break;
+                case 'aws': this.awsChecking = false; break;
+                }
+                let msg = err.statusText
+                if (err.error && err.error.detail) {
+                    msg = err.error.detail
+                }
+                this.msgSrv.add({
+                    severity: 'error',
+                    summary: 'Checking failed',
+                    detail: 'Checking erred: ' + msg,
                     life: 10000,
                 })
             }

@@ -32,6 +32,8 @@ from .models import db, Branch, Stage, Agent, AgentsGroup, Secret, AgentAssignme
 from .models import Project, BranchSequence, get_setting
 from .schema import check_and_correct_stage_schema, SchemaError, execute_schema_code
 from .schema import prepare_new_planner_triggers
+from . import notify
+from . import cloud
 
 
 log = logging.getLogger(__name__)
@@ -768,3 +770,16 @@ def get_errors_in_logs_count():
         errors_count = 0
 
     return {'errors_count': errors_count}, 200
+
+
+def get_settings_working_state(resource):
+    if resource == 'email':
+        state = notify.check_email_settings()
+    elif resource == 'slack':
+        state = notify.check_slack_settings()
+    elif resource == 'aws':
+        state = cloud.check_aws_settings()
+    else:
+        abort(400, "Unsupported resource type: %s" % resource)
+
+    return {'state': state}, 200

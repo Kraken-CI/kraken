@@ -1645,6 +1645,27 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Settings'
+  /settings/{resource}/working-state:
+    get:
+      tags:
+      - Management
+      summary: Check if email or AWS settings are working
+      description: Check if email or AWS settings are working
+      operationId: get_settings_working_state
+      parameters:
+      - name: resource
+        in: path
+        description: ID of pet to return
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettingsWorkingState'
   /diagnostics:
     get:
       tags:
@@ -2319,6 +2340,11 @@ components:
         monitoring:
           type: object
           properties: {}
+    SettingsWorkingState:
+      type: object
+      properties:
+        state:
+          type: string
     Diagnostics:
       type: object
     ApiError:
