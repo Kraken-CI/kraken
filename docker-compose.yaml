@@ -175,8 +175,14 @@ services:
 
 volumes:
   db-data:
+    labels:
+      kraken: true
   clickhouse:
+    labels:
+      kraken: true
   minio:
+    labels:
+      kraken: true
 
 networks:
   db_net:
