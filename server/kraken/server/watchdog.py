@@ -353,6 +353,7 @@ def main():
                 _main_loop()
             except Exception:
                 log.exception('IGNORED EXCEPTION')
+                db.session.rollback()
                 time.sleep(10)
 
 
