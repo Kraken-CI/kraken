@@ -44,7 +44,7 @@ def check_aws_settings():
 
     try:
         ec2 = boto3.client('ec2', region_name='us-east-1', aws_access_key_id=access_key, aws_secret_access_key=secret_access_key)
-        resp = ec2.describe_regions()
+        ec2.describe_regions()
     except Exception as ex:
         return str(ex)
 
