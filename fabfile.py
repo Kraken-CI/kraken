@@ -34,7 +34,7 @@ def redeploy(c, kk_ver):
         c.run('mv db-sql.current.gz db-sql.prev.gz')
 
     # dump postgresql as sql
-    c.run("""bash -c "docker exec `docker ps -qf 'name=kraken_postgres'` ubuntu:20.04 bash -c 'export PGPASSWORD=kk123 && /usr/bin/pg_dump -U kraken kraken' | gzip -9 > ~/backup/db-sql.current.gz" """)
+    c.run("""bash -c "docker exec `docker ps -qf 'name=kraken_postgres'` bash -c 'export PGPASSWORD=kk123 && /usr/bin/pg_dump -U kraken kraken' | gzip -9 > ~/backup/db-sql.current.gz" """)
     c.run('ls -lh ~/backup/db-sql.current.gz')
 
     # dump volume with postgresql files
