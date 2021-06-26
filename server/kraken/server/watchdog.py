@@ -73,7 +73,11 @@ def _check_jobs_if_expired():
 
     q = Job.query.filter_by(state=consts.JOB_STATE_ASSIGNED)
 
+    job_count = 0
+    canceled_count = 0
+
     for job in q.all():
+        job_count += 1
         if not job.assigned:
             log.warning('job %s assigned but no assign time', job)
             continue
@@ -84,6 +88,9 @@ def _check_jobs_if_expired():
             log.warning('time %ss for job %s expired, canceling', timeout, job)
             note = 'time %ss for job expired' % timeout
             exec_utils.cancel_job(job, note, consts.JOB_CMPLT_SERVER_TIMEOUT)
+            canceled_count += 1
+
+    log.info('canceled jobs:%d / all:%d', canceled_count, job_count)
 
 
 def _check_jobs_if_missing_agents():
@@ -205,6 +212,7 @@ def _check_agents_to_destroy():
 
     outdated_count = 0
     dangling_count = 0
+    all_count = 0
     for agent in q.all():
         ag = agent.agents_groups[0].agents_group
         if not ag.deployment or ag.deployment['method'] != consts.AGENT_DEPLOYMENT_METHOD_AWS or 'aws' not in ag.deployment or not ag.deployment['aws']:
@@ -220,10 +228,9 @@ def _check_agents_to_destroy():
             dangling_count += 1
             continue
 
-    if outdated_count > 0:
-        log.info('destroyed and deleted %d aws ec2 instances and agents', outdated_count)
-    if dangling_count > 0:
-        log.info('deleted %d dangling agents without any aws ec2 instance', dangling_count)
+    log.info('all agents:%d, destroyed and deleted %d aws ec2 instances and agents',
+             all_count, outdated_count)
+    log.info('deleted %d dangling agents without any aws ec2 instance', dangling_count)
 
 
 def _check_machines_with_no_agent():
@@ -236,10 +243,15 @@ def _check_machines_with_no_agent():
     q = q.filter_by(deleted=None)
     q = q.filter(AgentsGroup.deployment.isnot(None))
 
-    count = 0
+    all_groups = 0
+    aws_groups = 0
+
     for ag in q.all():
+        all_groups += 1
         if not ag.deployment or ag.deployment['method'] != consts.AGENT_DEPLOYMENT_METHOD_AWS or 'aws' not in ag.deployment or not ag.deployment['aws']:
             continue
+
+        aws_groups += 1
 
         aws = ag.deployment['aws']
         region = aws['region']
@@ -254,9 +266,17 @@ def _check_machines_with_no_agent():
             log.exception('IGNORED EXCEPTION')
             continue
 
+        ec2_instances = 0
+        ec2_terminated_instances = 0
+        ec2_assigned_instances = 0
+        ec2_orphaned_instances = 0
+        ec2_orphaned_terminated_instances = 0
+
         for i in instances:
+            ec2_instances += 1
             # if terminated then skip it
             if i.state['Name'] == 'terminated':
+                ec2_terminated_instances += 1
                 continue
 
             # if assigned to some agent then skip it
@@ -267,6 +287,7 @@ def _check_machines_with_no_agent():
                     assigned = True
                     break
             if assigned:
+                ec2_assigned_instances += 1
                 continue
 
             # instances have to be old enough to avoid race condition with
@@ -278,15 +299,22 @@ def _check_machines_with_no_agent():
             # the instance is not terminated, not assigned, old enough
             # so delete it as it seems to be a lost instance
             log.info('terminating lost aws ec2 instance %s', i.id)
+            ec2_orphaned_instances += 1
             try:
                 i.terminate()
             except Exception:
                 log.exception('IGNORED EXCEPTION')
 
-            count += 1
+            ec2_orphaned_terminated_instances += 1
 
-    if count > 0:
-        log.info('terminated %d lost aws ec2 instances', count)
+        log.info('group:%d, aws ec2 instances:%d, already-terminated:%d, still-assigned:%d, orphaned:%d, terminated-orphaned:%d',
+                 ag.id,
+                 ec2_instances,
+                 ec2_terminated_instances,
+                 ec2_assigned_instances,
+                 ec2_orphaned_instances,
+                 ec2_orphaned_terminated_instances)
+    log.info('aws groups:%d / all:%d', aws_groups, all_groups)
 
 
 def _check_agents():
