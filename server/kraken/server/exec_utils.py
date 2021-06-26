@@ -39,6 +39,8 @@ def complete_run(run, now):
 
 
 def cancel_job(job, note, cmplt_status):
+    # job is not un-assigned from agent, this will happen in backend.py
+    # when agent will call get_job or any other function
     from .bg import jobs as bg_jobs  # pylint: disable=import-outside-toplevel
     if job.state == consts.JOB_STATE_COMPLETED:
         return

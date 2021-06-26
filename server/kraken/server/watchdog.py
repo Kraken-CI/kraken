@@ -198,8 +198,12 @@ def _delete_if_missing_in_aws(agent, ag):
 
     instance_id = agent.extra_attrs['instance_id']
     try:
+        # try to get instance, if missing then raised exception will cause deleting agent
         i = ec2.Instance(instance_id)
         i.state  # pylint: disable=pointless-statement
+        if i.state['Name'] == 'terminated':
+            # if instance exists but is terminated also trigger deleting agent by raising an exception
+            raise Exception('terminated')
     except Exception:
         agent.deleted = datetime.datetime.utcnow()
         agent.disabled = True
@@ -218,10 +222,14 @@ def _check_agents_to_destroy():
     outdated_count = 0
     dangling_count = 0
     all_count = 0
+    all_depl_count = 0
     for agent in q.all():
+        all_count += 1
         ag = agent.agents_groups[0].agents_group
         if not ag.deployment or ag.deployment['method'] != consts.AGENT_DEPLOYMENT_METHOD_AWS or 'aws' not in ag.deployment or not ag.deployment['aws']:
             continue
+
+        all_depl_count += 1
 
         deleted = _destroy_and_delete_if_outdated(agent, ag)
         if deleted:
@@ -233,8 +241,8 @@ def _check_agents_to_destroy():
             dangling_count += 1
             continue
 
-    log.info('all agents:%d, destroyed and deleted %d aws ec2 instances and agents',
-             all_count, outdated_count)
+    log.info('all agents:%d, with depl:%d, destroyed and deleted %d aws ec2 instances and agents',
+             all_count, all_depl_count, outdated_count)
     log.info('deleted %d dangling agents without any aws ec2 instance', dangling_count)
 
 
