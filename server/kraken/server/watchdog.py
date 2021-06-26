@@ -160,6 +160,7 @@ def _check_agents_keep_alive():
 def _destroy_and_delete_if_outdated(agent, ag):
     aws = ag.deployment['aws']
     if 'destruction_after_time' not in aws or int(aws['destruction_after_time']) == 0:
+        log.info('agent:%d, destruction_after_time is 0 - skipped', agent.id)
         return False
 
     q = Job.query.filter_by(agent_used=agent)
@@ -167,11 +168,14 @@ def _destroy_and_delete_if_outdated(agent, ag):
     q = q.order_by(desc(Job.finished))
     last_job = q.first()
     if not last_job:
+        log.info('agent:%d, no last job - skipped', agent.id)
         return False
 
     now = datetime.datetime.utcnow()
     dt = now - last_job.finished
-    if dt < datetime.timedelta(seconds=60 * int(aws['destruction_after_time'])):
+    timeout = datetime.timedelta(seconds=60 * int(aws['destruction_after_time']))
+    if dt < timeout:
+        log.info('agent:%d, not yet timed out %d < %d - skipped', agent.id, dt, timeout)
         return False
 
     log.info('destroying machine with agent %s due idle time', agent)
@@ -183,6 +187,7 @@ def _destroy_and_delete_if_outdated(agent, ag):
 
 def _delete_if_missing_in_aws(agent, ag):
     if not agent.extra_attrs or 'instance_id' not in agent.extra_attrs:
+        log.warning('agent:%d, no instance id in extra_attrs', agent.id)
         return False
 
     aws = ag.deployment['aws']
