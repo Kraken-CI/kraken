@@ -80,6 +80,7 @@
           </div>
           <div style="margin: auto 0;">
             <button *ngIf="job.state !== 5" type="button" pButton label="Cancel Job" icon="pi pi-times" (click)="cancelJob()"
+                    class="p-button-danger p-button-outlined"
                     [disabled]="!auth.hasPermission('manage')"
                     [pTooltip]="auth.permTip('manage')"></button>
             <button *ngIf="job.state === 5" type="button" pButton label="Rerun Job" icon="pi pi-replay" (click)="rerunJob()"
