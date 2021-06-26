@@ -16,7 +16,7 @@ import datetime
 import logging
 
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Column, Boolean, DateTime, ForeignKey, Integer, String, Text, Unicode, UnicodeText
+from sqlalchemy import Column, Boolean, DateTime, ForeignKey, Integer, Unicode, UnicodeText
 from sqlalchemy import event, UniqueConstraint, Index
 from sqlalchemy.orm import relationship, mapper
 from sqlalchemy.dialects.postgresql import JSONB, DOUBLE_PRECISION, BYTEA
@@ -61,8 +61,8 @@ class DatesMixin():
 class Project(db.Model, DatesMixin):
     __tablename__ = "projects"
     id = Column(Integer, primary_key=True)
-    name = Column(Unicode(50))
-    description = Column(Unicode(200))
+    name = Column(UnicodeText)
+    description = Column(UnicodeText)
     branches = relationship("Branch", back_populates="project", order_by="Branch.created")
     secrets = relationship("Secret", back_populates="project", order_by="Secret.name")
     agents_groups = relationship("AgentsGroup", back_populates="project")
@@ -84,10 +84,10 @@ class Project(db.Model, DatesMixin):
 class Branch(db.Model, DatesMixin):
     __tablename__ = "branches"
     id = Column(Integer, primary_key=True)
-    name = Column(Unicode(255))
+    name = Column(UnicodeText)
     project_id = Column(Integer, ForeignKey('projects.id'), nullable=False)
     project = relationship('Project', back_populates="branches")  # display name
-    branch_name = Column(Unicode(255))                            # branch name in the repository, PR is matched agains this
+    branch_name = Column(UnicodeText)                             # branch name in the repository, PR is matched agains this
     ci_flows = relationship("Flow", order_by="desc(Flow.created)",
                             primaryjoin="and_(Branch.id==Flow.branch_id, Flow.kind==0)", viewonly=True)
     dev_flows = relationship("Flow", order_by="desc(Flow.created)",
@@ -169,7 +169,7 @@ class BranchSequence(db.Model):
 class Secret(db.Model, DatesMixin):
     __tablename__ = "secrets"
     id = Column(Integer, primary_key=True)
-    name = Column(Unicode(255))
+    name = Column(UnicodeText)
     project_id = Column(Integer, ForeignKey('projects.id'), nullable=False)
     project = relationship('Project', back_populates="secrets")
     kind = Column(Integer, default=0)
@@ -196,8 +196,8 @@ class Secret(db.Model, DatesMixin):
 class Stage(db.Model, DatesMixin):
     __tablename__ = "stages"
     id = Column(Integer, primary_key=True)
-    name = Column(Unicode(50))
-    description = Column(Unicode(1024))
+    name = Column(UnicodeText)
+    description = Column(UnicodeText)
     branch_id = Column(Integer, ForeignKey('branches.id'), nullable=False)
     branch = relationship('Branch', back_populates="stages")
     enabled = Column(Boolean, default=True)
@@ -254,7 +254,7 @@ class Stage(db.Model, DatesMixin):
 # class Config(db.Model, DatesMixin):
 #     __tablename__ = "configs"
 #     id = Column(Integer, primary_key=True)
-#     name = Column(Unicode(50))
+#     name = Column(UnicodeText)
 #     #vector =
 #     environments = relationship("Environment", back_populates="config")
 #     stage_id = Column(Integer, ForeignKey('stages.id'), nullable=False)
@@ -288,13 +288,13 @@ class Flow(db.Model, DatesMixin):
     finished = Column(DateTime)
     state = Column(Integer, default=consts.FLOW_STATE_IN_PROGRESS)
     kind = Column(Integer, default=consts.FLOW_KIND_CI)  # 0 - CI, 1 - dev
-    branch_name = Column(Unicode(255))
+    branch_name = Column(UnicodeText)
     branch_id = Column(Integer, ForeignKey('branches.id'), nullable=False)
     branch = relationship('Branch', foreign_keys=[branch_id])
     runs = relationship('Run', back_populates="flow", order_by="Run.created")
     args = Column(JSONB, nullable=False, default={})
     artifacts = Column(JSONB, default={})
-    label = Column(Unicode(200))
+    label = Column(UnicodeText)
     trigger_data_id = Column(Integer, ForeignKey('repo_changes.id'))
     trigger_data = relationship('RepoChanges')
     artifacts_files = relationship('Artifact', back_populates="flow")
@@ -373,7 +373,7 @@ class Run(db.Model, DatesMixin):
     tests_passed = Column(Integer, default=0)
     tests_total = Column(Integer, default=0)
     artifacts = Column(JSONB, default={})
-    label = Column(Unicode(200))
+    label = Column(UnicodeText)
     reason = Column(JSONB, nullable=False)
     repo_data_id = Column(Integer, ForeignKey('repo_changes.id'))
     repo_data = relationship('RepoChanges')
@@ -492,7 +492,7 @@ class Step(db.Model, DatesMixin):
 class Job(db.Model, DatesMixin):
     __tablename__ = "jobs"
     id = Column(Integer, primary_key=True)
-    name = Column(Unicode(200))
+    name = Column(UnicodeText)
     assigned = Column(DateTime)
     started = Column(DateTime)
     finished = Column(DateTime)
@@ -504,7 +504,7 @@ class Job(db.Model, DatesMixin):
     state = Column(Integer, default=consts.JOB_STATE_QUEUED)
     completion_status = Column(Integer)
     covered = Column(Boolean, default=False)
-    notes = Column(Unicode(2048))
+    notes = Column(UnicodeText)
     agent = relationship('Agent', uselist=False, back_populates="job",
                             foreign_keys="Agent.job_id", post_update=True)
     agent_used_id = Column(Integer, ForeignKey('agents.id'))
@@ -564,7 +564,7 @@ class TestCase(db.Model, DatesMixin):
     __tablename__ = "test_cases"
     __test__ = False  # do not treat this class as a test by pytest
     id = Column(Integer, primary_key=True)
-    name = Column(Unicode(255), unique=True)
+    name = Column(UnicodeText, unique=True)
     tool_id = Column(Integer, ForeignKey('tools.id'), nullable=False)
     tool = relationship('Tool', back_populates="test_cases")
     results = relationship("TestCaseResult", back_populates="test_case")
@@ -628,9 +628,9 @@ class Issue(db.Model):
     issue_type = Column(Integer, default=consts.ISSUE_TYPE_ERROR)
     line = Column(Integer)
     column = Column(Integer)
-    path = Column(Unicode(512))
-    symbol = Column(Unicode(64))
-    message = Column(Unicode(512))
+    path = Column(UnicodeText)
+    symbol = Column(UnicodeText)
+    message = Column(UnicodeText)
     job_id = Column(Integer, ForeignKey('jobs.id'), nullable=False)
     job = relationship('Job', back_populates="issues")
     extra = Column(JSONB)
@@ -659,7 +659,7 @@ class Issue(db.Model):
 class File(db.Model):
     __tablename__ = "files"
     id = Column(Integer, primary_key=True)
-    path = Column(Unicode(512))
+    path = Column(UnicodeText)
     artifacts = relationship('Artifact', back_populates="file")
 
 
@@ -696,8 +696,8 @@ class APSchedulerJob(db.Model):
 class System(db.Model):
     __tablename__ = "systems"
     id = Column(Integer, primary_key=True)
-    name = Column(Unicode(150))
-    executor = Column(Unicode(20))
+    name = Column(UnicodeText)
+    executor = Column(UnicodeText)
     jobs = relationship('Job', back_populates="system")
     UniqueConstraint(name, executor, name='uq_system_name_executor')
 
@@ -705,9 +705,9 @@ class System(db.Model):
 class Tool(db.Model, DatesMixin):
     __tablename__ = "tools"
     id = Column(Integer, primary_key=True)
-    name = Column(Unicode(50))
-    description = Column(Unicode(200))
-    configuration = Column(Text)
+    name = Column(UnicodeText)
+    description = Column(UnicodeText)
+    configuration = Column(UnicodeText)
     steps = relationship("Step", back_populates="tool")
     fields = Column(JSONB, nullable=False)
     # TODO should it have optional reference to project so that there are local and global tools?
@@ -725,7 +725,7 @@ class AgentAssignment(db.Model):
 class AgentsGroup(db.Model, DatesMixin):
     __tablename__ = "agents_groups"
     id = Column(Integer, primary_key=True)
-    name = Column(Unicode(50))
+    name = Column(UnicodeText)
     project_id = Column(Integer, ForeignKey('projects.id'), nullable=True)
     project = relationship('Project', back_populates="agents_groups")
     # agents = relationship("Agent", back_populates="agents_group")  # static assignments
@@ -760,13 +760,13 @@ class AgentsGroup(db.Model, DatesMixin):
 class Agent(db.Model, DatesMixin):
     __tablename__ = "agents"
     id = Column(Integer, primary_key=True)
-    name = Column(Unicode(50), nullable=False)
-    address = Column(Unicode(25), index=True, nullable=False, unique=True)
-    ip_address = Column(Unicode(50))
+    name = Column(UnicodeText, nullable=False)
+    address = Column(UnicodeText, index=True, nullable=False, unique=True)
+    ip_address = Column(UnicodeText)
     state = Column(Integer, default=0)
     disabled = Column(Boolean, default=False)
-    comment = Column(Text)
-    status_line = Column(Text)
+    comment = Column(UnicodeText)
+    status_line = Column(UnicodeText)
     job_id = Column(Integer, ForeignKey('jobs.id'))
     job = relationship('Job', back_populates="agent", foreign_keys=[job_id])
     authorized = Column(Boolean, default=False)
@@ -805,10 +805,10 @@ Index('ix_agents_address_not_deleted', Agent.address, postgresql_where=Agent.del
 class Setting(db.Model):
     __tablename__ = "settings"
     id = Column(Integer, primary_key=True)
-    name = Column(Unicode(50))
-    value = Column(Text)
-    val_type = Column(String(8))  # integer, text, boolean, password
-    group = Column(Unicode(50))
+    name = Column(UnicodeText)
+    value = Column(UnicodeText)
+    val_type = Column(UnicodeText)  # integer, text, boolean, password
+    group = Column(UnicodeText)
 
     def get_json(self):
         return {
@@ -848,8 +848,8 @@ def get_setting(group, name):
 class User(db.Model, DatesMixin):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True)
-    name = Column(Unicode(50))
-    password = Column(Unicode(150))
+    name = Column(UnicodeText)
+    password = Column(UnicodeText)
     sessions = relationship("UserSession", back_populates="user")
 
     def get_json(self):
@@ -860,7 +860,7 @@ class User(db.Model, DatesMixin):
 class UserSession(db.Model, DatesMixin):
     __tablename__ = "user_sessions"
     id = Column(Integer, primary_key=True)
-    token = Column(Unicode(32))
+    token = Column(UnicodeText)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     user = relationship('User', back_populates="sessions")
 
