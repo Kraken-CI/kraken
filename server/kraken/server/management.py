@@ -105,7 +105,12 @@ def create_branch(project_id, body):
     if project is None:
         abort(404, "Project not found")
 
-    branch = Branch(project=project, name=body['name'])
+    if 'branch_name' in body and body['branch_name']:
+        branch_name = body['branch_name']
+    else:
+        branch_name = body['name']
+
+    branch = Branch(project=project, name=body['name'], branch_name=branch_name)
     BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_FLOW, value=0)
     BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_CI_FLOW, value=0)
     BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_DEV_FLOW, value=0)
@@ -121,6 +126,9 @@ def update_branch(branch_id, body):
 
     if 'name' in body:
         branch.name = body['name']
+
+    if 'branch_name' in body:
+        branch.branch_name = body['branch_name']
 
     db.session.commit()
 

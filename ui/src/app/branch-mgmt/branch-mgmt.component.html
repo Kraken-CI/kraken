@@ -1,5 +1,25 @@
+<p-dialog header="Branch display and repo names" [(visible)]="branchNameDlgVisible" [style]="{width: '30rem'}">
+    <div class="p-field p-grid">
+        <label for="branchDisplayName" class="p-col-fixed" style="width: 10rem;">Display Name</label>
+        <div class="p-col">
+            <input id="branchDisplayName" type="text" [(ngModel)]="newBranchDisplayName" (keydown)="branchNameKeyDown($event)" autofocus pInputText>
+        </div>
+    </div>
+    <div class="p-field p-grid">
+        <label for="branchRepoName" class="p-col-fixed" style="width: 10rem;">Name in the Repo</label>
+        <div class="p-col">
+            <input id="branchRepoName" type="text" [(ngModel)]="newBranchRepoName" (keydown)="branchNameKeyDown($event)" pInputText>
+        </div>
+    </div>
+
+    <p-footer>
+        <button type="button" (click)="cancelBranchNameChange()" pButton icon="pi pi-times" label="Cancel" class="p-button-outlined p-button-secondary"></button>
+        <button type="button" (click)="saveBranchName()" pButton icon="pi pi-check" label="Change"></button>
+    </p-footer>
+</p-dialog>
+
 <p-dialog header="New Stage in {{branch.name}} branch" [(visible)]="newStageDlgVisible">
-  <input type="text" pInputText [(ngModel)]="stageName" (keydown)="newStageKeyDown($event)"/>
+  <input type="text" pInputText [(ngModel)]="stageName" (keydown)="newStageKeyDown($event)" autofocus/>
   <p-footer>
     <button type="button" (click)="cancelNewStage()" pButton icon="pi pi-times" label="Cancel" class="p-button-outlined p-button-secondary"></button>
     <button type="button" (click)="addNewStage()" pButton icon="pi pi-check" label="Add"></button>
@@ -30,22 +50,27 @@
   </p-footer>
 </p-dialog>
 
-
 <div style="margin-bottom: 15px; display: flex; justify-content: space-between;">
   <div style="display: flex; align-items: baseline;">
-    <p-inplace #branchNameInplace>
-      <span pInplaceDisplay style="font-size: 2rem; font-weight: bold;">
-        {{branch.name}}
-      </span>
-      <span pInplaceContent>
-        <input type="text" pInputText [(ngModel)]="newBranchName" (keydown)="branchNameKeyDown($event, branchNameInplace)"/>
-      </span>
-    </p-inplace>
 
+    <!-- branch name -->
+    <div (click)="displayBranchNameEdit()">
+        <span style="font-size: 2rem; font-weight: bold;">
+            {{branch.name}}
+        </span>
+        <span style="font-size: 1rem; padding-left: 0.3rem;" *ngIf="branch.branch_name !== branch.name && branch.branch_name.length > 0">
+            {{branch.branch_name}}
+        </span>
+        <i class="fa fa-edit" style="font-size: 1.3rem; padding-left: 0.5rem; color: #888;"
+           pTooltip="Edit display and repo branch names"></i>
+    </div>
+
+    <!-- links to results -->
     <div style="margin-left: 40px;">
       <a routerLink="/branches/{{branchId}}/ci">CI Results</a>   &nbsp;&nbsp;&nbsp; | &nbsp;&nbsp;&nbsp;   <a routerLink="/branches/{{branchId}}/dev">Dev Results</a>
     </div>
 
+    <!-- buttons to trigger a new flow -->
     <a routerLink="/branches/{{branchId}}/ci/flows/new">
       <button type="button" pButton icon="pi pi-caret-right" label="Run CI Flow" style="margin: 0 10px 0 100px;"
               [disabled]="!auth.hasPermission('manage')"
@@ -61,7 +86,10 @@
         <button type="button" (click)="forkBranch()" pButton icon="fa fa-code-fork" label="Fork Branch" style="margin: 0 10px 0 100px;"></button>
         -->
   </div>
+
+  <!-- aligned to right -->
   <div style="display: flex; align-items: baseline;">
+    <!-- archive button -->
     <p-button label="Archive Branch" icon="pi pi-trash" styleClass="p-button-danger p-button-outlined" (onClick)="deleteBranch()"
               [disabled]="!auth.hasPermission('manage')"
               [pTooltip]="auth.permTip('manage')"></p-button>
@@ -96,7 +124,7 @@
           <div *ngIf="stage.schema.parameters" style="font-size: 1.05rem;">Parameters: {{stage.schema.parameters.length}}</div>
         </div>
       </div>
-      <div class="p-col-9" style="padding-left: 40px;" *ngIf="branch.stages.length">
+      <div class="p-col-9" style="padding-left: 40px;" *ngIf="branch.stages && branch.stages.length">
         <div>
           <div class="p-d-flex">
             <div class="p-m-2" style="min-width: 18em;">
@@ -215,7 +243,7 @@
         </div>
 
       </div>
-      <div class="p-col-9" style="padding-left: 40px;" *ngIf="branch.stages.length === 0">
+      <div class="p-col-9" style="padding-left: 40px;" *ngIf="!branch.stages || branch.stages.length === 0">
         No stages yet.
       </div>
     </div>

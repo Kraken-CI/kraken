@@ -18,8 +18,11 @@ import { Branch } from '../backend/model/models'
 })
 export class BranchMgmtComponent implements OnInit {
     branchId: number
-    branch: Branch = { id: 0, name: 'noname', stages: [] }
-    newBranchName: string
+    branch: Branch = { id: 0, name: 'noname', branch_name: 'noname', stages: [] }
+
+    newBranchDisplayName: string
+    newBranchRepoName: string
+    branchNameDlgVisible = false
 
     newStageDlgVisible = false
     stageName = ''
@@ -82,7 +85,6 @@ export class BranchMgmtComponent implements OnInit {
                 'Kraken - Branch Management - ' + branch.name
             )
             this.branch = branch
-            this.newBranchName = branch.name
             this.stage = null // reset selected stage
             if (this.stageName !== '') {
                 // this is a finish of adding new stage ie. select newly created stage
@@ -259,15 +261,28 @@ export class BranchMgmtComponent implements OnInit {
         })
     }
 
-    branchNameKeyDown(event, branchNameInplace) {
+    branchNameKeyDown(event) {
         if (event.key === 'Enter') {
-            branchNameInplace.deactivate()
-            this.doSaveBranch(this.branch.id, { name: this.newBranchName })
+            this.saveBranchName()
         }
         if (event.key === 'Escape') {
-            branchNameInplace.deactivate()
-            this.newBranchName = this.branch.name
+            this.cancelBranchNameChange()
         }
+    }
+
+    displayBranchNameEdit() {
+        this.newBranchDisplayName = this.branch.name
+        this.newBranchRepoName = this.branch.branch_name
+        this.branchNameDlgVisible = true
+    }
+
+    cancelBranchNameChange() {
+        this.branchNameDlgVisible = false
+    }
+
+    saveBranchName() {
+        this.doSaveBranch(this.branch.id, { name: this.newBranchDisplayName, branch_name: this.newBranchRepoName })
+        this.branchNameDlgVisible = false
     }
 
     doSaveBranch(branchId, branchData) {

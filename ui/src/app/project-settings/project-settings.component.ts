@@ -25,7 +25,8 @@ export class ProjectSettingsComponent implements OnInit {
     }
 
     newBranchDlgVisible = false
-    branchName = ''
+    branchDisplayName = ''
+    branchRepoName = ''
 
     // secret form
     secretMode = 0
@@ -137,7 +138,7 @@ export class ProjectSettingsComponent implements OnInit {
 
     addNewBranch() {
         this.managementService
-            .createBranch(this.project.id, { name: this.branchName })
+            .createBranch(this.project.id, { name: this.branchDisplayName, branch_name: this.branchRepoName })
             .subscribe(
                 (branch) => {
                     this.msgSrv.add({
