@@ -138,7 +138,6 @@ class Branch(db.Model, DatesMixin):
         return data
 
 Index('ix_branches_name_project_id_not_deleted', Branch.name, Branch.project_id, postgresql_where=Branch.deleted.is_(None), unique=True)
-Index('ix_branches_branch_name_project_id_not_deleted', Branch.branch_name, Branch.project_id, postgresql_where=Branch.deleted.is_(None), unique=True)
 
 
 # Sequence kinds:
