@@ -33,6 +33,7 @@ from .bg import jobs as bg_jobs
 from . import minioops
 from .. import version
 from . import kkrq
+from . import utils
 
 log = logging.getLogger(__name__)
 
@@ -55,7 +56,7 @@ JOB = {
 
 
 def _left_time(job):
-    now = datetime.datetime.utcnow()
+    now = utils.utcnow()
     slip = now - job.assigned
     timeout = job.timeout
     timeout2 = timeout - slip.total_seconds()
@@ -168,7 +169,7 @@ def _handle_get_job(agent):
                 step['minio_folders'] = folders
 
     if not agent.job.started:
-        agent.job.started = datetime.datetime.utcnow()
+        agent.job.started = utils.utcnow()
         agent.job.state = consts.JOB_STATE_ASSIGNED
         db.session.commit()
 
@@ -363,7 +364,7 @@ def _handle_step_result(agent, req):
         break
     if job_finished:
         job.state = consts.JOB_STATE_EXECUTING_FINISHED
-        job.finished = datetime.datetime.utcnow()
+        job.finished = utils.utcnow()
         agent.job = None
 
         # check if aws machine should be destroyed now
@@ -505,7 +506,7 @@ def _handle_keep_alive(agent, req):  # pylint: disable=unused-argument
 
 def _handle_unknown_agent(address, ip_address):
     try:
-        Agent(name=address, address=address, authorized=False, ip_address=ip_address, last_seen=datetime.datetime.utcnow())
+        Agent(name=address, address=address, authorized=False, ip_address=ip_address, last_seen=utils.utcnow())
         db.session.commit()
     except Exception as e:
         log.warning('IGNORED EXCEPTION: %s', str(e))
@@ -530,7 +531,7 @@ def serve_agent_request():
         _handle_unknown_agent(address, request.remote_addr)
         return json.dumps({})
 
-    agent.last_seen = datetime.datetime.utcnow()
+    agent.last_seen = utils.utcnow()
     agent.deleted = None
     db.session.commit()
 

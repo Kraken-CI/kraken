@@ -13,5 +13,12 @@
 # limitations under the License.
 
 import logging
+import datetime
+
+import pytz
 
 log = logging.getLogger(__name__)
+
+
+def utcnow():
+    return datetime.datetime.now(pytz.utc)

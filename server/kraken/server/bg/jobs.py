@@ -40,6 +40,7 @@ from .. import dbutils
 from .. import gitops
 from .. import kkrq
 from .. import cloud
+from .. import utils
 
 log = logging.getLogger(__name__)
 
@@ -200,7 +201,7 @@ def analyze_run(run_id):
 
         if is_completed:
             log.info('completed flow %s', flow)
-            now = datetime.datetime.utcnow()
+            now = utils.utcnow()
             flow.finished = now
             flow.state = consts.FLOW_STATE_COMPLETED
 
@@ -586,7 +587,7 @@ def job_completed(job_id):
 
         with app.app_context():
 
-            now = datetime.datetime.utcnow()
+            now = utils.utcnow()
 
             log.info('completing job %s', job_id)
             job = Job.query.filter_by(id=job_id).one_or_none()
@@ -997,7 +998,7 @@ def destroy_machine(agent_id):
             log.error('cannot find agent id:%d', agent_id)
             return
 
-        agent.deleted = datetime.datetime.utcnow()
+        agent.deleted = utils.utcnow()
         agent.disabled = True
         db.session.commit()
 

@@ -20,6 +20,7 @@ from passlib.hash import pbkdf2_sha256
 from werkzeug.exceptions import Unauthorized, BadRequest
 
 from .models import db, User, UserSession
+from . import utils
 
 log = logging.getLogger(__name__)
 
@@ -60,7 +61,7 @@ def logout(session_id):
     us = UserSession.query.filter_by(id=int(session_id), deleted=None).one_or_none()
     if us is None:
         return None
-    us.deleted = datetime.datetime.utcnow()
+    us.deleted = utils.utcnow()
     db.session.commit()
     return None
 

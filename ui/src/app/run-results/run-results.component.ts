@@ -512,6 +512,8 @@ export class RunResultsComponent implements OnInit, OnDestroy {
                 return 'missing group'
             case 10:
                 return 'no agents'
+            case 11:
+                return 'agent not alive'
             default:
                 return ''
         }
@@ -540,6 +542,8 @@ export class RunResultsComponent implements OnInit, OnDestroy {
             case 9:
                 return 'pi pi-exclamation-circle step-status-red'
             case 10:
+                return 'pi pi-exclamation-circle step-status-red'
+            case 11:
                 return 'pi pi-exclamation-circle step-status-red'
             default:
                 return ''

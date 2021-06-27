@@ -22,7 +22,7 @@ from sqlalchemy.orm.attributes import flag_modified
 
 from .models import db
 from .models import Agent, AgentAssignment, get_setting
-
+from . import utils
 
 log = logging.getLogger(__name__)
 
@@ -156,7 +156,7 @@ def allocate_ec2_vms(aws, access_key, secret_access_key,
 
     sys_id = system.id if system.executor == 'local' else 0
 
-    now = datetime.datetime.utcnow()
+    now = utils.utcnow()
     for i in instances:
         try:
             i.wait_until_running()
@@ -180,7 +180,8 @@ def allocate_ec2_vms(aws, access_key, secret_access_key,
             db.session.rollback()
             a = Agent.query.filter_by(deleted=None, address=address).one_or_none()
             if a:
-                a.update(params)
+                for f, val in params.items():
+                    setattr(a, f, val)
                 db.session.commit()
             else:
                 raise

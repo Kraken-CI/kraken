@@ -34,6 +34,7 @@ from .schema import check_and_correct_stage_schema, SchemaError, execute_schema_
 from .schema import prepare_new_planner_triggers
 from . import notify
 from . import cloud
+from . import utils
 
 
 log = logging.getLogger(__name__)
@@ -77,7 +78,7 @@ def delete_project(project_id):
     if project is None:
         abort(400, "Project with id %s does not exist" % project_id)
 
-    project.deleted = datetime.datetime.utcnow()
+    project.deleted = utils.utcnow()
     db.session.commit()
 
     return {}, 200
@@ -148,7 +149,7 @@ def delete_branch(branch_id):
     if branch is None:
         abort(400, "Branch with id %s does not exist" % branch_id)
 
-    branch.deleted = datetime.datetime.utcnow()
+    branch.deleted = utils.utcnow()
     db.session.commit()
 
     return {}, 200
@@ -206,7 +207,7 @@ def delete_secret(secret_id):
     if secret is None:
         abort(404, "Secret not found")
 
-    secret.deleted = datetime.datetime.utcnow()
+    secret.deleted = utils.utcnow()
     db.session.commit()
 
     return {}, 200
@@ -333,7 +334,7 @@ def delete_stage(stage_id):
     if stage is None:
         abort(404, "Stage not found")
 
-    stage.deleted = datetime.datetime.utcnow()
+    stage.deleted = utils.utcnow()
     db.session.commit()
 
     return {}, 200
@@ -487,7 +488,7 @@ def delete_agent(agent_id):
         job.state = consts.JOB_STATE_QUEUED
         agent.job = None
 
-    agent.deleted = datetime.datetime.utcnow()
+    agent.deleted = utils.utcnow()
     agent.authorized = False
     agent.disabled = True
     db.session.commit()
@@ -560,7 +561,7 @@ def delete_group(group_id):
     if group is None:
         abort(404, "Agents group with id %s not found" % group_id)
 
-    group.deleted = datetime.datetime.utcnow()
+    group.deleted = utils.utcnow()
     db.session.commit()
 
     return {}, 200
@@ -697,7 +698,7 @@ def get_last_rq_jobs_names():
     o = urlparse(ch_url)
     ch = clickhouse_driver.Client(host=o.hostname)
 
-    now = datetime.datetime.utcnow()
+    now = utils.utcnow()
     start_date = now - datetime.timedelta(hours=12111)
     query = "select max(time) as mt, tool, count(*) from logs "
     query += "where service = 'rq' and tool != '' "

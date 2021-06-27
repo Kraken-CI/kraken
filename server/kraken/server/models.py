@@ -22,6 +22,7 @@ from sqlalchemy.orm import relationship, mapper
 from sqlalchemy.dialects.postgresql import JSONB, DOUBLE_PRECISION, BYTEA
 
 from . import consts
+from . import utils
 
 log = logging.getLogger(__name__)
 
@@ -53,9 +54,9 @@ class AlembicVersion(db.Model):
 
 
 class DatesMixin():
-    created = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
-    updated = Column(DateTime, nullable=False, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
-    deleted = Column(DateTime)
+    created = Column(DateTime(timezone=True), nullable=False, default=utils.utcnow)
+    updated = Column(DateTime(timezone=True), nullable=False, default=utils.utcnow, onupdate=utils.utcnow)
+    deleted = Column(DateTime(timezone=True))
 
 
 class Project(db.Model, DatesMixin):
@@ -285,7 +286,7 @@ class RepoChanges(db.Model, DatesMixin):
 class Flow(db.Model, DatesMixin):
     __tablename__ = "flows"
     id = Column(Integer, primary_key=True)
-    finished = Column(DateTime)
+    finished = Column(DateTime(timezone=True))
     state = Column(Integer, default=consts.FLOW_STATE_IN_PROGRESS)
     kind = Column(Integer, default=consts.FLOW_KIND_CI)  # 0 - CI, 1 - dev
     branch_name = Column(UnicodeText)
@@ -307,7 +308,7 @@ class Flow(db.Model, DatesMixin):
         if self.state == consts.FLOW_STATE_COMPLETED:
             duration = self.finished - self.created
         else:
-            duration = datetime.datetime.utcnow() - self.created
+            duration = utils.utcnow() - self.created
 
         trigger = None
         if self.trigger_data:
@@ -345,11 +346,11 @@ Index('ix_flows_created', Flow.created)
 class Run(db.Model, DatesMixin):
     __tablename__ = "runs"
     id = Column(Integer, primary_key=True)
-    started = Column(DateTime)    # time when the run got a first non-deleted job
-    finished = Column(DateTime)    # time when all tasks finished first time
-    finished_again = Column(DateTime)    # time when all tasks finished
+    started = Column(DateTime(timezone=True))    # time when the run got a first non-deleted job
+    finished = Column(DateTime(timezone=True))    # time when all tasks finished first time
+    finished_again = Column(DateTime(timezone=True))    # time when all tasks finished
     state = Column(Integer, default=consts.RUN_STATE_IN_PROGRESS)
-    email_sent = Column(DateTime)
+    email_sent = Column(DateTime(timezone=True))
     note = Column(UnicodeText)
     stage_id = Column(Integer, ForeignKey('stages.id'), nullable=False)
     stage = relationship('Stage', back_populates="runs")
@@ -357,8 +358,8 @@ class Run(db.Model, DatesMixin):
     flow = relationship('Flow', back_populates="runs")
     jobs = relationship('Job', back_populates="run")
     artifacts_files = relationship('Artifact', back_populates="run")
-    hard_timeout_reached = Column(DateTime)
-    soft_timeout_reached = Column(DateTime)
+    hard_timeout_reached = Column(DateTime(timezone=True))
+    soft_timeout_reached = Column(DateTime(timezone=True))
     args = Column(JSONB, nullable=False, default={})
     # stats - result changes
     fix_cnt = Column(Integer, default=0)
@@ -390,7 +391,7 @@ class Run(db.Model, DatesMixin):
             jobs_error = self.jobs_error
             if self.finished is None:
                 log.error('PROBLEM WITH NONE TIMESTAMP in run %s', self)
-                duration = datetime.datetime.utcnow() - self.created
+                duration = utils.utcnow() - self.created
             else:
                 duration = self.finished - self.created
         else:
@@ -416,7 +417,7 @@ class Run(db.Model, DatesMixin):
             if jobs_total == jobs_completed and last_time:
                 duration = last_time - self.created
             else:
-                duration = datetime.datetime.utcnow() - self.created
+                duration = utils.utcnow() - self.created
 
         data = dict(id=self.id,
                     label=self.label,
@@ -493,11 +494,11 @@ class Job(db.Model, DatesMixin):
     __tablename__ = "jobs"
     id = Column(Integer, primary_key=True)
     name = Column(UnicodeText)
-    assigned = Column(DateTime)
-    started = Column(DateTime)
-    finished = Column(DateTime)
-    processing_started = Column(DateTime)  # TODO: this is never used
-    completed = Column(DateTime)
+    assigned = Column(DateTime(timezone=True))
+    started = Column(DateTime(timezone=True))
+    finished = Column(DateTime(timezone=True))            # time when agent reported that job is finished
+    processing_started = Column(DateTime(timezone=True))  # TODO: this is never used
+    completed = Column(DateTime(timezone=True))
     run_id = Column(Integer, ForeignKey('runs.id'), nullable=False)
     run = relationship("Run", back_populates="jobs")
     steps = relationship("Step", back_populates="job", order_by="Step.index")
@@ -522,7 +523,7 @@ class Job(db.Model, DatesMixin):
             if self.finished:
                 duration = self.finished - self.started
             else:
-                duration = datetime.datetime.utcnow() - self.started
+                duration = utils.utcnow() - self.started
             duration = duration_to_txt(duration)
         else:
             duration = ''
@@ -770,7 +771,7 @@ class Agent(db.Model, DatesMixin):
     job_id = Column(Integer, ForeignKey('jobs.id'))
     job = relationship('Job', back_populates="agent", foreign_keys=[job_id])
     authorized = Column(Boolean, default=False)
-    last_seen = Column(DateTime)
+    last_seen = Column(DateTime(timezone=True))
     host_info = Column(JSONB)
     user_attrs = Column(JSONB)
     extra_attrs = Column(JSONB)

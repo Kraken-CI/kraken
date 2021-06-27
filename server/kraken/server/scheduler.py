@@ -27,6 +27,7 @@ from .models import db, Agent, Run, Job, get_setting
 from . import consts
 from . import srvcheck
 from .. import version
+from . import utils
 
 log = logging.getLogger('scheduler')
 
@@ -87,7 +88,7 @@ def assign_jobs_to_agents():
         # assign job to found agent
         best_agent.job = j
         j.agent_used = best_agent
-        j.assigned = datetime.datetime.utcnow()
+        j.assigned = utils.utcnow()
         db.session.commit()
         log.info("assigned job %s to agent %s", j, best_agent)
 

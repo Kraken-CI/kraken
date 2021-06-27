@@ -25,6 +25,7 @@ from sqlalchemy.sql.expression import desc
 import clickhouse_driver
 import redis
 import boto3
+import pytz
 
 from . import logs
 from .models import db, Agent, AgentsGroup, Run, Job, get_setting
@@ -34,6 +35,7 @@ from .. import version
 from . import exec_utils
 from .bg import jobs as bg_jobs
 from . import kkrq
+from . import utils
 
 log = logging.getLogger('watchdog')
 
@@ -69,7 +71,7 @@ def create_app():
 
 
 def _check_jobs_if_expired():
-    now = datetime.datetime.utcnow()
+    now = utils.utcnow()
 
     q = Job.query.filter_by(state=consts.JOB_STATE_ASSIGNED)
 
@@ -86,7 +88,7 @@ def _check_jobs_if_expired():
         duration = now - job.assigned
         if duration > datetime.timedelta(seconds=timeout):
             log.warning('time %ss for job %s expired, canceling', timeout, job)
-            note = 'time %ss for job expired' % timeout
+            note = 'job expired after %ss' % timeout
             exec_utils.cancel_job(job, note, consts.JOB_CMPLT_SERVER_TIMEOUT)
             canceled_count += 1
 
@@ -111,7 +113,7 @@ def _check_jobs():
 
 
 def _check_runs():
-    now = datetime.datetime.utcnow()
+    now = utils.utcnow()
 
     q = Run.query.filter_by(finished=None)
     q = q.filter(Run.state != consts.RUN_STATE_MANUAL)  # TODO: manual runs will require timeouting as well when jobs are started
@@ -142,47 +144,87 @@ def _check_runs():
             exec_utils.complete_run(run, now)
 
 
+def _cancel_job_and_unassign_agent(agent):
+    exec_utils.cancel_job(agent.job, 'agent not alive', consts.JOB_CMPLT_AGENT_NOT_ALIVE)
+    job = agent.job
+    agent.job = None
+    job.agent = None
+    db.session.commit()
+
+
 def _check_agents_keep_alive():
-    now = datetime.datetime.utcnow()
+    now = utils.utcnow()
     five_mins_ago = now - datetime.timedelta(seconds=consts.AGENT_TIMEOUT)
+    ten_mins_ago = now - datetime.timedelta(seconds=consts.SLOW_AGENT_TIMEOUT)
 
     q = Agent.query
     q = q.filter_by(disabled=False, deleted=None)
     q = q.filter(Agent.last_seen < five_mins_ago)
 
-    for e in q.all():
-        e.disabled = True
-        e.status_line = 'agent was not seen for last 5 minutes, disabled'
+    for a in q.all():
+        # in case of AWS VMs check for 10mins, not 5mins
+        aws = None
+        for aa in agent.agents_groups:
+            ag = aa.agents_group
+            if ag.deployment and ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS and 'aws' in ag.deployment:
+                if a.last_seen > ten_mins_ago:
+                    continue
+
+        a.disabled = True
+        a.status_line = 'agent was not seen for last 5 minutes, disabled'
+        log.info('agent %s not seen for 5 minutes, disabled', a)
         db.session.commit()
-        log.info('agent %s not seen for 5 minutes, disabled', e)
+
+        if a.job:
+            _cancel_job_and_unassign_agent(a)
 
 
 def _destroy_and_delete_if_outdated(agent, ag):
     aws = ag.deployment['aws']
-    if 'destruction_after_time' not in aws or int(aws['destruction_after_time']) == 0:
+
+    destroy = False
+
+    # check if idle time after job passed, then destroy VM
+    if 'destruction_after_time' in aws and int(aws['destruction_after_time']) > 0:
+        q = Job.query.filter_by(agent_used=agent)
+        q = q.filter(Job.finished.isnot(None))
+        q = q.order_by(desc(Job.finished))
+        last_job = q.first()
+        if last_job:
+            now = utils.utcnow()
+            dt = now - last_job.finished
+            timeout = datetime.timedelta(seconds=60 * int(aws['destruction_after_time']))
+            if dt >= timeout:
+                log.info('agent:%d, timed out %d > %d - destroying it', agent.id, dt, timeout)
+                destroy = True
+            else:
+                log.info('agent:%d, not yet timed out %d < %d - skipped', agent.id, dt, timeout)
+        else:
+            log.info('agent:%d, no last job - skipped', agent.id)
+    else:
         log.info('agent:%d, destruction_after_time is 0 - skipped', agent.id)
-        return False
 
-    q = Job.query.filter_by(agent_used=agent)
-    q = q.filter(Job.finished.isnot(None))
-    q = q.order_by(desc(Job.finished))
-    last_job = q.first()
-    if not last_job:
-        log.info('agent:%d, no last job - skipped', agent.id)
-        return False
+    # check if number of executed jobs on VM is reached, then destroy VM
+    if not destroy and 'destruction_after_jobs' in aws and int(aws['destruction_after_jobs']) > 0:
+        max_jobs = int(aws['destruction_after_jobs'])
+        jobs_num = Job.query.filter_by(agent_used=agent, state=consts.JOB_STATE_COMPLETED).count()
+        if jobs_num >= max_jobs:
+            log.info('agent:%d, max jobs reached %d/%d', agent.id, jobs_num, max_jobs)
+            destroy = True
+        else:
+            log.info('agent:%d, max jobs not reached yet %d/%d - skipped', agent.id, jobs_num, max_jobs)
+    else:
+        log.info('agent:%d, destruction_after_jobs is 0 - skipped', agent.id)
 
-    now = datetime.datetime.utcnow()
-    dt = now - last_job.finished
-    timeout = datetime.timedelta(seconds=60 * int(aws['destruction_after_time']))
-    if dt < timeout:
-        log.info('agent:%d, not yet timed out %d < %d - skipped', agent.id, dt, timeout)
-        return False
+    # if machine mark for destruction then schedule it
+    if destroy:
+        log.info('disabling and destroying machine with agent %s', agent)
+        agent.disabled = True
+        db.session.commit()
+        kkrq.enq(bg_jobs.destroy_machine, agent.id)
+        return True
 
-    log.info('destroying machine with agent %s due idle time', agent)
-    agent.disabled = True
-    db.session.commit()
-    kkrq.enq(bg_jobs.destroy_machine, agent.id)
-    return True
+    return False
 
 
 def _delete_if_missing_in_aws(agent, ag):
@@ -205,7 +247,7 @@ def _delete_if_missing_in_aws(agent, ag):
             # if instance exists but is terminated also trigger deleting agent by raising an exception
             raise Exception('terminated')
     except Exception:
-        agent.deleted = datetime.datetime.utcnow()
+        agent.deleted = utils.utcnow()
         agent.disabled = True
         db.session.commit()
         log.info('deleted dangling agent %d', agent.id)
@@ -215,7 +257,7 @@ def _delete_if_missing_in_aws(agent, ag):
 
 
 def _check_agents_to_destroy():
-    q = Agent.query.filter_by(deleted=None, job=None)
+    q = Agent.query.filter_by(deleted=None)
     q = q.join('agents_groups', 'agents_group')
     q = q.filter(AgentsGroup.deployment.isnot(None))
 
@@ -234,11 +276,15 @@ def _check_agents_to_destroy():
         deleted = _destroy_and_delete_if_outdated(agent, ag)
         if deleted:
             outdated_count += 1
+            if agent.job:
+                _cancel_job_and_unassign_agent(agent)
             continue
 
         deleted = _delete_if_missing_in_aws(agent, ag)
         if deleted:
             dangling_count += 1
+            if agent.job:
+                _cancel_job_and_unassign_agent(agent)
             continue
 
     log.info('all agents:%d, with depl:%d, destroyed and deleted %d aws ec2 instances and agents',
@@ -270,7 +316,7 @@ def _check_machines_with_no_agent():
         region = aws['region']
         ec2 = boto3.resource('ec2', region_name=region, aws_access_key_id=access_key, aws_secret_access_key=secret_access_key)
 
-        now = datetime.datetime.utcnow()
+        now = utils.utcnow()
 
         try:
             instances = ec2.instances.filter(Filters=[{'Name': 'tag:kraken-group', 'Values': ['%d' % ag.id]}])
@@ -305,7 +351,7 @@ def _check_machines_with_no_agent():
 
             # instances have to be old enough to avoid race condition with
             # case when instances are being created but not yet assigned to agents
-            lt = i.launch_time.replace(tzinfo=None)
+            lt = i.launch_time.replace(tzinfo=pytz.utc)
             if now - lt < datetime.timedelta(minutes=10):
                 continue
 
@@ -341,7 +387,7 @@ def _check_for_errors_in_logs():
     o = urlparse(ch_url)
     ch = clickhouse_driver.Client(host=o.hostname)
 
-    now = datetime.datetime.utcnow()
+    now = utils.utcnow()
     start_date = now - datetime.timedelta(hours=1)
 
     query = "select count(*) from logs where level = 'ERROR' and time > %(start_date)s;"

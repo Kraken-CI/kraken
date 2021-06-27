@@ -22,6 +22,7 @@ from .models import db, BranchSequence, Flow, Run, Job, Step, AgentsGroup, Tool,
 from .schema import check_and_correct_stage_schema, prepare_secrets, substitute_vars, substitute_val
 from . import dbutils
 from . import kkrq
+from . import utils
 
 log = logging.getLogger(__name__)
 
@@ -41,17 +42,18 @@ def complete_run(run, now):
 def cancel_job(job, note, cmplt_status):
     # job is not un-assigned from agent, this will happen in backend.py
     # when agent will call get_job or any other function
+    # or in watchdog.py in _check_agents_keep_alive if agent is not alive
     from .bg import jobs as bg_jobs  # pylint: disable=import-outside-toplevel
     if job.state == consts.JOB_STATE_COMPLETED:
         return
-    job.completed = datetime.datetime.utcnow()
+    job.completed = utils.utcnow()
     job.state = consts.JOB_STATE_COMPLETED
     job.completion_status = cmplt_status
-    if note:
-        job.notes = note
+    job.notes = note
+    job.finished = utils.utcnow()
     db.session.commit()
     kkrq.enq(bg_jobs.job_completed, job.id)
-    log.info('job %s timed out or canceled', job, job=job.id)
+    log.info('job %s canceled because: %s', job, note, job=job.id)
 
 
 def _increment_sequences(branch, stage, kind):
@@ -271,7 +273,7 @@ def trigger_jobs(run, replay=False):
 
     # trigger new jobs based on jobs defined in stage schema
     all_started_erred = True
-    now = datetime.datetime.utcnow()
+    now = utils.utcnow()
     for j in schema['jobs']:
         # check tools in steps
         tools = []
