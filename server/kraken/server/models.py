@@ -99,9 +99,6 @@ class Branch(db.Model, DatesMixin):
     stages = relationship("Stage", back_populates="branch", order_by="Stage.name")
     sequences = relationship("BranchSequence", back_populates="branch")
 
-    UniqueConstraint(name, project_id, name='uq_branch_name_project_id')
-    UniqueConstraint(branch_name, project_id, name='uq_branch_branch_name_project_id')
-
     #base_branch = relationship('BaseBranch', uselist=False, primaryjoin="or_(Branch.id==BaseBranch.ci_branch_id, Branch.id==BaseBranch.dev_branch_id)")
 
     def get_json(self, with_results=False, with_cfg=False, with_last_results=False):
@@ -139,6 +136,9 @@ class Branch(db.Model, DatesMixin):
         if with_cfg:
             data['stages'] = [s.get_json() for s in self.stages if s.deleted is None]
         return data
+
+Index('ix_branches_name_project_id_not_deleted', Branch.name, Branch.project_id, postgresql_where=Branch.deleted.is_(None), unique=True)
+Index('ix_branches_branch_name_project_id_not_deleted', Branch.branch_name, Branch.project_id, postgresql_where=Branch.deleted.is_(None), unique=True)
 
 
 # Sequence kinds:
