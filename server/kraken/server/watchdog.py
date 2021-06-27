@@ -163,8 +163,7 @@ def _check_agents_keep_alive():
 
     for a in q.all():
         # in case of AWS VMs check for 10mins, not 5mins
-        aws = None
-        for aa in agent.agents_groups:
+        for aa in a.agents_groups:
             ag = aa.agents_group
             if ag.deployment and ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS and 'aws' in ag.deployment:
                 if a.last_seen > ten_mins_ago:

@@ -14,7 +14,6 @@
 
 import uuid
 import logging
-import datetime
 
 from passlib.hash import pbkdf2_sha256
 from werkzeug.exceptions import Unauthorized, BadRequest

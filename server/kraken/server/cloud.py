@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import logging
-import datetime
 
 import boto3
 import botocore

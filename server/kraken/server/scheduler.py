@@ -17,7 +17,6 @@
 import os
 import time
 import logging
-import datetime
 
 from flask import Flask
 from sqlalchemy.sql.expression import asc
