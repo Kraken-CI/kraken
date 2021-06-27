@@ -63,6 +63,10 @@ def stage(ctx):
                 "cwd": "kraken/server",
                 "timeout": 240
             }, {
+                "tool": "shell",
+                "cmd": "echo 'version = \'0.0\'' > version.py",
+                "cwd": "kraken/server/kraken",
+            }, {
                 "tool": "pytest",
                 "pytest_exe": "poetry run pytest",
                 "params": "-vv -m 'not db'",
