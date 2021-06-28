@@ -801,9 +801,6 @@ class Agent(db.Model, DatesMixin):
                     job=self.job.get_json() if self.job else None)
 
 
-Index('ix_agents_address_not_deleted', Agent.address, postgresql_where=Agent.deleted.is_(None), unique=True)
-
-
 class Setting(db.Model):
     __tablename__ = "settings"
     id = Column(Integer, primary_key=True)
