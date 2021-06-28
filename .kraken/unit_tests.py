@@ -72,11 +72,8 @@ def stage(ctx):
                 "background": True
             }, {
                 "tool": "pytest",
-                "pytest_exe": "poetry run pytest",
-                "cwd": "kraken/server",
-                "env": {
-                    "POSTGRES_URL": "postgresql://kkut:kkut@localhost:15432/"
-                }
+                "pytest_exe": "POSTGRES_URL=postgresql://kkut:kkut@localhost:15432/ poetry run pytest",
+                "cwd": "kraken/server"
             }],
             "environments": [{
                 "system": "krakenci/ubuntu:20.04",
