@@ -372,6 +372,7 @@ def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
             result = {'status': 'error', 'reason': 'job-timeout'}
             srv.report_step_result(job_id, idx, result)
             return result['status'], cancel, bg_step
+
         attempts = step.get('attempts', 1)
         sleep_time_after_attempt = step.get('sleep_time_after_attempt', 0)
         background = step.get('background', False)
@@ -381,16 +382,17 @@ def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
                 bg_step = result
                 result = {'status': 'done'}
                 break
-            else:
-                if cancel:
-                    log.info('canceling job')
-                    return 'cancel', cancel, bg_step
-                if result['status'] == 'done':
-                    break
-                retry_info = 'no more retries' if n + 1 == attempts else ('retrying after %ds' % sleep_time_after_attempt)
-                log.info('command failed, it was attempt %d/%d, %s', n + 1, attempts, retry_info)
-                if sleep_time_after_attempt > 0:
-                    time.sleep(sleep_time_after_attempt)
+
+            if cancel:
+                log.info('canceling job')
+                return 'cancel', cancel, bg_step
+            if result['status'] == 'done':
+                break
+            retry_info = 'no more retries' if n + 1 == attempts else ('retrying after %ds' % sleep_time_after_attempt)
+            log.info('command failed, it was attempt %d/%d, %s', n + 1, attempts, retry_info)
+            if sleep_time_after_attempt > 0:
+                time.sleep(sleep_time_after_attempt)
+
         log.info('result for run: %s', result)
         rsp = srv.report_step_result(job_id, idx, result)
         cancel = rsp.get('cancel', False)
