@@ -183,6 +183,7 @@ def allocate_ec2_vms(aws, access_key, secret_access_key,
                     setattr(a, f, val)
                 db.session.commit()
             else:
+                log.info('agent %s duplicated but cannot find it'. address)
                 raise
 
         AgentAssignment(agent=a, agents_group=ag)
