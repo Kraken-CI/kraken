@@ -12,7 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import json
+import time
+import signal
 import asyncio
 import logging
 import datetime
@@ -67,12 +70,23 @@ class LocalExecContext:
             cwd=cwd,
             limit=1024 * 128,  # 128 KiB
             stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.STDOUT)
+            stderr=asyncio.subprocess.STDOUT,
+            start_new_session=True)
 
-        await self._async_pump_output(proc.stdout, log_ctx)
+        try:
+            await self._async_pump_output(proc.stdout, log_ctx)
 
-        await asyncio.wait([proc.wait(), self._async_monitor_proc(proc, timeout * 0.95)],
-                           timeout=timeout)
+            await asyncio.wait([proc.wait(), self._async_monitor_proc(proc, timeout * 0.95)],
+                               timeout=timeout)
+        except asyncio.CancelledError:
+            os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
+            time.sleep(1)
+            await asyncio.wait_for(proc.wait(), timeout=1)
+            if proc.returncode is None:
+                os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+                time.sleep(1)
+            await proc.wait()
+            raise
         #log.info('done %s', done)
         #log.info('pending %s', pending)
         #proc_coord.proc_retcode = proc.returncode

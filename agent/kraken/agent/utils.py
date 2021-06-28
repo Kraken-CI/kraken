@@ -86,7 +86,9 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
         p = subprocess.Popen(cmd,
                              shell=True,
                              universal_newlines=True,
-                             start_new_session=True,
+                             # TODO: this requires doing os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+                             # like in local_run.py
+                             # start_new_session=True,
                              env=env,
                              cwd=cwd,
                              stdout=fh,

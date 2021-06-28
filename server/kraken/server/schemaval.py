@@ -792,6 +792,11 @@ schema = {
                                             "description": "A sleep time between subsequent execution attempts.",
                                             "default": 0,
                                             "type": "integer"
+                                        },
+                                        "background": {
+                                            "description": "Indicates if step should be started and pushed to background. The step process is closed at the end of a job.",
+                                            "default": False,
+                                            "type": "boolean"
                                         }
                                     }
                                 },

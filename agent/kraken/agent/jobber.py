@@ -21,6 +21,7 @@ import pkgutil
 import asyncio
 import traceback
 # import socketserver
+import threading
 import pkg_resources
 
 from . import config
@@ -173,7 +174,14 @@ async def _send_keep_alive_to_server(proc_coord):
             proc_coord.cancel()
 
 
-async def _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeout, user, step_file_path):
+async def _wait_for_cancel(cancel_event):
+    while True:
+        await asyncio.sleep(1)
+        if cancel_event.is_set():
+            break
+
+
+async def _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeout, user, step_file_path, cancel_event=None):
     # prepare internal http server for receiving messages from tool subprocess
     addr = exec_ctx.get_return_ip_addr()
     log.info('return ip addr %s', addr)
@@ -194,9 +202,17 @@ async def _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeou
     # async task for sending keep alive messages to kraken server
     keep_alive_task = asyncio.ensure_future(_send_keep_alive_to_server(proc_coord))
 
+    tasks = [subprocess_task, tcp_server_task, keep_alive_task]
+
+    # waiting for cancel task if needed
+    if cancel_event:
+        cancel_task = asyncio.ensure_future(_wait_for_cancel(cancel_event))
+        tasks.append(cancel_task)
+    else:
+        cancel_task = None
+
     # wait for any task to complete
-    done, _ = await asyncio.wait([subprocess_task, tcp_server_task, keep_alive_task],
-                                 return_when=asyncio.FIRST_COMPLETED)
+    done, _ = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
 
     # stop internal http server if not stopped yet
     if tcp_server_task not in done:
@@ -206,13 +222,20 @@ async def _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeou
         except asyncio.CancelledError:
             pass
 
+    if cancel_task and cancel_task in done:
+        subprocess_task.cancel()
+        try:
+            await subprocess_task
+        except asyncio.CancelledError:
+            pass
 
-def _exec_tool(kk_srv, exec_ctx, tool_path, command, cwd, timeout, user, step_file_path, job_id, idx):
+
+def _exec_tool_inner(kk_srv, exec_ctx, tool_path, command, cwd, timeout, user, step_file_path, job_id, idx, cancel_event=None):
     if tool_path.endswith('.py'):
         tool_path = "%s %s" % (sys.executable, tool_path)
 
     proc_coord = ProcCoord(kk_srv, command, job_id, idx)
-    f = _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeout, user, step_file_path)
+    f = _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeout, user, step_file_path, cancel_event)
     if hasattr(asyncio, 'run'):
         asyncio.run(f)  # this is available since Python 3.7
     else:
@@ -220,6 +243,18 @@ def _exec_tool(kk_srv, exec_ctx, tool_path, command, cwd, timeout, user, step_fi
         loop.run_until_complete(f)
         loop.close()
     return proc_coord.result, proc_coord.is_canceled
+
+
+def _exec_tool(kk_srv, exec_ctx, tool_path, command, cwd, timeout, user, step_file_path, job_id, idx, background=False):
+    if background:
+        cancel_event = threading.Event()
+        th = threading.Thread(target=_exec_tool_inner, args=(kk_srv, exec_ctx, tool_path, command, cwd, timeout,
+                                                             user, step_file_path, job_id, idx, cancel_event))
+        th.start()
+        return (th, cancel_event), None
+
+    result, cancel = _exec_tool_inner(kk_srv, exec_ctx, tool_path, command, cwd, timeout, user, step_file_path, job_id, idx)
+    return result, cancel
 
 
 def _write_step_file(job_dir, step, idx):
@@ -242,6 +277,7 @@ def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
     step_file_path = _write_step_file(job_dir, step, idx)
 
     cancel = False
+    bg_step = None
 
     result, cancel = _exec_tool(srv, exec_ctx, tool_path, 'get_commands', job_dir, 10, user, step_file_path, job_id, idx)
     log.info('result for get_commands: %s', result)
@@ -261,7 +297,7 @@ def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
         log.info('result for collect_tests: %s', str(result)[:200])
         if cancel:
             log.info('canceling job')
-            return 'cancel', cancel
+            return 'cancel', cancel, bg_step
 
         # check result
         if not isinstance(result, dict):
@@ -270,7 +306,7 @@ def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
         # if command not succeeded
         if result['status'] != 'done':
             rsp = srv.report_step_result(job_id, idx, result)
-            return result['status'], rsp.get('cancel', False)
+            return result['status'], rsp.get('cancel', False), bg_step
 
         # check result
         if 'tests' not in result:
@@ -280,7 +316,7 @@ def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
         if len(result['tests']) == 0:
             result = {'status': 'error', 'reason': 'no-tests'}
             rsp = srv.report_step_result(job_id, idx, result)
-            return result['status'], rsp.get('cancel', False)
+            return result['status'], rsp.get('cancel', False), bg_step
 
         # if there are tests then send them for dispatching to server
         response = srv.dispatch_tests(job_id, idx, result['tests'])
@@ -293,13 +329,13 @@ def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
             log.info('timout expired %s', deadline)
             result = {'status': 'error', 'reason': 'job-timeout'}
             srv.report_step_result(job_id, idx, result)
-            return result['status'], cancel
+            return result['status'], cancel, bg_step
         result, cancel = _exec_tool(srv, exec_ctx, tool_path, 'run_tests', job_dir, timeout, user, step_file_path, job_id, idx)
         log.info('result for run_tests: %s', str(result)[:200])
         # do not srv.report_step_result, it was already done in RequestHandler.async_handle_request
         if cancel:
             log.info('canceling job')
-            return 'cancel', cancel
+            return 'cancel', cancel, bg_step
 
     if 'run_analysis' in available_commands:
         timeout = deadline - time.time()
@@ -307,13 +343,13 @@ def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
             log.info('timout expired %s', deadline)
             result = {'status': 'error', 'reason': 'job-timeout'}
             srv.report_step_result(job_id, idx, result)
-            return result['status'], cancel
+            return result['status'], cancel, bg_step
         result, cancel = _exec_tool(srv, exec_ctx, tool_path, 'run_analysis', job_dir, timeout, user, step_file_path, job_id, idx)
         log.info('result for run_analysis: %s', str(result)[:200])
         # do not srv.report_step_result, it was already done in RequestHandler.async_handle_request
         if cancel:
             log.info('canceling job')
-            return 'cancel', cancel
+            return 'cancel', cancel, bg_step
 
     if 'run_artifacts' in available_commands:
         timeout = deadline - time.time()
@@ -321,13 +357,13 @@ def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
             log.info('timout expired %s', deadline)
             result = {'status': 'error', 'reason': 'job-timeout'}
             srv.report_step_result(job_id, idx, result)
-            return result['status'], cancel
+            return result['status'], cancel, bg_step
         result, cancel = _exec_tool(srv, exec_ctx, tool_path, 'run_artifacts', job_dir, timeout, user, step_file_path, job_id, idx)
         log.info('result for run_artifacts: %s', str(result)[:200])
         # do not srv.report_step_result, it was already done in RequestHandler.async_handle_request
         if cancel:
             log.info('canceling job')
-            return 'cancel', cancel
+            return 'cancel', cancel, bg_step
 
     if 'run' in available_commands:
         timeout = deadline - time.time()
@@ -335,27 +371,33 @@ def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
             log.info('timout expired %s', deadline)
             result = {'status': 'error', 'reason': 'job-timeout'}
             srv.report_step_result(job_id, idx, result)
-            return result['status'], cancel
+            return result['status'], cancel, bg_step
         attempts = step.get('attempts', 1)
         sleep_time_after_attempt = step.get('sleep_time_after_attempt', 0)
+        background = step.get('background', False)
         for n in range(attempts):
-            result, cancel = _exec_tool(srv, exec_ctx, tool_path, 'run', job_dir, timeout, user, step_file_path, job_id, idx)
-            if cancel:
-                log.info('canceling job')
-                return 'cancel', cancel
-            if result['status'] == 'done':
+            result, cancel = _exec_tool(srv, exec_ctx, tool_path, 'run', job_dir, timeout, user, step_file_path, job_id, idx, background=background)
+            if background:
+                bg_step = result
+                result = {'status': 'done'}
                 break
-            retry_info = 'no more retries' if n + 1 == attempts else ('retrying after %ds' % sleep_time_after_attempt)
-            log.info('command failed, it was attempt %d/%d, %s', n + 1, attempts, retry_info)
-            if sleep_time_after_attempt > 0:
-                time.sleep(sleep_time_after_attempt)
+            else:
+                if cancel:
+                    log.info('canceling job')
+                    return 'cancel', cancel, bg_step
+                if result['status'] == 'done':
+                    break
+                retry_info = 'no more retries' if n + 1 == attempts else ('retrying after %ds' % sleep_time_after_attempt)
+                log.info('command failed, it was attempt %d/%d, %s', n + 1, attempts, retry_info)
+                if sleep_time_after_attempt > 0:
+                    time.sleep(sleep_time_after_attempt)
         log.info('result for run: %s', result)
         rsp = srv.report_step_result(job_id, idx, result)
         cancel = rsp.get('cancel', False)
         if cancel:
             log.info('canceling job')
 
-    return result['status'], cancel
+    return result['status'], cancel, bg_step
 
 
 def _create_exec_context(job):
@@ -387,7 +429,7 @@ def run(srv, job):
         return
 
     try:
-
+        bg_steps = []
         last_status = None
         for idx, step in enumerate(job['steps']):
             if step['status'] == 2:
@@ -401,18 +443,27 @@ def run(srv, job):
                 step['trigger_data'] = job['trigger_data']
 
             try:
-                last_status, cancel = _run_step(srv, exec_ctx, job_dir, job['id'], idx, step, tools, job['deadline'])
+                last_status, cancel, bg_step = _run_step(srv, exec_ctx, job_dir, job['id'], idx, step, tools, job['deadline'])
             except Exception:
                 log.exception('step interrupted by exception')
                 exc = traceback.format_exc()
                 srv.report_step_result(job['id'], idx, {'status': 'error', 'reason': 'exception', 'msg': exc})
                 last_status = 'error'
+                bg_step = None
+
+            if bg_step:
+                bg_steps.append(bg_step)
 
             if last_status == 'error':
                 break
             if cancel:
                 log.info('received job cancel')
                 break
+
+        for bg_step in bg_steps:
+            thread, cancel_event = bg_step
+            cancel_event.set()
+            thread.join()
 
     finally:
         exec_ctx.stop()
