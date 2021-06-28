@@ -16,10 +16,11 @@ depends_on = None
 
 
 def upgrade():
-    try:
-        op.drop_index('ix_agents_address_not_deleted', table_name='agents')
-    except Exception:
-        pass
+    with op.get_context().autocommit_block():
+        try:
+            op.drop_index('ix_agents_address_not_deleted', table_name='agents')
+        except Exception:
+            pass
 
 
 def downgrade():
