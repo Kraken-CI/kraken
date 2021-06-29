@@ -73,7 +73,7 @@ def stage(ctx):
                 "cwd": "kraken/server/kraken",
             }, {
                 "tool": "pytest",
-                "pytest_exe": "sleep 6; POSTGRES_URL=postgresql://kkut:kkut@localhost:15432/ poetry run pytest",
+                "pytest_exe": "sleep 2; POSTGRES_URL=postgresql://kkut:kkut@172.17.0.1:15432/ poetry run pytest",
                 "cwd": "kraken/server"
             }],
             "environments": [{
