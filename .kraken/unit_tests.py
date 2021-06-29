@@ -45,6 +45,11 @@ def stage(ctx):
             "name": "pytest server",
             "steps": [{
                 "tool": "shell",
+                "cmd": "docker run --name kkut -p 15432:5432 -e POSTGRES_DB=kkut -e POSTGRES_USER=kkut -e POSTGRES_PASSWORD=kkut postgres:11",
+                "background": True,
+                "timeout": 12400
+            }, {
+                "tool": "shell",
                 "cmd": "sudo apt update && sudo apt-get install -y python3-pip || ps axf",
                 "timeout": 300
             }, {
@@ -66,10 +71,6 @@ def stage(ctx):
                 "tool": "shell",
                 "cmd": "echo 'version = \'0.0\'' > version.py",
                 "cwd": "kraken/server/kraken",
-            }, {
-                "tool": "shell",
-                "cmd": "docker run --name kkut -p 15432:5432 -e POSTGRES_DB=kkut -e POSTGRES_USER=kkut -e POSTGRES_PASSWORD=kkut postgres:11",
-                "background": True
             }, {
                 "tool": "pytest",
                 "pytest_exe": "sleep 6; POSTGRES_URL=postgresql://kkut:kkut@localhost:15432/ poetry run pytest",
