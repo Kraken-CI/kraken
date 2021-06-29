@@ -45,7 +45,7 @@ def stage(ctx):
             "name": "pytest server",
             "steps": [{
                 "tool": "shell",
-                "cmd": "sudo apt-get update && sudo apt-get install -y --no-install-recommends apt-transport-https software-properties-common",
+                "cmd": "sudo apt-get update && sudo apt-get install -y --no-install-recommends apt-transport-https software-properties-common postgresql-client",
                 "timeout": 300
             }, {
                 "tool": "shell",
