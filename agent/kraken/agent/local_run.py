@@ -76,8 +76,11 @@ class LocalExecContext:
         try:
             await self._async_pump_output(proc.stdout, log_ctx)
 
-            await asyncio.wait([proc.wait(), self._async_monitor_proc(proc, timeout * 0.95)],
-                               timeout=timeout)
+            if timeout:
+                await asyncio.wait([proc.wait(), self._async_monitor_proc(proc, timeout * 0.95)],
+                                   timeout=timeout)
+            else:
+                await proc.wait()
         except asyncio.CancelledError:
             os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
             time.sleep(1)

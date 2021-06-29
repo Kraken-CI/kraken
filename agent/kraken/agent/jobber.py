@@ -248,7 +248,7 @@ def _exec_tool_inner(kk_srv, exec_ctx, tool_path, command, cwd, timeout, user, s
 def _exec_tool(kk_srv, exec_ctx, tool_path, command, cwd, timeout, user, step_file_path, job_id, idx, background=False):
     if background:
         cancel_event = threading.Event()
-        th = threading.Thread(target=_exec_tool_inner, args=(kk_srv, exec_ctx, tool_path, command, cwd, timeout,
+        th = threading.Thread(target=_exec_tool_inner, args=(kk_srv, exec_ctx, tool_path, command, cwd, None,
                                                              user, step_file_path, job_id, idx, cancel_event))
         th.start()
         return (th, cancel_event), None
