@@ -45,6 +45,10 @@ def stage(ctx):
             "name": "pytest server",
             "steps": [{
                 "tool": "shell",
+                "cmd": "bash -c \"curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && add-apt-repository 'deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable' && apt update && DEBIAN_FRONTEND=noninteractive apt-get install -y docker-ce-cli\"",
+                "timeout": 300
+            }, {
+                "tool": "shell",
                 "cmd": "docker run --name kkut -p 15432:5432 -e POSTGRES_DB=kkut -e POSTGRES_USER=kkut -e POSTGRES_PASSWORD=kkut postgres:11",
                 "background": True,
                 "timeout": 12400
