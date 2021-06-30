@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core'
 import { Title } from '@angular/platform-browser'
 import { ActivatedRoute } from '@angular/router'
 
+import { AuthService } from '../auth.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
 import { ManagementService } from '../backend/api/management.service'
 
@@ -27,6 +28,7 @@ export class DiagsPageComponent implements OnInit {
 
     constructor(
         private route: ActivatedRoute,
+        public auth: AuthService,
         protected breadcrumbService: BreadcrumbsService,
         protected managementService: ManagementService,
         private titleService: Title
@@ -102,6 +104,9 @@ export class DiagsPageComponent implements OnInit {
     }
 
     loadServicesLogs() {
+        if (!this.auth.hasPermission('manage')) {
+            return
+        }
         this.servicesLogsAreLoading = true
 
         let services = ['all']
