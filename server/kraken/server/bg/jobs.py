@@ -849,7 +849,7 @@ def trigger_flow(project_id, trigger_data=None):
             exec_utils.create_a_flow(branch, flow_kind, {}, trigger_data)
 
 
-def refresh_schema_repo(stage_id):
+def refresh_schema_repo(stage_id, complete_starting_run_id=None):
     app = _create_app('refresh_schema_repo_%d' % stage_id)
 
     with app.app_context():
@@ -905,6 +905,9 @@ def refresh_schema_repo(stage_id):
 
         stage.repo_refresh_job_id = job['id']
         db.session.commit()
+
+        if complete_starting_run_id:
+            exec_utils.complete_starting_run(complete_starting_run_id)
 
 
 def spawn_new_agents(agents_group_id):

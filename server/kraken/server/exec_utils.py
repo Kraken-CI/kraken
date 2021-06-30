@@ -89,53 +89,61 @@ def _increment_sequences(branch, stage, kind):
     return vals
 
 
-def start_run(stage, flow, reason, args=None, repo_data=None):
-    # if there was already run for this stage then replay it, otherwise create new one
-    replay = True
-    run = Run.query.filter_by(stage=stage, flow=flow).one_or_none()
+def complete_starting_run(run_id):
+    run = Run.query.filter_by(id=run_id).one_or_none()
     if run is None:
+        raise Exception('run %d cannot be found' % run_id)
+
+    # if this is already executed run then replay it, if this is new, fresh run then do everything from scratch
+    if run.state == consts.RUN_STATE_REPLAY:
+        # move run back into IN PROGRESS state
+        run.state = consts.RUN_STATE_IN_PROGRESS
+        replay = True
+    else:
+        replay = False
+
         # prepare args
-        run_args = stage.get_default_args()
-        if flow.args:
-            run_args.update(flow.args)
-        if args is not None:
-            run_args.update(args)
+        run_args = run.stage.get_default_args()
+        if run.flow.args:
+            run_args.update(run.flow.args)
+        if run.args is not None:
+            run_args.update(run.args)
 
         # increment sequences
-        seq_vals = _increment_sequences(flow.branch, stage, flow.kind)
+        seq_vals = _increment_sequences(run.flow.branch, run.stage, run.flow.kind)
         run_args.update(seq_vals)
 
         # prepare flow label if needed
         lbl_vals = {}
         for lbl_field in ['flow_label', 'run_label']:
-            label_pattern = stage.schema.get(lbl_field, None)
+            label_pattern = run.stage.schema.get(lbl_field, None)
             if label_pattern:
                 lbl_vals[lbl_field] = label_pattern
         if lbl_vals:
             lbl_vals = substitute_vars(lbl_vals, run_args)
-            if flow.label is None:
-                flow.label = lbl_vals.get('flow_label', None)
+            if run.flow.label is None:
+                run.flow.label = lbl_vals.get('flow_label', None)
 
         # if currently there is not repo data copy it from previous run if it is there
+        repo_data = run.repo_data
         if not repo_data:
-            prev_run = dbutils.get_prev_run(stage.id, flow.kind)
+            prev_run = dbutils.get_prev_run(run.stage.id, run.flow.kind)
             if prev_run and prev_run.repo_data_id and prev_run.repo_data.data:
                 repo_data = prev_run.repo_data
                 log.info('new run, taken repo_data from prev run %s', prev_run)
 
-        # create run instance
-        run = Run(stage=stage, flow=flow, args=run_args, label=lbl_vals.get('run_label', None), reason=reason, repo_data=repo_data)
-        replay = False
-        if stage.schema['triggers'].get('manual', False):
+        # initialize run instance
+        run.args = run_args
+        run.label = lbl_vals.get('run_label', None)
+        run.repo_data = repo_data
+        if run.stage.schema['triggers'].get('manual', False):
             run.state = consts.RUN_STATE_MANUAL
-    else:
-        # move run back into IN PROGRESS state
-        run.state = consts.RUN_STATE_IN_PROGRESS
+
     db.session.commit()
 
     # trigger jobs if not manual
     if run.state == consts.RUN_STATE_MANUAL:
-        log.info('created manual run %s for stage %s of branch %s - no jobs started yet', run, stage, stage.branch)
+        log.info('created manual run %s for stage %s of branch %s - no jobs started yet', run, run.stage, run.stage.branch)
     else:
         # update pointer to last, incomplete, CI flow in the branch
         if run.flow.kind == consts.FLOW_KIND_CI:
@@ -144,9 +152,29 @@ def start_run(stage, flow, reason, args=None, repo_data=None):
                 run.flow.branch.ci_last_incomplete_flow = run.flow
 
         # trigger jobs
-        log.info('starting run %s for stage %s of branch %s', run, stage, stage.branch)
+        log.info('starting run %s for stage %s of branch %s', run, run.stage, run.stage.branch)
         # TODO: move triggering jobs to background tasks
         trigger_jobs(run, replay=replay)
+
+    return run
+
+
+def start_run(stage, flow, reason, args=None, repo_data=None):
+    # if there was already run for this stage then replay it, otherwise create new one
+    run = Run.query.filter_by(stage=stage, flow=flow).one_or_none()
+    if run is None:
+        # create run instance
+        run = Run(stage=stage, flow=flow, args=args, reason=reason, repo_data=repo_data)
+    else:
+        # move run to REPLAY state
+        run.state = consts.RUN_STATE_REPLAY
+    db.session.commit()
+
+    if stage.schema_from_repo_enabled:
+        from .bg import jobs as bg_jobs  # pylint: disable=import-outside-toplevel
+        kkrq.enq_neck(bg_jobs.refresh_schema_repo, stage.id, run.id, ignore_args=[1])
+    else:
+        complete_starting_run(run.id)
 
     return run
 

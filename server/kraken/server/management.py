@@ -322,7 +322,7 @@ def update_stage(stage_id, body):
             db.session.commit()
 
         from .bg import jobs as bg_jobs  # pylint: disable=import-outside-toplevel
-        kkrq.enq_neck(bg_jobs.refresh_schema_repo, stage.id)
+        kkrq.enq_neck(bg_jobs.refresh_schema_repo, stage.id, 0, ignore_args=[1])
 
     result = stage.get_json()
 

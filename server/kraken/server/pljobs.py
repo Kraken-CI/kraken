@@ -34,4 +34,4 @@ def refresh_schema_repo(stage_id):
     logging.basicConfig(format=consts.LOG_FMT, level=logging.INFO)
 
     log.info('refresh stage %s schema from repo', stage_id)
-    kkrq.enq_neck(bg_jobs.refresh_schema_repo, stage_id)
+    kkrq.enq_neck(bg_jobs.refresh_schema_repo, stage_id, None, ignore_args=[1])

@@ -58,7 +58,7 @@
         <span style="font-size: 2rem; font-weight: bold;">
             {{branch.name}}
         </span>
-        <span style="font-size: 1rem; padding-left: 0.3rem;" *ngIf="branch.branch_name !== branch.name && branch.branch_name.length > 0">
+        <span style="font-size: 1rem; padding-left: 0.3rem;" *ngIf="branch.branch_name && branch.branch_name !== branch.name && branch.branch_name.length > 0">
             {{branch.branch_name}}
         </span>
         <i class="fa fa-edit" style="font-size: 1.3rem; padding-left: 0.5rem; color: #888;"
