@@ -22,7 +22,6 @@
                         "main": "src/main.ts",
                         "polyfills": "src/polyfills.ts",
                         "tsConfig": "tsconfig.app.json",
-                        "aot": true,
                         "assets": ["src/favicon.ico", "src/assets"],
                         "styles": [
                             "./node_modules/primeicons/primeicons.css",
@@ -40,7 +39,13 @@
                             "./node_modules/chartjs-plugin-error-bars/build/Plugin.Errorbars.js",
                             "./node_modules/codemirror/addon/lint/json-lint.js",
                             "./node_modules/codemirror/addon/lint/lint.js"
-                        ]
+                        ],
+                        "vendorChunk": true,
+                        "extractLicenses": false,
+                        "buildOptimizer": false,
+                        "sourceMap": true,
+                        "optimization": false,
+                        "namedChunks": true
                     },
                     "configurations": {
                         "production": {
@@ -70,7 +75,8 @@
                                 }
                             ]
                         }
-                    }
+                    },
+                    "defaultConfiguration": ""
                 },
                 "serve": {
                     "builder": "@angular-devkit/build-angular:dev-server",
