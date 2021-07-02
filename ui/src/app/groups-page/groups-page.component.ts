@@ -1,9 +1,5 @@
 import { Component, OnInit } from '@angular/core'
-import {
-    ActivatedRoute,
-    ParamMap,
-    Router,
-} from '@angular/router'
+import { ActivatedRoute, ParamMap, Router } from '@angular/router'
 import { Title } from '@angular/platform-browser'
 
 import { MessageService, MenuItem } from 'primeng/api'
@@ -13,7 +9,7 @@ import { ManagementService } from '../backend/api/management.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
 
 interface DeploymentMethod {
-    name: string,
+    name: string
     val: number
 }
 
@@ -57,9 +53,9 @@ export class GroupsPageComponent implements OnInit {
         private titleService: Title
     ) {
         this.deploymentMethods = [
-            {name: 'Manual', val: 0},
+            { name: 'Manual', val: 0 },
             // {name: 'SSH', val: 1},
-            {name: 'Amazon Web Services', val: 2},
+            { name: 'Amazon Web Services', val: 2 },
             // {name: 'Google Cloud Platform', val: 3},
             // {name: 'Microsoft Azure', val: 4},
             // {name: 'Digital Ocean', val: 5},
@@ -338,15 +334,13 @@ export class GroupsPageComponent implements OnInit {
     }
 
     getAwsEc2Regions() {
-        this.managementService.getAwsEc2Regions().subscribe(
-            (data) => {
-                this.regions = data.items
+        this.managementService.getAwsEc2Regions().subscribe((data) => {
+            this.regions = data.items
 
-                if (this.groupTab.group.deployment.aws.region) {
-                    this.regionChange()
-                }
+            if (this.groupTab.group.deployment.aws.region) {
+                this.regionChange()
             }
-        )
+        })
     }
 
     deploymentMethodChange() {
@@ -357,10 +351,10 @@ export class GroupsPageComponent implements OnInit {
 
     regionChange() {
         const region = this.groupTab.group.deployment.aws.region
-        this.managementService.getAwsEc2InstanceTypes(region).subscribe(
-            (data) => {
+        this.managementService
+            .getAwsEc2InstanceTypes(region)
+            .subscribe((data) => {
                 this.instanceTypes = data.items
-            }
-        )
+            })
     }
 }

@@ -38,11 +38,13 @@ export class DiscoveredPageComponent implements OnInit {
 
     loadAgentsLazy(event) {
         this.loadingAgents = true
-        this.managementService.getAgents(true, event.first, event.rows).subscribe((data) => {
-            this.agents = data.items
-            this.totalAgents = data.total
-            this.loadingAgents = false
-        })
+        this.managementService
+            .getAgents(true, event.first, event.rows)
+            .subscribe((data) => {
+                this.agents = data.items
+                this.totalAgents = data.total
+                this.loadingAgents = false
+            })
     }
 
     refreshAgents(agentsTable) {

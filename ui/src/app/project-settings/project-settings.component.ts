@@ -138,7 +138,10 @@ export class ProjectSettingsComponent implements OnInit {
 
     addNewBranch() {
         this.managementService
-            .createBranch(this.project.id, { name: this.branchDisplayName, branch_name: this.branchRepoName })
+            .createBranch(this.project.id, {
+                name: this.branchDisplayName,
+                branch_name: this.branchRepoName,
+            })
             .subscribe(
                 (branch) => {
                     this.msgSrv.add({
@@ -319,7 +322,9 @@ export class ProjectSettingsComponent implements OnInit {
             // generate random string, 20 chars
             const arr = new Uint8Array(20)
             window.crypto.getRandomValues(arr)
-            const rndStr = Array.from(arr, c => Math.round(36*c/255).toString(36)).join('')
+            const rndStr = Array.from(arr, (c) =>
+                Math.round((36 * c) / 255).toString(36)
+            ).join('')
             this.project.webhooks.github_secret = rndStr
         }
         return this.project.webhooks.github_secret

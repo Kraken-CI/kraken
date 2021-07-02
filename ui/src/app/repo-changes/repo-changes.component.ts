@@ -1,9 +1,9 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core'
 
 @Component({
-  selector: 'app-repo-changes',
-  templateUrl: './repo-changes.component.html',
-  styleUrls: ['./repo-changes.component.sass']
+    selector: 'app-repo-changes',
+    templateUrl: './repo-changes.component.html',
+    styleUrls: ['./repo-changes.component.sass'],
 })
 export class RepoChangesComponent implements OnInit {
     @Input() changes: any
@@ -13,8 +13,7 @@ export class RepoChangesComponent implements OnInit {
     repoUrl = ''
     diffUrl = ''
 
-    constructor() {
-    }
+    constructor() {}
 
     ngOnInit(): void {
         // prepare repo url
@@ -35,7 +34,8 @@ export class RepoChangesComponent implements OnInit {
             lastCommit = this.changes.after
         }
         if (this.changes.commits2) {
-            startCommit = this.changes.commits2[this.changes.commits2.length - 1].commit
+            startCommit =
+                this.changes.commits2[this.changes.commits2.length - 1].commit
             lastCommit = this.changes.commits2[0].commit
         }
         if (startCommit && lastCommit) {
@@ -43,6 +43,5 @@ export class RepoChangesComponent implements OnInit {
         }
     }
 
-    toggleFiles() {
-    }
+    toggleFiles() {}
 }

@@ -18,7 +18,12 @@ import { Branch } from '../backend/model/models'
 })
 export class BranchMgmtComponent implements OnInit {
     branchId: number
-    branch: Branch = { id: 0, name: 'noname', branch_name: 'noname', stages: [] }
+    branch: Branch = {
+        id: 0,
+        name: 'noname',
+        branch_name: 'noname',
+        stages: [],
+    }
 
     newBranchDisplayName: string
     newBranchRepoName: string
@@ -281,7 +286,10 @@ export class BranchMgmtComponent implements OnInit {
     }
 
     saveBranchName() {
-        this.doSaveBranch(this.branch.id, { name: this.newBranchDisplayName, branch_name: this.newBranchRepoName })
+        this.doSaveBranch(this.branch.id, {
+            name: this.newBranchDisplayName,
+            branch_name: this.newBranchRepoName,
+        })
         this.branchNameDlgVisible = false
     }
 

@@ -13,7 +13,7 @@ import { ManagementService } from '../backend/api/management.service'
 })
 export class DiagsPageComponent implements OnInit {
     tabIndex = 0
-    data: any = {rq: {}}
+    data: any = { rq: {} }
     logServices: any = []
     logServicesSelected: string[] = []
     servicesLogs: any = []
@@ -34,28 +34,28 @@ export class DiagsPageComponent implements OnInit {
         private titleService: Title
     ) {
         this.logServices = [
-            {name: 'server', value: 'server'},
-            {name: 'server/api', value: 'server/api'},
-            {name: 'server/backend', value: 'server/backend'},
-            {name: 'server/webhooks', value: 'server/webhooks'},
-            {name: 'server/artifacts', value: 'server/artifacts'},
-            {name: 'server/install', value: 'server/install'},
-            {name: 'server/job-log', value: 'server/job-log'},
-            {name: 'server/badge', value: 'server/badge'},
-            {name: 'server/other', value: 'server/other'},
-            {name: 'rq', value: 'rq'},
-            {name: 'scheduler', value: 'scheduler'},
-            {name: 'planner', value: 'planner'},
-            {name: 'watchdog', value: 'watchdog'},
+            { name: 'server', value: 'server' },
+            { name: 'server/api', value: 'server/api' },
+            { name: 'server/backend', value: 'server/backend' },
+            { name: 'server/webhooks', value: 'server/webhooks' },
+            { name: 'server/artifacts', value: 'server/artifacts' },
+            { name: 'server/install', value: 'server/install' },
+            { name: 'server/job-log', value: 'server/job-log' },
+            { name: 'server/badge', value: 'server/badge' },
+            { name: 'server/other', value: 'server/other' },
+            { name: 'rq', value: 'rq' },
+            { name: 'scheduler', value: 'scheduler' },
+            { name: 'planner', value: 'planner' },
+            { name: 'watchdog', value: 'watchdog' },
         ]
 
         this.logLevels = [
-            {label: 'Info', value: 'info'},
-            {label: 'Warning', value: 'warning'},
-            {label: 'Error', value: 'error'},
+            { label: 'Info', value: 'info' },
+            { label: 'Warning', value: 'warning' },
+            { label: 'Error', value: 'error' },
         ]
 
-        this.rqJobs = [{label: '-- all --', value: 'all'}]
+        this.rqJobs = [{ label: '-- all --', value: 'all' }]
     }
 
     ngOnInit() {
@@ -77,15 +77,20 @@ export class DiagsPageComponent implements OnInit {
                     this.loadLastRQJobsNames()
 
                     const level = params.get('level')
-                    if (['info', 'warning', 'error'].includes(level) && this.logLevel !== level) {
+                    if (
+                        ['info', 'warning', 'error'].includes(level) &&
+                        this.logLevel !== level
+                    ) {
                         this.logLevel = level
                         this.loadServicesLogs()
                     }
                 } else {
                     this.tabIndex = 0
-                    this.managementService.getDiagnostics().subscribe((data) => {
-                        this.data = data
-                    })
+                    this.managementService
+                        .getDiagnostics()
+                        .subscribe((data) => {
+                            this.data = data
+                        })
                 }
             },
             (error) => {
@@ -96,9 +101,9 @@ export class DiagsPageComponent implements OnInit {
 
     loadLastRQJobsNames() {
         this.managementService.getLastRqJobsNames().subscribe((data) => {
-            this.rqJobs = [{label: '-- all --', value: 'all'}]
+            this.rqJobs = [{ label: '-- all --', value: 'all' }]
             for (const t of data.items) {
-                this.rqJobs.push({label: t.name, value: t.name})
+                this.rqJobs.push({ label: t.name, value: t.name })
             }
         })
     }
@@ -118,17 +123,18 @@ export class DiagsPageComponent implements OnInit {
                         s = 'rq/' + this.rqJob
                     }
                     services.push(s)
-
                 }
             } else {
                 services = this.logServicesSelected
             }
         }
 
-        this.managementService.getServicesLogs(services, this.logLevel).subscribe((data) => {
-            this.servicesLogs = data.items
-            this.servicesLogsAreLoading = false
-        })
+        this.managementService
+            .getServicesLogs(services, this.logLevel)
+            .subscribe((data) => {
+                this.servicesLogs = data.items
+                this.servicesLogsAreLoading = false
+            })
     }
 
     handleTabChange(ev) {

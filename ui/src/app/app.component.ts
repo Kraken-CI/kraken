@@ -21,7 +21,7 @@ export class AppComponent implements OnInit {
     logoClass = 'logo1'
     krakenVersion = '0.4'
 
-    @ViewChild('topmenubar') topmenubar: Menubar;
+    @ViewChild('topmenubar') topmenubar: Menubar
     topMenuItems: MenuItem[]
     logoutMenuItems: MenuItem[]
 
@@ -97,10 +97,10 @@ export class AppComponent implements OnInit {
                 label: '0',
                 icon: 'fa fa-smile-o',
                 routerLink: '/diagnostics',
-                queryParams: {tab: 'logs', level: 'error'},
+                queryParams: { tab: 'logs', level: 'error' },
                 // badge: '0' TODO: it does not work
                 title: '0 errors in the last hour',
-                styleClass: ''
+                styleClass: '',
             },
             {
                 label: 'Settings',
@@ -150,13 +150,13 @@ export class AppComponent implements OnInit {
             })
             return
         }
-        this.auth.login(this.username, this.password, 'returnUrl').subscribe(
-            (msg) => {
+        this.auth
+            .login(this.username, this.password, 'returnUrl')
+            .subscribe((msg) => {
                 if (msg) {
                     this.msgSrv.add(msg)
                 }
-            }
-        )
+            })
     }
 
     passwdKeyUp(evKey) {
@@ -252,8 +252,7 @@ export class AppComponent implements OnInit {
             this.msgSrv.add({
                 severity: 'error',
                 summary: 'Agent Install Script download failed',
-                detail:
-                    'Server URL is missing or incorrect in settings. Please, set it on Settings page.',
+                detail: 'Server URL is missing or incorrect in settings. Please, set it on Settings page.',
                 life: 10000,
             })
             return
@@ -273,7 +272,8 @@ export class AppComponent implements OnInit {
             if (this.errorsInLogsCount !== data.errors_count) {
                 this.errorsInLogsCount = data.errors_count
                 this.topMenuItems[2].label = '' + this.errorsInLogsCount
-                this.topMenuItems[2].title = '' + this.errorsInLogsCount + ' errors in the last hour'
+                this.topMenuItems[2].title =
+                    '' + this.errorsInLogsCount + ' errors in the last hour'
                 if (this.errorsInLogsCount > 0) {
                     this.topMenuItems[2].icon = 'pi pi-exclamation-triangle'
                     this.topMenuItems[2].styleClass = 'error-indicator'

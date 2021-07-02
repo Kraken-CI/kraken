@@ -46,7 +46,10 @@ export class AuthService {
                     }
 
                     this.currentSessionSubject.next(this.session)
-                    localStorage.setItem('session', JSON.stringify(this.session))
+                    localStorage.setItem(
+                        'session',
+                        JSON.stringify(this.session)
+                    )
                     // this.router.navigate([returnUrl])
                     observer.next(null)
                 },

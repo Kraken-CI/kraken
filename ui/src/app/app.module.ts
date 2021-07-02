@@ -71,7 +71,7 @@ import { AgentsPageComponent } from './agents-page/agents-page.component'
 import { DiscoveredPageComponent } from './discovered-page/discovered-page.component'
 import { GroupsPageComponent } from './groups-page/groups-page.component'
 import { SettingsPageComponent } from './settings-page/settings-page.component'
-import { DiagsPageComponent } from './diags-page/diags-page.component';
+import { DiagsPageComponent } from './diags-page/diags-page.component'
 import { RepoChangesComponent } from './repo-changes/repo-changes.component'
 
 export function cfgFactory() {

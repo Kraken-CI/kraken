@@ -44,7 +44,7 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
             id: null,
         },
         run: null,
-        selected: false
+        selected: false,
     }
     repoUrl = 'awe'
     diffUrl = 'dafsd'
@@ -364,7 +364,8 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
     }
 
     hasFlowCommits(flow) {
-        if (flow &&
+        if (
+            flow &&
             flow.trigger &&
             (flow.trigger.commits || flow.trigger.pull_request)
         ) {

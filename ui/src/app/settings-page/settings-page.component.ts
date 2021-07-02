@@ -85,18 +85,18 @@ export class SettingsPageComponent implements OnInit {
 
         // save settings from current tab
         switch (this.tabIndex) {
-        case 0:
-            settings.general = this.generalForm.value
-            break
-        case 1:
-            settings.notification = this.notificationForm.value
-            break
-        case 2:
-            settings.monitoring = this.monitoringForm.value
-            break
-        case 3:
-            settings.cloud = this.cloudForm.value
-            break
+            case 0:
+                settings.general = this.generalForm.value
+                break
+            case 1:
+                settings.notification = this.notificationForm.value
+                break
+            case 2:
+                settings.monitoring = this.monitoringForm.value
+                break
+            case 3:
+                settings.cloud = this.cloudForm.value
+                break
         }
 
         this.settingsService.updateSettings(settings).subscribe(
@@ -125,24 +125,45 @@ export class SettingsPageComponent implements OnInit {
 
     checkResourceWorkingState(resource) {
         switch (resource) {
-        case 'email': this.emailChecking = true; break;
-        case 'slack': this.slackChecking = true; break;
-        case 'aws': this.awsChecking = true; break;
+            case 'email':
+                this.emailChecking = true
+                break
+            case 'slack':
+                this.slackChecking = true
+                break
+            case 'aws':
+                this.awsChecking = true
+                break
         }
         this.settingsService.checkResourceWorkingState(resource).subscribe(
             (data) => {
                 console.info(data)
                 switch (resource) {
-                case 'email': this.emailState = data.state; this.emailChecking = false; break;
-                case 'slack': this.slackState = data.state; this.slackChecking = false; break;
-                case 'aws': this.awsState = data.state; this.awsChecking = false; break;
+                    case 'email':
+                        this.emailState = data.state
+                        this.emailChecking = false
+                        break
+                    case 'slack':
+                        this.slackState = data.state
+                        this.slackChecking = false
+                        break
+                    case 'aws':
+                        this.awsState = data.state
+                        this.awsChecking = false
+                        break
                 }
             },
             (err) => {
                 switch (resource) {
-                case 'email': this.emailChecking = false; break;
-                case 'slack': this.slackChecking = false; break;
-                case 'aws': this.awsChecking = false; break;
+                    case 'email':
+                        this.emailChecking = false
+                        break
+                    case 'slack':
+                        this.slackChecking = false
+                        break
+                    case 'aws':
+                        this.awsChecking = false
+                        break
                 }
                 let msg = err.statusText
                 if (err.error && err.error.detail) {

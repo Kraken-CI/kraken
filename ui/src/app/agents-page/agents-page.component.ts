@@ -1,9 +1,5 @@
 import { Component, OnInit } from '@angular/core'
-import {
-    ActivatedRoute,
-    ParamMap,
-    Router,
-} from '@angular/router'
+import { ActivatedRoute, ParamMap, Router } from '@angular/router'
 import { Title } from '@angular/platform-browser'
 
 import { MessageService, MenuItem } from 'primeng/api'
