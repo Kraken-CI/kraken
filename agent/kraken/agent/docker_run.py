@@ -180,9 +180,12 @@ class DockerExecContext:
             # connect new container to lab_net
             try:
                 self.lab_net.connect(self.cntr)
-            except Exception:
-                log.exception('problems with lab_net')
-                raise
+            except Exception as ex:
+                if 'address already in use' in str(ex).lower():
+                    log.warning('address already in use')
+                else:
+                    log.exception('problems with lab_net')
+                    raise
 
             # connect current container with agent to lab_net
             if self.lab_net.name not in self.curr_cntr.attrs['NetworkSettings']['Networks']:
