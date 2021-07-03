@@ -193,10 +193,13 @@ def analyze_run(run_id):
         # establish new state for flow
         flow = run.flow
         is_completed = True
+        log.info('check if flow %d is completed', flow.id)
         for r in flow.runs:
+            log.info('  run %d: state: %d', r.id, r.state)
             if r.state == consts.RUN_STATE_IN_PROGRESS:
                 is_completed = False
                 break
+        log.info('flow %d: %s completed', 'IS' if is_completed else 'NOT')
 
         if is_completed:
             log.info('completed flow %s', flow)
