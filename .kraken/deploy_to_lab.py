@@ -38,7 +38,8 @@ def stage(ctx):
                 "cwd": "kraken",
                 "env": {
                     "host": "#{KK_SECRET_SIMPLE_deploy_host}"
-                }
+                },
+                "timeout": 1000
             }],
             "environments": [{
                 "system": "krakenci/bld-kraken",
