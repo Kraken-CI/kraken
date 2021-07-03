@@ -23,6 +23,13 @@ def stage(ctx):
                 "cwd": "kraken"
             }, {
                 "tool": "shell",
+                "cmd": 'printf "$labenv" > lab.env',
+                "cwd": "kraken",
+                "env": {
+                    "labenv": "#{KK_SECRET_SIMPLE_labenv}"
+                }
+            }, {
+                "tool": "shell",
                 "cmd": "rake kk_ver=0.#{KK_FLOW_SEQ} deploy_lab",
                 "cwd": "kraken",
                 "env": {
