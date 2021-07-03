@@ -15,10 +15,26 @@
           <div *ngIf="s.key === 'rq'">
             <b>Current Jobs:</b>
             <div *ngFor="let t of s.value.current_jobs">
-              {{ t.description }}
+                {{ t.started_at | localtime }} {{ t.description }}
             </div>
             <div *ngIf="!s.value.current_jobs || s.value.current_jobs.length === 0">
-              no jobs
+              no current jobs
+            </div>
+
+            <b>Failed Jobs:</b>
+            <div *ngFor="let t of s.value.failed_jobs">
+                {{ t.ended_at | localtime }} {{ t.description }}
+            </div>
+            <div *ngIf="!s.value.failed_jobs || s.value.failed_jobs.length === 0">
+              no failed jobs
+            </div>
+
+            <b>Finished Jobs:</b>
+            <div *ngFor="let t of s.value.finished_jobs">
+                {{ t.ended_at | localtime }} {{ t.description }}
+            </div>
+            <div *ngIf="!s.value.finished_jobs || s.value.finished_jobs.length === 0">
+              no finished jobs
             </div>
           </div>
 

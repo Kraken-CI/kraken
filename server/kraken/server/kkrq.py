@@ -54,10 +54,17 @@ def get_jobs():
     redis_addr = os.environ.get('KRAKEN_REDIS_ADDR', consts.DEFAULT_REDIS_ADDR)
     rds = redis.Redis(host=redis_addr, port=6379, db=consts.REDIS_RQ_DB)
     q = rq.Queue('kq', connection=rds)
-    #jobs_ids = q.started_job_registry.get_job_ids()
+
+    jobs_ids = q.started_job_registry.get_job_ids()
+    started_jobs = rq.job.Job.fetch_many(jobs_ids, connection=rds)
+
     jobs_ids = q.finished_job_registry.get_job_ids()
-    jobs = rq.job.Job.fetch_many(jobs_ids, connection=rds)
-    return jobs
+    finished_jobs = rq.job.Job.fetch_many(jobs_ids, connection=rds)
+
+    jobs_ids = q.failed_job_registry.get_job_ids()
+    failed_jobs = rq.job.Job.fetch_many(jobs_ids, connection=rds)
+
+    return started_jobs, finished_jobs, failed_jobs
 
 
 def _exception_handler(job, exc_type, exc_value, traceback):  # pylint: disable=unused-argument

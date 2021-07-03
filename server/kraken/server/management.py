@@ -676,18 +676,21 @@ def get_diagnostics():
         'open': True,
     }
 
-    # get current RQ jobs: TODO
-    jobs = kkrq.get_jobs()
-    diags['rq']['current_jobs'] = []
-    for job in jobs:
-        job = dict(id=job.id,
-                   created_at=job.created_at,
-                   ended_at=job.ended_at,
-                   enqueued_at=job.enqueued_at,
-                   func_name=job.func_name,
-                   description=job.description,
-                   status=job.get_status(refresh=False))
-        diags['rq']['current_jobs'].append(job)
+    # get current RQ jobs
+    all_jobs = kkrq.get_jobs()
+    for jobs, name in zip(all_jobs, ['current', 'finished', 'failed']):
+        jobs2 = []
+        for job in jobs:
+            job = dict(id=job.id,
+                       created_at=job.created_at,
+                       ended_at=job.ended_at,
+                       enqueued_at=job.enqueued_at,
+                       func_name=job.func_name,
+                       description=job.description,
+                       status=job.get_status(refresh=False))
+            jobs2.append(job)
+        key = '%s_jobs' % name
+        diags['rq'][key] = jobs2
 
     return diags
 

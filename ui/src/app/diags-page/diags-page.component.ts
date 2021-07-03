@@ -25,6 +25,9 @@ export class DiagsPageComponent implements OnInit {
 
     rqJobs: any[]
     rqJob: any = 'all'
+    rqCurrentJobs: any[]
+    rqFinishedJobs: any[]
+    rqFailedJobs: any[]
 
     constructor(
         private route: ActivatedRoute,
