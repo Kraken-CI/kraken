@@ -469,7 +469,7 @@ task :run_portainer do
   sh 'docker run -d -p 8000:8000 -p 9000:9000 -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer'
 end
 
-task :deploy_lab do
+task :deploy_lab => ['./venv/bin/python3'] do
   # prepare docker stack config
   Rake::Task["compose_to_swarm"].invoke
 

@@ -23,6 +23,10 @@ def stage(ctx):
                 "cwd": "kraken"
             }, {
                 "tool": "shell",
+                "cmd": "sudo apt update && sudo apt-get install -y --no-install-recommends python3-setuptools python3-wheel python3-pip python3-venv",
+                "timeout": 300
+            }, {
+                "tool": "shell",
                 "cmd": 'printf "$labenv" > lab.env',
                 "cwd": "kraken",
                 "env": {
