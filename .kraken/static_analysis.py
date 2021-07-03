@@ -83,29 +83,32 @@ def stage(ctx):
                 "cwd": "kraken/server"
             }],
             "environments": envs
-        }, {
-            "name": "ng lint",
-            "steps": [{
-                "tool": "shell",
-                "cmd": "sudo apt update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends git nodejs npm || ps axf",
-                "timeout": 300
-            }, {
-                "tool": "artifacts",
-                "action": "download",
-                "source": "kraken.tar.gz"
-            }, {
-                "tool": "shell",
-                "cmd": "tar -zxf kraken.tar.gz"
-            }, {
-                "tool": "shell",
-                "cmd": "npm install",
-                "cwd": "kraken/ui",
-                "timeout": 400
-            }, {
-                "tool": "nglint",
-                "cwd": "kraken/ui"
-            }],
-            "environments": envs
+        # TODO:
+        # TSLint's support is discontinued and we're deprecating its support in Angular CLI.
+        # To opt-in using the community driven ESLint builder, see: https://github.com/angular-eslint/angular-eslint#migrating-an-angular-cli-project-from-codelyzer-and-tslint.
+        # }, {
+        #     "name": "ng lint",
+        #     "steps": [{
+        #         "tool": "shell",
+        #         "cmd": "sudo apt update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends git nodejs npm || ps axf",
+        #         "timeout": 300
+        #     }, {
+        #         "tool": "artifacts",
+        #         "action": "download",
+        #         "source": "kraken.tar.gz"
+        #     }, {
+        #         "tool": "shell",
+        #         "cmd": "tar -zxf kraken.tar.gz"
+        #     }, {
+        #         "tool": "shell",
+        #         "cmd": "npm install",
+        #         "cwd": "kraken/ui",
+        #         "timeout": 400
+        #     }, {
+        #         "tool": "nglint",
+        #         "cwd": "kraken/ui"
+        #     }],
+        #     "environments": envs
         }, {
             "name": "cloc",
             "steps": [{

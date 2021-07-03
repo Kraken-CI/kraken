@@ -70,7 +70,7 @@ def run_analysis(step, report_issue=None):
     cmd = 'npx ng lint --format json --force'
     ret, out = utils.execute(cmd, cwd=cwd, out_prefix='', timeout=180, stderr=subprocess.DEVNULL)
     if ret != 0:
-        log.error('ng lint exited with non-zero retcode: %s:\n%s', ret, out)
+        log.error('ng lint exited with non-zero retcode: %s', ret)
         return ret, 'ng lint exited with non-zero retcode'
 
 
