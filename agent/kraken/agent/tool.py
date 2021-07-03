@@ -165,7 +165,7 @@ class JsonSocket(socket.socket):
         try:
             self.connect((address[0], int(address[1])))
         except Exception:
-            log.error('problem with connecting to %s:%s', address[0], address[1])
+            log.exception('problem with connecting to %s:%s', address[0], address[1])
             raise
 
     def send_json(self, data):
