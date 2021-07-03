@@ -3,4 +3,4 @@ shiv
 wheel
 fabric
 boto3
-awscli
+awscli=1.19.105
