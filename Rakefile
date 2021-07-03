@@ -429,6 +429,20 @@ task :publish_docker => DOCKER_COMPOSE do
   sh "mv kraken-docker-compose-#{kk_ver}-tmp.yaml kraken-docker-compose-#{kk_ver}.yaml"
 end
 
+task :publish_docker_aws => DOCKER_COMPOSE do
+  names = ['kkserver:',
+           'kkcontroller:',
+           'kkrq:',
+           'kkagent:',
+           'kkui:',
+           'clickhouse-server:20.11.4.13.',
+           'kkchproxy:']
+  names.each do |name|
+    sh "docker tag eu.gcr.io/kraken-261806/#{name}#{kk_ver} public.ecr.aws/kraken-ci/#{name}#{kk_ver}"
+    sh "docker push public.ecr.aws/kraken-ci/#{name}#{kk_ver}"
+  end
+end
+
 task :compose_to_swarm => DOCKER_COMPOSE do
   sh 'cp lab.env .env'
   sh 'cp docker-compose.yaml docker-compose-swarm-tmp.yaml'
