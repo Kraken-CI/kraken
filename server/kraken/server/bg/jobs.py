@@ -199,7 +199,7 @@ def analyze_run(run_id):
             if r.state == consts.RUN_STATE_IN_PROGRESS:
                 is_completed = False
                 break
-        log.info('flow %d: %s completed', 'IS' if is_completed else 'NOT')
+        log.info('flow %d: %s completed', flow.id, 'IS' if is_completed else 'NOT')
 
         if is_completed:
             log.info('completed flow %s', flow)
