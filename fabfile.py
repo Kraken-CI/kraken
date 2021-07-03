@@ -43,6 +43,10 @@ def redeploy(c, kk_ver):
     c.run('ls -lh ~/backup/db-vol.current.tar.gz')
     c.run('ls -alh ~/backup')
 
+    c.sudo('systemctl stop docker')
+    time.sleep(5)
+    c.sudo('systemctl start docker')
+
     # deploy the stack
     bld_dir = 'kk-%s' % kk_ver
     with c.cd(bld_dir):
