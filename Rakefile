@@ -169,42 +169,54 @@ task :run_agent_in_docker do
 end
 
 task :run_agent_in_lxd_all do
-  Rake::Task["build_agent"].invoke
+#  Rake::Task["build_agent"].invoke
   Dir.chdir('agent') do
     systems = [
-      ['ubuntu:20.04', 'u20'],  # images:ubuntu/focal/amd64
-      ['images:fedora/32/amd64', 'f32'],
-#      ['images:centos/7/amd64', 'c7'],
-      ['images:centos/8/amd64', 'c8'],
-      ['images:debian/buster/amd64', 'd10'],
-      ['images:debian/bullseye/amd64', 'd11'],
-      ['images:opensuse/15.2/amd64', 's15'],
+#      ['images:ubuntu/focal/amd64', 'u20'],
+#      ['images:fedora/34/amd64', 'f34'],
+#      ['images:centos/7/amd64', 'c7'], TODO: problem with locales
+#      ['images:centos/8/amd64', 'c8'], TODO: problem with sudo which hangs
+#      ['images:debian/buster/amd64', 'd10'],
+#      ['images:debian/bullseye/amd64', 'd11'],
+#      ['images:opensuse/15.3/amd64', 's15'], TODO: problem with network (wicked)
+      ['images:rockylinux/8/amd64', 'rl8'], # TODO: problem with sudo which hangs
     ]
 
-    sh 'lxc network delete kk-net || true'
-    sh 'lxc network create kk-net || true'
+#    sh 'lxc network delete kk-net || true'
+#    sh 'lxc network create kk-net || true'
+#    sh "sleep 10"
     systems.each do |sys, name|
       cntr_name = "kk-agent-#{name}"
       sh "lxc stop #{cntr_name} || true"
       sh "lxc delete #{cntr_name} || true"
       sh "lxc launch #{sys} #{cntr_name}"
       sh "lxc network attach kk-net #{cntr_name}"
-      sh "lxc exec #{cntr_name} -- sleep 5"
+      sh "sleep 5"
       if sys.include?('centos/7') or sys.include?('debian/buster')
         sh "lxc exec #{cntr_name} -- dhclient"
       end
-      if sys.include?('centos')
-        sh "lxc exec #{cntr_name} -- yum install -y python3 sudo"
+      if sys.include?('centos') or sys.include?('rocky')
+        sh "lxc exec #{cntr_name} -- yum install -y python3 sudo wget which"
+      end
+      if sys.include?('fedora')
+        sh "lxc exec #{cntr_name} -- dnf install -y wget"
       end
       if sys.include?('debian')
         sh "lxc exec #{cntr_name} -- apt-get update"
-        sh "lxc exec #{cntr_name} -- apt-get install -y curl python3 sudo"
+        sh "lxc exec #{cntr_name} -- apt-get install -y curl python3 sudo wget"
       end
-      if sys.include?('opensuse/15.2')
+      if sys.include?('opensuse/15')
         sh "lxc exec #{cntr_name} -- zypper install -y curl python3 sudo system-group-wheel"
       end
-      sh "lxc file push agent/kkagent #{cntr_name}/root/kkagent"
-      sh "lxc exec #{cntr_name} -- ./kkagent install -s http://#{LOCALHOST_IP}:8080"
+      if sys.include?('ubuntu')
+        sh "lxc exec #{cntr_name} -- apt install -y wget"
+      end
+      #sh "lxc file push agent/kkagent #{cntr_name}/root/kkagent"
+      #sh "lxc exec #{cntr_name} -- ./kkagent install -s http://#{LOCALHOST_IP}:8080"
+      sh "lxc exec #{cntr_name} -- wget http://#{LOCALHOST_IP}:4200/install/kraken-agent-install.sh"
+      sh "lxc exec #{cntr_name} -- chmod a+x kraken-agent-install.sh"
+      #sh "lxc exec #{cntr_name} -- bash -c 'LC_ALL=en_US.utf8 LANG=en_US.utf8 ./kraken-agent-install.sh'"
+      sh "lxc exec #{cntr_name} -- ./kraken-agent-install.sh"
       sh "lxc exec #{cntr_name} -- journalctl -u kraken-agent.service"
       # sh "lxc exec #{cntr_name} -- journalctl -f -u kraken-agent.service'
     end

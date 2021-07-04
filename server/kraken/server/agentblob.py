@@ -67,6 +67,10 @@ else
     curl -o /tmp/kkagent ${KRAKEN_URL}install/agent
 fi
 chmod a+x /tmp/kkagent
+
+export KRAKEN_MINIO_ADDR="{minio-addr}"
+export KRAKEN_CLICKHOUSE_ADDR="{clickhouse-addr}"
+
 /tmp/kkagent install -s ${KRAKEN_URL}
 rm -f /tmp/kkagent
 echo 'Kraken Agent installed'
@@ -78,10 +82,26 @@ def serve_agent_blob(blob):
         abort(404)
 
     if blob == 'kraken-agent-install.sh':
+        # get and check server url
         url = get_setting('general', 'server_url')
         if not url:
             raise abort(500, 'Cannot get server URL and put it in Kraken agent install script. The URL should be set on Kraken Settings page first.')
+
+        # get and check minio addr
+        minio_addr = get_setting('general', 'minio_addr')
+        if not minio_addr:
+            raise abort(500, 'Cannot get MinIO address and put it in Kraken agent install script. The MinIO address should be set on Kraken Settings page first.')
+
+        # get and check clickhouse addr
+        clickhouse_addr = get_setting('general', 'clickhouse_addr')
+        if not clickhouse_addr:
+            raise abort(500, 'Cannot get ClickHouse address and put it in Kraken agent install script. The ClickHouse address should be set on Kraken Settings page first.')
+
+        # patch install script with url and addresses
         script = INSTALL_SCRIPT.replace('{url}', url)
+        script = script.replace('{minio-addr}', minio_addr)
+        script = script.replace('{clickhouse-addr}', clickhouse_addr)
+
         resp = make_response(script)
         # add a filename
         resp.headers.set("Content-Type", "application/x-sh")

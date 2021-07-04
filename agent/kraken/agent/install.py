@@ -14,6 +14,7 @@
 
 import pwd
 import grp
+import logging
 import tempfile
 import platform
 import subprocess
@@ -25,6 +26,8 @@ import pkg_resources
 from . import update
 from . import consts
 from . import config
+
+log = logging.getLogger(__name__)
 
 
 SYSTEMD_SERVICE = '''[Unit]
@@ -99,21 +102,23 @@ def install_linux():
         else:
             raise Exception('distro %s is not supported yet' % dstr)
     except KeyError:
-        print('no docker group')
+        log.info('no docker group')
 
     # TODO: add to lxd group if present
 
     # install bin files
     kraken_version = pkg_resources.get_distribution('kraken-agent').version
     dest_dir = update.get_dest_dir(kraken_version)
-    if dest_dir.exists():
-        run('sudo rm -rf %s' % dest_dir)
+    run('sudo rm -rf %s' % dest_dir)
     run('sudo mkdir -p %s' % dest_dir)
     data_dir = config.get('data_dir')
     if not data_dir:
         data_dir = Path(consts.AGENT_DIR) / 'data'
     run('sudo mkdir -p %s' % data_dir)
     run('sudo chown -R kraken:kraken %s' % consts.AGENT_DIR)
+    run('sudo chmod a+rx %s' % consts.AGENT_DIR)
+    run('sudo chmod a+rx %s' % dest_dir)
+    run('sudo chmod a+rx %s' % data_dir)
     tmp_dir = Path(tempfile.gettempdir())
     agent_path, tool_path = update.get_blobs(tmp_dir)
     run('sudo mv %s %s %s' % (agent_path, tool_path, dest_dir))
@@ -126,11 +131,11 @@ def install_linux():
                              clickhouse_addr=config.get('clickhouse_addr') or '')
     run('sudo bash -c \'echo "%s" > /opt/kraken/kraken.env\'' % kenv)
 
-    run('sudo chown kraken:kraken %s/* /opt/kraken/*' % dest_dir)
+    run("sudo bash -c 'chown kraken:kraken %s/* /opt/kraken/*'" % dest_dir)
 
     update.make_links_to_new_binaries(dest_dir)
 
-    run('sudo chown kraken:kraken /opt/kraken/*')
+    run("sudo bash -c 'chown kraken:kraken /opt/kraken/*'")
 
     # setup kraken agent service in systemd
     sysd_dest = '/lib/systemd/system'
