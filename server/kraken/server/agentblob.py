@@ -85,17 +85,20 @@ def serve_agent_blob(blob):
         # get and check server url
         url = get_setting('general', 'server_url')
         if not url:
-            raise abort(500, 'Cannot get server URL and put it in Kraken agent install script. The URL should be set on Kraken Settings page first.')
+            raise abort(500, 'Cannot get server URL and put it in Kraken agent install script. ' +
+                        'The URL should be set on Kraken Settings page first.')
 
         # get and check minio addr
         minio_addr = get_setting('general', 'minio_addr')
         if not minio_addr:
-            raise abort(500, 'Cannot get MinIO address and put it in Kraken agent install script. The MinIO address should be set on Kraken Settings page first.')
+            raise abort(500, 'Cannot get MinIO address and put it in Kraken agent install script. ' +
+                        'The MinIO address should be set on Kraken Settings page first.')
 
         # get and check clickhouse addr
         clickhouse_addr = get_setting('general', 'clickhouse_addr')
         if not clickhouse_addr:
-            raise abort(500, 'Cannot get ClickHouse address and put it in Kraken agent install script. The ClickHouse address should be set on Kraken Settings page first.')
+            raise abort(500, 'Cannot get ClickHouse address and put it in Kraken agent install script. ' +
+                        'The ClickHouse address should be set on Kraken Settings page first.')
 
         # patch install script with url and addresses
         script = INSTALL_SCRIPT.replace('{url}', url)
