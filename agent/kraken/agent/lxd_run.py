@@ -112,7 +112,7 @@ class LxdExecContext:
         if distro in ['debian', 'ubuntu']:
             self._async_run('apt-get update', deadline)
             self._async_run('apt-get install -y python3', deadline)
-        elif distro in ['centos', 'fedora']:
+        elif distro in ['centos', 'fedora', 'rocky']:
             self._async_run('yum install -y python3', deadline)
         elif 'suse' in distro:
             time.sleep(3)  # wait for network

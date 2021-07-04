@@ -145,13 +145,13 @@ class DockerExecContext:
             if os.path.exists(dkr_sock):
                 dkr_gid = self._async_run("stat -c '%%g' %s" % dkr_sock, deadline)
                 self._async_run("addgroup --gid %d docker" % int(dkr_gid.strip()), deadline)
-        elif distro in ['centos', 'fedora']:
+        elif distro in ['centos', 'fedora', 'rocky']:
             pkgs = ('openssh-clients ca-certificates sudo git unzip zip gnupg curl wget make net-tools ' +
                     'python3 python3-pytest python3-virtualenv python3-setuptools')
             if distro == 'fedora':
                 pkgs += ' python3-docker'
             self._async_run('yum install -y ' + pkgs, deadline)
-            if distro == 'centos':
+            if distro in ['centos', 'rocky']:
                 self._async_run('python3 -m pip install docker-py', deadline)
             try:
                 self._async_run('getent passwd kraken', deadline)

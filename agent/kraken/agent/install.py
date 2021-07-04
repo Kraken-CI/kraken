@@ -77,7 +77,7 @@ def install_linux():
     except Exception:
         if dstr in ['ubuntu', 'debian']:
             run('sudo useradd kraken -d %s -m -s /bin/bash -G sudo' % consts.AGENT_DIR)
-        elif dstr in ['fedora', 'centos']:
+        elif dstr in ['fedora', 'centos', 'rocky']:
             run('sudo useradd kraken -d %s -m -s /bin/bash -G wheel --system' % consts.AGENT_DIR)
         elif 'suse' in dstr:
             run('sudo useradd kraken -d %s -m -s /bin/bash -G wheel --system -U' % consts.AGENT_DIR)
@@ -94,7 +94,7 @@ def install_linux():
         grp.getgrnam('docker')
         if dstr in ['ubuntu', 'debian']:
             run('sudo usermod -a -G docker kraken')
-        elif dstr in ['fedora', 'centos']:
+        elif dstr in ['fedora', 'centos', 'rocky']:
             run('sudo usermod -aG docker kraken')
         else:
             raise Exception('distro %s is not supported yet' % dstr)
