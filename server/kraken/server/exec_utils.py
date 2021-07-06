@@ -136,8 +136,12 @@ def complete_starting_run(run_id):
         run.args = run_args
         run.label = lbl_vals.get('run_label', None)
         run.repo_data = repo_data
+
+        # move run from CREATING to proper state
         if run.stage.schema['triggers'].get('manual', False):
             run.state = consts.RUN_STATE_MANUAL
+        else:
+            run.state = consts.RUN_STATE_IN_PROGRESS
 
     db.session.commit()
 
@@ -164,7 +168,7 @@ def start_run(stage, flow, reason, args=None, repo_data=None):
     run = Run.query.filter_by(stage=stage, flow=flow).one_or_none()
     if run is None:
         # create run instance
-        run = Run(stage=stage, flow=flow, args=args, reason=reason, repo_data=repo_data)
+        run = Run(stage=stage, flow=flow, args=args, reason=reason, repo_data=repo_data, state=consts.RUN_STATE_CREATING)
     else:
         # move run to REPLAY state
         run.state = consts.RUN_STATE_REPLAY
