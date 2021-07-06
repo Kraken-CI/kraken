@@ -261,8 +261,6 @@ def _check_agents_to_destroy():
     q = q.join('agents_groups', 'agents_group')
     q = q.filter(cast(AgentsGroup.deployment['method'], Integer) == consts.AGENT_DEPLOYMENT_METHOD_AWS)
 
-    log.info('check_agents_to_destroy: %s', str(q))
-
     outdated_count = 0
     dangling_count = 0
     all_count = 0
