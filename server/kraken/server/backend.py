@@ -185,11 +185,16 @@ def _store_results(job, step, result):
     for tr in result['test-results']:
         or_list.append(TestCase.name == tr['test'])
         results[tr['test']] = tr
+        log.info('looking for existing results for TC: %s', tr)
     q = q.filter(or_(*or_list))
 
     # update status of existing test case results
     cnt = 0
     for tcr in q.all():
+        log.info('updating result for %s', tcr.test_case.name)
+        if tcr.test_case.name not in results:
+            log.warning('MISSING result')
+            continue
         tr = results.pop(tcr.test_case.name)
         tcr.cmd_line = tr['cmd']
         tcr.result = tr['status']
