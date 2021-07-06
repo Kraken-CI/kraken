@@ -21,7 +21,8 @@ import datetime
 from urllib.parse import urlparse
 
 from flask import Flask
-from sqlalchemy.sql.expression import desc
+from sqlalchemy.sql.expression import desc, cast
+from sqlalchemy import Integer
 import clickhouse_driver
 import redis
 import boto3
@@ -258,19 +259,16 @@ def _delete_if_missing_in_aws(agent, ag):
 def _check_agents_to_destroy():
     q = Agent.query.filter_by(deleted=None)
     q = q.join('agents_groups', 'agents_group')
-    q = q.filter(AgentsGroup.deployment.isnot(None))
+    q = q.filter(cast(AgentsGroup.deployment['method'], Integer) == consts.AGENT_DEPLOYMENT_METHOD_AWS)
+
+    log.info('check_agents_to_destroy: %s', str(q))
 
     outdated_count = 0
     dangling_count = 0
     all_count = 0
-    all_depl_count = 0
     for agent in q.all():
         all_count += 1
         ag = agent.agents_groups[0].agents_group
-        if not ag.deployment or ag.deployment['method'] != consts.AGENT_DEPLOYMENT_METHOD_AWS or 'aws' not in ag.deployment or not ag.deployment['aws']:
-            continue
-
-        all_depl_count += 1
 
         deleted = _destroy_and_delete_if_outdated(agent, ag)
         if deleted:
@@ -286,9 +284,11 @@ def _check_agents_to_destroy():
                 _cancel_job_and_unassign_agent(agent)
             continue
 
-    log.info('all agents:%d, with depl:%d, destroyed and deleted %d aws ec2 instances and agents',
-             all_count, all_depl_count, outdated_count)
+    log.info('all agents:%d, destroyed and deleted %d aws ec2 instances and agents',
+             all_count, outdated_count)
     log.info('deleted %d dangling agents without any aws ec2 instance', dangling_count)
+
+    return all_count, outdated_count, dangling_count
 
 
 def _check_machines_with_no_agent():

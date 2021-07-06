@@ -130,7 +130,7 @@ def _main_loop():
 
 
 def main():
-    logs.setup_logging('watchdog')
+    logs.setup_logging('rq')
     log.info('Kraken QNeck started, version %s', version.version)
 
     try:
