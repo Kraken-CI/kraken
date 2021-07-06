@@ -15,7 +15,7 @@
           <div *ngIf="s.key === 'rq'">
             <b>Current Jobs:</b>
             <div *ngFor="let t of s.value.current_jobs">
-                {{ t.started_at | localtime }} {{ t.description }}
+                {{ t.created_at | localtime }} {{ t.description }}
             </div>
             <div *ngIf="!s.value.current_jobs || s.value.current_jobs.length === 0">
               no current jobs
