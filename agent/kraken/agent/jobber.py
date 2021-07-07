@@ -281,7 +281,15 @@ def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
 
     result, cancel = _exec_tool(srv, exec_ctx, tool_path, 'get_commands', job_dir, 10, user, step_file_path, job_id, idx)
     log.info('result for get_commands: %s', result)
-    if not isinstance(result, dict) or 'commands' not in result:
+    # check result
+    if not isinstance(result, dict):
+        raise Exception('bad result received from tool: %s' % result)
+    # if command not succeeded
+    if result['status'] != 'done':
+        rsp = srv.report_step_result(job_id, idx, result)
+        return result['status'], rsp.get('cancel', False), bg_step
+    # check if commands in result
+    if 'commands' not in result:
         raise Exception('bad result received from tool: %s' % result)
     available_commands = result['commands']
 
