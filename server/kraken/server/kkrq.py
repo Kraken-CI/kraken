@@ -35,7 +35,7 @@ def enq(func, *args, **kwargs):
     redis_addr = os.environ.get('KRAKEN_REDIS_ADDR', consts.DEFAULT_REDIS_ADDR)
     rds = redis.Redis(host=redis_addr, port=6379, db=consts.REDIS_RQ_DB)
     q = rq.Queue('kq', connection=rds)
-    j = q.enqueue(func, args=args, kwargs=kwargs, retry=rq.Retry(max=10))
+    j = q.enqueue(func, args=args, kwargs=kwargs, retry=rq.Retry(max=10), job_timeout=1200)  # timeout is 20mins
     log.info('bg processing: %s', j)
     return j
 
