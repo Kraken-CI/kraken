@@ -72,7 +72,7 @@ def make_links_to_new_binaries(dest_dir):
     subprocess.run(cmd, shell=True, check=True)
 
     cmd = "sudo bash -c 'chown kraken:kraken /opt/kraken/*'"
-    subprocess.run(cmd, shell=True, check=True))
+    subprocess.run(cmd, shell=True, check=True)
 
 
 def update_agent(version):
