@@ -135,8 +135,6 @@ def install_linux():
 
     update.make_links_to_new_binaries(dest_dir)
 
-    run("sudo bash -c 'chown kraken:kraken /opt/kraken/*'")
-
     # setup kraken agent service in systemd
     sysd_dest = '/lib/systemd/system'
     if 'suse' in dstr:

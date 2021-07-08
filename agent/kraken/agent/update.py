@@ -62,14 +62,17 @@ def prepare_dest_dir(version):
 
 def make_links_to_new_binaries(dest_dir):
     if os.path.exists('/opt/kraken/kkagent'):
-        os.unlink('/opt/kraken/kkagent')
+        subprocess.run('sudo rm -f /opt/kraken/kkagent', shell=True)
     cmd = 'sudo ln -s %s/kkagent /opt/kraken/kkagent' % dest_dir
     subprocess.run(cmd, shell=True, check=True)
 
     if os.path.exists('/opt/kraken/kktool'):
-        os.unlink('/opt/kraken/kktool')
+        subprocess.run('sudo rm -f /opt/kraken/kktool', shell=True)
     cmd = 'sudo ln -s %s/kktool /opt/kraken/kktool' % dest_dir
     subprocess.run(cmd, shell=True, check=True)
+
+    cmd = "sudo bash -c 'chown kraken:kraken /opt/kraken/*'"
+    subprocess.run(cmd, shell=True, check=True))
 
 
 def update_agent(version):
