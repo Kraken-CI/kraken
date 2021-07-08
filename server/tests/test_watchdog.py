@@ -12,18 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import logging
 import datetime
 
 import pytest
 
-import sqlalchemy
 from flask import Flask
 
 from kraken.server import consts, utils, initdb
-from kraken.server.models import db, Run, Job, TestCaseResult, Branch, Flow, Stage, Project, Issue, System, AgentsGroup, TestCase, Tool, AgentAssignment, Agent
-from kraken.server.bg import jobs
+from kraken.server.models import db, Run, Job, Branch, Flow, Stage, Project, Issue, System, AgentsGroup, TestCase, Tool, AgentAssignment, Agent
 
 from dbtest import prepare_db
 
@@ -67,7 +64,7 @@ def test__check_agents_to_destroy():
         # simple case but still empty
         a = Agent(name='agent', address='1.2.3.4')
         ag = AgentsGroup(name='group')
-        aa = AgentAssignment(agent=a, agents_group=ag)
+        AgentAssignment(agent=a, agents_group=ag)
         db.session.commit()
 
         all_count, outdated_count, dangling_count = watchdog._check_agents_to_destroy()

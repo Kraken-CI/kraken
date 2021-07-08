@@ -62,12 +62,12 @@ def prepare_dest_dir(version):
 
 def make_links_to_new_binaries(dest_dir):
     if os.path.exists('/opt/kraken/kkagent'):
-        subprocess.run('sudo rm -f /opt/kraken/kkagent', shell=True)
+        subprocess.run('sudo rm -f /opt/kraken/kkagent', shell=True, check=True)
     cmd = 'sudo ln -s %s/kkagent /opt/kraken/kkagent' % dest_dir
     subprocess.run(cmd, shell=True, check=True)
 
     if os.path.exists('/opt/kraken/kktool'):
-        subprocess.run('sudo rm -f /opt/kraken/kktool', shell=True)
+        subprocess.run('sudo rm -f /opt/kraken/kktool', shell=True, check=True)
     cmd = 'sudo ln -s %s/kktool /opt/kraken/kktool' % dest_dir
     subprocess.run(cmd, shell=True, check=True)
 
