@@ -84,9 +84,9 @@ class Project(db.Model, DatesMixin):
 class Branch(db.Model, DatesMixin):
     __tablename__ = "branches"
     id = Column(Integer, primary_key=True)
-    name = Column(UnicodeText)
+    name = Column(UnicodeText)  # display name
     project_id = Column(Integer, ForeignKey('projects.id'), nullable=False)
-    project = relationship('Project', back_populates="branches")  # display name
+    project = relationship('Project', back_populates="branches")
     branch_name = Column(UnicodeText)                             # branch name in the repository, PR is matched agains this
     ci_flows = relationship("Flow", order_by="desc(Flow.created)",
                             primaryjoin="and_(Branch.id==Flow.branch_id, Flow.kind==0)", viewonly=True)

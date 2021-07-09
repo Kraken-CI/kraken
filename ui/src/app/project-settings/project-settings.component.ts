@@ -153,7 +153,6 @@ export class ProjectSettingsComponent implements OnInit {
                     this.router.navigate(['/branches/' + branch.id])
                 },
                 (err) => {
-                    console.info(err)
                     let msg = err.statusText
                     if (err.error && err.error.detail) {
                         msg = err.error.detail

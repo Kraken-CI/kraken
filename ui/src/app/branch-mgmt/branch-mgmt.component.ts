@@ -29,6 +29,11 @@ export class BranchMgmtComponent implements OnInit {
     newBranchRepoName: string
     branchNameDlgVisible = false
 
+    forkBranchDisplayName: string
+    forkBranchRepoName: string
+    forkBranchDlgVisible = false
+    forkingModel = 'model-1'
+
     newStageDlgVisible = false
     stageName = ''
     newStageName: string
@@ -413,7 +418,56 @@ export class BranchMgmtComponent implements OnInit {
         }
     }
 
-    forkBranch() {}
+    showForkBranchDialog() {
+        this.forkBranchDlgVisible = true
+    }
+
+    cancelForkBranch() {
+        this.forkBranchDlgVisible = false
+    }
+
+    forkBranchKeyDown(event) {
+        if (event.key === 'Enter') {
+            this.forkBranch()
+        }
+        if (event.key === 'Escape') {
+            this.cancelForkBranch()
+        }
+    }
+
+    forkBranch() {
+        this.managementService
+            .createBranch(this.branch.project_id, {
+                id: this.branchId,
+                name: this.forkBranchDisplayName,
+                branch_name: this.forkBranchRepoName,
+                forking_model: this.forkingModel
+            })
+            .subscribe(
+                (branch) => {
+                    this.msgSrv.add({
+                        severity: 'success',
+                        summary: 'Fork branch succeeded',
+                        detail: 'Fork branch operation succeeded.',
+                    })
+                    this.forkBranchDlgVisible = false
+                    this.router.navigate(['/branches/' + branch.id])
+                },
+                (err) => {
+                    let msg = err.statusText
+                    if (err.error && err.error.detail) {
+                        msg = err.error.detail
+                    }
+                    this.msgSrv.add({
+                        severity: 'error',
+                        summary: 'Fork branch erred',
+                        detail: 'Fork branch operation erred: ' + msg,
+                        life: 10000,
+                    })
+                    this.forkBranchDlgVisible = false
+                }
+            )
+    }
 
     getSeqTypeName(seq) {
         switch (seq.kind) {

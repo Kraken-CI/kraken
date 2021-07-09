@@ -1,3 +1,4 @@
+<!-- change branch names dialog -->
 <p-dialog header="Branch display and repo names" [(visible)]="branchNameDlgVisible" [style]="{width: '30rem'}">
     <div class="p-field p-grid">
         <label for="branchDisplayName" class="p-col-fixed" style="width: 10rem;">Display Name</label>
@@ -18,6 +19,44 @@
     </p-footer>
 </p-dialog>
 
+
+<!-- fork branch dialog -->
+<p-dialog header="Fork branch {{branch.name}}" [(visible)]="forkBranchDlgVisible">
+    <!-- name fields -->
+    <div class="p-field p-grid">
+        <label for="forkBranchDisplayName" class="p-col-fixed" style="width: 10rem;">Display Name</label>
+        <div class="p-col">
+            <input id="forkBranchDisplayName" type="text" [(ngModel)]="forkBranchDisplayName" (keydown)="forkBranchKeyDown($event)" autofocus pInputText>
+        </div>
+    </div>
+    <div class="p-field p-grid">
+        <label for="forkBranchRepoName" class="p-col-fixed" style="width: 10rem;">Name in the Repo</label>
+        <div class="p-col">
+            <input id="forkBranchRepoName" type="text" [(ngModel)]="forkBranchRepoName" (keydown)="forkBranchKeyDown($event)" pInputText>
+        </div>
+    </div>
+
+    <!-- forking model -->
+    <div style="width: 100%; margin-bottom: 15px;">
+        <img src="/assets/forking-branch.png" style="width: 700px; display: block; margin: 0 auto; border: 1px solid #aaa; box-shadow: 0 3px 10px #ddd; padding: 15px;">
+    </div>
+    <div class="p-field-radiobutton">
+        <p-radioButton name="forkingModel" value="model-1" [(ngModel)]="forkingModel" inputId="forkingModel1"></p-radioButton>
+        <label for="forkingModel1">Model 1</label>
+    </div>
+    <div class="p-field-radiobutton">
+        <p-radioButton name="forkingModel" value="model-2" [(ngModel)]="forkingModel" inputId="forkingModel2"></p-radioButton>
+        <label for="forkingModel2">Model 2</label>
+    </div>
+
+  <p-footer>
+    <button type="button" (click)="cancelForkBranch()" pButton icon="pi pi-times" label="Cancel" class="p-button-outlined p-button-secondary"></button>
+    <button type="button" (click)="forkBranch()" pButton icon="pi pi-check" label="Fork"></button>
+  </p-footer>
+</p-dialog>
+
+
+<!-- new stage dialog -->
 <p-dialog header="New Stage in {{branch.name}} branch" [(visible)]="newStageDlgVisible">
   <input type="text" pInputText [(ngModel)]="stageName" (keydown)="newStageKeyDown($event)" autofocus/>
   <p-footer>
@@ -27,6 +66,7 @@
 </p-dialog>
 
 
+<!-- schema validation dialog -->
 <p-dialog header="Schema Validation" [(visible)]="schemaCheckDisplay" [modal]="true" [responsive]="true"
           [style]="{minWidth: '400px'}" [minY]="70" [maximizable]="true">
   <pre *ngIf="schemaCheckContent.error">{{ schemaCheckContent.error }}</pre>
@@ -50,6 +90,8 @@
   </p-footer>
 </p-dialog>
 
+
+<!-- page -->
 <div style="margin-bottom: 15px; display: flex; justify-content: space-between;">
   <div style="display: flex; align-items: baseline;">
 
@@ -82,13 +124,16 @@
               [pTooltip]="auth.permTip('manage')"
               ></button>
     </a>
-    <!--
-        <button type="button" (click)="forkBranch()" pButton icon="fa fa-code-fork" label="Fork Branch" style="margin: 0 10px 0 100px;"></button>
-        -->
   </div>
 
   <!-- aligned to right -->
   <div style="display: flex; align-items: baseline;">
+    <!-- fork button -->
+    <p-button label="Fork Branch" icon="fa fa-code-fork" styleClass="p-button-outlined" (onClick)="showForkBranchDialog()"
+              [disabled]="!auth.hasPermission('manage')"
+              [pTooltip]="auth.permTip('manage')"
+              [ngStyle]="{'margin-right': '10px'}"></p-button>
+
     <!-- archive button -->
     <p-button label="Archive Branch" icon="pi pi-trash" styleClass="p-button-danger p-button-outlined" (onClick)="deleteBranch()"
               [disabled]="!auth.hasPermission('manage')"

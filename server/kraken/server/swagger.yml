@@ -2105,8 +2105,6 @@ components:
         key:
           type: string
     Branch:
-      required:
-      - name
       type: object
       properties:
         id:
@@ -2120,6 +2118,8 @@ components:
           type: integer
           format: int64
         project_name:
+          type: string
+        forking_model:
           type: string
         stages:
           type: array

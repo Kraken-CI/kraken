@@ -106,16 +106,79 @@ def create_branch(project_id, body):
     if project is None:
         abort(404, "Project not found")
 
+    if 'id' in body:
+        parent_branch = Branch.query.filter_by(id=body['id']).one_or_none()
+        if parent_branch is None:
+            abort(404, "Branch not found")
+    else:
+        parent_branch = None
+
+
     if 'branch_name' in body and body['branch_name']:
         branch_name = body['branch_name']
     else:
         branch_name = body['name']
 
     branch = Branch(project=project, name=body['name'], branch_name=branch_name)
-    BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_FLOW, value=0)
-    BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_CI_FLOW, value=0)
-    BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_DEV_FLOW, value=0)
-    db.session.commit()
+
+    if parent_branch:
+        if body['forking_model'] == 'model-1':
+            # forked branch continues numbering, old branch resets numbering
+            for bs in parent_branch.sequences:
+                if bs.stage is not None:
+                    continue
+                BranchSequence(branch=branch, kind=bs.kind, value=bs.value)
+                bs.value = 0
+        else:
+            # forked branch resets numbering, old branch continues numbering
+            BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_FLOW, value=0)
+            BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_CI_FLOW, value=0)
+            BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_DEV_FLOW, value=0)
+
+        db.session.commit()
+
+        # clone stages
+        for stage in parent_branch.stages:
+            if stage.deleted:
+                continue
+            new_stage = Stage(
+                name=stage.name,
+                description=stage.description,
+                branch=branch,
+                enabled=stage.enabled,
+                schema=stage.schema,
+                schema_code=stage.schema_code,
+                timeouts=stage.timeouts,
+                repo_access_token=stage.repo_access_token,
+                repo_branch=stage.repo_branch,
+                repo_url=stage.repo_url,
+                schema_file=stage.schema_file,
+                schema_from_repo_enabled=stage.schema_from_repo_enabled,
+                repo_refresh_interval=stage.repo_refresh_interval)
+
+            if body['forking_model'] == 'model-1':
+                # forked branch continues numbering, old branch resets numbering
+                for bs in stage.sequences:
+                    BranchSequence(branch=branch, stage=new_stage, kind=bs.kind, value=bs.value)
+                    bs.value = 0
+            else:
+                # forked branch resets numbering, old branch continues numbering
+                BranchSequence(branch=branch, stage=new_stage, kind=consts.BRANCH_SEQ_RUN, value=0)
+                BranchSequence(branch=branch, stage=new_stage, kind=consts.BRANCH_SEQ_CI_RUN, value=0)
+                BranchSequence(branch=branch, stage=new_stage, kind=consts.BRANCH_SEQ_DEV_RUN, value=0)
+
+            db.session.flush()
+
+            triggers = {}
+            prepare_new_planner_triggers(new_stage.id, new_stage.schema['triggers'], None, triggers)
+            stage.triggers = triggers
+
+            db.session.commit()
+    else:
+        BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_FLOW, value=0)
+        BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_CI_FLOW, value=0)
+        BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_DEV_FLOW, value=0)
+        db.session.commit()
 
     return branch.get_json(), 201
 

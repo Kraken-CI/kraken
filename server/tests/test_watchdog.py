@@ -20,7 +20,7 @@ import pytest
 from flask import Flask
 
 from kraken.server import consts, utils, initdb
-from kraken.server.models import db, Run, Job, Branch, Flow, Stage, Project, Issue, System, AgentsGroup, TestCase, Tool, AgentAssignment, Agent
+from kraken.server.models import db, Run, Job, Branch, Flow, Stage, Project, System, AgentsGroup, TestCase, Tool, AgentAssignment, Agent
 
 from dbtest import prepare_db
 
