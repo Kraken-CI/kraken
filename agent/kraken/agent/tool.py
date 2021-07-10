@@ -162,11 +162,16 @@ def execute(sock, module, command, step_file_path):
 class JsonSocket(socket.socket):
     def __init__(self, address):
         socket.socket.__init__(self, socket.AF_INET, socket.SOCK_STREAM)
-        try:
-            self.connect((address[0], int(address[1])))
-        except Exception:
-            log.exception('problem with connecting to %s:%s', address[0], address[1])
-            raise
+        while True:
+            try:
+                self.connect((address[0], int(address[1])))
+                break
+            except TimeoutError:
+                log.warn('connection timeout, retrying')
+                continue
+            except Exception:
+                log.exception('problem with connecting to %s:%s', address[0], address[1])
+                raise
 
     def send_json(self, data):
         data = json.dumps(data) + '\n'
