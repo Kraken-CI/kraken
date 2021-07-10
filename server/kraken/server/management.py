@@ -381,7 +381,7 @@ def update_stage(stage_id, body):
             planner_url = os.environ.get('KRAKEN_PLANNER_URL', consts.DEFAULT_PLANNER_URL)
             planner = xmlrpc.client.ServerProxy(planner_url, allow_none=True)
             planner.remove_job(stage.repo_refresh_job_id)
-            stage.repo_refresh_job_id = 0
+            stage.repo_refresh_job_id = ''
             db.session.commit()
 
         from .bg import jobs as bg_jobs  # pylint: disable=import-outside-toplevel
