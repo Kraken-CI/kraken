@@ -167,7 +167,7 @@ class JsonSocket(socket.socket):
                 self.connect((address[0], int(address[1])))
                 break
             except TimeoutError:
-                log.warn('connection timeout, retrying')
+                log.warning('connection timeout, retrying')
                 continue
             except Exception:
                 log.exception('problem with connecting to %s:%s', address[0], address[1])
