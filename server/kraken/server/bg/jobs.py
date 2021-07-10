@@ -867,7 +867,7 @@ def refresh_schema_repo(stage_id, complete_starting_run_id=None):
         # cancel any previous scheduled refresh job
         if stage.repo_refresh_job_id:
             planner.remove_job(stage.repo_refresh_job_id)
-            stage.repo_refresh_job_id = 0
+            stage.repo_refresh_job_id = ''
             db.session.commit()
 
         try:
