@@ -226,19 +226,13 @@ class DockerExecContext:
     def _async_run(self, cmd, deadline, cwd='/', env=None, user='root'):
         logs, exit_code = asyncio.run(self._dkr_run(None, cmd, cwd, deadline, env, user))
         if exit_code != 0:
-            now = time.time()
-            t0 = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(now))
-            t1 = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(deadline))
-            timeout = deadline - now
+            t0, t1, timeout = utils.get_times(deadline)
             raise Exception("non-zero %d exit code from '%s', cwd:%s, user:%s, now:%s, deadline:%s, time: %ds" % (
                 exit_code, cmd, str(cwd), str(user), t0, t1, timeout))
         return logs
 
     async def _dkr_run(self, proc_coord, cmd, cwd, deadline, env, user, log_ctx=None):
-        now = time.time()
-        t0 = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(now))
-        t1 = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(deadline))
-        timeout = deadline - now
+        t0, t1, timeout = utils.get_times(deadline)
         log.info("cmd '%s' in '%s', now %s, deadline %s, time: %ds, env: %s", cmd, cwd, t0, t1, timeout, env)
 
         if log_ctx:
@@ -367,10 +361,8 @@ class DockerExecContext:
             await self._dkr_run(proc_coord, cmd, docker_cwd, deadline, env, user, log_ctx)
         except Timeout:
             if proc_coord.result == {}:
-                now = time.time()
-                t0 = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(now))
-                t1 = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(deadline))
-                log.info('job timout expired, now: %s, daedline: %s', t0, t1)
+                t0, t1, timeout = utils.get_times(deadline)
+                log.info('job time expired, now: %s, deadline: %s', t0, t1)
                 proc_coord.result = {'status': 'error', 'reason': 'job-timeout'}
 
         log.reset_ctx()

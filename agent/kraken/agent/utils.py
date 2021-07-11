@@ -1,4 +1,4 @@
-# Copyright 2020 The Kraken Authors
+# Copyright 2020-2021 The Kraken Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -221,3 +221,11 @@ def is_in_lxc():
     except Exception:
         log.exception('IGNORED')
     return False
+
+
+def get_times(deadline):
+    now = time.time()
+    t0 = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(now))
+    t1 = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(deadline))
+    time_left = deadline - now
+    return t0, t1, time_left

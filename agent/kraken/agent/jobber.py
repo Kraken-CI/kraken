@@ -29,6 +29,7 @@ from . import local_run
 from . import docker_run
 from . import lxd_run
 from . import consts
+from . import utils
 
 log = logging.getLogger(__name__)
 
@@ -268,7 +269,8 @@ def _write_step_file(job_dir, step, idx):
 
 def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
     tool_name = step['tool']
-    log.info('step %s, deadline %s', str(step)[:200], deadline)
+    t0, t1, timeout = utils.get_times(deadline)
+    log.info('step %d. %s, now %s, deadline %s, time: %ds', idx, str(step)[:200], t0, t1, timeout)
     if tool_name not in tools:
         raise Exception('No such Kraken tool: %s' % tool_name)
     tool_path = tools[tool_name]
@@ -280,7 +282,7 @@ def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
     cancel = False
     bg_step = None
 
-    result, cancel = _exec_tool(srv, exec_ctx, tool_path, 'get_commands', job_dir, 10, user, step_file_path, job_id, idx)
+    result, cancel = _exec_tool(srv, exec_ctx, tool_path, 'get_commands', job_dir, 20, user, step_file_path, job_id, idx)
     log.info('result for get_commands: %s', result)
     # check result
     if not isinstance(result, dict):
@@ -302,7 +304,7 @@ def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
 
     if 'collect_tests' in available_commands and ('tests' not in step or step['tests'] is None or len(step['tests']) == 0):
         # collect tests from tool to execute
-        result, cancel = _exec_tool(srv, exec_ctx, tool_path, 'collect_tests', job_dir, 10, user, step_file_path, job_id, idx)
+        result, cancel = _exec_tool(srv, exec_ctx, tool_path, 'collect_tests', job_dir, 20, user, step_file_path, job_id, idx)
         log.info('result for collect_tests: %s', str(result)[:200])
         if cancel:
             log.info('canceling job')

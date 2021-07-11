@@ -26,6 +26,7 @@ except ImportError:
     pylxd = None
 
 from . import consts
+from . import utils
 
 
 log = logging.getLogger(__name__)
@@ -166,10 +167,7 @@ class LxdExecContext:
     def _async_run(self, cmd, deadline, cwd='/', env=None):
         logs, exit_code = asyncio.run(self._lxd_run(cmd, cwd, deadline, env))
         if exit_code != 0:
-            now = time.time()
-            t0 = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(now))
-            t1 = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(deadline))
-            timeout = deadline - now
+            t0, t1, timeout = utils.get_times(deadline)
             raise Exception("non-zero %d exit code from '%s', cwd:%s, now:%s, deadline:%s, time: %ds" % (
                 exit_code, cmd, str(cwd), t0, t1, timeout))
         return logs

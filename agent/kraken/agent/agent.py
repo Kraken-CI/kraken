@@ -39,8 +39,7 @@ def _dispatch_job(srv, job):
         now = time.time()
         deadline = now + job['timeout']
         job['deadline'] = deadline
-        t0 = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(now))
-        t1 = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(deadline))
+        t0, t1, _ = utils.get_times(deadline)
         log.info('job now: %s, deadline: %s, time: %ss', t0, t1, job['timeout'])
         jobber.run(srv, job)
     except Exception:
