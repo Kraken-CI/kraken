@@ -59,17 +59,15 @@ def redeploy(c, kk_ver):
     c.run('docker volume prune -f')
 
     # restart services
-    c.run('docker service update --force kraken_postgres')
-    c.run('docker service update --force kraken_clickhouse')
-    c.run('docker service update --force kraken_clickhouse-proxy')
-    c.run('docker service update --force kraken_minio')
-    c.run('docker service update --force kraken_controller')
-    c.run('docker service update --force kraken_server')
-    c.run('docker service update --force kraken_rq')
-    c.run('docker service update --force kraken_agent')
-    c.run('docker service update --force kraken_ui')
-    time.sleep(10)
-    c.run('docker service update --force kraken_minio')
+    # c.run('docker service update --force kraken_postgres')
+    # c.run('docker service update --force kraken_clickhouse')
+    # c.run('docker service update --force kraken_clickhouse-proxy')
+    # c.run('docker service update --force kraken_minio')
+    # c.run('docker service update --force kraken_controller')
+    # c.run('docker service update --force kraken_server')
+    # c.run('docker service update --force kraken_rq')
+    # c.run('docker service update --force kraken_agent')
+    # c.run('docker service update --force kraken_ui')
 
 
 def show_state(c):

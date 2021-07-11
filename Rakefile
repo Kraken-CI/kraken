@@ -460,8 +460,8 @@ task :compose_to_swarm => DOCKER_COMPOSE do
   sh 'cp docker-compose.yaml docker-compose-swarm-tmp.yaml'
   sh "yq e 'del(.services.*.depends_on)'                         -i docker-compose-swarm-tmp.yaml"
   sh "yq e 'del(.services.*.build)'                              -i docker-compose-swarm-tmp.yaml"
-  sh "yq e 'del(.services.*.networks)'                           -i docker-compose-swarm-tmp.yaml"
-  sh "yq e 'del(.networks)'                                      -i docker-compose-swarm-tmp.yaml"
+#  sh "yq e 'del(.services.*.networks)'                           -i docker-compose-swarm-tmp.yaml"
+#  sh "yq e 'del(.networks)'                                      -i docker-compose-swarm-tmp.yaml"
   sh "yq e '.services.ui.ports = [\"8888:80\"]'                  -i docker-compose-swarm-tmp.yaml"
   sh "yq e 'del(.services.clickhouse.ports)'                     -i docker-compose-swarm-tmp.yaml"
   sh "yq e '.services.agent.environment = .services.agent.environment + \"KRAKEN_AGENT_SLOT={{.Task.Slot}}\"' -i docker-compose-swarm-tmp.yaml"

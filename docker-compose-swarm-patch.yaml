@@ -20,3 +20,11 @@ services:
       - /var/snap/lxd/common/lxd/unix.socket:/var/snap/lxd/common/lxd/unix.socket
   ui:
     image: eu.gcr.io/kraken-261806/kkui:kk_ver
+
+networks:
+  db_net:
+    driver: overlay
+  web_net:
+    driver: overlay
+  lab_net:
+    driver: overlay
