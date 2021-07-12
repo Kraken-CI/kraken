@@ -166,16 +166,20 @@ class DockerExecContext:
 
         # if agent is running inside docker then get or create lab_net and use it to communicate with execution container
         if utils.is_in_docker():
+            log.info('docker networks:')
             for net in self.client.networks.list():
+                log.info('  net: %s', net.name)
                 if net.name.endswith('lab_net'):
                     self.lab_net = net
                     break
             if self.lab_net is None:
                 if self.swarm:
                     driver = 'overlay'
+                    lab_net_name = 'kraken_lab_net'
                 else:
                     driver = 'bridge'
-                self.lab_net = self.client.networks.create('lab_net', driver=driver, attachable=True)
+                    lab_net_name = 'lab_net'
+                self.lab_net = self.client.networks.create(lab_net_name, driver=driver, attachable=True)
 
             # connect new container to lab_net
             try:
