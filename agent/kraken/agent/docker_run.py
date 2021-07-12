@@ -195,6 +195,9 @@ class DockerExecContext:
             if self.lab_net.name not in self.curr_cntr.attrs['NetworkSettings']['Networks']:
                 self.lab_net.connect(self.curr_cntr)
                 self.curr_cntr.reload()
+            log.info('container networks:')
+            for net_name, net in self.curr_cntr.attrs['NetworkSettings']['Networks'].items():
+                log.info('%s: %s', net_name, net['IPAddress'])
 
             # connect clickhouse and minio to lab_net
             for c in self.client.containers.list():
