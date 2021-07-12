@@ -28,3 +28,4 @@ networks:
     driver: overlay
   lab_net:
     driver: overlay
+    attachable: true
