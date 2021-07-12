@@ -285,7 +285,7 @@ def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
     result, cancel = _exec_tool(srv, exec_ctx, tool_path, 'get_commands', job_dir, 20, user, step_file_path, job_id, idx)
     log.info('result for get_commands: %s', result)
     # check result
-    if not isinstance(result, dict):
+    if not isinstance(result, dict) or 'status' not in result:
         raise Exception('bad result received from tool: %s' % result)
     # if command not succeeded
     if result['status'] != 'done':

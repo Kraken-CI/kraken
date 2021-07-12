@@ -169,6 +169,9 @@ class JsonSocket(socket.socket):
                 break
             except TimeoutError:
                 log.warning('connecting timeout, retrying')
+                log.warning('connecting from:')
+                for iface, ip_addr in sysutils.get_ifaces():
+                    log.warning('   %s:  %s', iface, ip_addr)
                 continue
             except Exception:
                 log.exception('problem with connecting to %s:%s', address[0], address[1])
