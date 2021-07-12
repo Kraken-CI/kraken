@@ -24,6 +24,7 @@ import importlib
 import traceback
 
 from . import consts
+from . import sysutils
 
 log = logging.getLogger('tool')
 
@@ -171,6 +172,9 @@ class JsonSocket(socket.socket):
                 continue
             except Exception:
                 log.exception('problem with connecting to %s:%s', address[0], address[1])
+                log.warning('connecting from:')
+                for iface, ip_addr in sysutils.get_ifaces():
+                    log.warning('   %s:  %s', iface, ip_addr)
                 raise
 
     def send_json(self, data):
