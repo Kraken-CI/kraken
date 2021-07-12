@@ -68,6 +68,10 @@ def get_jobs():
 
 
 def _exception_handler(job, exc_type, exc_value, traceback):  # pylint: disable=unused-argument
+    ignore_excs = ['ix_agents_address']
+    for ex in ignore_excs:
+        if ex in str(exc_value) or ex in str(traceback):
+            return
     log.exception('IGNORED')
 
 
