@@ -1,6 +1,6 @@
 images = {
   'python'     => ['python:3.8.5', 'python:3.8', 'python:3', 'python:latest'],
-  'go'         => ['golang:1.15.7', 'golang:1.15', 'golang:latest'],
+  'go'         => ['golang:1.16.6', 'golang:1.16', 'golang:latest'],
   'openjdk'    => ['openjdk:11.0', 'openjdk:11', 'openjdk:latest'],
   'ubuntu'     => ['ubuntu:20.04'],
   'centos'     => ['centos:8'],
