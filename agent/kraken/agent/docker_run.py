@@ -199,16 +199,16 @@ class DockerExecContext:
             for net_name, net in self.curr_cntr.attrs['NetworkSettings']['Networks'].items():
                 log.info('%s: %s', net_name, net['IPAddress'])
 
-            # connect clickhouse and minio to lab_net
-            for c in self.client.containers.list():
-                if 'clickhouse' in c.name or 'minio' in c.name:
-                    if self.lab_net.name not in c.attrs['NetworkSettings']['Networks']:
-                        self.lab_net.connect(c)
-                    c.reload()
-                    if 'clickhouse' in c.name:
-                        self.clickhouse_ip = c.attrs['NetworkSettings']['Networks'][self.lab_net.name]['IPAddress']
-                    if 'minio' in c.name:
-                        self.minio_ip = c.attrs['NetworkSettings']['Networks'][self.lab_net.name]['IPAddress']
+            # # connect clickhouse and minio to lab_net
+            # for c in self.client.containers.list():
+            #     if 'clickhouse' in c.name or 'minio' in c.name:
+            #         if self.lab_net.name not in c.attrs['NetworkSettings']['Networks']:
+            #             self.lab_net.connect(c)
+            #         c.reload()
+            #         if 'clickhouse' in c.name:
+            #             self.clickhouse_ip = c.attrs['NetworkSettings']['Networks'][self.lab_net.name]['IPAddress']
+            #         if 'minio' in c.name:
+            #             self.minio_ip = c.attrs['NetworkSettings']['Networks'][self.lab_net.name]['IPAddress']
 
     def get_return_ip_addr(self):
         if self.curr_cntr:

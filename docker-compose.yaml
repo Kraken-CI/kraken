@@ -21,6 +21,8 @@ services:
       - MINIO_SECRET_KEY
     ports:
       - $KRAKEN_SERVER_PORT:$KRAKEN_SERVER_PORT
+    expose:
+      - $KRAKEN_SERVER_PORT
     networks:
       - db_net
       - web_net
@@ -153,6 +155,8 @@ services:
       - KRAKEN_CLICKHOUSE_URL
     ports:
       - $KRAKEN_CLICKHOUSE_PORT:$KRAKEN_CLICKHOUSE_PORT/udp
+    expose:
+      - $KRAKEN_CLICKHOUSE_PORT
     networks:
       - db_net
       - lab_net
@@ -169,6 +173,8 @@ services:
       - minio:/data
     ports:
       - $KRAKEN_MINIO_PORT:$KRAKEN_MINIO_PORT
+    expose:
+      - $KRAKEN_MINIO_PORT
     networks:
       - lab_net
       - db_net
