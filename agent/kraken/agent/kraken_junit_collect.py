@@ -34,15 +34,15 @@ def _parse_junit_file(fp, report_result):
     for tc in root.iter('testcase'):
         test = '%s::%s' % (tc.get('classname'), tc.get('name'))
 
-        if tc.find('error'):
+        if tc.find('error') is not None:
             status = 3  # error
             status_txt = 'error'
             error += 1
-        elif tc.find('failure'):
+        elif tc.find('failure') is not None:
             status = 2  # failed
             status_txt = 'failed'
             failed += 1
-        elif tc.find('skipped'):
+        elif tc.find('skipped') is not None:
             status = 4  # disabled
             status_txt = 'disabled'
             disabled += 1
@@ -84,8 +84,11 @@ def run_tests(step, report_result=None):
 
 def main():
     logging.basicConfig(level=logging.INFO)
-    step = dict(cwd='/tmp/hgo/lucene-solr',
-                file_glob='**/test-results/test/*.xml')
+    # step = dict(cwd='/tmp/lucene',
+    #             file_glob='**/test-results/test/*.xml')
+    step = dict(cwd='/home/godfryd/repos/kraken/agent/kraken/agent',
+                file_glob='ju-rf.xml')
+
     run_tests(step)
 
 

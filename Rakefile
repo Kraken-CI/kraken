@@ -172,14 +172,14 @@ task :run_agent_in_lxd_all do
 #  Rake::Task["build_agent"].invoke
   Dir.chdir('agent') do
     systems = [
-#      ['images:ubuntu/focal/amd64', 'u20'],
-#      ['images:fedora/34/amd64', 'f34'],
+      ['images:ubuntu/focal/amd64', 'u20'],
+      ['images:fedora/34/amd64', 'f34'],
 #      ['images:centos/7/amd64', 'c7'], TODO: problem with locales
 #      ['images:centos/8/amd64', 'c8'], TODO: problem with sudo which hangs
-#      ['images:debian/buster/amd64', 'd10'],
-#      ['images:debian/bullseye/amd64', 'd11'],
+      ['images:debian/buster/amd64', 'd10'],
+      ['images:debian/bullseye/amd64', 'd11'],
 #      ['images:opensuse/15.3/amd64', 's15'], TODO: problem with network (wicked)
-      ['images:rockylinux/8/amd64', 'rl8'], # TODO: problem with sudo which hangs
+#      ['images:rockylinux/8/amd64', 'rl8'], # TODO: problem with sudo which hangs
     ]
 
 #    sh 'lxc network delete kk-net || true'
