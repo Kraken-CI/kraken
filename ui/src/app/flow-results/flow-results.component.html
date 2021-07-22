@@ -139,7 +139,7 @@
     <app-repo-changes [changes]="flow.trigger"></app-repo-changes>
   </p-tabPanel>
 
-  <p-tabPanel header="Artifacts" *ngIf="flow && flow.artifacts && ((flow.artifacts.private && flow.artifacts.private.count > 0) || (flow.artifacts.public && flow.artifacts.public.count > 0) || (flow.artifacts.report && flow.artifacts.report.count > 0))">
+  <p-tabPanel header="Artifacts" *ngIf="flow && flow.artifacts && ((flow.artifacts.private && flow.artifacts.private.count > 0) || (flow.artifacts.public && flow.artifacts.public.count > 0))">
     <div *ngIf="flow.artifacts.public && flow.artifacts.public.count > 0">
       <h3>Public</h3>
       <div style="display: flex;">
@@ -188,11 +188,11 @@
       <br>
       Total size: {{ humanFileSize(flow.artifacts.private.size) }}
     </div>
-    <div *ngIf="flow.artifacts.report && flow.artifacts.report.count > 0">
-      <h3>Report</h3>
-      Files: {{ flow.artifacts.report.count }}
-      <br>
-      Total size: {{ humanFileSize(flow.artifacts.report.size) }}
+  </p-tabPanel>
+
+  <p-tabPanel header="Reports" *ngIf="flow && flow.report_entries && flow.report_entries.length > 0">
+    <div *ngFor="let rep of flow.report_entries">
+        <a [href]="rep.url" target="blank">{{ rep.name }}</a>
     </div>
   </p-tabPanel>
 

@@ -1748,6 +1748,10 @@ components:
                 count:
                   type: integer
                   format: int64
+        report_entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReportEntry'
     Flows:
       type: object
       properties:
@@ -1823,6 +1827,10 @@ components:
           type: integer
         artifacts_total:
           type: integer
+        report_entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReportEntry'
         fix_cnt:
           type: integer
         regr_cnt:
@@ -1917,6 +1925,13 @@ components:
         total:
           type: integer
           format: int64
+    ReportEntry:
+      type: object
+      properties:
+        name:
+          type: string
+        url:
+          type: string
     Log:
       type: object
       properties:

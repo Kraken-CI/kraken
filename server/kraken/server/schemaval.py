@@ -897,9 +897,13 @@ schema = {
                                             "type": "string"
                                         },
                                         "public": {
-                                            "description": "Determines if artifacts should be public and available to users in web UI (`True`) or if they should be only accessible internally to other stages but only in the same flow (`False`).",
+                                            "description": "Determines if artifacts should be public and available to users in web UI (`True`) or if they should be only accessible internally to other stages but only in the same flow (`False`). If report_entry is set then public is True.",
                                             "default": False,
                                             "type": "boolean"
+                                        },
+                                        "report_entry": {
+                                            "description": "A path to HTML file that is an entry to the uploaded report. If present then it sets public to True.",
+                                            "type": "string"
                                         },
                                         "attempts": {
                                             "description": "A number of times the step is retried if if it returns error.",

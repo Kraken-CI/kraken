@@ -110,8 +110,10 @@ export class RunResultsComponent implements OnInit, OnDestroy {
             idx = 2
         } else if (tabName === 'artifacts') {
             idx = 3
-        } else if (tabName === 'details') {
+        } else if (tabName === 'reports') {
             idx = 4
+        } else if (tabName === 'details') {
+            idx = 5
         }
         this.activeTab = this.tabs[idx]
         this.activeTabIdx = idx
@@ -146,6 +148,10 @@ export class RunResultsComponent implements OnInit, OnDestroy {
                     {
                         label: 'Artifacts',
                         routerLink: '/runs/' + this.runId + '/artifacts',
+                    },
+                    {
+                        label: 'Reports',
+                        routerLink: '/runs/' + this.runId + '/reports',
                     },
                     {
                         label: 'Details',

@@ -284,6 +284,18 @@ class RepoChanges(db.Model, DatesMixin):
     runs = relationship("Run", back_populates="repo_data")
 
 
+def _get_report_entries(artifacts, infix):
+    report_entries = []
+    if (isinstance(artifacts, dict) and 'public' in artifacts and 'entries' in artifacts['public']):
+        for rep_ent in artifacts['public']['entries']:
+            url = '/artifacts/public/%s/%s' % (infix, rep_ent)
+            name = rep_ent.rsplit('/', 1)[-1].split('.', 1)[0].capitalize()
+            rep = dict(name=name,
+                       url=url)
+            report_entries.append(rep)
+    return report_entries
+
+
 class Flow(db.Model, DatesMixin):
     __tablename__ = "flows"
     id = Column(Integer, primary_key=True)
@@ -329,6 +341,9 @@ class Flow(db.Model, DatesMixin):
                     runs=[r.get_json(with_project=False, with_branch=False, with_artifacts=False) for r in self.runs],
                     trigger=trigger,
                     artifacts=self.artifacts)
+
+        infix = 'f/%d' % self.id
+        data['report_entries'] = _get_report_entries(self.artifacts, infix)
 
         if with_project:
             data['project_id'] = self.branch.project_id
@@ -461,6 +476,8 @@ class Run(db.Model, DatesMixin):
 
         if with_artifacts:
             data['artifacts_total'] = len(self.artifacts_files)
+            infix = 'r/%d' % self.id
+            data['report_entries'] = _get_report_entries(self.artifacts, infix)
 
         return data
 

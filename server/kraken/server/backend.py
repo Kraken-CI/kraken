@@ -245,26 +245,27 @@ def _store_artifacts(job, step):
     t0 = time.time()
     flow = job.run.flow
     if not flow.artifacts:
-        flow.artifacts = dict(public=dict(size=0, count=0),
-                              private=dict(size=0, count=0),
-                              report=dict(size=0, count=0, entries=[]))
+        flow.artifacts = dict(public=dict(size=0, count=0, entries=[]),
+                              private=dict(size=0, count=0))
     if not flow.artifacts_files:
         flow.artifacts_files = []
 
     run = job.run
     if not run.artifacts:
-        run.artifacts = dict(public=dict(size=0, count=0),
-                             private=dict(size=0, count=0),
-                             report=dict(size=0, count=0, entries=[]))
+        run.artifacts = dict(public=dict(size=0, count=0, entries=[]),
+                             private=dict(size=0, count=0))
     if not run.artifacts_files:
         run.artifacts_files = []
 
     action = step.fields.get('action', 'upload')
     public = step.fields.get('public', False)
-    if action == 'report':
-        section = 'report'
-        section_id = consts.ARTIFACTS_SECTION_REPORT
-    elif public:
+    report_entry = step.fields.get('report_entry', None)
+    if report_entry:
+        public = True
+        flow.artifacts['public']['entries'].append(report_entry)
+        run.artifacts['public']['entries'].append(report_entry)
+
+    if public:
         section = 'public'
         section_id = consts.ARTIFACTS_SECTION_PUBLIC
     else:
@@ -278,11 +279,11 @@ def _store_artifacts(job, step):
         run.artifacts[section]['size'] += artifact['size']
         run.artifacts[section]['count'] += 1
 
-        if section == 'report':
+        if section == 'public':
             report_entry = artifact.get('report_entry', None)
             if report_entry:
-                flow.artifacts['report']['entries'].append(report_entry)
-                run.artifacts['report']['entries'].append(report_entry)
+                flow.artifacts['public']['entries'].append(report_entry)
+                run.artifacts['public']['entries'].append(report_entry)
 
         path = artifact['path']
         f = File.query.filter_by(path=path).one_or_none()
