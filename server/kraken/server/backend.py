@@ -257,7 +257,6 @@ def _store_artifacts(job, step):
     if not run.artifacts_files:
         run.artifacts_files = []
 
-    action = step.fields.get('action', 'upload')
     public = step.fields.get('public', False)
     report_entry = step.fields.get('report_entry', None)
     if report_entry:
