@@ -577,6 +577,10 @@ def _estimate_timeout(job):
         if timeout < user_timeout:
             timeout = user_timeout
 
+    # it does not make sense to make timeout bigger than 3 days ie. seconds
+    if timeout > 259200:
+        timeout = 259200
+
     log.info("new timeout for job '%s' in stage '%s': %ssecs", job_key, stage.name, timeout)
     stage.timeouts[job_key] = timeout
     flag_modified(stage, 'timeouts')
