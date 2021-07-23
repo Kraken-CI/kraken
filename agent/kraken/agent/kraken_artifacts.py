@@ -119,6 +119,11 @@ def _download_all(mc, minio_bucket, flow_id, run_id, cwd, source, dest):
         runs.append(r_id)
     runs.sort()
 
+    if len(runs) == 0:
+        msg = 'no runs folders in storage'
+        log.error(msg)
+        return 3, msg
+
     log.info('runs for download: %s', runs)
     log.info('sources: %s', source)
 
