@@ -1,4 +1,0 @@
-../../venv/bin/celery -A bg.clry worker -l info
-rm -rf /tmp/kk-jobs/ && ./agent.py -d /tmp/kk-jobs -s http://localhost:5000/backend
-venv ./scheduler.py
-venv ./server.py
