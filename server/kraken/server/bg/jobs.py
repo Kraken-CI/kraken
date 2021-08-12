@@ -151,6 +151,7 @@ def _prepare_flow_summary(flow):
     # store in redis flow state
     key = 'branch-%d' % flow.branch_id
     rds.set(key, json.dumps(val))
+    log.info('cached flow results: %s = %s', key, val)
 
 
 def analyze_run(run_id):

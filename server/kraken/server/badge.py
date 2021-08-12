@@ -38,6 +38,8 @@ def get_branch_badge(branch_id, what=None):
     elif what == 'issues':
         label = 'Kraken Issues'
 
+    # get data from redis
+    # data in redis is prepared in bg/jobs.py, in _prepare_flow_summary()
     key = 'branch-%s' % branch_id
     data = rds.get(key)
     if not data:
