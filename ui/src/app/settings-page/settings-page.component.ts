@@ -24,6 +24,8 @@ export class SettingsPageComponent implements OnInit {
     slackChecking = false
     awsState = ''
     awsChecking = false
+    azureState = ''
+    azureChecking = false
 
     generalForm = new FormGroup({
         server_url: new FormControl(''),
@@ -45,8 +47,14 @@ export class SettingsPageComponent implements OnInit {
     })
 
     cloudForm = new FormGroup({
+        // AWS
         aws_access_key: new FormControl(''),
         aws_secret_access_key: new FormControl(''),
+        // Azure
+        azure_subscription_id: new FormControl(''),
+        azure_tenant_id: new FormControl(''),
+        azure_client_id: new FormControl(''),
+        azure_client_secret: new FormControl(''),
     })
 
     constructor(
@@ -134,6 +142,9 @@ export class SettingsPageComponent implements OnInit {
             case 'aws':
                 this.awsChecking = true
                 break
+            case 'azure':
+                this.azureChecking = true
+                break
         }
         this.settingsService.checkResourceWorkingState(resource).subscribe(
             (data) => {
@@ -151,6 +162,10 @@ export class SettingsPageComponent implements OnInit {
                         this.awsState = data.state
                         this.awsChecking = false
                         break
+                    case 'azure':
+                        this.azureState = data.state
+                        this.azureChecking = false
+                        break
                 }
             },
             (err) => {
@@ -163,6 +178,9 @@ export class SettingsPageComponent implements OnInit {
                         break
                     case 'aws':
                         this.awsChecking = false
+                        break
+                    case 'azure':
+                        this.azureChecking = false
                         break
                 }
                 let msg = err.statusText

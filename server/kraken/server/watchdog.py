@@ -21,7 +21,7 @@ import datetime
 from urllib.parse import urlparse
 
 from flask import Flask
-from sqlalchemy.sql.expression import desc, cast
+from sqlalchemy.sql.expression import desc, cast, or_
 from sqlalchemy import Integer
 import clickhouse_driver
 import redis
@@ -101,7 +101,8 @@ def _check_jobs_if_missing_agents():
     q = Job.query.filter_by(covered=False, deleted=None, state=consts.JOB_STATE_QUEUED)
     for job in q.all():
         ag = job.agents_group
-        if ag.deployment and ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS and 'aws' in ag.deployment:
+        if (ag.deployment and
+            ag.deployment['method'] in [consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2, consts.AGENT_DEPLOYMENT_METHOD_AWS_ECS_FARGATE]):
             groups.add(ag.id)
 
     for ag_id in groups:
@@ -166,7 +167,8 @@ def _check_agents_keep_alive():
         # in case of AWS VMs check for 10mins, not 5mins
         for aa in a.agents_groups:
             ag = aa.agents_group
-            if ag.deployment and ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS and 'aws' in ag.deployment:
+            if (ag.deployment and
+                ag.deployment['method'] in [consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2, consts.AGENT_DEPLOYMENT_METHOD_AWS_ECS_FARGATE]):
                 if a.last_seen > ten_mins_ago:
                     continue
 
@@ -259,7 +261,10 @@ def _delete_if_missing_in_aws(agent, ag):
 def _check_agents_to_destroy():
     q = Agent.query.filter_by(deleted=None)
     q = q.join('agents_groups', 'agents_group')
-    q = q.filter(cast(AgentsGroup.deployment['method'], Integer) == consts.AGENT_DEPLOYMENT_METHOD_AWS)
+    #q = q.filter(or_(cast(AgentsGroup.deployment['method'], Integer) == consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2,
+    #                 cast(AgentsGroup.deployment['method'], Integer) == consts.AGENT_DEPLOYMENT_METHOD_AWS_ECS_FARGATE))
+    q = q.filter(cast(AgentsGroup.deployment['method'], Integer) == consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2)
+
 
     outdated_count = 0
     dangling_count = 0
@@ -304,7 +309,7 @@ def _check_machines_with_no_agent():
 
     for ag in q.all():
         all_groups += 1
-        if not ag.deployment or ag.deployment['method'] != consts.AGENT_DEPLOYMENT_METHOD_AWS or 'aws' not in ag.deployment or not ag.deployment['aws']:
+        if not ag.deployment or ag.deployment['method'] != consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2 or 'aws' not in ag.deployment or not ag.deployment['aws']:
             continue
 
         aws_groups += 1

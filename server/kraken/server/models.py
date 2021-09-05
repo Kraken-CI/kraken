@@ -758,15 +758,23 @@ class AgentsGroup(db.Model, DatesMixin):
     def get_json(self):
         deployment = self.deployment
         if not deployment:
-            deployment = dict(
-                method=0,
-                aws=dict(region='', instances_limit=5, default_image='', instance_type='',
-                         destruction_after_jobs=1, destruction_after_time=30))
-        if 'aws' in deployment:
+            deployment = dict(method=0)
+
+        if 'aws' not in deployment:
+            deployment['aws'] = dict(region='', instances_limit=5, default_image='', instance_type='',
+                                     destruction_after_jobs=1, destruction_after_time=30)
+        else:
             if 'destruction_after_jobs' not in deployment['aws']:
                 deployment['aws']['destruction_after_jobs'] = 1
             if 'destruction_after_time' not in deployment['aws']:
-                deployment['aws']['destruction_after_time'] = 60
+                deployment['aws']['destruction_after_time'] = 30
+
+        if 'aws_ecs_fargate' not in deployment:
+            deployment['aws_ecs_fargate'] = dict(region='', instances_limit=5, cluster='', subnets='', security_groups='')
+
+        if 'azure_vm' not in deployment:
+            deployment['azure_vm'] = dict(location='', instances_limit=5, default_image='', instance_type='',
+                                          destruction_after_jobs=1, destruction_after_time=30)
 
         return dict(id=self.id,
                     created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,

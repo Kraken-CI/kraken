@@ -72,7 +72,8 @@ import { DiscoveredPageComponent } from './discovered-page/discovered-page.compo
 import { GroupsPageComponent } from './groups-page/groups-page.component'
 import { SettingsPageComponent } from './settings-page/settings-page.component'
 import { DiagsPageComponent } from './diags-page/diags-page.component'
-import { RepoChangesComponent } from './repo-changes/repo-changes.component'
+import { RepoChangesComponent } from './repo-changes/repo-changes.component';
+import { GrpCloudCfgComponent } from './grp-cloud-cfg/grp-cloud-cfg.component'
 
 export function cfgFactory() {
     const params: ConfigurationParameters = {
@@ -104,6 +105,7 @@ export function cfgFactory() {
         SettingsPageComponent,
         DiagsPageComponent,
         RepoChangesComponent,
+        GrpCloudCfgComponent,
     ],
     imports: [
         BrowserModule,

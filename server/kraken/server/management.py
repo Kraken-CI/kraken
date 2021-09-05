@@ -21,11 +21,14 @@ from urllib.parse import urlparse
 
 from flask import abort
 from sqlalchemy.orm.attributes import flag_modified
+from sqlalchemy.sql.expression import asc, desc
 from sqlalchemy.orm import joinedload
 import pytimeparse
 import clickhouse_driver
 import redis
 import boto3
+from azure.identity import ClientSecretCredential
+from azure.mgmt.subscription import SubscriptionClient
 
 from . import consts, srvcheck, kkrq
 from .models import db, Branch, Stage, Agent, AgentsGroup, Secret, AgentAssignment, Setting
@@ -455,15 +458,26 @@ def get_agent(agent_id):
     return ag.get_json(), 200
 
 
-def get_agents(unauthorized=None, start=0, limit=10):
+def get_agents(unauthorized=None, start=0, limit=10, sort_field="name", sort_dir="asc"):
     q = Agent.query
     q = q.filter_by(deleted=None)
     if unauthorized:
         q = q.filter_by(authorized=False)
     else:
         q = q.filter_by(authorized=True)
-    q = q.order_by(Agent.name)
+
     total = q.count()
+
+    # sorting
+    sort_func = asc
+    if sort_dir == "desc":
+        sort_func = desc
+
+    if sort_field in ['last_seen', 'ip_address', 'name', 'address', 'id']:
+        q = q.order_by(sort_func(sort_field))
+    else:
+        q = q.order_by(Agent.name)
+
     q = q.offset(start).limit(limit)
     agents = []
     for e in q.all():
@@ -650,6 +664,19 @@ def get_aws_ec2_instance_types(region):
     types.sort(key=lambda x: x['InstanceType'])
     return {'items': types, 'total': len(types)}, 200
 
+
+def get_azure_locations():
+    # Acquire a credential object using service principal authentication.
+    subscription_id = get_setting('cloud', 'azure_subscription_id')
+    tenant_id = get_setting('cloud', 'azure_tenant_id')
+    client_id = get_setting('cloud', 'azure_client_id')
+    client_secret = get_setting('cloud', 'azure_client_secret')
+
+    credential = ClientSecretCredential(tenant_id=tenant_id, client_id=client_id, client_secret=client_secret)
+    subscription_client = SubscriptionClient(credential)
+    locations = subscription_client.subscriptions.list_locations(subscription_id)
+    for location in locations:
+        print(location.name)
 
 def get_settings():
     settings = Setting.query.filter_by().all()
@@ -857,6 +884,8 @@ def get_settings_working_state(resource):
         state = notify.check_slack_settings()
     elif resource == 'aws':
         state = cloud.check_aws_settings()
+    elif resource == 'azure':
+        state = cloud.check_azure_settings()
     else:
         abort(400, "Unsupported resource type: %s" % resource)
 
