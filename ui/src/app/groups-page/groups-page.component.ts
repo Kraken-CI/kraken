@@ -8,11 +8,6 @@ import { AuthService } from '../auth.service'
 import { ManagementService } from '../backend/api/management.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
 
-interface DeploymentMethod {
-    name: string
-    val: number
-}
-
 @Component({
     selector: 'app-groups-page',
     templateUrl: './groups-page.component.html',
@@ -37,11 +32,6 @@ export class GroupsPageComponent implements OnInit {
     activeItem: MenuItem
     openedGroups: any
     groupTab: any
-    deploymentMethods: DeploymentMethod[]
-
-    // aws
-    regions: any[]
-    instanceTypes: any[]
 
     constructor(
         private route: ActivatedRoute,
@@ -52,15 +42,6 @@ export class GroupsPageComponent implements OnInit {
         protected breadcrumbService: BreadcrumbsService,
         private titleService: Title
     ) {
-        this.deploymentMethods = [
-            { name: 'Manual', val: 0 },
-            // {name: 'SSH', val: 1},
-            { name: 'Amazon Web Services', val: 2 },
-            // {name: 'Google Cloud Platform', val: 3},
-            // {name: 'Microsoft Azure', val: 4},
-            // {name: 'Digital Ocean', val: 5},
-            // {name: 'Linode', val: 6},
-        ]
     }
 
     switchToTab(index) {
@@ -71,7 +52,7 @@ export class GroupsPageComponent implements OnInit {
         this.activeItem = this.tabs[index]
         if (index > 0) {
             this.groupTab = this.openedGroups[index - 1]
-            this.deploymentMethodChange()
+            // TODO this.deploymentMethodChange()
         }
     }
 
@@ -331,30 +312,5 @@ export class GroupsPageComponent implements OnInit {
         if (event.key === 'Enter') {
             this.saveGroup()
         }
-    }
-
-    getAwsEc2Regions() {
-        this.managementService.getAwsEc2Regions().subscribe((data) => {
-            this.regions = data.items
-
-            if (this.groupTab.group.deployment.aws.region) {
-                this.regionChange()
-            }
-        })
-    }
-
-    deploymentMethodChange() {
-        if (this.groupTab.group.deployment.method === 2) {
-            this.getAwsEc2Regions()
-        }
-    }
-
-    regionChange() {
-        const region = this.groupTab.group.deployment.aws.region
-        this.managementService
-            .getAwsEc2InstanceTypes(region)
-            .subscribe((data) => {
-                this.instanceTypes = data.items
-            })
     }
 }

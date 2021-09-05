@@ -375,15 +375,23 @@ def _handle_step_result(agent, req):
         aws = None
         for aa in agent.agents_groups:
             ag = aa.agents_group
-            if ag.deployment and ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS and 'aws' in ag.deployment:
-                aws = ag.deployment['aws']
-        log.info('JOB %s, aws %s', job.id, aws)
+            if not ag.deployment:
+                continue
 
-        if aws and 'destruction_after_jobs' in aws and int(aws['destruction_after_jobs']) > 0:
-            max_jobs = int(aws['destruction_after_jobs'])
-            jobs_num = Job.query.filter_by(agent_used=agent).count()
-            log.info('JOB %s, num %d, max %d', job.id, jobs_num, max_jobs)
-            if jobs_num >= max_jobs:
+            if ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2:
+                depl = ag.deployment['aws']
+
+                if depl and 'destruction_after_jobs' in depl and int(depl['destruction_after_jobs']) > 0:
+                    max_jobs = int(depl['destruction_after_jobs'])
+                    jobs_num = Job.query.filter_by(agent_used=agent).count()
+                    log.info('JOB %s, num %d, max %d', job.id, jobs_num, max_jobs)
+                    if jobs_num >= max_jobs:
+                        agent.disabled = True
+                        kkrq.enq(bg_jobs.destroy_machine, agent.id)
+
+            elif ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS_ECS_FARGATE:
+                depl = ag.deployment['aws_ecs_fargate']
+                log.info('ECS FARGATE JOB %s - destroying task', job.id)
                 agent.disabled = True
                 kkrq.enq(bg_jobs.destroy_machine, agent.id)
 
@@ -508,9 +516,15 @@ def _handle_keep_alive(agent, req):  # pylint: disable=unused-argument
     return {}
 
 
-def _handle_unknown_agent(address, ip_address):
+def _handle_unknown_agent(address, ip_address, agent):
     try:
-        Agent(name=address, address=address, authorized=False, ip_address=ip_address, last_seen=utils.utcnow())
+        if agent:
+            agent.deleted = None
+            agent.authorized = False
+            agent.ip_address = ip_address
+            agent.last_seen = utils.utcnow()
+        else:
+            Agent(name=address, address=address, authorized=False, ip_address=ip_address, last_seen=utils.utcnow())
         db.session.commit()
     except Exception as e:
         log.warning('IGNORED EXCEPTION: %s', str(e))
@@ -529,10 +543,10 @@ def serve_agent_request():
         address = request.remote_addr
     # log.info('agent address: %s', address)
 
-    agent = Agent.query.filter_by(deleted=None, address=address).one_or_none()
-    if agent is None:
+    agent = Agent.query.filter_by(address=address).one_or_none()
+    if agent is None or agent.deleted:
         log.warning('unknown agent %s', address)
-        _handle_unknown_agent(address, request.remote_addr)
+        _handle_unknown_agent(address, request.remote_addr, agent)
         return json.dumps({})
 
     agent.last_seen = utils.utcnow()

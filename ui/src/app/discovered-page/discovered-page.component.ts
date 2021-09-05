@@ -38,8 +38,19 @@ export class DiscoveredPageComponent implements OnInit {
 
     loadAgentsLazy(event) {
         this.loadingAgents = true
+        console.info(event)
+
+        let sortField = 'name'
+        if (event.sortField) {
+            sortField = event.sortField
+        }
+        let sortDir = 'asc'
+        if (event.sortOrder === -1) {
+            sortDir = 'desc'
+        }
+
         this.managementService
-            .getAgents(true, event.first, event.rows)
+            .getAgents(true, event.first, event.rows, sortField, sortDir)
             .subscribe((data) => {
                 this.agents = data.items
                 this.totalAgents = data.total

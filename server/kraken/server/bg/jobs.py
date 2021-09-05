@@ -943,18 +943,21 @@ def spawn_new_agents(agents_group_id):
             return
 
         # only AWS supported
-        if ag.deployment['method'] != consts.AGENT_DEPLOYMENT_METHOD_AWS:
+        depl = None
+        if ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2:
+            depl = ag.deployment['aws']
+        elif ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS_ECS_FARGATE:
+            depl = ag.deployment['aws_ecs_fargate']
+        else:
             log.warning('deployment method %d in agents group id:%d not implemented', ag.deployment['method'], agents_group_id)
             return
-
-        aws = ag.deployment['aws']
 
         # check if limit of agents is reached
         q = Agent.query.filter_by(authorized=True, disabled=False, deleted=None)
         q = q.join('agents_groups')
         q = q.filter_by(agents_group=ag)
         agents_count = q.count()
-        limit = aws.get('instances_limit', 0)
+        limit = depl.get('instances_limit', 0)
         if agents_count >= limit:
             log.warning('in agents group id:%d cannot spawn more agents, limit %d reached', agents_group_id, limit)
             return
@@ -978,7 +981,7 @@ def spawn_new_agents(agents_group_id):
                     log.warning('cannot find system id:%d', sys_id)
                     continue
             else:
-                system = System.query.filter_by(name=aws['default_image']).one_or_none()
+                system = System.query.filter_by(name=depl['default_image']).one_or_none()
                 if system is None:
                     log.warning('cannot find system id:%d', sys_id)
                     continue
@@ -997,9 +1000,9 @@ def spawn_new_agents(agents_group_id):
                 log.info('enough agents, avail: %d, needed: %d', agents_count, needed_count)
                 continue
 
-            cloud.allocate_ec2_vms(aws, access_key, secret_access_key,
-                                   ag, system, num,
-                                   server_url, minio_addr, clickhouse_addr)
+            cloud.create_machines(depl, access_key, secret_access_key,
+                                  ag, system, num,
+                                  server_url, minio_addr, clickhouse_addr)
 
 
 def destroy_machine(agent_id):
@@ -1020,26 +1023,24 @@ def destroy_machine(agent_id):
             return
 
         # find agents group to get region for aws login
-        aws = None
+        depl = None
         for aa in agent.agents_groups:
             ag = aa.agents_group
-            if ag.deployment and ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS and 'aws' in ag.deployment:
-                aws = ag.deployment['aws']
+            if not ag.deployment:
+                continue
+            if ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2:
+                depl = ag.deployment['aws']
+                break
+            if ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS_ECS_FARGATE:
+                depl = ag.deployment['aws_ecs_fargate']
                 break
 
-        if not aws:
-            log.error('cannot find AWS region for agent %s', agent_id)
+        if not depl:
+            log.error('cannot find deployment info for agent %s', agent_id)
             return
 
-        region = aws['region']
         access_key = get_setting('cloud', 'aws_access_key')
         secret_access_key = get_setting('cloud', 'aws_secret_access_key')
-        ec2 = boto3.resource('ec2', region_name=region, aws_access_key_id=access_key, aws_secret_access_key=secret_access_key)
 
-        instance_id = agent.extra_attrs['instance_id']
-        log.info('terminate machine %s', instance_id)
-        try:
-            i = ec2.Instance(instance_id)
-            i.terminate()
-        except Exception:
-            log.exception('IGNORED EXCEPTION')
+        cloud.destroy_machine(access_key, secret_access_key,
+                              ag.deployment['method'], depl, agent)

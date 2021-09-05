@@ -74,17 +74,17 @@
 
   <p-tabPanel header="Cloud">
     <!-- https://www.sanwebe.com/2014/08/css-html-forms-designs -->
+    <form [formGroup]="cloudForm" class="form-style-2">
+
     <p-fieldset legend="Amazon Web Services" [toggleable]="true">
-      <form [formGroup]="cloudForm" class="form-style-2">
         <label for="aws_access_key"><span>Access Key</span>
-          <input class="input-field" name="aws_access_key" formControlName="aws_access_key"/>
+          <input class="input-field" name="aws_access_key" id="aws_access_key" formControlName="aws_access_key"/>
         </label>
         <label for="aws_secret_access_key"><span>Secret Access Key</span>
           <input type="password" class="input-field" name="aws_secret_access_key" pPassword [feedback]="false" formControlName="aws_secret_access_key"/>
         </label>
-      </form>
 
-      <p-button label="Test Access" icon="pi pi-check"
+      <p-button label="Test AWS Access" icon="pi pi-check"
                 (onClick)="checkResourceWorkingState('aws')"
                 [loading]="awsChecking"
                 styleClass="p-button-outlined p-button-secondary p-button-sm"></p-button>
@@ -93,6 +93,35 @@
       </span>
 
     </p-fieldset>
+
+    <p-fieldset legend="Microsoft Azure" [toggleable]="true">
+      <form [formGroup]="cloudForm" class="form-style-2">
+        <label for="azure_subscription_id"><span>Subscription ID</span>
+          <input class="input-field" name="azure_subscription_id" formControlName="azure_subscription_id"/>
+        </label>
+        <label for="azure_tenant_id"><span>Tenant ID</span>
+          <input class="input-field" name="azure_tenant_id" formControlName="azure_tenant_id"/>
+        </label>
+        <label for="azure_client_id"><span>Client ID</span>
+          <input class="input-field" name="azure_client_id" id="azure_client_id" formControlName="azure_client_id"/>
+        </label>
+        <label for="azure_client_secret"><span>Client Secret</span>
+          <input type="password" class="input-field" name="azure_client_secret" pPassword [feedback]="false" formControlName="azure_client_secret"/>
+        </label>
+      </form>
+
+      <p-button label="Test Azure Access" icon="pi pi-check"
+                (onClick)="checkResourceWorkingState('azure')"
+                [loading]="azureChecking"
+                styleClass="p-button-outlined p-button-secondary p-button-sm"></p-button>
+      <span [ngStyle]="{ 'color': (awsState === 'ok' ? '#2bc62b' : 'red'), 'font-size': '1.2rem', 'font-weight': 'bold', 'padding-left': '2em'  }">
+          {{ awsState }}
+      </span>
+
+    </p-fieldset>
+
+    </form>
+
   </p-tabPanel>
 
 </p-tabView>

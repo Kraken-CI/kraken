@@ -1358,6 +1358,14 @@ paths:
         schema:
           type: integer
           format: int32
+      - name: sort_field
+        in: query
+        schema:
+          type: string
+      - name: sort_dir
+        in: query
+        schema:
+          type: string
       responses:
         200:
           description: A paged array of logs
@@ -1611,6 +1619,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AwsEc2InstanceTypes'
+  /azure-locations:
+    get:
+      tags:
+      - Management
+      summary: Get settings
+      description: Get settings details
+      operationId: get_azure-locations
+      responses:
+        200:
+          description: Settings details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AzureLocations'
   /settings:
     get:
       tags:
@@ -2340,6 +2362,16 @@ components:
             properties:
               InstanceType:
                 type: string
+        total:
+          type: integer
+          format: int64
+    AzureLocations:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: string
         total:
           type: integer
           format: int64
