@@ -663,11 +663,13 @@ def _check_repo_commits(stage, flow_kind):
         for r in repo['repos']:
             repos.append((r['url'], r['branch']))
 
+    git_cfg = repo.get('git_cfg', {})
+
     # iterate over repos
     changes = False
     repo_data = []
     for repo_url, repo_branch in repos:
-        commits, base_commit = gitops.get_repo_commits_since(stage.branch_id, prev_run, repo_url, repo_branch)
+        commits, base_commit = gitops.get_repo_commits_since(stage.branch_id, prev_run, repo_url, repo_branch, git_cfg)
 
         if commits:
             changes = True

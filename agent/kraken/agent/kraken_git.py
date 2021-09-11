@@ -55,6 +55,13 @@ def run(step, **kwargs):  # pylint: disable=unused-argument
             url = url[4:]
         url = 'https://%s@%s' % (access_token, url.replace(':', '/'))
 
+    # prepare git config
+    cfg_params = []
+    git_cfg = step.get('git_cfg', {})
+    for k, v in git_cfg.items():
+        cfg_params.append('-c %s=%s' % (k, v))
+    cfg_params = ' '.join(cfg_params)
+
     # setup connection to minio
     minio_addr = step['minio_addr']
     minio_addr = os.environ.get('KRAKEN_MINIO_ADDR', minio_addr)
@@ -88,7 +95,7 @@ def run(step, **kwargs):  # pylint: disable=unused-argument
     if bundle_present:
         try:
             # restore git repo bundle
-            utils.execute('git clone %s %s' % (repo_bundle_path, repo_dir), out_prefix='', timeout=timeout, raise_on_error=True)
+            utils.execute('git clone %s %s %s' % (cfg_params, repo_bundle_path, repo_dir), out_prefix='', timeout=timeout, raise_on_error=True)
 
             # restore original remote URL
             utils.execute('git remote set-url origin %s' % url, cwd=repo_dir, out_prefix='', timeout=timeout, raise_on_error=True)
@@ -108,7 +115,7 @@ def run(step, **kwargs):  # pylint: disable=unused-argument
     # if restoring repo from bundle failed then do normal clone repo
     if not restore_ok:
         try:
-            ret, _ = utils.execute('git clone %s %s' % (url, dest), mask=access_token, out_prefix='', timeout=timeout)
+            ret, _ = utils.execute('git clone %s %s %s' % (cfg_params, url, dest), mask=access_token, out_prefix='', timeout=timeout)
             if ret != 0:
                 return ret, 'git clone exited with non-zero retcode'
         finally:

@@ -29,7 +29,7 @@ def _run(cmd, check=True, cwd=None, capture_output=False, text=None):
     return p
 
 
-def _retrieve_git_repo(tmpdir, repo_url, mc, minio_bucket, minio_repo_bundle_path):
+def _retrieve_git_repo(tmpdir, repo_url, git_cfg, mc, minio_bucket, minio_repo_bundle_path):
     # retrieve git repo bundle from minio
     repo_bundle_path = os.path.join(tmpdir, 'repo.bundle')
     log.info('try to retrieve repo bundle %s / %s -> %s', minio_bucket, minio_repo_bundle_path, repo_bundle_path)
@@ -43,12 +43,18 @@ def _retrieve_git_repo(tmpdir, repo_url, mc, minio_bucket, minio_repo_bundle_pat
             log.exception('retriving repo from bundle failed, skipping it')
         bundle_present = False
 
+    # prepare git config
+    cfg_params = []
+    for k, v in git_cfg.items():
+        cfg_params.append('-c %s=%s' % (k, v))
+    cfg_params = ' '.join(cfg_params)
+
     repo_dir = os.path.join(tmpdir, 'repo')
     restore_ok = False
     if bundle_present:
         try:
             # restore git repo bundle
-            _run('git clone %s repo' % repo_bundle_path, check=True, cwd=tmpdir)
+            _run('git clone %s %s repo' % (cfg_params, repo_bundle_path), check=True, cwd=tmpdir)
 
             # restore original remote URL
             _run('git remote set-url origin %s' % repo_url, check=True, cwd=repo_dir)
@@ -69,7 +75,7 @@ def _retrieve_git_repo(tmpdir, repo_url, mc, minio_bucket, minio_repo_bundle_pat
     if not restore_ok:
         # clone repo
         #cmd = "git clone --single-branch --branch %s '%s' repo" % (repo_branch, repo_url)
-        cmd = "git clone '%s' repo" % repo_url
+        cmd = "git clone %s '%s' repo" % (cfg_params, repo_url)
         p = _run(cmd, check=False, cwd=tmpdir, capture_output=True, text=True)
         if p.returncode != 0:
             err = "command '%s' returned non-zero exit status %d\n" % (cmd, p.returncode)
@@ -128,7 +134,7 @@ def _collect_commits_from_git_log(text):
     return commits
 
 
-def get_repo_commits_since(branch_id, prev_run, repo_url, repo_branch):
+def get_repo_commits_since(branch_id, prev_run, repo_url, repo_branch, git_cfg):
     log.info('checking commits in %s %s', repo_url, repo_branch)
 
     with tempfile.TemporaryDirectory(prefix='kraken-git-') as tmpdir:
@@ -138,7 +144,7 @@ def get_repo_commits_since(branch_id, prev_run, repo_url, repo_branch):
         minio_repo_bundle_path = '%s/repo.bundle' % minio_folder
 
         # retrieve repo from minio in bundle form or from remote git repository
-        repo_dir = _retrieve_git_repo(tmpdir, repo_url, mc, minio_bucket, minio_repo_bundle_path)
+        repo_dir = _retrieve_git_repo(tmpdir, repo_url, git_cfg, mc, minio_bucket, minio_repo_bundle_path)
 
         # get commits history
         cmd = "git log --no-merges --since='2 weeks ago' -n 20 --pretty=format:'commit:%H%nauthor:%an%nemail:%ae%ndate:%aI%nsubject:%s' --name-status"

@@ -680,6 +680,12 @@ schema = {
                             }, {
                                 "type": "string"
                             }]
+                        },
+                        "git_cfg": {
+                            "description": "Git config keys and values passed to -c of the clone command.",
+                            "additionalProperties": True,
+                            "properties": {
+                            }
                         }
                     }
                 },
@@ -850,6 +856,12 @@ schema = {
                                             "description": "A sleep time between subsequent execution attempts.",
                                             "default": 0,
                                             "type": "integer"
+                                        },
+                                        "git_cfg": {
+                                            "description": "Git config keys and values passed to -c of the clone command.",
+                                            "additionalProperties": True,
+                                            "properties": {
+                                            }
                                         }
                                     }
                                 },
