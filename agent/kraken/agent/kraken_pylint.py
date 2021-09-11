@@ -1,4 +1,4 @@
-# Copyright 2020 The Kraken Authors
+# Copyright 2020-2021 The Kraken Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
 
 import json
 import logging
+import tempfile
 
 import giturlparse
 
@@ -61,13 +62,21 @@ def run_analysis(step, report_issue=None):
     rcfile = step['rcfile']
     modules_or_packages = step['modules_or_packages']
     pylint_exe = step.get('pylint_exe', 'pylint')
-    cmd = '%s --exit-zero -f json --rcfile=%s %s' % (pylint_exe, rcfile, modules_or_packages)
-    ret, out = utils.execute(cmd, cwd=cwd, out_prefix='', timeout=180)
-    if ret != 0:
-        log.error('pylint exited with non-zero retcode: %s', ret)
-        return ret, 'pylint exited with non-zero retcode'
 
-    result = json.loads(out)
+    with tempfile.NamedTemporaryFile(suffix=".json", prefix="pylint-result-") as fh:
+        result_file = fh.name
+        cmd = 'sh -c "%s --exit-zero -f json --rcfile=%s %s > %s"' % (pylint_exe, rcfile, modules_or_packages, result_file)
+        ret, out = utils.execute(cmd, cwd=cwd, out_prefix='', timeout=180)
+
+        if ret != 0:
+            log.error('pylint exited with non-zero retcode: %s', ret)
+            return ret, 'pylint exited with non-zero retcode'
+
+        with open(result_file) as rf:
+            json_txt = rf.read()
+
+    result = json.loads(json_txt)
+
     for issue in result:
         log.info('%s:%s  %s', issue['path'], issue['line'], issue['message'])
         if git_url:
