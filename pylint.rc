@@ -147,7 +147,8 @@ disable=print-statement,
         bare-except,
         broad-except,
         no-self-use,
-        duplicate-code
+        duplicate-code,
+        unspecified-encoding
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
@@ -336,6 +337,7 @@ good-names=a,
            q1,
            q2,
            r,
+           rf,
            rx,
            s,
            sa,

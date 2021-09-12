@@ -56,7 +56,7 @@ def redeploy(c, kk_ver):
     c.run('docker container prune -f')
     c.run('docker image prune -a -f')
     c.run('docker builder prune -a -f')
-    c.run('docker volume prune -f')
+    #c.run('docker volume prune -f') TODO: this is too dangerous, it can deleted pgsql db
 
     # restart services
     # c.run('docker service update --force kraken_postgres')
