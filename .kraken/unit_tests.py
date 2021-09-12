@@ -45,7 +45,7 @@ def stage(ctx):
             "name": "pytest server",
             "steps": [{
                 "tool": "shell",
-                "cmd": "sudo apt-get update && sudo apt-get install -y --no-install-recommends apt-transport-https software-properties-common postgresql-client",
+                "cmd": "sudo apt-get update && sudo apt-get install -y --no-install-recommends apt-transport-https software-properties-common postgresql-client python3-pip python",
                 "timeout": 300
             }, {
                 "tool": "shell",
@@ -56,10 +56,6 @@ def stage(ctx):
                 "cmd": "docker run --name kkut -p 15432:5432 -e POSTGRES_DB=kkut -e POSTGRES_USER=kkut -e POSTGRES_PASSWORD=kkut postgres:11",
                 "background": True,
                 "timeout": 12400
-            }, {
-                "tool": "shell",
-                "cmd": "sudo apt update && sudo apt-get install -y python3-pip || ps axf",
-                "timeout": 300
             }, {
                 "tool": "artifacts",
                 "action": "download",
