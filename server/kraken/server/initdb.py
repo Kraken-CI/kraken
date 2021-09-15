@@ -38,8 +38,14 @@ INITIAL_SETTINGS = {
         'sentry_dsn': None  # password
     },
     'cloud': {
+        # AWS
         'aws_access_key': '',
-        'aws_secret_access_key': None  # password
+        'aws_secret_access_key': None,  # password
+        # Azure
+        'azure_subscription_id': '',
+        'azure_tenant_id': '',
+        'azure_client_id': '',
+        'azure_client_secret': None,  # password
     }
 }
 

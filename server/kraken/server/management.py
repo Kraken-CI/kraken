@@ -675,8 +675,13 @@ def get_azure_locations():
     credential = ClientSecretCredential(tenant_id=tenant_id, client_id=client_id, client_secret=client_secret)
     subscription_client = SubscriptionClient(credential)
     locations = subscription_client.subscriptions.list_locations(subscription_id)
+    locs = []
     for location in locations:
-        print(location.name)
+        locs.append(location.name)
+    locs.sort()
+
+    return {'items': locs, 'total': len(locs)}, 200
+
 
 def get_settings():
     settings = Setting.query.filter_by().all()

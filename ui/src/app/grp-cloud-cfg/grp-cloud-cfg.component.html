@@ -206,8 +206,6 @@
             <p-dropdown id="azure-vm-location"
                         [options]="azureLocations"
                         [(ngModel)]="deployment.azure_vm.location"
-                        optionLabel="RegionName"
-                        optionValue="RegionName"
                         [style]="{width: '100%'}"
                         [filter]="true"
                         (onChange)="azureLocationChange()"></p-dropdown>
@@ -232,7 +230,7 @@
           </div>
         </div>
         <div class="p-field p-grid">
-          <label for="defaultImage" class="p-col-fixed" style="width:100px">Default AMI Image</label>
+          <label for="defaultImage" class="p-col-fixed" style="width:100px">Default Image</label>
           <div class="p-col">
             <input id="defaultImage" type="text" [(ngModel)]="deployment.azure_vm.default_image" pInputText>
           </div>
