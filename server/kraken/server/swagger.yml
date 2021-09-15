@@ -1625,7 +1625,7 @@ paths:
       - Management
       summary: Get settings
       description: Get settings details
-      operationId: get_azure-locations
+      operationId: get_azure_locations
       responses:
         200:
           description: Settings details

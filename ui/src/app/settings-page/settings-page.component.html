@@ -114,8 +114,8 @@
                 (onClick)="checkResourceWorkingState('azure')"
                 [loading]="azureChecking"
                 styleClass="p-button-outlined p-button-secondary p-button-sm"></p-button>
-      <span [ngStyle]="{ 'color': (awsState === 'ok' ? '#2bc62b' : 'red'), 'font-size': '1.2rem', 'font-weight': 'bold', 'padding-left': '2em'  }">
-          {{ awsState }}
+      <span [ngStyle]="{ 'color': (azureState === 'ok' ? '#2bc62b' : 'red'), 'font-size': '1.2rem', 'font-weight': 'bold', 'padding-left': '2em'  }">
+          {{ azureState }}
       </span>
 
     </p-fieldset>

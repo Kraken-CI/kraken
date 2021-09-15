@@ -38,6 +38,9 @@ export class GrpCloudCfgComponent implements OnInit {
             // {name: 'Digital Ocean', val: 5},
             // {name: 'Linode', val: 6},
         ]
+
+        this.awsRegions = []
+        this.azureLocations = []
     }
 
     ngOnInit(): void {
@@ -65,6 +68,9 @@ export class GrpCloudCfgComponent implements OnInit {
         if (this.deployment.method === 2 || this.deployment.method === 3) {
             this.getAwsEc2Regions()
         }
+        if (this.deployment.method === 4) {
+            this.getAzureLocations()
+        }
     }
 
     regionChange() {
@@ -77,6 +83,15 @@ export class GrpCloudCfgComponent implements OnInit {
     }
 
     getAzureLocations() {
+        if (this.azureLocations.length === 0) {
+            this.managementService.getAzureLocations().subscribe((data) => {
+                this.azureLocations = data.items
+
+                //if (this.deployment.aws.region) {
+                //    this.regionChange()
+                //}
+            })
+        }
     }
 
     azureLocationChange() {
