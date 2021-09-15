@@ -154,7 +154,8 @@ def create_branch(project_id, body):
                 repo_url=stage.repo_url,
                 schema_file=stage.schema_file,
                 schema_from_repo_enabled=stage.schema_from_repo_enabled,
-                repo_refresh_interval=stage.repo_refresh_interval)
+                repo_refresh_interval=stage.repo_refresh_interval,
+                git_clone_params=stage.git_clone_params)
 
             if body['forking_model'] == 'model-1':
                 # forked branch continues numbering, old branch resets numbering
@@ -372,6 +373,8 @@ def update_stage(stage_id, body):
                     abort(400, 'Incorrect repo refresh interval value')
             stage.repo_refresh_interval = body['repo_refresh_interval']
             log.info('stage.repo_refresh_interval %s', stage.repo_refresh_interval)
+        if 'git_clone_params' in body:
+            stage.git_clone_params = body['git_clone_params']
 
         stage.repo_state = consts.REPO_STATE_REFRESHING
         stage.repo_error = ''

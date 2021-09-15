@@ -879,7 +879,8 @@ def refresh_schema_repo(stage_id, complete_starting_run_id=None):
 
         try:
             # get schema from repo
-            schema_code, version = gitops.get_schema_from_repo(stage.repo_url, stage.repo_branch, stage.repo_access_token, stage.schema_file)
+            schema_code, version = gitops.get_schema_from_repo(stage.repo_url, stage.repo_branch, stage.repo_access_token,
+                                                               stage.schema_file, stage.git_clone_params)
 
             # check schema
             schema_code, schema = check_and_correct_stage_schema(stage.branch, stage.name, schema_code)

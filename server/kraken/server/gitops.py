@@ -181,10 +181,10 @@ def get_repo_commits_since(branch_id, prev_run, repo_url, repo_branch, git_cfg):
     return commits, base_commit
 
 
-def get_schema_from_repo(repo_url, repo_branch, repo_access_token, schema_file):  # pylint: disable=unused-argument
+def get_schema_from_repo(repo_url, repo_branch, repo_access_token, schema_file, git_clone_params):  # pylint: disable=unused-argument
     with  tempfile.TemporaryDirectory(prefix='kraken-git-') as tmpdir:
         # clone repo
-        cmd = "git clone --depth 1 --single-branch --branch %s '%s' repo" % (repo_branch, repo_url)
+        cmd = "git clone --depth 1 --single-branch --branch %s %s '%s' repo" % (repo_branch, git_clone_params, repo_url)
         p = _run(cmd, check=False, cwd=tmpdir, capture_output=True, text=True)
         if p.returncode != 0:
             err = "command '%s' returned non-zero exit status %d\n" % (cmd, p.returncode)

@@ -66,6 +66,7 @@ export class BranchMgmtComponent implements OnInit {
         repo_access_token: new FormControl(''),
         schema_file: new FormControl(''),
         repo_refresh_interval: new FormControl(''),
+        git_clone_params: new FormControl(''),
     })
 
     sequences = []
@@ -148,6 +149,7 @@ export class BranchMgmtComponent implements OnInit {
             repo_access_token: stage.repo_access_token,
             schema_file: stage.schema_file,
             repo_refresh_interval: stage.repo_refresh_interval,
+            git_clone_params: stage.git_clone_params,
         }
         this.schemaFromRepoForm.setValue(val)
 

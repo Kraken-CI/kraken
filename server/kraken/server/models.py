@@ -210,6 +210,7 @@ class Stage(db.Model, DatesMixin):
     repo_access_token = Column(UnicodeText)
     repo_branch = Column(UnicodeText)
     repo_url = Column(UnicodeText)
+    git_clone_params = Column(UnicodeText)
     schema_file = Column(UnicodeText)
     schema_from_repo_enabled = Column(Boolean, default=False)
     repo_error = Column(UnicodeText)
@@ -235,6 +236,7 @@ class Stage(db.Model, DatesMixin):
                     repo_state=self.repo_state,
                     repo_error=self.repo_error,
                     repo_refresh_interval=self.repo_refresh_interval,
+                    git_clone_params=self.git_clone_params,
                     repo_version=self.repo_version,
                     schema_file=self.schema_file)
 
