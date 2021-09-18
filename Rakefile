@@ -1,9 +1,24 @@
 require 'json'
 
+# Check host OS
+UNAME=`uname -s`
+
+case UNAME.rstrip
+  when "Darwin"
+    sysname = "Darwin"
+    sysnamel = "darwin"
+  when "Linux"
+    sysname = "Linux"
+    sysnamel = "linux"
+  else
+    puts "ERROR: Unknown/unsupported OS: %s" % UNAME
+    fail
+  end
+
 TOOLS_DIR = File.expand_path('tools')
 NODE_VER = 'v12.19.0'
-ENV['PATH'] = "#{TOOLS_DIR}/node-#{NODE_VER}-linux-x64/bin:#{ENV['PATH']}"
-NPX = "#{TOOLS_DIR}/node-#{NODE_VER}-linux-x64/bin/npx"
+ENV['PATH'] = "#{TOOLS_DIR}/node-#{NODE_VER}-#{sysnamel}-x64/bin:#{ENV['PATH']}"
+NPX = "#{TOOLS_DIR}/node-#{NODE_VER}-#{sysnamel}-x64/bin/npx"
 NG = File.expand_path('ui/node_modules/.bin/ng')
 OPENAPI_GENERATOR_VER = '5.0.0'
 OPENAPI_GENERATOR = "#{TOOLS_DIR}/swagger-codegen-cli-#{OPENAPI_GENERATOR_VER}.jar"
@@ -22,9 +37,10 @@ LOCALHOST_IP=ENV['LOCALHOST_IP'] || '192.168.0.89'
 CLICKHOUSE_ADDR="#{LOCALHOST_IP}:9001"
 MINIO_ADDR="#{LOCALHOST_IP}:9999"
 
+
 file DOCKER_COMPOSE do
   sh "mkdir -p #{TOOLS_DIR}"
-  sh "wget -nv https://github.com/docker/compose/releases/download/#{DOCKER_COMPOSE_VER}/docker-compose-Linux-x86_64 -O #{DOCKER_COMPOSE}"
+  sh "wget -nv https://github.com/docker/compose/releases/download/#{DOCKER_COMPOSE_VER}/docker-compose-#{sysname}-x86_64 -O #{DOCKER_COMPOSE}"
   sh "chmod a+x #{DOCKER_COMPOSE}"
 end
 
@@ -60,7 +76,7 @@ end
 file NPX do
   sh "mkdir -p #{TOOLS_DIR}"
   Dir.chdir(TOOLS_DIR) do
-    sh "wget -nv https://nodejs.org/dist/#{NODE_VER}/node-#{NODE_VER}-linux-x64.tar.xz -O #{TOOLS_DIR}/node.tar.xz"
+    sh "wget -nv https://nodejs.org/dist/#{NODE_VER}/node-#{NODE_VER}-#{sysnamel}-x64.tar.xz -O #{TOOLS_DIR}/node.tar.xz"
     sh "tar -Jxf node.tar.xz"
   end
 end
