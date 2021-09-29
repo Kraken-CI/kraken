@@ -1475,6 +1475,45 @@ paths:
         200:
           description: Successfully deleted agent
           content: {}
+  /agents/{agent_id}/jobs:
+    get:
+      tags:
+      - Execution
+      summary: List jobs executed by given agent
+      operationId: get_agent_jobs
+      parameters:
+      - name: agent_id
+        in: path
+        description: ID of agent
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: start
+        in: query
+        description: How many items to return at one time (max 100)
+        schema:
+          type: integer
+          format: int32
+      - name: limit
+        in: query
+        description: How many items to return at one time (max 100)
+        schema:
+          type: integer
+          format: int32
+      responses:
+        200:
+          description: A paged array of runs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Jobs'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
   /groups:
     get:
       tags:
@@ -1633,6 +1672,27 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AzureLocations'
+  /azure-vm-sizes/{location}:
+    get:
+      tags:
+      - Management
+      summary: Get settings
+      description: Get settings details
+      operationId: get_azure_vm_sizes
+      parameters:
+      - name: location
+        in: path
+        description: ID of group
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Settings details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AzureVmSizes'
   /settings:
     get:
       tags:
@@ -2366,6 +2426,16 @@ components:
           type: integer
           format: int64
     AzureLocations:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: string
+        total:
+          type: integer
+          format: int64
+    AzureVmSizes:
       type: object
       properties:
         items:

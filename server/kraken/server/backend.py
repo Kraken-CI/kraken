@@ -33,6 +33,7 @@ from . import minioops
 from .. import version
 from . import kkrq
 from . import utils
+from . import dbutils
 
 log = logging.getLogger(__name__)
 
@@ -371,29 +372,46 @@ def _handle_step_result(agent, req):
         job.finished = utils.utcnow()
         agent.job = None
 
-        # check if aws machine should be destroyed now
-        aws = None
-        for aa in agent.agents_groups:
-            ag = aa.agents_group
-            if not ag.deployment:
-                continue
-
+        # check if cloud machine should be destroyed now
+        ag = dbutils.find_cloud_assignment_group(agent)
+        if ag:
+            # aws ec2
             if ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2:
                 depl = ag.deployment['aws']
 
                 if depl and 'destruction_after_jobs' in depl and int(depl['destruction_after_jobs']) > 0:
                     max_jobs = int(depl['destruction_after_jobs'])
-                    jobs_num = Job.query.filter_by(agent_used=agent).count()
+                    q = Job.query.filter_by(agent_used=agent)
+                    q = q.filter(Job.finished.isnot(None))
+                    q = q.filter(Job.finished > agent.created)
+                    jobs_num = q.count()
                     log.info('JOB %s, num %d, max %d', job.id, jobs_num, max_jobs)
                     if jobs_num >= max_jobs:
                         agent.disabled = True
                         kkrq.enq(bg_jobs.destroy_machine, agent.id)
 
+            # aws ecs fargate
             elif ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS_ECS_FARGATE:
                 depl = ag.deployment['aws_ecs_fargate']
                 log.info('ECS FARGATE JOB %s - destroying task', job.id)
                 agent.disabled = True
                 kkrq.enq(bg_jobs.destroy_machine, agent.id)
+
+            # azure vm
+            elif ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AZURE_VM:
+                depl = ag.deployment['azure_vm']
+
+                if depl and 'destruction_after_jobs' in depl and int(depl['destruction_after_jobs']) > 0:
+                    max_jobs = int(depl['destruction_after_jobs'])
+                    q = Job.query.filter_by(agent_used=agent)
+                    q = q.filter(Job.finished.isnot(None))
+                    q = q.filter(Job.finished > agent.created)
+                    jobs_num = q.count()
+                    log.info('JOB %s, num %d, max %d', job.id, jobs_num, max_jobs)
+                    if jobs_num >= max_jobs:
+                        agent.disabled = True
+                        kkrq.enq(bg_jobs.destroy_machine, agent.id)
+                        log.info('*' * 300)
 
         db.session.commit()
         kkrq.enq(bg_jobs.job_completed, job.id)
@@ -518,14 +536,22 @@ def _handle_keep_alive(agent, req):  # pylint: disable=unused-argument
 
 def _handle_unknown_agent(address, ip_address, agent):
     try:
+        new = False
         if agent:
-            agent.deleted = None
+            now = utils.utcnow()
+            if agent.deleted:
+                log.info('undeleting agent %s with address %s', agent, address)
+                agent.deleted = None
+                agent.created = now
             agent.authorized = False
             agent.ip_address = ip_address
-            agent.last_seen = utils.utcnow()
+            agent.last_seen = now
         else:
-            Agent(name=address, address=address, authorized=False, ip_address=ip_address, last_seen=utils.utcnow())
+            agent = Agent(name=address, address=address, authorized=False, ip_address=ip_address, last_seen=utils.utcnow())
+            new = True
         db.session.commit()
+        if new:
+            log.info('created new agent instance %s for address %s', agent, address)
     except Exception as e:
         log.warning('IGNORED EXCEPTION: %s', str(e))
 
@@ -550,7 +576,6 @@ def serve_agent_request():
         return json.dumps({})
 
     agent.last_seen = utils.utcnow()
-    agent.deleted = None
     db.session.commit()
 
     if not agent.authorized:

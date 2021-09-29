@@ -16,6 +16,7 @@ import time
 import base64
 import random
 import logging
+import datetime
 
 # AWS
 import boto3
@@ -29,16 +30,60 @@ from azure.mgmt.network import NetworkManagementClient
 from azure.mgmt.network.models import SecurityRuleAccess, SecurityRuleDirection, SecurityRuleProtocol
 from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.subscription import SubscriptionClient
+from azure.mgmt.monitor import MonitorManagementClient
 
 import requests
 from sqlalchemy.orm.attributes import flag_modified
+from sqlalchemy.exc import IntegrityError
+from psycopg2.errors import UniqueViolation  # pylint: disable=no-name-in-module
 
 from .models import db
 from .models import Agent, AgentAssignment, get_setting
 from . import utils
+from . import consts
+
 
 log = logging.getLogger(__name__)
 
+azr_logger = logging.getLogger('azure')
+azr_logger.setLevel(logging.WARNING)
+
+
+def _create_agent(params, ag):
+    now = utils.utcnow()
+    params['last_seen'] = now
+    params['authorized'] = True
+    params['disabled'] = False
+
+    try:
+        a = Agent(**params)
+        db.session.commit()
+        log.info('created new agent %s', a)
+    except Exception:
+        db.session.rollback()
+        a = Agent.query.filter_by(address=params['address']).one_or_none()
+        log.info('using existing agent %s', a)
+        if a:
+            a.created = now
+            if a.deleted:
+                log.info('undeleting agent %s', a)
+                a.deleted = None
+            for f, val in params.items():
+                setattr(a, f, val)
+            db.session.commit()
+        else:
+            log.info('agent %s duplicated but cannot find it', params['address'])
+            raise
+
+    try:
+        AgentAssignment(agent=a, agents_group=ag)
+        db.session.commit()
+    except IntegrityError as e:
+        db.session.rollback()
+        if not isinstance(e.orig, UniqueViolation):
+            raise
+
+    return a
 
 
 # AWS EC2 ###################################################################
@@ -67,12 +112,28 @@ def check_aws_settings():
     return 'ok'
 
 
-def create_ec2_vms(aws, access_key, secret_access_key,
-                   ag, system, num,
+def login_to_aws():
+    access_key = get_setting('cloud', 'aws_access_key')
+    secret_access_key = get_setting('cloud', 'aws_secret_access_key')
+    settings = ['access_key', 'secret_access_key']
+    for s in settings:
+        val = locals()[s]
+        if not val:
+            log.error('AWS %s is empty, please set it in global cloud settings', s)
+            return None
+
+    return dict(aws_access_key_id=access_key, aws_secret_access_key=secret_access_key)
+
+
+def create_ec2_vms(aws, ag, system, num,
                    server_url, minio_addr, clickhouse_addr):
+    credential = login_to_aws()
+    if not credential:
+        return
+
     region = aws['region']
-    ec2 = boto3.client("ec2", region_name=region, aws_access_key_id=access_key, aws_secret_access_key=secret_access_key)
-    ec2_res = boto3.resource('ec2', region_name=region, aws_access_key_id=access_key, aws_secret_access_key=secret_access_key)
+    ec2 = boto3.client("ec2", region_name=region, **credential)
+    ec2_res = boto3.resource('ec2', region_name=region, **credential)
 
     # get key pair
     if not ag.extra_attrs:
@@ -172,7 +233,6 @@ def create_ec2_vms(aws, access_key, secret_access_key,
 
     sys_id = system.id if system.executor == 'local' else 0
 
-    now = utils.utcnow()
     for i in instances:
         try:
             i.wait_until_running()
@@ -182,35 +242,21 @@ def create_ec2_vms(aws, access_key, secret_access_key,
         i.load()
         name = '.'.join(i.public_dns_name.split('.')[:2])
         address = i.private_ip_address
-        a = None
         params = dict(name=name,
                       address=address,
                       ip_address=i.public_ip_address,
-                      extra_attrs=dict(system=sys_id, instance_id=i.id),
-                      authorized=True,
-                      last_seen=now)
-        try:
-            a = Agent(**params)
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
-            a = Agent.query.filter_by(deleted=None, address=address).one_or_none()
-            if a:
-                for f, val in params.items():
-                    setattr(a, f, val)
-                db.session.commit()
-            else:
-                log.info('agent %s duplicated but cannot find it', address)
-                raise
-
-        AgentAssignment(agent=a, agents_group=ag)
-        db.session.commit()
+                      extra_attrs=dict(system=sys_id, instance_id=i.id))
+        a = _create_agent(params, ag)
         log.info('spawned new agent %s on EC2 instance %s', a, i)
 
 
-def destroy_aws_ec2_vm(access_key, secret_access_key, depl, agent):
+def destroy_aws_ec2_vm(depl, agent, group):
+    credential = login_to_aws()
+    if not credential:
+        return
+
     region = depl['region']
-    ec2 = boto3.resource('ec2', region_name=region, aws_access_key_id=access_key, aws_secret_access_key=secret_access_key)
+    ec2 = boto3.resource('ec2', region_name=region, **credential)
 
     instance_id = agent.extra_attrs['instance_id']
     log.info('terminate ec2 vm %s', instance_id)
@@ -221,14 +267,99 @@ def destroy_aws_ec2_vm(access_key, secret_access_key, depl, agent):
         log.exception('IGNORED EXCEPTION')
 
 
+def aws_ec2_vm_exists(agent):
+    credential = cloud.login_to_aws()
+    if not credential:
+        raise Exception('wrong aws credential')
+    region = depl['region']
+    ec2 = boto3.resource('ec2', region_name=region, **credential)
+
+    instance_id = agent.extra_attrs['instance_id']
+    try:
+        # try to get instance, if missing then raised exception will cause return False
+        i = ec2.Instance(instance_id)
+        i.state  # pylint: disable=pointless-statement
+        if i.state['Name'] == 'terminated':
+            # if instance exists theb raising an exception and it will cause return False
+            raise Exception('terminated')
+    except Exception:
+        return False
+
+    return True
+
+
+def aws_ec2_cleanup_dangling_vms(depl, ag):
+    credential = login_to_aws()
+    if not credential:
+        return 0, 0, 0, 0, 0
+
+    region = depl['region']
+    ec2 = boto3.resource('ec2', region_name=region, **credential)
+
+    now = utils.utcnow()
+
+    try:
+        vms = ec2.instances.filter(Filters=[{'Name': 'tag:kraken-group', 'Values': ['%d' % ag.id]}])
+        vms = list(vms)
+    except Exception:
+        log.exception('IGNORED EXCEPTION')
+        return 0, 0, 0, 0, 0
+
+    instances = 0
+    terminated_instances = 0
+    assigned_instances = 0
+    orphaned_instances = 0
+    orphaned_terminated_instances = 0
+
+    for vm in vms:
+        instances += 1
+        # if terminated then skip it
+        if vm.state['Name'] == 'terminated':
+            terminated_instances += 1
+            continue
+
+        # if assigned to some agent then skip it
+        assigned = False
+        for aa in ag.agents:
+            agent = aa.agent
+            if agent.extra_attrs and 'instance_id' in agent.extra_attrs and agent.extra_attrs['instance_id'] == vm.id:
+                assigned = True
+                break
+        if assigned:
+            assigned_instances += 1
+            continue
+
+        # instances have to be old enough to avoid race condition with
+        # case when instances are being created but not yet assigned to agents
+        lt = vm.launch_time.replace(tzinfo=pytz.utc)
+        if now - lt < datetime.timedelta(minutes=10):
+            continue
+
+        # the instance is not terminated, not assigned, old enough
+        # so delete it as it seems to be a lost instance
+        log.info('terminating lost aws ec2 instance %s', vm.id)
+        orphaned_instances += 1
+        try:
+            vm.terminate()
+        except Exception:
+            log.exception('IGNORED EXCEPTION')
+
+        orphaned_terminated_instances += 1
+
+    return instances, terminated_instances, assigned_instances, orphaned_instances, orphaned_terminated_instances
+
+
 # AWS ECS FARGATE #############################################################
 
-def create_aws_ecs_fargate_tasks(aws, access_key, secret_access_key,
-                                 ag, system, num,
+def create_aws_ecs_fargate_tasks(aws, ag, system, num,
                                  server_url, minio_addr, clickhouse_addr):
+    credential = login_to_aws()
+    if not credential:
+        return
+
     region = aws['region']
-    ec2 = boto3.client("ec2", region_name=region, aws_access_key_id=access_key, aws_secret_access_key=secret_access_key)
-    ecs = boto3.client('ecs', region_name=region, aws_access_key_id=access_key, aws_secret_access_key=secret_access_key)
+    ec2 = boto3.client("ec2", region_name=region, **credential)
+    ecs = boto3.client('ecs', region_name=region, **credential)
 
     system_norm = system.name.replace(':', '_').replace('/', '_').replace('.', '_')
     task_def_name = 'kraken-agent-1-%s' % system_norm
@@ -357,38 +488,23 @@ def create_aws_ecs_fargate_tasks(aws, access_key, secret_access_key,
 
     sys_id = system.id if system.executor == 'local' else 0
 
-    now = utils.utcnow()
     for task in tasks_ready:
         address = task['address']
-        a = None
         params = dict(name=task['name'],
                       address=address,
                       ip_address=task['ip_address'],
-                      extra_attrs=dict(system=sys_id, task_arn=task['task_arn']),
-                      authorized=True,
-                      last_seen=now)
-        try:
-            a = Agent(**params)
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
-            a = Agent.query.filter_by(deleted=None, address=address).one_or_none()
-            if a:
-                for f, val in params.items():
-                    setattr(a, f, val)
-                db.session.commit()
-            else:
-                log.info('agent %s duplicated but cannot find it', address)
-                raise
-
-        AgentAssignment(agent=a, agents_group=ag)
-        db.session.commit()
+                      extra_attrs=dict(system=sys_id, task_arn=task['task_arn']))
+        a = _create_agent(params, ag)
         log.info('spawned new agent %s on ECS Fargate task %s', a, task)
 
 
-def destroy_aws_ecs_task(access_key, secret_access_key, depl, agent):
+def destroy_aws_ecs_task(depl, agent, group):
+    credential = login_to_aws()
+    if not credential:
+        return
+
     region = depl['region']
-    ecs = boto3.client('ecs', region_name=region, aws_access_key_id=access_key, aws_secret_access_key=secret_access_key)
+    ecs = boto3.client('ecs', region_name=region, **credential)
 
     task_arn = agent.extra_attrs['task_arn']
     log.info('terminate ecs task %s', task_arn)
@@ -434,16 +550,41 @@ def check_azure_settings():
     return 'ok'
 
 
-def _create_azure_vm(group_name, location,
+def login_to_azure():
+    subscription_id = get_setting('cloud', 'azure_subscription_id')
+    tenant_id = get_setting('cloud', 'azure_tenant_id')
+    client_id = get_setting('cloud', 'azure_client_id')
+    client_secret = get_setting('cloud', 'azure_client_secret')
+    settings = ['subscription_id', 'tenant_id', 'client_id', 'client_secret']
+    for s in settings:
+        val = locals()[s]
+        if not val:
+            log.error('Azure %s is empty, please set it in global cloud settings', s)
+            return None, None
+
+    credential = ClientSecretCredential(tenant_id=tenant_id, client_id=client_id, client_secret=client_secret)
+    return credential, subscription_id
+
+
+def _create_azure_vm(ag, depl, system,
                      server_url, minio_addr, clickhouse_addr,
                      credential, subscription_id):
     instance_id = str(random.randrange(9999999999))
 
-    print(f"Provisioning a virtual machine...some operations might take a minute or two.")
+    location = depl['location']
+    vm_size = depl['vm_size']
+
+    sys_parts = system.name.split(':')
+    if len(sys_parts) != 4:
+        log.warning('incorrect system image name %s, Azure image name should have form <publisher>:<offer>:<sku>:<version>',
+                    system.name)
+        return
+
+    log.info(f"Provisioning a virtual machine...some operations might take a minute or two.")
 
     # Step 1: Provision a resource group
 
-    # Obtain the management object for resources, using the credentials from the CLI login.
+    # Obtain the management object for resources, using the credential from the CLI login.
     resource_client = ResourceManagementClient(credential, subscription_id)
 
     # Provision the resource groups.
@@ -454,16 +595,16 @@ def _create_azure_vm(group_name, location,
             "location": location
         }
     )
-    print(f"Provisioned global resource group {rg_result.name} in the {rg_result.location} region")
+    log.info(f"Provisioned global resource group {rg_result.name} in the {rg_result.location} region")
 
-    group_rg = "kraken-%s-rg" % group_name
+    group_rg = "kraken-%d-rg" % ag.id
     rg_result = resource_client.resource_groups.create_or_update(
         group_rg,
         {
             "location": location
         }
     )
-    print(f"Provisioned resource group {rg_result.name} in the {rg_result.location} region")
+    log.info(f"Provisioned resource group {rg_result.name} in the {rg_result.location} region")
 
 
     # For details on the previous code, see Example: Provision a resource group
@@ -506,7 +647,7 @@ def _create_azure_vm(group_name, location,
 
         vnet_result = poller.result()
 
-    print(f"Provisioned virtual network {vnet_result.name} with address prefixes {vnet_result.address_space.address_prefixes}")
+    log.info(f"Provisioned virtual network {vnet_result.name} with address prefixes {vnet_result.address_space.address_prefixes}")
 
     #########
     security_group_name = 'kraken-nsg'
@@ -565,7 +706,7 @@ def _create_azure_vm(group_name, location,
         )
         subnet_result = poller.result()
 
-    print(f"Provisioned virtual subnet {subnet_result.name} with address prefix {subnet_result.address_prefix}")
+    log.info(f"Provisioned virtual subnet {subnet_result.name} with address prefix {subnet_result.address_prefix}")
 
     # Step 4: Provision an IP address and wait for completion
     poller = network_client.public_ip_addresses.begin_create_or_update(
@@ -580,7 +721,7 @@ def _create_azure_vm(group_name, location,
     )
     ip_address_result = poller.result()
 
-    print(f"Provisioned public IP address {ip_address_result.name} with address {ip_address_result.ip_address}")
+    log.info(f"Provisioned public IP address {ip_address_result.name} with address {ip_address_result.ip_address}")
 
     # Step 5: Provision the network interface client
     poller = network_client.network_interfaces.begin_create_or_update(
@@ -599,7 +740,7 @@ def _create_azure_vm(group_name, location,
 
     nic_result = poller.result()
 
-    print(f"Provisioned network interface client {nic_result.name}")
+    log.info(f"Provisioned network interface client {nic_result.name}")
 
     # Step 6: Provision the virtual machine
 
@@ -609,7 +750,7 @@ def _create_azure_vm(group_name, location,
     USERNAME = "kraken"
     PASSWORD = "kraken123!"
 
-    print(f"Provisioning virtual machine {vm_name}; this operation might take a few minutes.")
+    log.info(f"Provisioning virtual machine {vm_name}; this operation might take a few minutes.")
 
     # Provision the VM specifying only minimal arguments, which defaults to an Ubuntu 18.04 VM
     # on a Standard DS1 v2 plan with a public IP address and a default virtual network/subnet.
@@ -629,14 +770,15 @@ def _create_azure_vm(group_name, location,
             "location": location,
             "storage_profile": {
                 "image_reference": {
-                    "publisher": 'Canonical',
-                    "offer": "0001-com-ubuntu-server-focal",
-                    "sku": "20_04-lts",
-                    "version": "latest"
+                    "publisher": sys_parts[0],  # 'Canonical',
+                    "offer": sys_parts[1],  # "0001-com-ubuntu-server-focal",
+                    "sku": sys_parts[2],  # "20_04-lts",
+                    "version": sys_parts[3]  # "latest"
                 }
+                #"image_reference": "Canonical:0001-com-ubuntu-server-focal:20_04-lts:20.04.202109080"
             },
             "hardware_profile": {
-                "vm_size": "Standard_B1ls"
+                "vm_size": vm_size
             },
             "os_profile": {
                 "computer_name": vm_name,
@@ -654,97 +796,204 @@ def _create_azure_vm(group_name, location,
 
     vm_result = poller.result()
 
-    print(f"Provisioned virtual machine {vm_result.name}")
+    log.info(f"Provisioned Azure virtual machine {vm_result.name}")
 
     # VM params
+    sys_id = system.id if system.executor == 'local' else 0
     address = nic_result.ip_configurations[0].private_ip_address
     params = dict(name=vm_name,
                   address=address,
                   ip_address=ip_address_result.ip_address,
                   extra_attrs=dict(
-                      system='sys_id',
-                      instance_id=instance_id),
-                  authorized=True,
-                  last_seen='now')
-    print(params)
-    return params
+                      system=sys_id,
+                      instance_id=instance_id))
+
+    a = _create_agent(params, ag)
+    log.info('spawned new agent %s on Azure VM instance %s at %s', a, vm_result.name, a.created)
 
 
-def create_azure_vms(depl, access_key, secret_access_key,
-                     ag, system, num,
+def create_azure_vms(depl, ag, system, num,
                      server_url, minio_addr, clickhouse_addr):
 
     # Acquire a credential object using service principal authentication.
-    subscription_id = 'a80e8684-5866-41ef-ac39-e4058f7a490f'
-    tenant_id = '698e4063-ab0b-469b-b755-0204bc97db4b'
-    client_id = 'a756f034-5c2b-4cc1-98a7-a24bff5238bb'
-    client_secret = '2xEtx7CHJ.jloWrX5p7p5lL-IW._y.t07U'
-    credential = ClientSecretCredential(tenant_id=tenant_id, client_id=client_id, client_secret=client_secret)
+    credential, subscription_id = login_to_azure()
+    if not credential:
+        return
 
-    _create_azure_vm(group_name, location,
-                     server_url, minio_addr, clickhouse_addr,
-                     credential, subscription_id)
+    for i in range(num):
+        _create_azure_vm(ag, depl, system,
+                         server_url, minio_addr, clickhouse_addr,
+                         credential, subscription_id)
 
 
-def delete_azure_vm(group_name, vm_name, instance_id):
-    log.info('deleting azure vm: %s', vm_name)
+def _destroy_azure_vm(rg, vm_name, instance_id, cc, nc):
+    try:
+        vm = cc.virtual_machines.get(rg, vm_name)
+        disk_name = vm.storage_profile.os_disk.name
+        cc.virtual_machines.begin_delete(rg, vm_name).wait()
+        cc.disks.begin_delete(rg, disk_name)
+    except azure.core.exceptions.ResourceNotFoundError:
+        log.info('azure vm %s already missing', vm_name)
 
-    rg = 'kraken-%s-rg' % group_name
-
-    # Acquire a credential object using service principal authentication.
-    subscription_id = 'a80e8684-5866-41ef-ac39-e4058f7a490f'
-    tenant_id = '698e4063-ab0b-469b-b755-0204bc97db4b'
-    client_id = 'a756f034-5c2b-4cc1-98a7-a24bff5238bb'
-    client_secret = '2xEtx7CHJ.jloWrX5p7p5lL-IW._y.t07U'
-    credential = ClientSecretCredential(tenant_id=tenant_id, client_id=client_id, client_secret=client_secret)
-
-    cc = ComputeManagementClient(credential, subscription_id)
-    vm = cc.virtual_machines.get(rg, vm_name)
-    disk_name = vm.storage_profile.os_disk.name
-    cc.virtual_machines.begin_delete(rg, vm_name).wait()
-    cc.disks.begin_delete(rg, disk_name)
-
-    ip_config_name = "kraken-%s-ip-config" % instance_id
-    ip_name = "kraken-%s-ip" % instance_id
     nic_name = "kraken-%s-nic" % instance_id
-    nc = NetworkManagementClient(credential, subscription_id)
-    nc.network_interfaces.begin_delete(rg, nic_name).wait()
-    nc.public_ip_addresses.begin_delete(rg, ip_name).wait()
+    try:
+        nc.network_interfaces.begin_delete(rg, nic_name).wait()
+    except azure.core.exceptions.ResourceNotFoundError:
+        log.info('azure nic %s already missing', nic_name)
+
+    # ip_config_name = "kraken-%s-ip-config" % instance_id
+    ip_name = "kraken-%s-ip" % instance_id
+    try:
+        nc.public_ip_addresses.begin_delete(rg, ip_name).wait()
+    except azure.core.exceptions.ResourceNotFoundError:
+        log.info('azure ip %s already missing', ip_name)
 
     log.info('deleted azure vm: %s', vm_name)
+
+
+def destroy_azure_vm(depl, agent, ag):
+    instance_id = agent.extra_attrs['instance_id']
+    vm_name = "kraken-agent-%s-vm" % instance_id
+    rg = 'kraken-%d-rg' % ag.id
+
+    log.info('deleting azure vm: %s', vm_name)
+
+    # Acquire a credential object using service principal authentication.
+    credential, subscription_id = login_to_azure()
+    if not credential:
+        return
+
+    cc = ComputeManagementClient(credential, subscription_id)
+    nc = NetworkManagementClient(credential, subscription_id)
+
+    _destroy_azure_vm(rg, vm_name, instance_id, cc, nc)
+
+
+def azure_vm_exists(agent):
+    instance_id = agent.extra_attrs['instance_id']
+    ag = dbutils.find_cloud_assignment_group(agent)
+    if not ag:
+        return False
+    rg = 'kraken-%d-rg' % ag.id
+
+    credential, subscription_id = login_to_azure()
+    if not credential:
+        raise Exception('wrong azure credential')
+
+    cc = ComputeManagementClient(credential, subscription_id)
+    try:
+        vm = cc.virtual_machines.get(rg, vm_name)
+    except azure.core.exceptions.ResourceNotFoundError:
+        return False
+
+    return True
+
+
+def azure_vm_cleanup_dangling_vms(depl, ag):
+    credential, subscription_id = login_to_azure()
+    if not credential:
+        return 0, 0, 0, 0, 0
+
+    cc = ComputeManagementClient(credential, subscription_id)
+    mc = MonitorManagementClient(credential, subscription_id)
+    nc = NetworkManagementClient(credential, subscription_id)
+
+    rg = 'kraken-%d-rg' % ag.id
+    now = utils.utcnow()
+
+    try:
+        vms = cc.virtual_machines.list(rg)
+    except azure.core.exceptions.ResourceNotFoundError:
+        return 0, 0, 0, 0, 0
+
+    instances = 0
+    terminated_instances = 0
+    assigned_instances = 0
+    orphaned_instances = 0
+    orphaned_terminated_instances = 0
+
+    for vm in vms:
+        instances += 1
+
+        # if vm is being deleted then skip it
+        vm2 = cc.virtual_machines.instance_view(rg, vm.name)
+        log.info('vm %s statuses:', vm.name)
+        skip = False
+        for s in vm2.statuses:
+            log.info(s.code)
+            if s.code == 'ProvisioningState/deleting':
+                skip = True
+                break
+        if skip:
+            continue
+
+        # if assigned to some agent then skip it
+        assigned = False
+        for aa in ag.agents:
+            agent = aa.agent
+            if agent.extra_attrs and 'instance_id' in agent.extra_attrs:
+                instance_id = agent.extra_attrs['instance_id']
+                vm_name = "kraken-agent-%s-vm" % instance_id
+                if vm_name == vm.name:
+                    assigned = True
+                    break
+        if assigned:
+            assigned_instances += 1
+            continue
+
+        # instances have to be old enough to avoid race condition with
+        # case when instances are being created but not yet assigned to agents
+        fltr = " and ".join([ "eventTimestamp ge '{}T00:00:00Z'".format(now.date()),
+                              "resourceUri eq '%s'" % vm.id ])
+        created_at = None
+        for l in mc.activity_logs.list(filter=fltr, select="eventTimestamp"):
+            created_at = l.event_timestamp
+        if not created_at or now - created_at < datetime.timedelta(minutes=10):
+            continue
+
+        # the instance is not terminated, not assigned, old enough
+        # so delete it as it seems to be a lost instance
+        log.info('terminating lost azure vm instance %s', vm_name)
+        orphaned_instances += 1
+        try:
+            _destroy_azure_vm(rg, vm_name, instance_id, cc, nc)
+        except Exception:
+            log.exception('IGNORED EXCEPTION')
+
+        orphaned_terminated_instances += 1
+
+    return instances, terminated_instances, assigned_instances, orphaned_instances, orphaned_terminated_instances
 
 
 ####################################################################
 
 
-def create_machines(depl, access_key, secret_access_key,
-                   ag, system, num,
+def create_machines(depl, ag, system, num,
                    server_url, minio_addr, clickhouse_addr):
     method = ag.deployment['method']
     if method == consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2:
-        create_ec2_vms(depl, access_key, secret_access_key,
-                       ag, system, num,
+        create_ec2_vms(depl, ag, system, num,
                        server_url, minio_addr, clickhouse_addr)
 
     elif method == consts.AGENT_DEPLOYMENT_METHOD_AWS_ECS_FARGATE:
-        create_aws_ecs_fargate_tasks(depl, access_key, secret_access_key,
-                                     ag, system, num,
+        create_aws_ecs_fargate_tasks(depl, ag, system, num,
                                      server_url, minio_addr, clickhouse_addr)
 
     elif method == consts.AGENT_DEPLOYMENT_METHOD_AZURE_VM:
-        create_azure_vms(depl, access_key, secret_access_key,
-                         ag, system, num,
+        create_azure_vms(depl, ag, system, num,
                          server_url, minio_addr, clickhouse_addr)
 
     else:
         raise NotImplementedError('deployment method %s not supported' % str(ag.deployment['method']))
 
 
-def destroy_machine(access_key, secret_access_key, method, depl, agent):
+def destroy_machine(method, depl, agent, group):
     if method == consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2:
-        destroy_aws_ec2_vm(access_key, secret_access_key, depl, agent)
+        destroy_aws_ec2_vm(depl, agent, group)
     elif method == consts.AGENT_DEPLOYMENT_METHOD_AWS_ECS_FARGATE:
-        destroy_aws_ecs_task(access_key, secret_access_key, depl, agent)
+        destroy_aws_ecs_task(depl, agent, group)
+    elif method == consts.AGENT_DEPLOYMENT_METHOD_AZURE_VM:
+        destroy_azure_vm(depl, agent, group)
 
 
 #if __name__ == '__main__':

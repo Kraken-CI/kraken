@@ -6,6 +6,7 @@ import { MessageService, MenuItem } from 'primeng/api'
 
 import { AuthService } from '../auth.service'
 import { ManagementService } from '../backend/api/management.service'
+import { ExecutionService } from '../backend/api/execution.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
 
 @Component({
@@ -35,12 +36,18 @@ export class AgentsPageComponent implements OnInit {
 
     agentGroups: any[] = []
 
+    // agent jobs table
+    agentJobs: any[] = []
+    totalAgentJobs = 0
+    loadingAgentJobs = false
+
     constructor(
         private route: ActivatedRoute,
         private router: Router,
         public auth: AuthService,
         private msgSrv: MessageService,
         protected managementService: ManagementService,
+        protected executionService: ExecutionService,
         protected breadcrumbService: BreadcrumbsService,
         private titleService: Title
     ) {}
@@ -162,7 +169,6 @@ export class AgentsPageComponent implements OnInit {
     }
 
     loadAgentsLazy(event) {
-        console.info(event)
         this.loadingAgents = true
         this.managementService
             .getAgents(false, event.first, event.rows)
@@ -290,6 +296,17 @@ export class AgentsPageComponent implements OnInit {
     }
 
     changeAgentDisable(ev, ag) {
-        this.updateAgent(ag.id, { disabled: ag.disabled })
+        this.updateAgent(ag.id, { disabled: !ag.disabled })
+    }
+
+    loadAgentJobsLazy(event) {
+        this.loadingAgentJobs = true
+        this.executionService
+            .getAgentJobs(this.agentTab.agent.id, event.first, event.rows)
+            .subscribe((data) => {
+                this.agentJobs = data.items
+                this.totalAgentJobs = data.total
+                this.loadingAgentJobs = false
+            })
     }
 }

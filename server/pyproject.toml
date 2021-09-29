@@ -35,6 +35,7 @@ azure-mgmt-network = "^19.0.0"
 azure-mgmt-storage = "^18.0.0"
 azure-identity = "^1.6.1"
 azure-mgmt-subscription = "^1.0.0"
+azure-mgmt-monitor = "^2.0.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

@@ -19,11 +19,11 @@ export class GrpCloudCfgComponent implements OnInit {
 
     // aws
     awsRegions: any[]
-    instanceTypes: any[]
+    awsInstanceTypes: any[]
 
     // azure
     azureLocations: any[]
-    azureInstanceTypes: any[]
+    azureVmSizes: any[]
 
     constructor(
         protected managementService: ManagementService)
@@ -78,7 +78,7 @@ export class GrpCloudCfgComponent implements OnInit {
         this.managementService
             .getAwsEc2InstanceTypes(region)
             .subscribe((data) => {
-                this.instanceTypes = data.items
+                this.awsInstanceTypes = data.items
             })
     }
 
@@ -87,19 +87,19 @@ export class GrpCloudCfgComponent implements OnInit {
             this.managementService.getAzureLocations().subscribe((data) => {
                 this.azureLocations = data.items
 
-                //if (this.deployment.aws.region) {
-                //    this.regionChange()
-                //}
+                if (this.deployment.azure_vm.location) {
+                    this.azureLocationChange()
+                }
             })
         }
     }
 
     azureLocationChange() {
-        const location = this.deployment.azure.location
-        // this.managementService
-        //     .getAwsEc2InstanceTypes(region)
-        //     .subscribe((data) => {
-        //         this.instanceTypes = data.items
-        //     })
+        const location = this.deployment.azure_vm.location
+        this.managementService
+            .getAzureVmSizes(location)
+            .subscribe((data) => {
+                this.azureVmSizes = data.items
+            })
     }
 }

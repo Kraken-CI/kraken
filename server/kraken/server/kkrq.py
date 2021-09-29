@@ -48,6 +48,7 @@ def enq_neck(func, *args, ignore_args=None):
                 ignore_args=ignore_args)
     data = json.dumps(data)
     rds.publish('qneck', data)
+    log.info('enqueued func %s with args: %s and %s', func.__name__, args, ignore_args)
 
 
 def get_jobs():

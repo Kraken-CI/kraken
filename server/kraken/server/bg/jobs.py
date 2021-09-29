@@ -40,6 +40,7 @@ from .. import gitops
 from .. import kkrq
 from .. import cloud
 from .. import utils
+from .. import dbutils
 
 log = logging.getLogger(__name__)
 
@@ -928,13 +929,11 @@ def spawn_new_agents(agents_group_id):
         server_url = get_setting('general', 'server_url')
         minio_addr = get_setting('general', 'minio_addr')
         clickhouse_addr = get_setting('general', 'clickhouse_addr')
-        access_key = get_setting('cloud', 'aws_access_key')
-        secret_access_key = get_setting('cloud', 'aws_secret_access_key')
-        settings = ['server_url', 'minio_addr', 'clickhouse_addr', 'access_key', 'secret_access_key']
+        settings = ['server_url', 'minio_addr', 'clickhouse_addr']
         for s in settings:
             val = locals()[s]
             if not val:
-                log.error('%s is empty, please set it in global general or cloud settings', s)
+                log.error('%s is empty, please set it in global general settings', s)
                 return
 
         ag = AgentsGroup.query.filter_by(id=agents_group_id).one_or_none()
@@ -942,14 +941,15 @@ def spawn_new_agents(agents_group_id):
             log.warning('cannot find agents group id: %d', agents_group_id)
             return
 
-        # only AWS supported
         depl = None
         if ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2:
             depl = ag.deployment['aws']
         elif ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS_ECS_FARGATE:
             depl = ag.deployment['aws_ecs_fargate']
+        elif ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AZURE_VM:
+            depl = ag.deployment['azure_vm']
         else:
-            log.warning('deployment method %d in agents group id:%d not implemented', ag.deployment['method'], agents_group_id)
+            log.error('deployment method %d in agents group id:%d not implemented', ag.deployment['method'], agents_group_id)
             return
 
         # check if limit of agents is reached
@@ -1000,8 +1000,7 @@ def spawn_new_agents(agents_group_id):
                 log.info('enough agents, avail: %d, needed: %d', agents_count, needed_count)
                 continue
 
-            cloud.create_machines(depl, access_key, secret_access_key,
-                                  ag, system, num,
+            cloud.create_machines(depl, ag, system, num,
                                   server_url, minio_addr, clickhouse_addr)
 
 
@@ -1014,33 +1013,29 @@ def destroy_machine(agent_id):
             log.error('cannot find agent id:%d', agent_id)
             return
 
-        agent.deleted = utils.utcnow()
-        agent.disabled = True
-        db.session.commit()
-
         if not agent.extra_attrs:
             log.warning('missing extra_attrs in agent %s', agent)
+            dbutils.delete_agent(agent)
             return
 
-        # find agents group to get region for aws login
+        ag = dbutils.find_cloud_assignment_group(agent)
+        if not ag:
+            log.error('agent %s does not have cloud group', agent)
+            dbutils.delete_agent(agent)
+            return
+
+        dbutils.delete_agent(agent)
+
         depl = None
-        for aa in agent.agents_groups:
-            ag = aa.agents_group
-            if not ag.deployment:
-                continue
-            if ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2:
-                depl = ag.deployment['aws']
-                break
-            if ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS_ECS_FARGATE:
-                depl = ag.deployment['aws_ecs_fargate']
-                break
+        if ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2:
+            depl = ag.deployment['aws']
+        elif ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS_ECS_FARGATE:
+            depl = ag.deployment['aws_ecs_fargate']
+        elif ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AZURE_VM:
+            depl = ag.deployment['azure_vm']
 
         if not depl:
             log.error('cannot find deployment info for agent %s', agent_id)
             return
 
-        access_key = get_setting('cloud', 'aws_access_key')
-        secret_access_key = get_setting('cloud', 'aws_secret_access_key')
-
-        cloud.destroy_machine(access_key, secret_access_key,
-                              ag.deployment['method'], depl, agent)
+        cloud.destroy_machine(ag.deployment['method'], depl, agent, ag)
