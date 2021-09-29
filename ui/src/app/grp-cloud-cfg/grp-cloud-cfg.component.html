@@ -61,7 +61,7 @@
           <label for="instanceType" class="p-col-fixed" style="width:100px">Instance Type</label>
           <div class="p-col">
             <p-dropdown id="instanceType"
-                        [options]="instanceTypes"
+                        [options]="awsInstanceTypes"
                         [(ngModel)]="deployment.aws.instance_type"
                         optionLabel="InstanceType"
                         optionValue="InstanceType"
@@ -241,13 +241,13 @@
       <div class="p-mr-4">
         <h4>VM Options</h4>
         <div class="p-field p-grid">
-          <label for="instanceType" class="p-col-fixed" style="width:100px">Instance Type</label>
+          <label for="vmSize" class="p-col-fixed" style="width:100px">VM Size</label>
           <div class="p-col">
-            <p-dropdown id="instanceType"
-                        [options]="instanceTypes"
-                        [(ngModel)]="deployment.azure_vm.instance_type"
-                        optionLabel="InstanceType"
-                        optionValue="InstanceType"
+            <p-dropdown id="vmSize"
+                        [options]="azureVmSizes"
+                        [(ngModel)]="deployment.azure_vm.vm_size"
+                        optionLabel="name"
+                        optionValue="name"
                         [style]="{width: '10em'}"
                         scrollHeight="300px"
                         [filter]="true"></p-dropdown>

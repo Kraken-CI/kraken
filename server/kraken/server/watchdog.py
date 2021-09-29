@@ -37,6 +37,8 @@ from . import exec_utils
 from .bg import jobs as bg_jobs
 from . import kkrq
 from . import utils
+from . import dbutils
+from . import cloud
 
 log = logging.getLogger('watchdog')
 
@@ -93,7 +95,8 @@ def _check_jobs_if_expired():
             exec_utils.cancel_job(job, note, consts.JOB_CMPLT_SERVER_TIMEOUT)
             canceled_count += 1
 
-    log.info('canceled jobs:%d / all:%d', canceled_count, job_count)
+    if job_count > 0:
+        log.info('canceled jobs:%d / all:%d', canceled_count, job_count)
 
 
 def _check_jobs_if_missing_agents():
@@ -102,11 +105,16 @@ def _check_jobs_if_missing_agents():
     for job in q.all():
         ag = job.agents_group
         if (ag.deployment and
-            ag.deployment['method'] in [consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2, consts.AGENT_DEPLOYMENT_METHOD_AWS_ECS_FARGATE]):
+            ag.deployment['method'] in [consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2,
+                                        consts.AGENT_DEPLOYMENT_METHOD_AWS_ECS_FARGATE,
+                                        consts.AGENT_DEPLOYMENT_METHOD_AZURE_VM,
+                                        ]):
             groups.add(ag.id)
 
     for ag_id in groups:
         kkrq.enq_neck(bg_jobs.spawn_new_agents, ag_id)
+    if groups:
+        log.info('enqueued spawning new agents for groups with no agents but with waiting jobs')
 
 
 def _check_jobs():
@@ -164,13 +172,14 @@ def _check_agents_keep_alive():
     q = q.filter(Agent.last_seen < five_mins_ago)
 
     for a in q.all():
-        # in case of AWS VMs check for 10mins, not 5mins
-        for aa in a.agents_groups:
-            ag = aa.agents_group
-            if (ag.deployment and
-                ag.deployment['method'] in [consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2, consts.AGENT_DEPLOYMENT_METHOD_AWS_ECS_FARGATE]):
-                if a.last_seen > ten_mins_ago:
-                    continue
+        # in case of cloud machines check for 10mins, not 5mins
+        ag = dbutils.find_cloud_assignment_group(a)
+        if (ag and
+            ag.deployment['method'] in [consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2,
+                                        consts.AGENT_DEPLOYMENT_METHOD_AWS_ECS_FARGATE,
+                                        consts.AGENT_DEPLOYMENT_METHOD_AZURE_VM]):
+            if a.last_seen > ten_mins_ago:
+                continue
 
         a.disabled = True
         a.status_line = 'agent was not seen for last 5 minutes, disabled'
@@ -181,42 +190,52 @@ def _check_agents_keep_alive():
             _cancel_job_and_unassign_agent(a)
 
 
-def _destroy_and_delete_if_outdated(agent, ag):
-    aws = ag.deployment['aws']
-
+def _destroy_and_delete_if_outdated(agent, depl):
     destroy = False
 
     # check if idle time after job passed, then destroy VM
-    if 'destruction_after_time' in aws and int(aws['destruction_after_time']) > 0:
+    if 'destruction_after_time' in depl and int(depl['destruction_after_time']) > 0:
+        max_idle_time = datetime.timedelta(seconds=60 * int(depl['destruction_after_time']))
+
         q = Job.query.filter_by(agent_used=agent)
         q = q.filter(Job.finished.isnot(None))
+        q = q.filter(Job.finished > agent.created)
         q = q.order_by(desc(Job.finished))
         last_job = q.first()
+        now = utils.utcnow()
         if last_job:
-            now = utils.utcnow()
             dt = now - last_job.finished
-            timeout = datetime.timedelta(seconds=60 * int(aws['destruction_after_time']))
-            if dt >= timeout:
-                log.info('agent:%d, timed out %d > %d - destroying it', agent.id, dt, timeout)
+            if dt >= max_idle_time:
+                log.info('agent:%d, timed out %s > %s - destroying it, last job %s',
+                         agent.id, dt, max_idle_time, last_job)
                 destroy = True
             else:
-                log.info('agent:%d, not yet timed out %d < %d - skipped', agent.id, dt, timeout)
+                log.info('agent:%d, not yet timed out %s < %s - skipped', agent.id, dt, max_idle_time)
+        elif now - agent.created >= max_idle_time:
+            log.info('agent:%d, timed out %s - destroying it, created at %s vs now %s', agent.id, max_idle_time, agent.created, now)
+            destroy = True
         else:
-            log.info('agent:%d, no last job - skipped', agent.id)
+            log.info('agent:%d, no last job and not idle enough - skipped', agent.id)
     else:
         log.info('agent:%d, destruction_after_time is 0 - skipped', agent.id)
 
     # check if number of executed jobs on VM is reached, then destroy VM
-    if not destroy and 'destruction_after_jobs' in aws and int(aws['destruction_after_jobs']) > 0:
-        max_jobs = int(aws['destruction_after_jobs'])
-        jobs_num = Job.query.filter_by(agent_used=agent, state=consts.JOB_STATE_COMPLETED).count()
-        if jobs_num >= max_jobs:
-            log.info('agent:%d, max jobs reached %d/%d', agent.id, jobs_num, max_jobs)
-            destroy = True
+    if not destroy:
+        if 'destruction_after_jobs' in depl and int(depl['destruction_after_jobs']) > 0:
+            max_jobs = int(depl['destruction_after_jobs'])
+            q = Job.query.filter_by(agent_used=agent, state=consts.JOB_STATE_COMPLETED)
+            q = q.filter(Job.finished > agent.created)
+            jobs_num = q.count()
+            if jobs_num >= max_jobs:
+                log.info('agent:%d, max jobs reached %d/%d', agent.id, jobs_num, max_jobs)
+                # TODO: remove it later, for debugging only
+                #for j in q.all():
+                #    log.info('  job: %s', j)
+                destroy = True
+            else:
+                log.info('agent:%d, max jobs not reached yet %d/%d - skipped', agent.id, jobs_num, max_jobs)
         else:
-            log.info('agent:%d, max jobs not reached yet %d/%d - skipped', agent.id, jobs_num, max_jobs)
-    else:
-        log.info('agent:%d, destruction_after_jobs is 0 - skipped', agent.id)
+            log.info('agent:%d, destruction_after_jobs is 0 - skipped', agent.id)
 
     # if machine mark for destruction then schedule it
     if destroy:
@@ -229,29 +248,22 @@ def _destroy_and_delete_if_outdated(agent, ag):
     return False
 
 
-def _delete_if_missing_in_aws(agent, ag):
+def _delete_if_missing_in_cloud(agent, depl, depl_method):
     if not agent.extra_attrs or 'instance_id' not in agent.extra_attrs:
         log.warning('agent:%d, no instance id in extra_attrs', agent.id)
         return False
 
-    aws = ag.deployment['aws']
-    region = aws['region']
-    access_key = get_setting('cloud', 'aws_access_key')
-    secret_access_key = get_setting('cloud', 'aws_secret_access_key')
-    ec2 = boto3.resource('ec2', region_name=region, aws_access_key_id=access_key, aws_secret_access_key=secret_access_key)
-
-    instance_id = agent.extra_attrs['instance_id']
+    exists = True
     try:
-        # try to get instance, if missing then raised exception will cause deleting agent
-        i = ec2.Instance(instance_id)
-        i.state  # pylint: disable=pointless-statement
-        if i.state['Name'] == 'terminated':
-            # if instance exists but is terminated also trigger deleting agent by raising an exception
-            raise Exception('terminated')
-    except Exception:
-        agent.deleted = utils.utcnow()
-        agent.disabled = True
-        db.session.commit()
+        if depl_method == consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2:
+            exists = cloud.aws_ec2_vm_exists(agent)
+        elif depl_method == consts.AGENT_DEPLOYMENT_METHOD_AZURE_VM:
+            exists = cloud.azure_vm_exists(agent)
+    except:
+        pass
+
+    if not exists:
+        dbutils.delete_agent(agent)
         log.info('deleted dangling agent %d', agent.id)
         return True
 
@@ -259,123 +271,102 @@ def _delete_if_missing_in_aws(agent, ag):
 
 
 def _check_agents_to_destroy():
-    q = Agent.query.filter_by(deleted=None)
+    q = Agent.query.filter_by(deleted=None, authorized=True)
     q = q.join('agents_groups', 'agents_group')
     #q = q.filter(or_(cast(AgentsGroup.deployment['method'], Integer) == consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2,
     #                 cast(AgentsGroup.deployment['method'], Integer) == consts.AGENT_DEPLOYMENT_METHOD_AWS_ECS_FARGATE))
-    q = q.filter(cast(AgentsGroup.deployment['method'], Integer) == consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2)
-
+    # TODO ECS
+    q = q.filter(AgentsGroup.deployment.isnot(None))
+    q = q.filter(or_(cast(AgentsGroup.deployment['method'], Integer) == consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2,
+                     cast(AgentsGroup.deployment['method'], Integer) == consts.AGENT_DEPLOYMENT_METHOD_AZURE_VM))
 
     outdated_count = 0
     dangling_count = 0
     all_count = 0
     for agent in q.all():
         all_count += 1
-        ag = agent.agents_groups[0].agents_group
+        ag = dbutils.find_cloud_assignment_group(agent)
 
-        deleted = _destroy_and_delete_if_outdated(agent, ag)
+        if not ag:
+            log.error('missing ag in agent %s', agent)
+            continue
+
+        if not ag.deployment:
+            log.error('missing deployment in ag %s', ag)
+            continue
+
+        if ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2:
+            depl = ag.deployment['aws']
+        elif ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AZURE_VM:
+            depl = ag.deployment['azure_vm']
+        else:
+            log.error('unsupported deployment method %s', ag.deployment['method'])
+            continue
+        deleted = _destroy_and_delete_if_outdated(agent, depl)
         if deleted:
             outdated_count += 1
             if agent.job:
                 _cancel_job_and_unassign_agent(agent)
             continue
 
-        deleted = _delete_if_missing_in_aws(agent, ag)
+        deleted = _delete_if_missing_in_cloud(agent, depl, ag.deployment['method'])
         if deleted:
             dangling_count += 1
             if agent.job:
                 _cancel_job_and_unassign_agent(agent)
             continue
 
-    log.info('all agents:%d, destroyed and deleted %d aws ec2 instances and agents',
-             all_count, outdated_count)
-    log.info('deleted %d dangling agents without any aws ec2 instance', dangling_count)
+    if outdated_count > 0:
+        log.info('all agents:%d, destroyed and deleted %d VM instances and agents',
+                 all_count, outdated_count)
+    if dangling_count > 0:
+        log.info('deleted %d dangling agents without any VM instance', dangling_count)
 
     return all_count, outdated_count, dangling_count
 
 
 def _check_machines_with_no_agent():
-    # look for AWS EC2 machines that do not have agents in database
+    # look for AWS EC2 or Azure VM machines that do not have agents in database
     # and destroy such machines
-    access_key = get_setting('cloud', 'aws_access_key')
-    secret_access_key = get_setting('cloud', 'aws_secret_access_key')
-
     q = AgentsGroup.query
     q = q.filter_by(deleted=None)
     q = q.filter(AgentsGroup.deployment.isnot(None))
 
     all_groups = 0
-    aws_groups = 0
+    aws_ec2_groups = 0
+    azure_vm_groups = 0
 
     for ag in q.all():
         all_groups += 1
-        if not ag.deployment or ag.deployment['method'] != consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2 or 'aws' not in ag.deployment or not ag.deployment['aws']:
+
+        if ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2:
+            depl = ag.deployment['aws']
+            aws_ec2_groups += 1
+            counts = cloud.aws_ec2_cleanup_dangling_vms(depl, ag)
+        elif ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AZURE_VM:
+            depl = ag.deployment['azure_vm']
+            azure_vm_groups += 1
+            counts = cloud.azure_vm_cleanup_dangling_vms(depl, ag)
+        else:
             continue
 
-        aws_groups += 1
+        instances = counts[0]
+        terminated_instances = counts[1]
+        assigned_instances = counts[2]
+        orphaned_instances = counts[3]
+        orphaned_terminated_instances = counts[4]
 
-        aws = ag.deployment['aws']
-        region = aws['region']
-        ec2 = boto3.resource('ec2', region_name=region, aws_access_key_id=access_key, aws_secret_access_key=secret_access_key)
-
-        now = utils.utcnow()
-
-        try:
-            instances = ec2.instances.filter(Filters=[{'Name': 'tag:kraken-group', 'Values': ['%d' % ag.id]}])
-            instances = list(instances)
-        except Exception:
-            log.exception('IGNORED EXCEPTION')
-            continue
-
-        ec2_instances = 0
-        ec2_terminated_instances = 0
-        ec2_assigned_instances = 0
-        ec2_orphaned_instances = 0
-        ec2_orphaned_terminated_instances = 0
-
-        for i in instances:
-            ec2_instances += 1
-            # if terminated then skip it
-            if i.state['Name'] == 'terminated':
-                ec2_terminated_instances += 1
-                continue
-
-            # if assigned to some agent then skip it
-            assigned = False
-            for aa in ag.agents:
-                agent = aa.agent
-                if agent.extra_attrs and 'instance_id' in agent.extra_attrs and agent.extra_attrs['instance_id'] == i.id:
-                    assigned = True
-                    break
-            if assigned:
-                ec2_assigned_instances += 1
-                continue
-
-            # instances have to be old enough to avoid race condition with
-            # case when instances are being created but not yet assigned to agents
-            lt = i.launch_time.replace(tzinfo=pytz.utc)
-            if now - lt < datetime.timedelta(minutes=10):
-                continue
-
-            # the instance is not terminated, not assigned, old enough
-            # so delete it as it seems to be a lost instance
-            log.info('terminating lost aws ec2 instance %s', i.id)
-            ec2_orphaned_instances += 1
-            try:
-                i.terminate()
-            except Exception:
-                log.exception('IGNORED EXCEPTION')
-
-            ec2_orphaned_terminated_instances += 1
-
-        log.info('group:%d, aws ec2 instances:%d, already-terminated:%d, still-assigned:%d, orphaned:%d, terminated-orphaned:%d',
-                 ag.id,
-                 ec2_instances,
-                 ec2_terminated_instances,
-                 ec2_assigned_instances,
-                 ec2_orphaned_instances,
-                 ec2_orphaned_terminated_instances)
-    log.info('aws groups:%d / all:%d', aws_groups, all_groups)
+        if (instances + terminated_instances + assigned_instances +
+            orphaned_instances + orphaned_terminated_instances > 0):
+            log.info('group:%d, instances:%d, already-terminated:%d, still-assigned:%d, orphaned:%d, terminated-orphaned:%d',
+                     ag.id,
+                     instances,
+                     terminated_instances,
+                     assigned_instances,
+                     orphaned_instances,
+                     orphaned_terminated_instances)
+    if aws_ec2_groups + azure_vm_groups > 0:
+        log.info('aws groups:%d, azure vm groups:%d / all:%d', aws_ec2_groups, azure_vm_groups, all_groups)
 
 
 def _check_agents():

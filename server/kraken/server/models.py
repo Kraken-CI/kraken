@@ -25,7 +25,7 @@ from . import utils
 
 log = logging.getLogger(__name__)
 
-db = SQLAlchemy()
+db = SQLAlchemy(engine_options=dict(connect_args={"options": "-c timezone=utc"}))
 
 
 @event.listens_for(mapper, 'init')
@@ -773,7 +773,7 @@ class AgentsGroup(db.Model, DatesMixin):
             deployment['aws_ecs_fargate'] = dict(region='', instances_limit=5, cluster='', subnets='', security_groups='')
 
         if 'azure_vm' not in deployment:
-            deployment['azure_vm'] = dict(location='', instances_limit=5, default_image='', instance_type='',
+            deployment['azure_vm'] = dict(location='', instances_limit=5, default_image='', vm_size='',
                                           destruction_after_jobs=1, destruction_after_time=30)
 
         return dict(id=self.id,

@@ -435,3 +435,15 @@ def delete_job(job_id):
     exec_utils.cancel_job(job, 'canceled by user', consts.JOB_CMPLT_USER_CANCEL)
 
     return {}
+
+
+def get_agent_jobs(agent_id, start=0, limit=10):
+    q = Job.query
+    q = q.filter_by(agent_used_id=agent_id)
+    total = q.count()
+    q = q.order_by(desc('id'))
+    q = q.offset(start).limit(limit)
+    jobs = []
+    for j in q.all():
+        jobs.append(j.get_json())
+    return {'items': jobs, 'total': total}, 200

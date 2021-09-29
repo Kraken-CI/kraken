@@ -46,7 +46,7 @@
         <th style="width: 160px;">Name</th>
         <th style="width: 120px;">IP Address</th>
         <!-- <th style="width: 60px;">State</th> -->
-        <th style="width: 80px;">Disabled</th>
+        <th style="width: 80px;">Enabled</th>
         <th style="width: 120px;">Last Seen</th>
         <th style="width: 10%;">Groups</th>
         <th style="width: 10%;">System</th>
@@ -65,7 +65,7 @@
         <td>{{agent.ip_address}}</td>
         <!-- <td>{{ agent.state }}</td> -->
         <td>
-          <p-inputSwitch [(ngModel)]="agent.disabled" (onChange)="changeAgentDisable($event, agent)"
+          <p-inputSwitch [ngModel]="!agent.disabled" (onChange)="changeAgentDisable($event, agent)"
                          [disabled]="!auth.hasPermission('manage')"
                          [pTooltip]="auth.permTip('manage')"></p-inputSwitch>
         </td>
@@ -117,7 +117,7 @@
       <table>
         <tr>
           <th style="width: 8rem;"></th>
-          <th style="width: 12rem;"></th>
+          <th style="width: 14rem;"></th>
         </tr>
 
         <tr>
@@ -158,10 +158,28 @@
 
         <tr>
           <td style="text-align: right; padding-right: 10px;">
-            Disabled
+            Enabled
           </td>
           <td>
-            {{ agentTab.agent.disabled }}
+            {{ !agentTab.agent.disabled }}
+          </td>
+        </tr>
+
+        <tr>
+          <td style="text-align: right; padding-right: 10px;">
+            Created
+          </td>
+          <td>
+            {{ agentTab.agent.created | localtime }}
+          </td>
+        </tr>
+
+        <tr *ngIf="agentTab.agent.deleted">
+          <td style="text-align: right; padding-right: 10px;">
+            Deleted
+          </td>
+          <td>
+            {{ agentTab.agent.deleted | localtime }}
           </td>
         </tr>
 
@@ -215,6 +233,46 @@
           </td>
         </tr>
       </table>
+    </div>
+
+    <div class="p-col-12" style="padding: 12px">
+        <h3>Jobs</h3>
+        <p-table #agentJobsTable
+                 id="agentJobs"
+                 [value]="agentJobs"
+                 [lazy]="true"
+                 (onLazyLoad)="loadAgentJobsLazy($event)"
+                 [paginator]="true"
+                 [rows]="30"
+                 [totalRecords]="totalAgentJobs"
+                 [loading]="loadingAgentJobs"
+                 [rowsPerPageOptions]="[10,20,30,50,100]"
+                 [showCurrentPageReport]="true">
+            <ng-template pTemplate="header">
+                <tr>
+                    <th style="width: 60px;">ID</th>
+                    <th style="width: 120px;">Name</th>
+                    <th style="width: 160px;">Started</th>
+                    <th style="width: 120px;">Finished</th>
+                    <th style="width: 120px;">Completed</th>
+                    <th style="width: 120px;">Run ID</th>
+                    <th style="width: 120px;">State</th>
+                    <th style="width: 120px;">Covered</th>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-job>
+                <tr>
+                    <td>{{job.id}}</td>
+                    <td>{{job.name}}</td>
+                    <td>{{job.started | localtime}}</td>
+                    <td>{{job.finished | localtime}}</td>
+                    <td>{{job.completed | localtime}}</td>
+                    <td>{{job.run_id}}</td>
+                    <td>{{job.state}}</td>
+                    <td>{{job.covered}}</td>
+                </tr>
+            </ng-template>
+        </p-table>
     </div>
 
   </div>

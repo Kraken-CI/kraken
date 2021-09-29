@@ -29,6 +29,7 @@ import redis
 import boto3
 from azure.identity import ClientSecretCredential
 from azure.mgmt.subscription import SubscriptionClient
+from azure.mgmt.compute import ComputeManagementClient
 
 from . import consts, srvcheck, kkrq
 from .models import db, Branch, Stage, Agent, AgentsGroup, Secret, AgentAssignment, Setting
@@ -38,6 +39,7 @@ from .schema import prepare_new_planner_triggers
 from . import notify
 from . import cloud
 from . import utils
+from . import dbutils
 
 
 log = logging.getLogger(__name__)
@@ -568,6 +570,8 @@ def delete_agent(agent_id):
         job.state = consts.JOB_STATE_QUEUED
         agent.job = None
 
+    # only mark as deleted, do not unassign from groups yet as it is needed
+    # in destroy_machine if it is cloud machine
     agent.deleted = utils.utcnow()
     agent.authorized = False
     agent.disabled = True
@@ -648,17 +652,19 @@ def delete_group(group_id):
 
 
 def get_aws_ec2_regions():
-    access_key = get_setting('cloud', 'aws_access_key')
-    secret_access_key = get_setting('cloud', 'aws_secret_access_key')
-    ec2 = boto3.client('ec2', region_name='us-east-1', aws_access_key_id=access_key, aws_secret_access_key=secret_access_key)
+    credential = cloud.login_to_aws()
+    if not credential:
+        abort(500, "Incorrect AWS credential, set them in global cloud settings")
+    ec2 = boto3.client('ec2', region_name='us-east-1', **credential)
     resp = ec2.describe_regions()
     return {'items': resp['Regions'], 'total': len(resp['Regions'])}, 200
 
 
 def get_aws_ec2_instance_types(region):
-    access_key = get_setting('cloud', 'aws_access_key')
-    secret_access_key = get_setting('cloud', 'aws_secret_access_key')
-    ec2 = boto3.client('ec2', region_name=region, aws_access_key_id=access_key, aws_secret_access_key=secret_access_key)
+    credential = cloud.login_to_aws()
+    if not credential:
+        abort(500, "Incorrect AWS credential, set them in global cloud settings")
+    ec2 = boto3.client('ec2', region_name=region, **credential)
     resp = ec2.describe_instance_type_offerings(Filters=[{'Name': 'location', 'Values':[region]}])
     types = resp['InstanceTypeOfferings']
     types.sort(key=lambda x: x['InstanceType'])
@@ -667,12 +673,9 @@ def get_aws_ec2_instance_types(region):
 
 def get_azure_locations():
     # Acquire a credential object using service principal authentication.
-    subscription_id = get_setting('cloud', 'azure_subscription_id')
-    tenant_id = get_setting('cloud', 'azure_tenant_id')
-    client_id = get_setting('cloud', 'azure_client_id')
-    client_secret = get_setting('cloud', 'azure_client_secret')
-
-    credential = ClientSecretCredential(tenant_id=tenant_id, client_id=client_id, client_secret=client_secret)
+    credential, subscription_id = cloud.login_to_azure()
+    if not credential:
+        abort(500, "Incorrect Azure credential, set them in global cloud settings")
     subscription_client = SubscriptionClient(credential)
     locations = subscription_client.subscriptions.list_locations(subscription_id)
     locs = []
@@ -682,6 +685,20 @@ def get_azure_locations():
 
     return {'items': locs, 'total': len(locs)}, 200
 
+
+def get_azure_vm_sizes(location):
+    # Acquire a credential object using service principal authentication.
+    credential, subscription_id = cloud.login_to_azure()
+    if not credential:
+        abort(500, "Incorrect Azure credential, set them in global cloud settings")
+    compute_client = ComputeManagementClient(credential, subscription_id)
+    vm_sizes_list = compute_client.virtual_machine_sizes.list(location=location)
+    vm_sizes = []
+    for s in vm_sizes_list:
+        vm_sizes.append(s.as_dict())
+    vm_sizes.sort(key=lambda x: x['name'])
+
+    return {'items': vm_sizes, 'total': len(vm_sizes)}, 200
 
 def get_settings():
     settings = Setting.query.filter_by().all()

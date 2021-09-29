@@ -14,7 +14,8 @@
 
 from sqlalchemy.sql.expression import desc
 
-from .models import Run, Flow
+from .models import Run, Flow, db
+from . import utils
 
 
 def get_prev_run(stage_id, flow_kind):
@@ -26,3 +27,20 @@ def get_prev_run(stage_id, flow_kind):
     q = q.order_by(desc(Flow.created))
     prev_run = q.first()
     return prev_run
+
+
+def find_cloud_assignment_group(agent):
+    for aa in agent.agents_groups:
+        ag = aa.agents_group
+        if ag.deployment:
+            return ag
+    return None
+
+
+def delete_agent(agent):
+    agent.deleted = utils.utcnow()
+    agent.disabled = True
+    agent.authorized = False
+    for aa in agent.agents_groups:
+        db.session.delete(aa)
+    db.session.commit()

@@ -122,6 +122,7 @@ export class RunResultsComponent implements OnInit, OnDestroy {
     ngOnInit() {
         this.route.paramMap.subscribe((params) => {
             const runId = parseInt(params.get('id'), 10)
+            this.run.id = runId
 
             const tab = params.get('tab')
             if (tab === '') {
