@@ -749,8 +749,8 @@ def _create_azure_vm(ag, depl, system,
     # Obtain the management object for virtual machines
     compute_client = ComputeManagementClient(credential, subscription_id)
 
-    USERNAME = "kraken"
-    PASSWORD = "kraken123!"
+    username = "kraken"
+    password = "kraken123!"
 
     log.info(f"Provisioning virtual machine {vm_name}; this operation might take a few minutes.")
 
@@ -784,8 +784,8 @@ def _create_azure_vm(ag, depl, system,
             },
             "os_profile": {
                 "computer_name": vm_name,
-                "admin_username": USERNAME,
-                "admin_password": PASSWORD,
+                "admin_username": username,
+                "admin_password": password,
             },
             "network_profile": {
                 "network_interfaces": [{
