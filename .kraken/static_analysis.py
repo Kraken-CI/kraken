@@ -80,7 +80,8 @@ def stage(ctx):
                 "pylint_exe": "poetry run pylint",
                 "rcfile": "../pylint.rc",
                 "modules_or_packages": "kraken/server",
-                "cwd": "kraken/server"
+                "cwd": "kraken/server",
+                "timeout": 300
             }],
             "environments": envs
         # TODO:
