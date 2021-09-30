@@ -27,19 +27,17 @@ import pytimeparse
 import clickhouse_driver
 import redis
 import boto3
-from azure.identity import ClientSecretCredential
 from azure.mgmt.subscription import SubscriptionClient
 from azure.mgmt.compute import ComputeManagementClient
 
 from . import consts, srvcheck, kkrq
 from .models import db, Branch, Stage, Agent, AgentsGroup, Secret, AgentAssignment, Setting
-from .models import Project, BranchSequence, get_setting
+from .models import Project, BranchSequence
 from .schema import check_and_correct_stage_schema, SchemaError, execute_schema_code
 from .schema import prepare_new_planner_triggers
 from . import notify
 from . import cloud
 from . import utils
-from . import dbutils
 
 
 log = logging.getLogger(__name__)

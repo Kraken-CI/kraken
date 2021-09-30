@@ -24,7 +24,6 @@ from sqlalchemy.orm.attributes import flag_modified
 import giturlparse
 import pytimeparse
 import redis
-import boto3
 
 from ..models import db, Run, Job, TestCaseResult, Branch, Flow, Stage, Project, get_setting
 from ..models import AgentsGroup, Agent, System
@@ -35,7 +34,6 @@ from .. import exec_utils  # pylint: disable=cyclic-import
 from .. import consts
 from .. import notify
 from .. import logs
-from .. import dbutils
 from .. import gitops
 from .. import kkrq
 from .. import cloud

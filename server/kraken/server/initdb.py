@@ -201,7 +201,7 @@ def prepare_initial_data():
     # common systems
     system = System.query.filter_by(name='any', executor='local').one_or_none()
     if system is None:
-        system = System(name='any', executor='local')
+        System(name='any', executor='local')
         db.session.commit()
 
     # preferences

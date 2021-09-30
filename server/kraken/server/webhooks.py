@@ -63,7 +63,7 @@ def handle_github_webhook(project_id):
         my_digest = hmac.new(my_secret, payload, hashlib.sha1).hexdigest()
 
         if len(github_digest_parts) < 2 or github_digest_parts[0] != "sha1" or not hmac.compare_digest(github_digest_parts[1], my_digest):
-            log.warning('bad signature %s vs %s, secret %s', github_sig, my_digest, my_secret)
+            log.warning('bad signature %s vs %s', github_sig, my_digest)
             abort(400, "Invalid signature")
 
     req = json.loads(payload)
