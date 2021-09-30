@@ -369,7 +369,7 @@ def create_aws_ecs_fargate_tasks(aws, ag, system, num,
     # if there is no task definition yet then create one
     response = ecs.list_task_definitions(familyPrefix=task_def_name)
     if len(response['taskDefinitionArns']) == 0:
-        response = ecs.register_task_definition(
+        ecs.register_task_definition(
             family=task_def_name,
             containerDefinitions=[{
                 "name": "kraken-agent",
