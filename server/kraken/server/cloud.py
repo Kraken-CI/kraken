@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pytz
 import time
 import base64
 import random
@@ -40,6 +41,7 @@ from psycopg2.errors import UniqueViolation  # pylint: disable=no-name-in-module
 from .models import db
 from .models import Agent, AgentAssignment, get_setting
 from . import utils
+from . import dbutils
 from . import consts
 
 
@@ -267,8 +269,8 @@ def destroy_aws_ec2_vm(depl, agent, group):
         log.exception('IGNORED EXCEPTION')
 
 
-def aws_ec2_vm_exists(agent):
-    credential = cloud.login_to_aws()
+def aws_ec2_vm_exists(depl, agent):
+    credential = login_to_aws()
     if not credential:
         raise Exception('wrong aws credential')
     region = depl['region']
@@ -580,7 +582,7 @@ def _create_azure_vm(ag, depl, system,
                     system.name)
         return
 
-    log.info(f"Provisioning a virtual machine...some operations might take a minute or two.")
+    log.info("Provisioning a virtual machine...some operations might take a minute or two.")
 
     # Step 1: Provision a resource group
 
@@ -670,7 +672,7 @@ def _create_azure_vm(ag, depl, system,
 
     ssh_security_rule_name = 'kraken-ssh-rule'
     try:
-        ssh_security_rule = network_client.security_rules.get(global_rg, security_group_name, ssh_security_rule_name)
+        network_client.security_rules.get(global_rg, security_group_name, ssh_security_rule_name)
     except azure.core.exceptions.ResourceNotFoundError:
         poller = network_client.security_rules.begin_create_or_update(
             global_rg,
@@ -684,11 +686,11 @@ def _create_azure_vm(ag, depl, system,
                 'direction': SecurityRuleDirection.inbound,
                 'priority': 400,
                 'protocol': SecurityRuleProtocol.tcp,
-                'source_address_prefix': '*',
+                'source_address_prefix': '*',  # TODO: change it to my_ip
                 'source_port_range': '*',
             }
         )
-        ssh_security_rule = poller.result()
+        poller.result()
     #########
 
     # Step 3: Provision the subnet and wait for completion
@@ -820,7 +822,7 @@ def create_azure_vms(depl, ag, system, num,
     if not credential:
         return
 
-    for i in range(num):
+    for _ in range(num):
         _create_azure_vm(ag, depl, system,
                          server_url, minio_addr, clickhouse_addr,
                          credential, subscription_id)
@@ -875,6 +877,7 @@ def azure_vm_exists(agent):
     if not ag:
         return False
     rg = 'kraken-%d-rg' % ag.id
+    vm_name = "kraken-agent-%s-vm" % instance_id
 
     credential, subscription_id = login_to_azure()
     if not credential:
@@ -882,7 +885,7 @@ def azure_vm_exists(agent):
 
     cc = ComputeManagementClient(credential, subscription_id)
     try:
-        vm = cc.virtual_machines.get(rg, vm_name)
+        cc.virtual_machines.get(rg, vm_name)
     except azure.core.exceptions.ResourceNotFoundError:
         return False
 

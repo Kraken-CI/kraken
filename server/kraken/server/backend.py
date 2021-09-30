@@ -392,7 +392,6 @@ def _handle_step_result(agent, req):
 
             # aws ecs fargate
             elif ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS_ECS_FARGATE:
-                depl = ag.deployment['aws_ecs_fargate']
                 log.info('ECS FARGATE JOB %s - destroying task', job.id)
                 agent.disabled = True
                 kkrq.enq(bg_jobs.destroy_machine, agent.id)

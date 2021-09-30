@@ -25,8 +25,6 @@ from sqlalchemy.sql.expression import desc, cast, or_
 from sqlalchemy import Integer
 import clickhouse_driver
 import redis
-import boto3
-import pytz
 
 from . import logs
 from .models import db, Agent, AgentsGroup, Run, Job, get_setting
@@ -256,10 +254,10 @@ def _delete_if_missing_in_cloud(agent, depl, depl_method):
     exists = True
     try:
         if depl_method == consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2:
-            exists = cloud.aws_ec2_vm_exists(agent)
+            exists = cloud.aws_ec2_vm_exists(depl, agent)
         elif depl_method == consts.AGENT_DEPLOYMENT_METHOD_AZURE_VM:
             exists = cloud.azure_vm_exists(agent)
-    except:
+    except Exception:
         pass
 
     if not exists:
