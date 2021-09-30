@@ -552,8 +552,7 @@ def _estimate_timeout(job):
 
     # estimate new timeout from max duration
     timeout = int(max_duration.total_seconds() * 1.7)
-    if timeout < 60:
-        timeout = 60
+    timeout = max(timeout, 60)
 
     stage = job.run.stage
     job_key = "%s-%d-%d" % (job.name, job.system_id, job.agents_group_id)
@@ -574,12 +573,10 @@ def _estimate_timeout(job):
                 break
 
         log.info('new: %s, user: %s', timeout, user_timeout)
-        if timeout < user_timeout:
-            timeout = user_timeout
+        timeout = max(timeout, user_timeout)
 
     # it does not make sense to make timeout bigger than 3 days ie. 259200 seconds
-    if timeout > 259200:
-        timeout = 259200
+    timeout = max(timeout, 259200)
 
     log.info("new timeout for job '%s' in stage '%s': %ssecs", job_key, stage.name, timeout)
     stage.timeouts[job_key] = timeout

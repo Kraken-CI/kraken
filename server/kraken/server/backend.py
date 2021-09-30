@@ -492,8 +492,7 @@ def _handle_dispatch_tests(agent, req):
 
     # new timeout reduced by nearly a half
     timeout = int(job.timeout * 0.6)
-    if timeout < 60:
-        timeout = 60
+    timeout = max(timeout, 60)
 
     # create new job and its steps
     job2 = Job(run=job.run, name=job.name, agents_group=job.agents_group, system=job.system, timeout=timeout)

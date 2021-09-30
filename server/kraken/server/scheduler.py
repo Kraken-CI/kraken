@@ -141,8 +141,7 @@ def main():
 
             dt = t1 - t0
             sleep_time = 5 - dt
-            if sleep_time < 0:
-                sleep_time = 0
+            sleep_time = max(sleep_time, 0)
             log.info("scheduled %d jobs in %.1fs, go sleep for %.1fs", jobs_cnt, dt, sleep_time)
             if sleep_time > 0:
                 time.sleep(sleep_time)
