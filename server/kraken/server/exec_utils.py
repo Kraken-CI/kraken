@@ -267,8 +267,7 @@ def _establish_timeout_for_job(j, run, system, agents_group):
         else:
             # take initial timeout from schema, or default one
             timeout = int(j.get('timeout', consts.DEFAULT_JOB_TIMEOUT))
-            if timeout < 60:
-                timeout = 60
+            timeout = max(timeout, 60)
     else:
         timeout = consts.DEFAULT_JOB_TIMEOUT
 

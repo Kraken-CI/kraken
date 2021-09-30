@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytz
 import time
 import base64
 import random
@@ -33,6 +32,7 @@ from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.subscription import SubscriptionClient
 from azure.mgmt.monitor import MonitorManagementClient
 
+import pytz
 import requests
 from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy.exc import IntegrityError
@@ -252,7 +252,7 @@ def create_ec2_vms(aws, ag, system, num,
         log.info('spawned new agent %s on EC2 instance %s', a, i)
 
 
-def destroy_aws_ec2_vm(depl, agent, group):
+def destroy_aws_ec2_vm(depl, agent, group):  # pylint: disable=unused-argument
     credential = login_to_aws()
     if not credential:
         return
@@ -500,7 +500,7 @@ def create_aws_ecs_fargate_tasks(aws, ag, system, num,
         log.info('spawned new agent %s on ECS Fargate task %s', a, task)
 
 
-def destroy_aws_ecs_task(depl, agent, group):
+def destroy_aws_ecs_task(depl, agent, group):  # pylint: disable=unused-argument
     credential = login_to_aws()
     if not credential:
         return
@@ -597,7 +597,8 @@ def _create_azure_vm(ag, depl, system,
             "location": location
         }
     )
-    log.info(f"Provisioned global resource group {rg_result.name} in the {rg_result.location} region")
+    log.info("Provisioned global resource group %s in the %s region",
+             rg_result.name, rg_result.location)
 
     group_rg = "kraken-%d-rg" % ag.id
     rg_result = resource_client.resource_groups.create_or_update(
@@ -606,7 +607,8 @@ def _create_azure_vm(ag, depl, system,
             "location": location
         }
     )
-    log.info(f"Provisioned resource group {rg_result.name} in the {rg_result.location} region")
+    log.info("Provisioned resource group %s in the %s region",
+             rg_result.name, rg_result.location)
 
 
     # For details on the previous code, see Example: Provision a resource group
@@ -649,7 +651,8 @@ def _create_azure_vm(ag, depl, system,
 
         vnet_result = poller.result()
 
-    log.info(f"Provisioned virtual network {vnet_result.name} with address prefixes {vnet_result.address_space.address_prefixes}")
+    log.info("Provisioned virtual network %s with address prefixes %s",
+             vnet_result.name, vnet_result.address_space.address_prefixes)
 
     #########
     security_group_name = 'kraken-nsg'
@@ -708,7 +711,8 @@ def _create_azure_vm(ag, depl, system,
         )
         subnet_result = poller.result()
 
-    log.info(f"Provisioned virtual subnet {subnet_result.name} with address prefix {subnet_result.address_prefix}")
+    log.info("Provisioned virtual subnet %s with address prefix %s",
+             subnet_result.name, subnet_result.address_prefix)
 
     # Step 4: Provision an IP address and wait for completion
     poller = network_client.public_ip_addresses.begin_create_or_update(
@@ -723,7 +727,8 @@ def _create_azure_vm(ag, depl, system,
     )
     ip_address_result = poller.result()
 
-    log.info(f"Provisioned public IP address {ip_address_result.name} with address {ip_address_result.ip_address}")
+    log.info("Provisioned public IP address %s with address %s",
+             ip_address_result.name, ip_address_result.ip_address)
 
     # Step 5: Provision the network interface client
     poller = network_client.network_interfaces.begin_create_or_update(
@@ -742,7 +747,7 @@ def _create_azure_vm(ag, depl, system,
 
     nic_result = poller.result()
 
-    log.info(f"Provisioned network interface client {nic_result.name}")
+    log.info("Provisioned network interface client %s", nic_result.name)
 
     # Step 6: Provision the virtual machine
 
@@ -752,7 +757,7 @@ def _create_azure_vm(ag, depl, system,
     username = "kraken"
     password = "kraken123!"
 
-    log.info(f"Provisioning virtual machine {vm_name}; this operation might take a few minutes.")
+    log.info("Provisioning virtual machine %s; this operation might take a few minutes.", vm_name)
 
     # Provision the VM specifying only minimal arguments, which defaults to an Ubuntu 18.04 VM
     # on a Standard DS1 v2 plan with a public IP address and a default virtual network/subnet.
@@ -798,7 +803,7 @@ def _create_azure_vm(ag, depl, system,
 
     vm_result = poller.result()
 
-    log.info(f"Provisioned Azure virtual machine {vm_result.name}")
+    log.info("Provisioned Azure virtual machine %s", vm_result.name)
 
     # VM params
     sys_id = system.id if system.executor == 'local' else 0
@@ -853,7 +858,7 @@ def _destroy_azure_vm(rg, vm_name, instance_id, cc, nc):
     log.info('deleted azure vm: %s', vm_name)
 
 
-def destroy_azure_vm(depl, agent, ag):
+def destroy_azure_vm(depl, agent, ag):  # pylint: disable=unused-argument
     instance_id = agent.extra_attrs['instance_id']
     vm_name = "kraken-agent-%s-vm" % instance_id
     rg = 'kraken-%d-rg' % ag.id
@@ -892,7 +897,7 @@ def azure_vm_exists(agent):
     return True
 
 
-def azure_vm_cleanup_dangling_vms(depl, ag):
+def azure_vm_cleanup_dangling_vms(depl, ag):  # pylint: disable=unused-argument
     credential, subscription_id = login_to_azure()
     if not credential:
         return 0, 0, 0, 0, 0
