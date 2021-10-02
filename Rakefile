@@ -383,6 +383,23 @@ task :db_new_revision do
 end
 
 
+# DOCKER Support
+
+task :docker_srv_builder do
+  Dir.chdir('server') do
+    sh 'docker build -f docker-builder.txt -t krakenci/srv-builder .'
+    sh 'docker push krakenci/srv-builder:latest'
+  end
+end
+
+task :docker_srv_base do
+  Dir.chdir('server') do
+    sh 'docker build -f docker-base.txt -t krakenci/srv-base .'
+    sh 'docker push krakenci/srv-base:latest'
+  end
+end
+
+
 # DOCKER
 
 task :docker_up => [DOCKER_COMPOSE, :build_all] do
