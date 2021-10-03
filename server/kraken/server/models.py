@@ -761,13 +761,15 @@ class AgentsGroup(db.Model, DatesMixin):
             deployment = dict(method=0)
 
         if 'aws' not in deployment:
-            deployment['aws'] = dict(region='', instances_limit=5, default_image='', instance_type='',
+            deployment['aws'] = dict(region='', instances_limit=5, default_image='', instance_type='', disk_size=0,
                                      destruction_after_jobs=1, destruction_after_time=30)
         else:
             if 'destruction_after_jobs' not in deployment['aws']:
                 deployment['aws']['destruction_after_jobs'] = 1
             if 'destruction_after_time' not in deployment['aws']:
                 deployment['aws']['destruction_after_time'] = 30
+            if 'disk_size' not in deployment['aws']:
+                deployment['aws']['disk_size'] = 0
 
         if 'aws_ecs_fargate' not in deployment:
             deployment['aws_ecs_fargate'] = dict(region='', instances_limit=5, cluster='', subnets='', security_groups='')

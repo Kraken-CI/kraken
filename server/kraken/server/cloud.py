@@ -228,6 +228,16 @@ def create_ec2_vms(aws, ag, system, num,
     if 't2' in aws['instance_type'] or 't3' in aws['instance_type']:
         params['CreditSpecification'] = {'CpuCredits': cpu_credits}
 
+    # prepare disk size if provided
+    disk_size = aws.get('disk_size', 0)
+    if disk_size:
+        params['BlockDeviceMappings'] = [{
+            'DeviceName': '/dev/sda1',
+            'Ebs': {
+                'VolumeSize': disk_size
+            }
+        }]
+
     # create AWS EC2 instances
     instances = ec2_res.create_instances(**params)
 
