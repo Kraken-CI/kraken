@@ -39,18 +39,27 @@ def test_run_analysis():
     }]
     issues_json = json.dumps(issues)
 
-    with patch('kraken.agent.utils.execute', return_value=(0, issues_json)) as ue, \
+    call_args = []
+    def my_exe(*args, **kwargs):
+        call_args.extend((args, kwargs))
+        cmd = args[0]
+        f = cmd.split()[-1][:-1]
+        with open(f, 'w') as fh:
+            fh.write(issues_json)
+        return 0, ''
+
+    with patch('kraken.agent.utils.execute', my_exe), \
          patch('kraken.agent.kraken_pylint._get_git_url', return_value='https://github.com/Kraken-CI/kraken/blob/master'):
         ret, msg = kraken_pylint.run_analysis(step, report_issue=_rep_issue)
 
-        ue.assert_called_once()
-        print('ARGS', ue.call_args)
-        assert ue.call_args.kwargs['cwd'] == '.'
-        assert ue.call_args.kwargs['timeout'] == 180
-        assert 'pylint' in ue.call_args.args[0]
-        assert '--exit-zero' in ue.call_args.args[0]
-        assert '--rcfile=pylint.rc' in ue.call_args.args[0]
-        assert '-f json' in ue.call_args.args[0]
+        assert call_args
+        print('ARGS', call_args)
+        assert call_args[1]['cwd'] == '.'
+        assert call_args[1]['timeout'] == 180
+        assert 'pylint' in call_args[0][0]
+        assert '--exit-zero' in call_args[0][0]
+        assert '--rcfile=pylint.rc' in call_args[0][0]
+        assert '-f json' in call_args[0][0]
 
     assert ret == 0
     assert msg == ''
