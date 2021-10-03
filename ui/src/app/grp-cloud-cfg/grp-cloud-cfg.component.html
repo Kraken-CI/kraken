@@ -82,6 +82,24 @@
           <p-checkbox [(ngModel)]="deployment.aws.cpu_credits_unlimited" binary="true" inputId="cpuCreditsUnlimited"></p-checkbox>
           <label for="cpuCreditsUnlimited">CPU Credits Unlimited</label>
         </div>
+        <div class="p-field p-grid">
+          <label for="diskSize" class="p-col-fixed" style="width:100px">Disk Size</label>
+          <div class="p-col">
+            <p-inputNumber [(ngModel)]="deployment.aws.disk_size" [showButtons]="true"
+                           inputId="diskSize"
+                           buttonLayout="horizontal"
+                           spinnerMode="horizontal"
+                           [min]="0"
+                           size="4"
+                           maxlength="5"
+                           decrementButtonClass="p-button-secondary p-button-outlined"
+                           incrementButtonClass="p-button-secondary p-button-outlined"
+                           incrementButtonIcon="pi pi-plus"
+                           decrementButtonIcon="pi pi-minus">
+            </p-inputNumber>
+
+          </div>
+        </div>
       </div>
 
       <!-- column 3 -->
