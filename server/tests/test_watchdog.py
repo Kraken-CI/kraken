@@ -14,13 +14,15 @@
 
 import logging
 import datetime
+from unittest.mock import patch
 
 import pytest
 
 from flask import Flask
 
 from kraken.server import consts, utils, initdb
-from kraken.server.models import db, Run, Job, Branch, Flow, Stage, Project, System, AgentsGroup, TestCase, Tool, AgentAssignment, Agent
+from kraken.server.models import db, Run, Job, Branch, Flow, Stage, Project, System, AgentsGroup
+from kraken.server.models import TestCase, Tool, AgentAssignment, Agent, Setting
 
 from dbtest import prepare_db
 
@@ -55,6 +57,9 @@ def test__check_agents_to_destroy():
     with app.app_context():
         initdb._prepare_initial_preferences()
 
+        Setting(group='cloud', name='aws_access_key', value='val', val_type='text')
+        db.session.commit()
+
         # empty db, no records
         all_count, outdated_count, dangling_count = watchdog._check_agents_to_destroy()
         assert all_count == 0
@@ -62,7 +67,7 @@ def test__check_agents_to_destroy():
         assert dangling_count == 0
 
         # simple case but still empty
-        a = Agent(name='agent', address='1.2.3.4')
+        a = Agent(name='agent', address='1.2.3.4', authorized=True, extra_attrs=dict(instance_id=1))
         ag = AgentsGroup(name='group')
         AgentAssignment(agent=a, agents_group=ag)
         db.session.commit()
@@ -74,7 +79,7 @@ def test__check_agents_to_destroy():
         assert not a.disabled
 
         # with empty deployment
-        ag.deployment = dict(method=consts.AGENT_DEPLOYMENT_METHOD_AWS, aws={})
+        ag.deployment = dict(method=consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2, aws={})
         db.session.commit()
 
         all_count, outdated_count, dangling_count = watchdog._check_agents_to_destroy()
@@ -86,7 +91,7 @@ def test__check_agents_to_destroy():
         # CHECK _destroy_and_delete_if_outdated
 
         # with deployment and destruction_after_time=0
-        ag.deployment = dict(method=consts.AGENT_DEPLOYMENT_METHOD_AWS, aws=dict(destruction_after_time=0))
+        ag.deployment = dict(method=consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2, aws=dict(destruction_after_time=0))
         db.session.commit()
 
         all_count, outdated_count, dangling_count = watchdog._check_agents_to_destroy()
@@ -96,7 +101,7 @@ def test__check_agents_to_destroy():
         assert not a.disabled
 
         # with deployment and destruction_after_time=0 and destruction_after_jobs=0
-        ag.deployment = dict(method=consts.AGENT_DEPLOYMENT_METHOD_AWS, aws=dict(destruction_after_time=0, destruction_after_jobs=0))
+        ag.deployment = dict(method=consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2, aws=dict(destruction_after_time=0, destruction_after_jobs=0))
         db.session.commit()
 
         all_count, outdated_count, dangling_count = watchdog._check_agents_to_destroy()
@@ -106,7 +111,7 @@ def test__check_agents_to_destroy():
         assert not a.disabled
 
         # with deployment and destruction_after_time > 0 but no jobs
-        ag.deployment = dict(method=consts.AGENT_DEPLOYMENT_METHOD_AWS, aws=dict(destruction_after_time=10, destruction_after_jobs=0))
+        ag.deployment = dict(method=consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2, aws=dict(destruction_after_time=10, destruction_after_jobs=0))
         db.session.commit()
 
         all_count, outdated_count, dangling_count = watchdog._check_agents_to_destroy()
@@ -117,7 +122,7 @@ def test__check_agents_to_destroy():
 
         # with deployment and destruction_after_time > 0 and with some job but just finished
         now = utils.utcnow()
-        ag.deployment = dict(method=consts.AGENT_DEPLOYMENT_METHOD_AWS, aws=dict(destruction_after_time=10, destruction_after_jobs=0))
+        ag.deployment = dict(method=consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2, aws=dict(destruction_after_time=10, destruction_after_jobs=0))
         project = Project()
         sys = System()
         branch = Branch(project=project)
@@ -136,6 +141,7 @@ def test__check_agents_to_destroy():
 
         # with deployment and destruction_after_time > 0 and with a job finished as needed
         job.finished = now - datetime.timedelta(seconds=60 * 11)
+        a.created = now - datetime.timedelta(seconds=60 * 12)
         db.session.commit()
 
         all_count, outdated_count, dangling_count = watchdog._check_agents_to_destroy()
@@ -145,7 +151,7 @@ def test__check_agents_to_destroy():
         assert a.disabled
 
         # with deployment and destruction_after_jobs > 0 but with a job just finished
-        ag.deployment = dict(method=consts.AGENT_DEPLOYMENT_METHOD_AWS, aws=dict(destruction_after_time=0, destruction_after_jobs=1))
+        ag.deployment = dict(method=consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2, aws=dict(destruction_after_time=0, destruction_after_jobs=1))
         job.finished = now
         job.state = consts.JOB_STATE_ASSIGNED
         a.disabled = False
@@ -170,7 +176,7 @@ def test__check_agents_to_destroy():
         # RESET
 
         # with deployment and no destruction_after_time and no destruction_after_jobs
-        ag.deployment = dict(method=consts.AGENT_DEPLOYMENT_METHOD_AWS, aws=dict(destruction_after_time=0, destruction_after_jobs=0))
+        ag.deployment = dict(method=consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2, aws=dict(destruction_after_time=0, destruction_after_jobs=0))
         a.disabled = False
         db.session.commit()
 
@@ -183,11 +189,11 @@ def test__check_agents_to_destroy():
         # CHECK _delete_if_missing_in_aws
 
         # with deployment and agent with AWS instance
-        ag.deployment = dict(method=consts.AGENT_DEPLOYMENT_METHOD_AWS, aws=dict(region='region'))
-        a.extra_attrs = dict(instance_id=123)
+        ag.deployment = dict(method=consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2, aws=dict(region='region'))
         db.session.commit()
 
-        all_count, outdated_count, dangling_count = watchdog._check_agents_to_destroy()
+        with patch('kraken.server.cloud.aws_ec2_vm_exists', return_value=False):
+            all_count, outdated_count, dangling_count = watchdog._check_agents_to_destroy()
         assert all_count == 1
         assert outdated_count == 0
         assert dangling_count == 1

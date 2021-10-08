@@ -20,7 +20,7 @@ import pytest
 import sqlalchemy
 from flask import Flask
 
-from kraken.server import consts
+from kraken.server import consts, initdb
 from kraken.server.models import db, Run, Job, TestCaseResult, Branch, Flow, Stage, Project, Issue, System, AgentsGroup, TestCase, Tool
 from kraken.server.bg import jobs
 
@@ -53,6 +53,8 @@ def test__analyze_job_results_history__1_job_basic():
     app = _create_app()
 
     with app.app_context():
+        initdb._prepare_initial_preferences()
+
         project = Project()
         branch = Branch(project=project)
         stage = Stage(branch=branch, schema={})
