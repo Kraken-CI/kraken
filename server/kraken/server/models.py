@@ -210,7 +210,6 @@ class Stage(db.Model, DatesMixin):
     repo_access_token = Column(UnicodeText)
     repo_branch = Column(UnicodeText)
     repo_url = Column(UnicodeText)
-    git_clone_params = Column(UnicodeText)
     schema_file = Column(UnicodeText)
     schema_from_repo_enabled = Column(Boolean, default=False)
     repo_error = Column(UnicodeText)
@@ -218,6 +217,7 @@ class Stage(db.Model, DatesMixin):
     repo_refresh_job_id = Column(UnicodeText)
     repo_state = Column(Integer, default=consts.REPO_STATE_OK)
     repo_version = Column(UnicodeText)
+    git_clone_params = Column(UnicodeText)
     runs = relationship('Run', back_populates="stage")
     sequences = relationship("BranchSequence", back_populates="stage")
     # services

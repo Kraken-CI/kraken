@@ -271,10 +271,8 @@ def _delete_if_missing_in_cloud(agent, depl, depl_method):
 def _check_agents_to_destroy():
     q = Agent.query.filter_by(deleted=None, authorized=True)
     q = q.join('agents_groups', 'agents_group')
-    #q = q.filter(or_(cast(AgentsGroup.deployment['method'], Integer) == consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2,
-    #                 cast(AgentsGroup.deployment['method'], Integer) == consts.AGENT_DEPLOYMENT_METHOD_AWS_ECS_FARGATE))
-    # TODO ECS
     q = q.filter(AgentsGroup.deployment.isnot(None))
+    # TODO ECS
     q = q.filter(or_(cast(AgentsGroup.deployment['method'], Integer) == consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2,
                      cast(AgentsGroup.deployment['method'], Integer) == consts.AGENT_DEPLOYMENT_METHOD_AZURE_VM))
 
