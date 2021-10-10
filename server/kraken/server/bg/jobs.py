@@ -310,10 +310,10 @@ def _analyze_dev_test_case_result(job, job_tcr):
     q = q.order_by(desc(Flow.created))
 
     ref_tcr = q.first()
-    log.info('REF TCR: %s %s %s %s', ref_tcr, ref_tcr.test_case.name, ref_tcr.job.run.flow, ref_tcr.job.run.flow.created)
 
     # determine change
     if ref_tcr:
+        log.info('REF TCR: %s %s %s %s', ref_tcr, ref_tcr.test_case.name, ref_tcr.job.run.flow, ref_tcr.job.run.flow.created)
         if ref_tcr.result == job_tcr.result:
             no_change_cnt += 1
         else:
@@ -324,6 +324,7 @@ def _analyze_dev_test_case_result(job, job_tcr):
                 job_tcr.change = consts.TC_RESULT_CHANGE_REGR
                 regr_cnt += 1
     else:
+        log.info('NO REF TCR, ie. new')
         job_tcr.change = consts.TC_RESULT_CHANGE_NEW
         new_cnt += 1
 
