@@ -22,7 +22,7 @@ from flask import Flask
 
 from kraken.server import consts, utils, initdb
 from kraken.server.models import db, Run, Job, Branch, Flow, Stage, Project, System, AgentsGroup
-from kraken.server.models import Tool, AgentAssignment, Agent, Setting
+from kraken.server.models import AgentAssignment, Agent, Setting
 
 from dbtest import prepare_db
 
