@@ -495,9 +495,7 @@ data6 = {
     "triggers": {
         "parent": True,
         "cron": "1 * * * *",
-        "interval": "10m",
-        "repository": True,
-        "webhook": True
+        "interval": "10m"
     },
     "parameters": [],
     "configs": [
@@ -662,14 +660,17 @@ schema = {
                             "type": "string"
                         },
                         "repos": {
-                            "type": "object",
-                            "additionalProperties": False,
-                            "properties": {
-                                "url": {
-                                    "type": "string"
-                                },
-                                "branch": {
-                                    "type": "string"
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "additionalProperties": False,
+                                "properties": {
+                                    "url": {
+                                        "type": "string"
+                                    },
+                                    "branch": {
+                                        "type": "string"
+                                    }
                                 }
                             }
                         },
@@ -1025,6 +1026,11 @@ schema = {
                                             "description": "A sleep time between subsequent execution attempts.",
                                             "default": 0,
                                             "type": "integer"
+                                        },
+                                        "timeout": {
+                                            "description": "A timeout in seconds that limits time of step execution. It is guareded by an agent. If it is exceeded then the step is arbitrarly terminated.",
+                                            "type": "integer",
+                                            "minimum": 30
                                         }
                                     }
                                 },

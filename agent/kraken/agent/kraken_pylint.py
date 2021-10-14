@@ -62,11 +62,12 @@ def run_analysis(step, report_issue=None):
     rcfile = step['rcfile']
     modules_or_packages = step['modules_or_packages']
     pylint_exe = step.get('pylint_exe', 'pylint')
+    timeout = int(step.get('timeout', 60))
 
     with tempfile.NamedTemporaryFile(suffix=".json", prefix="pylint-result-") as fh:
         result_file = fh.name
         cmd = 'sh -c "%s --exit-zero -f json --rcfile=%s %s > %s"' % (pylint_exe, rcfile, modules_or_packages, result_file)
-        ret, _ = utils.execute(cmd, cwd=cwd, out_prefix='', timeout=180)
+        ret, _ = utils.execute(cmd, cwd=cwd, out_prefix='', timeout=timeout)
 
         if ret != 0:
             log.error('pylint exited with non-zero retcode: %s', ret)
