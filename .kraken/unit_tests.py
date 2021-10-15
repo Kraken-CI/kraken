@@ -32,6 +32,7 @@ def stage(ctx):
                 "cwd": "kraken/server/kraken/server"
             }, {
                 "tool": "pytest",
+                "pytest_exe": "pytest",
                 "params": "-vv",
                 "cwd": "kraken/agent"
             }],

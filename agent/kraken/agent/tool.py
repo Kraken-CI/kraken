@@ -144,7 +144,7 @@ def execute(sock, module, command, step_file_path):
         else:
             raise Exception('unknown command %s' % command)
 
-        duration = t0 - time.time()
+        duration = time.time() - t0 + 0.5
         log.info('step tool %s, cmd %s done with retcode %s in %dsecs', tool_name, command, ret, duration)
 
         if ret != 0:
