@@ -62,7 +62,7 @@ def run_analysis(step, report_issue=None):
     rcfile = step['rcfile']
     modules_or_packages = step['modules_or_packages']
     pylint_exe = step.get('pylint_exe', 'pylint')
-    timeout = int(step.get('timeout', 60))
+    timeout = int(step.get('timeout', 180))
 
     with tempfile.NamedTemporaryFile(suffix=".json", prefix="pylint-result-") as fh:
         result_file = fh.name
