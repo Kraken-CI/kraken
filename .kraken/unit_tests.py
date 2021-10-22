@@ -84,9 +84,11 @@ def stage(ctx):
                 "cwd": "kraken/server"
             }],
             "environments": [{
-                "system": "krakenci/ubuntu:20.04",
-                "agents_group": "docker",
-                "executor": "docker",
+                #"system": "krakenci/ubuntu:20.04",
+                #"agents_group": "docker",
+                #"executor": "docker",
+                "system": "ubuntu:20.04",
+                "agents_group": "aws-ecs-fg",
                 "config": "default"
             }]
         }],
