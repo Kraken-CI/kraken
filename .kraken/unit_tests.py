@@ -74,7 +74,7 @@ def stage(ctx):
                 "tool": "shell",
                 "cmd": "poetry install",
                 "cwd": "kraken/server",
-                "timeout": 240
+                "timeout": 500
             }, {
                 "tool": "shell",
                 "cmd": "echo 'version = \'0.0\'' > version.py",
