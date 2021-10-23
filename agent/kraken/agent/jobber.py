@@ -397,6 +397,15 @@ def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
             if cancel:
                 log.info('canceling job')
                 return 'cancel', cancel, bg_step
+
+            if 'status' not in result:
+                msg = 'missing status in result: %s' % str(result)
+                log.error(msg)
+                if not result:
+                    result = {}
+                result['status'] = 'error'
+                result['reason'] = msg
+
             if result['status'] == 'done':
                 break
             retry_info = 'no more retries' if n + 1 == attempts else ('retrying after %ds' % sleep_time_after_attempt)
