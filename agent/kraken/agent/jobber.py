@@ -170,7 +170,11 @@ async def _send_keep_alive_to_server(proc_coord):
     srv = proc_coord.kk_srv
     while True:
         await asyncio.sleep(10)
-        rsp = srv.keep_alive(proc_coord.job_id)
+        try:
+            rsp = srv.keep_alive(proc_coord.job_id)
+        except Exception:
+            log.exception('IGNORED EXCEPTION')
+            continue
         if rsp.get('cancel', False):
             proc_coord.cancel()
 
