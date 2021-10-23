@@ -46,7 +46,7 @@ def stage(ctx):
             }]
         }, {
             "name": "pytest server",
-            "timeout": 600,
+            "timeout": 1200,
             "steps": [{
                 "tool": "shell",
                 "cmd": "sudo apt-get update && sudo apt-get install -y --no-install-recommends apt-transport-https software-properties-common postgresql-client python3-pip python curl gpg-agent",
