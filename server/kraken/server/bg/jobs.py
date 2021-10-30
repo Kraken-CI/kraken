@@ -772,18 +772,21 @@ def trigger_flow(project_id, trigger_data=None):
             log.error('got unknown project: %s', project_id)
             return
 
-        if trigger_data['trigger'] == 'github-push':
+        if trigger_data['trigger'] in ['github-push', 'gitea-push']:
             branch_name = trigger_data['ref'].split('/')[-1]
             flow_kind = 'ci'
             flow_kind_no = 0
-            reason = dict(reason='github push')
-        elif trigger_data['trigger'] == 'github-pull_request':
+        elif trigger_data['trigger'] in ['github-pull_request', 'gitea-pull_request']:
             branch_name = trigger_data['pull_request']['base']['ref']
             flow_kind = 'dev'
             flow_kind_no = 1
-            reason = dict(reason='github pull request')
         else:
-            reason = dict(reason=trigger_data['trigger'])
+            log.error('unsupported trigger %s', trigger_data['trigger'])
+            return
+
+        reason = trigger_data['trigger'].replace('-', ' ').replace('_', ' ')
+        reason = dict(reason=reason)
+
         branch = Branch.query.filter_by(project=project, branch_name=branch_name).one_or_none()
         if branch is None:
             log.warning('cannot find branch by branch_name: %s', branch_name)
@@ -800,8 +803,12 @@ def trigger_flow(project_id, trigger_data=None):
             exec_utils.create_a_flow(branch, flow_kind, {})
             return
 
-        trigger_git_url = giturlparse.parse(trigger_data['repo'])
-        trigger_git_url = trigger_git_url.url2https
+        trigger_git_url = trigger_data['repo']
+        try:
+            url = giturlparse.parse(trigger_git_url)
+            trigger_git_url = url.url2https
+        except Exception:
+            pass
 
         # find stages that use repo from trigger
         matching_stages = []

@@ -52,13 +52,13 @@ def create_empty_db(db_name, drop_exisiting=False):
 
 def clear_db_postresql(connection):
     for table in db.metadata.tables.keys():
-        connection.execute('ALTER TABLE "%s" DISABLE TRIGGER ALL;' % table)
         try:
+            connection.execute('ALTER TABLE "%s" DISABLE TRIGGER ALL;' % table)
             connection.execute('DELETE FROM "%s";' % table)
+            connection.execute('ALTER TABLE "%s" ENABLE TRIGGER ALL;' % table)
         except Exception as e:
-            if not "doesn't exist" in str(e):
+            if not "doesn't exist" in str(e) and not 'does not exist' in str(e):
                 raise
-        connection.execute('ALTER TABLE "%s" ENABLE TRIGGER ALL;' % table)
 
 
 def prepare_db(db_name=None):
@@ -69,25 +69,16 @@ def prepare_db(db_name=None):
     if db_name is None:
         db_name = os.environ.get('KK_UT_DB', 'kkut')
 
-    # db_root_url, db_exists = create_empty_db(db_name)
-    db_root_url, _ = create_empty_db(db_name)
+    db_root_url, db_exists = create_empty_db(db_name)
 
     # prepare connection, create any missing tables
     #clean_db()
     real_db_url = db_root_url + db_name
-    # engine = sqlalchemy.create_engine(real_db_url, echo=False)
-    # db.metadata.bind = engine
-    # db.setup_all()
-    # db.create_all()
-    # db.fix_compatibility()
 
-    # if db_exists:
-    #     global_log.log_global('prepare_db - delete all rows', 'real_db_url', real_db_url)
-    #     # delete all rows from all tables
-    #     if db_url.startswith("mysql"):
-    #         clear_db_mysql(engine)
-    #     elif db_url.startswith("postgresql"):
-    #         clear_db_postresql(engine)
+    if db_exists:
+        # delete all rows from all tables
+        engine = sqlalchemy.create_engine(real_db_url, echo=False)
+        clear_db_postresql(engine)
 
     # db.prepare_indexes(engine)
     return real_db_url

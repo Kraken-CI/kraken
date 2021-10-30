@@ -345,7 +345,7 @@ task :server_ut do
 
   ENV['POSTGRES_URL'] = "postgresql://kkut:kkut@localhost:15432/"
   Dir.chdir('server') do
-    sh "../venv/bin/poetry run pytest -s -v #{ENV['test']}"
+    sh "../venv/bin/poetry run pytest -s -r A -vv #{ENV['test']}"
   end
 end
 

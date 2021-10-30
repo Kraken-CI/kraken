@@ -247,7 +247,9 @@ export class BranchResultsComponent implements OnInit, OnDestroy {
                 html += ` at ${ts}<br>`
                 html += `${pr.title}<br>`
                 html += `branch: ${pr.head.ref}<br>`
-                html += `commits: ${pr.commits}`
+                if (pr.commits) {
+                    html += `commits: ${pr.commits}`
+                }
                 html += `</p>`
             }
         }

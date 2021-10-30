@@ -138,27 +138,51 @@
 
     <!-- WEB HOOKS -->
     <p-tabPanel header="Web Hooks">
-      <div style="font-size: 1.3em; font-weight: bold; margin-bottom: 8px;">GitHub</div>
-      <div style="margin: 0 0 8px 3px;">
-        <p-checkbox [(ngModel)]="project.webhooks.github_enabled" binary="true" label="Enabled"></p-checkbox>
-      </div>
-      <table *ngIf="project.webhooks.github_enabled" style="margin: 0 0 10px 0;">
-        <tr>
-          <td style="vertical-align: top; width: 80px;">URL</td>
-          <td>
-            <span style="font-size: 1.2em;">{{ getBaseUrl() }}/webhooks/{{ project.id }}/github</span>
-          </td>
-        </tr>
-        <tr>
-          <td>Secret</td>
-          <td>{{ getOrGenerateSecret() }}</td>
-        </tr>
-        <tr><td colspan="2">
-            <div style="color: #777; margin-top: 10px;">use URL and Secret on GitHub WebHooks setup page to trigger this project</div>
-        </td></tr>
-      </table>
-      <p-button label="Save" icon="pi pi-check" (onClick)="saveWebhooks()"
-                [disabled]="!auth.hasPermission('manage')"
-                [pTooltip]="auth.permTip('manage')"></p-button>
+        <!-- GITHUB -->
+        <div style="font-size: 1.3em; font-weight: bold; margin-bottom: 8px;">GitHub</div>
+        <div style="margin: 0 0 8px 3px;">
+            <p-checkbox [(ngModel)]="project.webhooks.github_enabled" binary="true" label="Enabled"></p-checkbox>
+        </div>
+        <table *ngIf="project.webhooks.github_enabled" style="margin: 0 0 10px 0;">
+            <tr>
+                <td style="vertical-align: top; width: 80px;">URL</td>
+                <td>
+                    <span style="font-size: 1.2em;">{{ getBaseUrl() }}/webhooks/{{ project.id }}/github</span>
+                </td>
+            </tr>
+            <tr>
+                <td>Secret</td>
+                <td>{{ getOrGenerateSecret('github') }}</td>
+            </tr>
+            <tr><td colspan="2">
+                    <div style="color: #777; margin-top: 10px;">use URL and Secret on GitHub WebHooks setup page to trigger this project</div>
+            </td></tr>
+        </table>
+
+        <!-- GITEA -->
+        <div style="font-size: 1.3em; font-weight: bold; margin-bottom: 8px;">Gitea</div>
+        <div style="margin: 0 0 8px 3px;">
+            <p-checkbox [(ngModel)]="project.webhooks.gitea_enabled" binary="true" label="Enabled"></p-checkbox>
+        </div>
+        <table *ngIf="project.webhooks.gitea_enabled" style="margin: 0 0 10px 0;">
+            <tr>
+                <td style="vertical-align: top; width: 80px;">URL</td>
+                <td>
+                    <span style="font-size: 1.2em;">{{ getBaseUrl() }}/webhooks/{{ project.id }}/gitea</span>
+                </td>
+            </tr>
+            <tr>
+                <td>Secret</td>
+                <td>{{ getOrGenerateSecret('gitea') }}</td>
+            </tr>
+            <tr><td colspan="2">
+                    <div style="color: #777; margin-top: 10px;">use URL and Secret on Gitea WebHooks setup page to trigger this project</div>
+            </td></tr>
+        </table>
+
+
+        <p-button label="Save" icon="pi pi-check" (onClick)="saveWebhooks()"
+                  [disabled]="!auth.hasPermission('manage')"
+                  [pTooltip]="auth.permTip('manage')"></p-button>
     </p-tabPanel>
 </p-tabView>

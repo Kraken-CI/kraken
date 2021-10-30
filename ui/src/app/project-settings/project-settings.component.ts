@@ -21,7 +21,8 @@ export class ProjectSettingsComponent implements OnInit {
         name: '',
         branches: [],
         secrets: [],
-        webhooks: { github_enabled: false },
+        webhooks: { github_enabled: false,
+                    gitea_enabled: false },
     }
 
     newBranchDlgVisible = false
@@ -316,17 +317,18 @@ export class ProjectSettingsComponent implements OnInit {
         return window.location.origin
     }
 
-    getOrGenerateSecret() {
-        if (!this.project.webhooks.github_secret) {
+    getOrGenerateSecret(service) {
+        const secretKey = service + '_secret'
+        if (!this.project.webhooks[secretKey]) {
             // generate random string, 20 chars
             const arr = new Uint8Array(20)
             window.crypto.getRandomValues(arr)
             const rndStr = Array.from(arr, (c) =>
                 Math.round((36 * c) / 255).toString(36)
             ).join('')
-            this.project.webhooks.github_secret = rndStr
+            this.project.webhooks[secretKey] = rndStr
         }
-        return this.project.webhooks.github_secret
+        return this.project.webhooks[secretKey]
     }
 
     saveWebhooks() {
@@ -360,8 +362,8 @@ export class ProjectSettingsComponent implements OnInit {
 
     getFlows(branch) {
         return [
-            { name: 'CI', flows: branch.ci_flows },
-            { name: 'Dev', flows: branch.dev_flows },
+            { name: 'CI', flows: branch.ci_flows ? branch.ci_flows : [] },
+            { name: 'Dev', flows: branch.dev_flows ? branch.dev_flows : [] },
         ]
     }
 
