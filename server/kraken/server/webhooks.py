@@ -116,8 +116,6 @@ def handle_github_webhook(project_id):
 def handle_gitea_webhook(project_id):
     payload = request.get_data()
     log.info('GITEA for project_id:%s, payload: %s', project_id, payload)
-    with open('/tmp/gitea-1.json', 'wb') as f:
-        f.write(payload)
     event = request.headers.get('X-Gitea-Event')
     signature = request.headers.get("X-Hub-Signature")
     log.info('GITEA event:%s, signature: %s', event, signature)
