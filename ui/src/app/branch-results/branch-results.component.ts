@@ -210,14 +210,11 @@ export class BranchResultsComponent implements OnInit, OnDestroy {
             if (flow.trigger.commits) {
                 for (const c of flow.trigger.commits) {
                     html += `<p>`
-                    html += `<a href="${c.url}" target="blank"><b>${c.id.slice(
-                        0,
-                        8
-                    )}</b></a>`
+                    html += `<a href="${c.url}" target="blank"><b>${c.id.slice(0, 8)}</b></a>`
                     html += ` by <a href="mailto:${c.author.email}">${c.author.name}</a>`
                     const ts = datetimeToLocal(c.timestamp, null)
                     html += ` at ${ts}<br>`
-                    html += `${c.message}<br>`
+                    html += `${c.message.trim()}<br>`
                     const files = []
                     if (c.modified) {
                         files.push(`modified ${c.modified.length}`)
@@ -240,7 +237,11 @@ export class BranchResultsComponent implements OnInit, OnDestroy {
             if (flow.trigger.pull_request) {
                 const pr = flow.trigger.pull_request
                 html += `<p>`
-                html += `Pull Request `
+                if (flow.trigger.trigger === 'gitlab-Merge Request Hook') {
+                    html += `Merge Request `
+                } else {
+                    html += `Pull Request `
+                }
                 html += ` <a href="${pr.html_url}" target="blank">#${pr.number}</a> `
                 html += ` by <a href="${pr.user.html_url}" target="blank">${pr.user.login}</a> `
                 const ts = datetimeToLocal(pr.updated_at, null)
@@ -271,7 +272,7 @@ export class BranchResultsComponent implements OnInit, OnDestroy {
                         html += ` by <a href="mailto:${c.author.email}">${c.author.name}</a>`
                         const ts = datetimeToLocal(c.timestamp, null)
                         html += ` at ${ts}<br>`
-                        html += `${c.message}<br>`
+                        html += `${c.message.trim()}<br>`
                         html += '</div>'
                     }
                     html += `</p>`

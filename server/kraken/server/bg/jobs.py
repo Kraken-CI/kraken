@@ -772,11 +772,11 @@ def trigger_flow(project_id, trigger_data=None):
             log.error('got unknown project: %s', project_id)
             return
 
-        if trigger_data['trigger'] in ['github-push', 'gitea-push']:
+        if trigger_data['trigger'] in ['github-push', 'gitea-push', 'gitlab-Push Hook']:
             branch_name = trigger_data['ref'].split('/')[-1]
             flow_kind = 'ci'
             flow_kind_no = 0
-        elif trigger_data['trigger'] in ['github-pull_request', 'gitea-pull_request']:
+        elif trigger_data['trigger'] in ['github-pull_request', 'gitea-pull_request', 'gitlab-Merge Request Hook']:
             branch_name = trigger_data['pull_request']['base']['ref']
             flow_kind = 'dev'
             flow_kind_no = 1
@@ -785,6 +785,7 @@ def trigger_flow(project_id, trigger_data=None):
             return
 
         reason = trigger_data['trigger'].replace('-', ' ').replace('_', ' ')
+        reason = reason.replace('Hook', '').strip()
         reason = dict(reason=reason)
 
         branch = Branch.query.filter_by(project=project, branch_name=branch_name).one_or_none()

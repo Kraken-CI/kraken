@@ -22,7 +22,8 @@ export class ProjectSettingsComponent implements OnInit {
         branches: [],
         secrets: [],
         webhooks: { github_enabled: false,
-                    gitea_enabled: false },
+                    gitea_enabled: false,
+                    gitlab_enabled: false },
     }
 
     newBranchDlgVisible = false
@@ -41,6 +42,20 @@ export class ProjectSettingsComponent implements OnInit {
     })
 
     selectedSecret: any
+
+    webhookServices = [{
+        name: 'github',
+        displayName: 'GitHub',
+        logoUrl: '/assets/github-logo.svg'
+    }, {
+        name: 'gitlab',
+        displayName: 'GitLab',
+        logoUrl: '/assets/gitlab-logo.svg'
+    }, {
+        name: 'gitea',
+        displayName: 'Gitea',
+        logoUrl: '/assets/gitea-logo.svg'
+    }]
 
     constructor(
         private route: ActivatedRoute,

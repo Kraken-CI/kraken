@@ -18,6 +18,7 @@ import hashlib
 import logging
 
 from flask import Blueprint, request, abort
+import dateutil.parser
 
 from .models import Project
 from .bg import jobs as bg_jobs
@@ -39,8 +40,9 @@ def handle_github_webhook(project_id):
         abort(400, "missing github event type in request header")
     log.info('EVENT %s', event)
     if event not in ['push', 'pull_request']:
-        log.info('unsupported event')
-        return "", 204
+        msg = 'unsupported event'
+        log.info(msg)
+        return msg, 204
 
     # check project
     project = Project.query.filter_by(id=project_id).one_or_none()
@@ -83,12 +85,14 @@ def handle_github_webhook(project_id):
                             commits=req['commits'])
     elif event == 'pull_request':
         if req['action'] not in ['opened', 'synchronize']:
-            log.info('unsupported action %s', req['action'])
-            return "", 204
+            msg = 'unsupported action %s' % req['action']
+            log.info(msg)
+            return msg, 204
 
         if req['action'] == 'opened' and req['pull_request']['commits'] == 0:
-            log.info('pull request with no commits, dropped')
-            return "", 204
+            msg = 'pull request with no commits, dropped'
+            log.info(msg)
+            return msg, 204
 
         if 'before' in req:
             before = req['before']
@@ -129,8 +133,9 @@ def _handle_gitea_webhook(project_id, payload, event, signature):
         abort(400, "missing gitea event type in request header")
     log.info('EVENT %s', event)
     if event not in ['push', 'pull_request']:
-        log.info('unsupported event')
-        return "", 204
+        msg = 'unsupported event'
+        log.info(msg)
+        return msg, 204
 
     # check project
     project = Project.query.filter_by(id=project_id).one_or_none()
@@ -149,8 +154,9 @@ def _handle_gitea_webhook(project_id, payload, event, signature):
         if my_secret:
             my_secret = bytes(my_secret, 'ascii')
     if my_secret is None:
-        log.warning('secret not configured for gitea webhook')
-        return "", 204
+        msg = 'secret not configured for gitea webhook'
+        log.warning(msg)
+        return msg, 204
     if signature is None:
         log.warning('missing signature in request header')
         abort(400, "missing signature in request header")
@@ -202,6 +208,109 @@ def _handle_gitea_webhook(project_id, payload, event, signature):
     return "", 204
 
 
+### GITLAB #############
+
+def handle_gitlab_webhook(project_id):
+    payload = request.get_data()
+    log.info('GITLAB for project_id:%s, payload: %s', project_id, payload)
+    event = request.headers.get('X-Gitlab-Event')
+    token = request.headers.get('X-Gitlab-Token')
+    return _handle_gitlab_webhook(project_id, payload, event, token)
+
+
+def _handle_gitlab_webhook(project_id, payload, event, token):
+    # check event
+    if event is None:
+        log.warning('missing gitlab event type in request header')
+        abort(400, "missing gitlab event type in request header")
+    log.info('EVENT %s', event)
+    if event not in ['Push Hook', 'Merge Request Hook']:
+        msg = 'unsupported event'
+        log.info(msg)
+        return msg, 204
+
+    # check project
+    project = Project.query.filter_by(id=project_id).one_or_none()
+    if project is None:
+        log.warning('cannot find project %s', project_id)
+        abort(400, "Invalid project id")
+
+    if not project.webhooks.get('gitlab_enabled', False):
+        log.info('webhooks from gitlab disabled')
+        abort(400, "webhooks from gitlab disabled")
+
+    # check secret
+    my_secret = None
+    if project.webhooks:
+        my_secret = project.webhooks.get('gitlab_secret', None)
+    if my_secret is None:
+        log.warning('secret not configured for gitea webhook')
+        return "", 204
+    if token is None:
+        log.warning('missing token in request header')
+        abort(400, "missing token in request header")
+
+    if token != my_secret:
+        log.warning('bad token %s vs %s', token, my_secret)
+        abort(400, "Invalid token")
+
+    req = json.loads(payload)
+
+    # trigger running the project flow via rq
+    if event == 'Push Hook':
+        trigger_data = dict(trigger='gitlab-' + event,
+                            ref=req['ref'],
+                            before=req['before'],
+                            after=req['after'],
+                            repo=req['repository']['git_http_url'],
+                            pusher=dict(full_name=req['user_name'],
+                                        username=req['user_username'],
+                                        email=req['user_email']),
+                            commits=req['commits'])
+    elif event == 'Merge Request Hook':
+        obj = req['object_attributes']
+        action = obj['action']
+        if action not in ['open', 'update']:
+            msg = 'unsupported action %s' % action
+            log.info(msg)
+            return msg, 204
+
+        if 'oldrev' in obj:
+            before = obj['oldrev']
+        else:
+            before = ''
+
+        after = obj['last_commit']['id']
+
+        if after == before:
+            msg = 'merge request with no commits, dropped'
+            log.info(msg)
+            return msg, 204
+
+        # get base url
+        base_url = req['project']['web_url']
+        base_url = base_url.rsplit('/', 2)[0]
+
+        trigger_data = dict(trigger='gitlab-' + event,
+                            action=action,
+                            pull_request=dict(head=dict(ref=obj['source_branch']),
+                                              base=dict(ref=obj['target_branch'],
+                                                        sha=before),
+                                              user=dict(login=req['user']['username'],
+                                                        html_url='%s/%s' % (base_url, req['user']['username'])),
+                                              html_url=obj['url'],
+                                              number=obj['id'],
+                                              updated_at=dateutil.parser.parse(obj['updated_at']).isoformat(),
+                                              title=obj['title']),
+                            before=before,
+                            after=after,
+                            repo=req['project']['git_http_url'],
+                            sender=req['user'])
+    kkrq.enq(bg_jobs.trigger_flow, project.id, trigger_data)
+
+    return "", 204
+
+
 ### BLUEPRINT #############
 
 def create_blueprint():
@@ -209,5 +318,6 @@ def create_blueprint():
 
     bp.add_url_rule('/<int:project_id>/github', view_func=handle_github_webhook, methods=['POST'])
     bp.add_url_rule('/<int:project_id>/gitea', view_func=handle_gitea_webhook, methods=['POST'])
+    bp.add_url_rule('/<int:project_id>/gitlab', view_func=handle_gitlab_webhook, methods=['POST'])
 
     return bp
