@@ -50,16 +50,14 @@ def handle_github_webhook(project_id):
         log.warning('cannot find project %s', project_id)
         abort(400, "Invalid project id")
 
-    if not project.webhooks.get('github_enabled', False):
+    if not project.webhooks or not project.webhooks.get('github_enabled', False):
         log.info('webhooks from github disabled')
         abort(400, "webhooks from github disabled")
 
     # check secret
-    my_secret = None
-    if project.webhooks:
-        my_secret = project.webhooks.get('github_secret', None)
-        if my_secret:
-            my_secret = bytes(my_secret, 'ascii')
+    my_secret = project.webhooks.get('github_secret', None)
+    if my_secret:
+        my_secret = bytes(my_secret, 'ascii')
     if my_secret is not None:
         github_sig = request.headers.get("X-Hub-Signature")
         if github_sig is None:
@@ -143,16 +141,14 @@ def _handle_gitea_webhook(project_id, payload, event, signature):
         log.warning('cannot find project %s', project_id)
         abort(400, "Invalid project id")
 
-    if not project.webhooks.get('gitea_enabled', False):
+    if not project.webhooks or not project.webhooks.get('gitea_enabled', False):
         log.info('webhooks from gitea disabled')
         abort(400, "webhooks from gitea disabled")
 
     # check secret
-    my_secret = None
-    if project.webhooks:
-        my_secret = project.webhooks.get('gitea_secret', None)
-        if my_secret:
-            my_secret = bytes(my_secret, 'ascii')
+    my_secret = project.webhooks.get('gitea_secret', None)
+    if my_secret:
+        my_secret = bytes(my_secret, 'ascii')
     if my_secret is None:
         msg = 'secret not configured for gitea webhook'
         log.warning(msg)
@@ -235,14 +231,12 @@ def _handle_gitlab_webhook(project_id, payload, event, token):
         log.warning('cannot find project %s', project_id)
         abort(400, "Invalid project id")
 
-    if not project.webhooks.get('gitlab_enabled', False):
+    if not project.webhooks or not project.webhooks.get('gitlab_enabled', False):
         log.info('webhooks from gitlab disabled')
         abort(400, "webhooks from gitlab disabled")
 
     # check secret
-    my_secret = None
-    if project.webhooks:
-        my_secret = project.webhooks.get('gitlab_secret', None)
+    my_secret = project.webhooks.get('gitlab_secret', None)
     if my_secret is None:
         log.warning('secret not configured for gitea webhook')
         return "", 204
