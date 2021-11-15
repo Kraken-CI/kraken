@@ -11,7 +11,7 @@ RUN rm ./target/release/deps/clickhouse_proxy*
 RUN cargo build --release
 
 ##############################################################################################################
-FROM alpine:3.12 as clickhouse-proxy
+FROM alpine:3.13 as clickhouse-proxy
 WORKDIR /proxy
 COPY --from=builder /proxy/target/release/clickhouse-proxy /proxy
 CMD /proxy/clickhouse-proxy
