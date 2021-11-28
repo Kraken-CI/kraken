@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    kraken.service: ui
+  name: ui
+spec:
+  selector:
+    kraken.service: ui
+  ports:
+    - port: 8080
+      targetPort: http
+{{- if eq .Values.access.method "node-port" }}
+      nodePort: {{ .Values.access.ui_port }}
+{{- end }}
+{{- if eq .Values.access.method "external-ips" }}
+  type: NodePort
+  externalIPs: {{- range .Values.access.external_ips }}
+    - {{ . }} {{- end }}
+{{- end }}
+{{- if eq .Values.access.method "node-port" }}
+  type: NodePort
+{{- end }}
+{{- if eq .Values.access.method "load-balancer" }}
+  type: LoadBalancer
+{{- end }}

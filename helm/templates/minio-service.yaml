@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    kraken.service: minio
+  name: minio
+spec:
+  selector:
+    kraken.service: minio
+  ports:
+    - port: 9999
+      targetPort: minio
+{{- if eq .Values.access.method "node-port" }}
+      nodePort: {{ .Values.access.minio_port }}
+{{- end }}
+{{- if eq .Values.access.method "external-ips" }}
+  type: NodePort
+  externalIPs: {{- range .Values.access.external_ips }}
+    - {{ . }} {{- end }}
+{{- end }}
+{{- if eq .Values.access.method "node-port" }}
+  type: NodePort
+{{- end }}
+{{- if eq .Values.access.method "load-balancer" }}
+  type: LoadBalancer
+{{- end }}

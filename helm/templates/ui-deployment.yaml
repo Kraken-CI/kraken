@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    kraken.service: ui
+  name: ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      kraken.service: ui
+  template:
+    metadata:
+      labels:
+        kraken.service: ui
+    spec:
+      containers:
+        - name: ui
+          env:
+            - name: KRAKEN_SERVER_ADDR
+              value: server:6363
+          image: "{{ .Values.image.baseUrl }}/kkui:{{ .Chart.AppVersion }}"
+          ports:
+            - name: http
+              containerPort: 80
+      restartPolicy: Always

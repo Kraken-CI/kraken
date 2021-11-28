@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    kraken.service: agent
+  name: agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      kraken.service: agent
+  template:
+    metadata:
+      labels:
+        kraken.service: agent
+    spec:
+      containers:
+        - name: agent
+          env:
+            - name: KRAKEN_CLICKHOUSE_ADDR
+              value: clickhouse-proxy:9001
+            - name: KRAKEN_MINIO_ADDR
+              value: minio:9999
+            - name: KRAKEN_SERVER_ADDR
+              value: server:6363
+          image: {{ .Values.image.baseUrl }}/kkagent:{{ .Chart.AppVersion }}
+      restartPolicy: Always
+      serviceAccountName: kraken

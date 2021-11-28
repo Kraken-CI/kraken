@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    kraken.service: postgres
+  name: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      kraken.service: postgres
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        kraken.service: postgres
+    spec:
+      containers:
+        - name: postgres
+          env:
+            - name: POSTGRES_DB
+              value: {{ .Values.postgresql.db }}
+            - name: POSTGRES_USER
+              value:  {{ .Values.postgresql.user }}
+            - name: POSTGRES_PASSWORD
+              value:  {{ .Values.postgresql.password }}
+            - name: PGDATA  # this subdir fixes problem: is not empty, it contains a lost+found directory
+              value: /var/lib/postgresql/data/pgdata
+          image: postgres:11
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: db-data
+          ports:
+            - name: pgsql
+              containerPort: 5432
+      restartPolicy: Always
+      volumes:
+        - name: db-data
+          persistentVolumeClaim:
+            claimName: db-data

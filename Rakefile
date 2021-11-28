@@ -514,6 +514,18 @@ task :run_portainer do
   sh 'docker run -d -p 8000:8000 -p 9000:9000 -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer'
 end
 
+file './venv/bin/cloudsmith' do
+  sh './venv/bin/pip install cloudsmith-cli'
+end
+
+task :helm_pkg do
+  sh "helm package helm --app-version #{kk_ver} --version #{kk_ver}.0"
+end
+
+task :helm_upload => ['./venv/bin/cloudsmith'] do
+  sh "./venv/bin/cloudsmith upload helm --republish kraken-ci/kraken kraken-ci-#{kk_ver}.0.tgz"
+end
+
 task :deploy_lab => ['./venv/bin/python3'] do
   # prepare docker stack config
   Rake::Task["compose_to_swarm"].invoke

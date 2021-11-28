@@ -23,7 +23,7 @@
 
 ![Kraken CI Results Page](https://kraken.ci/img/slide-branch-results.png)
 
-Kraken CI is a a modern, open-source, on-premise CI/CD system
+Kraken CI is a modern, open-source, on-premise CI/CD system
 that is highly scalable and focused on testing.
 
 More information can be found on https://kraken.ci

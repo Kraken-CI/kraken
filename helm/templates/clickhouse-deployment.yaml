@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    kraken.service: clickhouse
+  name: clickhouse
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      kraken.service: clickhouse
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        kraken.service: clickhouse
+    spec:
+      containers:
+        - name: clickhouse
+          image: {{ .Values.image.baseUrl }}/clickhouse-server:20.11.4.13.{{ .Chart.AppVersion }}
+          ports:
+            - name: http
+              containerPort: 8123
+            - name: ch
+              containerPort: 9000
+          volumeMounts:
+            - mountPath: /var/lib/clickhouse
+              name: clickhouse
+      restartPolicy: Always
+      volumes:
+        - name: clickhouse
+          persistentVolumeClaim:
+            claimName: clickhouse

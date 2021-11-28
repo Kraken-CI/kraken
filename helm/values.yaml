@@ -1,0 +1,22 @@
+image:
+  baseUrl: eu.gcr.io/kraken-261806
+
+postgresql:
+  db: kraken
+  user: kraken
+  password: kk123
+
+minio:
+  access_key: URDS4GCFU4ACSDFERFAU
+  secret_key: HIsgg5DIIGSRRerIUHIUhGFEUHugJjfrJuyyaiGY
+
+access:
+  # possible methods: external-ips, node-port, load-balancer
+  # default is node-port
+  method: node-port
+  # in case of external-ips method set these:
+  external_ips:
+  # in case of node-port method set these:
+  ui_port: 31080
+  clickhouse_port: 31901
+  minio_port: 31999

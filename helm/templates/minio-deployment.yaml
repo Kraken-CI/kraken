@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    kraken.service: minio
+  name: minio
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      kraken.service: minio
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        kraken.service: minio
+    spec:
+      containers:
+        - args:
+            - server
+            - --address
+            - :9999
+            - /data
+          env:
+            - name: MINIO_ACCESS_KEY
+              value: {{ .Values.minio.access_key }}
+            - name: MINIO_SECRET_KEY
+              value: {{ .Values.minio.secret_key }}
+          image: minio/minio:RELEASE.2020-12-18T03-27-42Z
+          name: minio
+          ports:
+            - name: minio
+              containerPort: 9999
+          volumeMounts:
+            - mountPath: /data
+              name: minio
+      restartPolicy: Always
+      volumes:
+        - name: minio
+          persistentVolumeClaim:
+            claimName: minio

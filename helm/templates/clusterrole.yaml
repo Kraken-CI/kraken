@@ -1,0 +1,10 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+
+metadata:
+  name: kraken-role
+
+rules:
+  - apiGroups: [""]
+    resources: ["nodes", "services", "pods", "endpoints"]
+    verbs: ["get", "list", "watch"]

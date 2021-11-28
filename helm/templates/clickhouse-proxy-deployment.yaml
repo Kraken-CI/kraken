@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    kraken.service: clickhouse-proxy
+  name: clickhouse-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      kraken.service: clickhouse-proxy
+  template:
+    metadata:
+      labels:
+        kraken.service: clickhouse-proxy
+    spec:
+      containers:
+        - name: clickhouse-proxy
+          env:
+            - name: KRAKEN_CLICKHOUSE_URL
+              value: http://clickhouse:8123/
+          image: {{ .Values.image.baseUrl }}/kkchproxy:{{ .Chart.AppVersion }}
+          ports:
+            - name: ch-proxy
+              containerPort: 9001
+              protocol: UDP
+      restartPolicy: Always

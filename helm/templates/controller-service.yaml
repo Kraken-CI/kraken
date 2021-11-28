@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    kraken.service: controller
+  name: controller
+spec:
+  ports:
+    - port: 7997
+      targetPort: planner
+  selector:
+    kraken.service: controller

@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    kraken.service: redis
+  name: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      kraken.service: redis
+  template:
+    metadata:
+      labels:
+        kraken.service: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:6
+          ports:
+            - name: redis
+              containerPort: 6379
+      restartPolicy: Always

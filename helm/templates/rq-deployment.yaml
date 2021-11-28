@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    kraken.service: rq
+  name: rq
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      kraken.service: rq
+  template:
+    metadata:
+      labels:
+        kraken.service: rq
+    spec:
+      containers:
+        - name: rq
+          env:
+            - name: KRAKEN_CLICKHOUSE_ADDR
+              value: clickhouse-proxy:9001
+            - name: KRAKEN_CLICKHOUSE_PORT
+              value: "9001"
+            - name: KRAKEN_DB_URL
+              value: postgresql://{{ .Values.postgresql.user }}:{{ .Values.postgresql.password }}@postgres:5432/{{ .Values.postgresql.db }}
+            - name: KRAKEN_MINIO_ADDR
+              value: minio:9999
+            - name: KRAKEN_PLANNER_URL
+              value: http://controller:7997/
+            - name: KRAKEN_REDIS_ADDR
+              value: redis
+            - name: KRAKEN_SERVER_ADDR
+              value: server:6363
+            - name: KRAKEN_SERVER_PORT
+              value: "6363"
+            - name: MINIO_ACCESS_KEY
+              value: {{ .Values.minio.access_key }}
+            - name: MINIO_SECRET_KEY
+              value: {{ .Values.minio.secret_key }}
+          image: {{ .Values.image.baseUrl }}/kkrq:{{ .Chart.AppVersion }}
+      restartPolicy: Always
+      serviceAccountName: kraken
