@@ -7,7 +7,7 @@ def stage(ctx):
         "parameters": [],
         "configs": [],
         "jobs": [{
-            "name": "publish on github",
+            "name": "publish",
             "timeout": 600,
             "steps": [{
                 "tool": "artifacts",
@@ -25,7 +25,7 @@ def stage(ctx):
             }, {
                 "tool": "git",
                 "checkout": "github.com/Kraken-CI/helm-repo.git",
-                "access-token": "#{KK_SECRET_SIMPLE_github_token}",
+                "access-token": "github_token",
                 "branch": "gh-pages"
             }, {
                 "tool": "shell",

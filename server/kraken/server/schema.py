@@ -150,7 +150,7 @@ def check_and_correct_stage_schema(branch, stage_name, schema_code, context=None
                 if field in ['access-token', 'ssh-key']:
                     secret = Secret.query.filter_by(project=branch.project, name=value).one_or_none()
                     if secret is None:
-                        raise SchemaError("Secret '%s' does not exists" % value)
+                        raise SchemaError("Secret '%s' does not exist" % value)
 
     # TODO: check if git url is valid according to giturlparse
     return schema_code, schema

@@ -840,7 +840,7 @@ schema = {
                                             "type": "string"
                                         },
                                         "access-token": {
-                                            "description": "An access token for GitLab use case.",
+                                            "description": "A name of secret that contains an access token for GitLab or GitHub.",
                                             "type": "string"
                                         },
                                         "timeout": {
