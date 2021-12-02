@@ -394,7 +394,8 @@ def trigger_jobs(run, replay=False):
                     # substitute vars in steps
                     for idx, s in enumerate(j['steps']):
                         args = secrets.copy()
-                        args.update(run.args)
+                        if run.args:
+                            args.update(run.args)
                         fields = substitute_vars(s, args)
                         del fields['tool']
                         Step(job=job, index=idx, tool=tools[idx], fields=fields)
