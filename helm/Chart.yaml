@@ -22,3 +22,22 @@ version: 0.0.0
 # follow Semantic Versioning. They should reflect the version the application is using.
 # It is recommended to use it with quotes.
 appVersion: "0.0"
+
+logoURL: https://kraken.ci/img/logo-big2.png
+home: https://kraken.ci/
+sources:
+  - https://github.com/Kraken-CI/kraken
+maintainers:
+  - name: Michal Nowikowski
+    email: mike@kraken.ci
+icon: https://kraken.ci/img/logo-big2.svg
+annotations:
+  artifacthub.io/license: Apache-2.0
+keywords:
+  - kraken-ci
+  - continuous-integration
+  - ci
+  - cd
+  - ci/cd
+  - continuous-delivery
+  - continuous-testing

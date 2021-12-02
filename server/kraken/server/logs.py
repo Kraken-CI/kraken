@@ -46,7 +46,7 @@ class StructLogger(logging.Logger):
         super()._log(level, msg, args, exc_info, extra, stack_info)
 
     def set_initial_ctx(self, **kwargs):
-        if StructLogger.initial_context == {}:
+        if not StructLogger.initial_context:
             StructLogger.initial_context.update(kwargs)
             self.reset_ctx()
 

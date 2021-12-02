@@ -33,6 +33,11 @@ kk_ver = ENV['kk_ver'] || '0.0'
 ENV['KRAKEN_VERSION'] = kk_ver
 KRAKEN_VERSION_FILE = File.expand_path("kraken-version-#{kk_ver}.txt")
 
+helm_dest = '.'
+if ENV['helm_dest']
+  helm_dest = ENV['helm_dest']
+end
+
 LOCALHOST_IP=ENV['LOCALHOST_IP'] || '192.168.0.89'
 CLICKHOUSE_ADDR="#{LOCALHOST_IP}:9001"
 MINIO_ADDR="#{LOCALHOST_IP}:9999"
@@ -514,16 +519,23 @@ task :run_portainer do
   sh 'docker run -d -p 8000:8000 -p 9000:9000 -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer'
 end
 
-file './venv/bin/cloudsmith' do
-  sh './venv/bin/pip install cloudsmith-cli'
-end
-
 task :helm_pkg do
-  sh "helm package helm --app-version #{kk_ver} --version #{kk_ver}.0"
+  sh "helm lint helm --strict"
+  sh "helm package helm --app-version #{kk_ver} --version #{kk_ver}.0 -d #{helm_dest}"
 end
 
-task :helm_upload => ['./venv/bin/cloudsmith'] do
-  sh "./venv/bin/cloudsmith upload helm --republish kraken-ci/kraken kraken-ci-#{kk_ver}.0.tgz"
+task :helm_upload do
+  sh "helm repo index #{helm_dest} --url https://kraken.ci/helm-repo/charts"
+  Dir.chdir(helm_dest) do
+    sh "git add kraken-ci-#{kk_ver}.0.tgz"
+    sh "git commit -am 'added new kraken version #{kk_ver}'"
+    sh "git push"
+  end
+end
+
+task :helm_release do
+  Rake::Task['helm_pkg'].invoke
+  Rake::Task['helm_upload'].invoke
 end
 
 task :deploy_lab => ['./venv/bin/python3'] do

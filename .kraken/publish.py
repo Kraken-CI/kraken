@@ -23,6 +23,16 @@ def stage(ctx):
                 "source": "kraken-docker-compose-0.#{KK_FLOW_SEQ}.yaml",
                 "cwd": "kraken"
             }, {
+                "tool": "git",
+                "checkout": "github.com/Kraken-CI/helm-repo.git",
+                "access-token": "#{KK_SECRET_SIMPLE_github_token}",
+                "branch": "gh-pages"
+            }, {
+                "tool": "shell",
+                "cmd": "rake kk_ver=0.#{KK_FLOW_SEQ} helm_dest=./helm-repo/charts helm_release",
+                "cwd": "kraken",
+                "timeout": 120
+            }, {
                 "tool": "shell",
                 "cmd": "rake kk_ver=0.#{KK_FLOW_SEQ} github_release",
                 "cwd": "kraken",
