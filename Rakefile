@@ -23,6 +23,8 @@ NG = File.expand_path('ui/node_modules/.bin/ng')
 OPENAPI_GENERATOR_VER = '5.0.0'
 OPENAPI_GENERATOR = "#{TOOLS_DIR}/swagger-codegen-cli-#{OPENAPI_GENERATOR_VER}.jar"
 SWAGGER_FILE = File.expand_path("server/kraken/server/swagger.yml")
+HELM_VER = 'v3.7.1'
+HELM = "#{TOOLS_DIR}/helm"
 
 DOCKER_COMPOSE_VER = '1.29.1'
 DOCKER_COMPOSE = "#{TOOLS_DIR}/docker-compose-#{DOCKER_COMPOSE_VER}"
@@ -519,13 +521,23 @@ task :run_portainer do
   sh 'docker run -d -p 8000:8000 -p 9000:9000 -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer'
 end
 
-task :helm_pkg do
-  sh "helm lint helm --strict"
-  sh "helm package helm --app-version #{kk_ver} --version #{kk_ver}.0 -d #{helm_dest}"
+file HELM do
+  sh "mkdir -p #{TOOLS_DIR}"
+  Dir.chdir(TOOLS_DIR) do
+    sh "wget -nv https://get.helm.sh/helm-#{HELM_VER}-linux-amd64.tar.gz"
+    sh "tar xzf helm-#{HELM_VER}-linux-amd64.tar.gz linux-amd64/helm"
+    sh "mv linux-amd64/helm #{HELM}"
+    sh 'rm -rf linux-amd64'
+  end
+end
+
+task :helm_pkg => HELM do
+  sh "#{HELM} lint ./helm --strict"
+  sh "#{HELM} package ./helm --app-version #{kk_ver} --version #{kk_ver}.0 -d #{helm_dest}"
 end
 
 task :helm_upload do
-  sh "helm repo index #{helm_dest} --url https://kraken.ci/helm-repo/charts"
+  sh "#{HELM} repo index #{helm_dest} --url https://kraken.ci/helm-repo/charts"
   Dir.chdir(helm_dest) do
     sh "git add kraken-ci-#{kk_ver}.0.tgz"
     sh "git commit -am 'added new kraken version #{kk_ver}'"
