@@ -524,10 +524,10 @@ end
 file HELM do
   sh "mkdir -p #{TOOLS_DIR}"
   Dir.chdir(TOOLS_DIR) do
-    sh "wget -nv https://get.helm.sh/helm-#{HELM_VER}-linux-amd64.tar.gz"
-    sh "tar xzf helm-#{HELM_VER}-linux-amd64.tar.gz linux-amd64/helm"
-    sh "mv linux-amd64/helm #{HELM}"
-    sh 'rm -rf linux-amd64'
+    sh "wget -nv https://get.helm.sh/helm-#{HELM_VER}-#{sysnamel}-amd64.tar.gz"
+    sh "tar xzf helm-#{HELM_VER}-#{sysnamel}-amd64.tar.gz #{sysnamel}-amd64/helm"
+    sh "mv #{sysnamel}-amd64/helm #{HELM}"
+    sh "rm -rf #{sysnamel}-amd64"
   end
 end
 
