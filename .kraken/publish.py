@@ -24,7 +24,7 @@ def stage(ctx):
                 "cwd": "kraken"
             }, {
                 "tool": "git",
-                "checkout": "github.com/Kraken-CI/helm-repo.git",
+                "checkout": "git@github.com:Kraken-CI/helm-repo.git",
                 "access-token": "github_token",
                 "branch": "gh-pages"
             }, {
