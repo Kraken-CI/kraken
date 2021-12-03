@@ -809,7 +809,7 @@ def trigger_flow(project_id, trigger_data=None):
             url = giturlparse.parse(trigger_git_url)
             trigger_git_url = url.url2https
         except Exception:
-            pass
+            log.warning('cannot parse trigger git url: %s', trigger_git_url)
 
         # find stages that use repo from trigger
         matching_stages = []
@@ -821,8 +821,13 @@ def trigger_flow(project_id, trigger_data=None):
                 for step in job['steps']:
                     if step['tool'] == 'git':
                         git_url = step['checkout']
-                        git_url = giturlparse.parse(git_url)
-                        git_url = git_url.url2https
+                        try:
+                            url = giturlparse.parse(git_url)
+                            git_url = url.url2https
+                        except:
+                            # TODO: git url should be checked upfront and errors reported to user
+                            log.warning('cannot parse git url: %s', git_url)
+                            continue
                         if git_url == trigger_git_url:
                             matching_stages.append(stage)
                             found = True
