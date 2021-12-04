@@ -824,7 +824,7 @@ def trigger_flow(project_id, trigger_data=None):
                         try:
                             url = giturlparse.parse(git_url)
                             git_url = url.url2https
-                        except:
+                        except Exception:
                             # TODO: git url should be checked upfront and errors reported to user
                             log.warning('cannot parse git url: %s', git_url)
                             continue
@@ -842,7 +842,7 @@ def trigger_flow(project_id, trigger_data=None):
         # change trigger_data into db record
         trigger_data = RepoChanges(data=[trigger_data])
 
-        # for stages that were not run while their parent was run, do run them
+        # for stages that were not run while their parent was run, do run them now
         started_something = False
         for stage in matching_stages:
             if stage.id in run_stages:
