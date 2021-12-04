@@ -23,6 +23,9 @@ def stage(ctx):
                 "source": "kraken-docker-compose-0.#{KK_FLOW_SEQ}.yaml",
                 "cwd": "kraken"
             }, {
+                "tool": "shell",
+                "cmd": "git config --global user.email 'godfryd@gmail.com'"
+            }, {
                 "tool": "git",
                 "checkout": "git@github.com:Kraken-CI/helm-repo.git",
                 "access-token": "github_token",
