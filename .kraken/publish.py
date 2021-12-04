@@ -24,7 +24,7 @@ def stage(ctx):
                 "cwd": "kraken"
             }, {
                 "tool": "shell",
-                "cmd": "git config --global user.email 'godfryd@gmail.com'"
+                "cmd": "git config --global user.email 'godfryd@gmail.com'; git config --global user.name 'Michal Nowikowski'"
             }, {
                 "tool": "git",
                 "checkout": "git@github.com:Kraken-CI/helm-repo.git",
