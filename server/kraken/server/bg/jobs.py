@@ -880,6 +880,9 @@ def refresh_schema_repo(stage_id, complete_starting_run_id=None):
             log.error('got unknown stage: %s', stage_id)
             return
 
+        log.info('refresh schema repo for stage: %d, run: %d',
+                 stage_id, complete_starting_run_id)
+
         planner_url = os.environ.get('KRAKEN_PLANNER_URL', consts.DEFAULT_PLANNER_URL)
         planner = xmlrpc.client.ServerProxy(planner_url, allow_none=True)
 
@@ -900,7 +903,8 @@ def refresh_schema_repo(stage_id, complete_starting_run_id=None):
             stage.repo_error = str(e)
             stage.repo_state = consts.REPO_STATE_ERROR
             db.session.commit()
-            log.exception('problem with schema')
+            log.exception('problem with schema, stage: %d, run: %d',
+                          stage_id, complete_starting_run_id)
             return
 
         # store schema id db
@@ -916,7 +920,7 @@ def refresh_schema_repo(stage_id, complete_starting_run_id=None):
             stage.triggers = {}
         prepare_new_planner_triggers(stage.id, schema['triggers'], prev_triggers, stage.triggers)
         flag_modified(stage, 'triggers')
-        log.info('new schema: %s', stage.schema)
+        log.info('stage: %s, new schema: %s', stage.id, stage.schema)
 
         # start schema refresh job
         try:

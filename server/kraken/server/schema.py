@@ -201,7 +201,7 @@ def prepare_new_planner_triggers(stage_id, new_triggers, prev_triggers, triggers
     planner_url = os.environ.get('KRAKEN_PLANNER_URL', consts.DEFAULT_PLANNER_URL)
     planner = xmlrpc.client.ServerProxy(planner_url, allow_none=True)
 
-    log.info('stage %d, triggers: new: %s, old: %s', stage_id, new_triggers, prev_triggers)
+    log.info('stage: %d, triggers: new: %s, old: %s', stage_id, new_triggers, prev_triggers)
 
     # set up interval trigger
     if 'interval' in new_triggers:

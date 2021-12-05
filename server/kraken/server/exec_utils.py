@@ -94,6 +94,8 @@ def complete_starting_run(run_id):
     if run is None:
         raise Exception('run %d cannot be found' % run_id)
 
+    log.info('complete starting run: %d', run_id)
+
     # if this is already executed run then replay it, if this is new, fresh run then do everything from scratch
     if run.state == consts.RUN_STATE_REPLAY:
         # move run back into IN PROGRESS state
@@ -205,7 +207,9 @@ def create_a_flow(branch, kind, body, trigger_data=None):
     # create flow instance
     flow = Flow(branch=branch, kind=kind, branch_name=branch_name, args=flow_args, trigger_data=trigger_data)
     db.session.commit()
-    log.info('created %s flow in branch %s', 'ci' if kind == 0 else 'dev', branch.id)
+    log.info('created %s flow %d in branch %d',
+             'ci' if kind == 0 else 'dev',
+             flow.id, branch.id)
 
     reason = dict(reason='manual')
 
