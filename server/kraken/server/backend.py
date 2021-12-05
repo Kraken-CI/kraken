@@ -318,7 +318,7 @@ def _handle_step_result(agent, req):
         step_idx = req['step_idx']
         status = result['status']
         del result['status']
-        if status not in list(consts.STEP_STATUS_TO_INT.keys()):
+        if status not in consts.STEP_STATUS_TO_INT:
             log.set_ctx(job=None)
             raise ValueError("unknown status: %s" % status)
     except Exception:
