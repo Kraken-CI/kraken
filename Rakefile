@@ -541,9 +541,6 @@ task :helm_upload do
   Dir.chdir(helm_dest) do
     sh "git add kraken-ci-#{kk_ver}.0.tgz"
     sh "git commit -am 'added new kraken version #{kk_ver}'"
-    sh "git status"
-    sh "git remote -v"
-    sh "pwd"
     sh "git push"
   end
 end
