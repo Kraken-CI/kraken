@@ -187,7 +187,9 @@ def analyze_run(run_id):
             db.session.commit()
 
         # trigger any following stages to currently completed run if there was no errors
-        if run.jobs_error == 0:
+        # and there were some jobs executed (sometimes jobs are not started at all
+        # due to some internal problems)
+        if run.jobs_error == 0 and run.jobs_total > 0:
             _trigger_stages(run)
 
         # establish new state for flow
