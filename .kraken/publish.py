@@ -32,7 +32,7 @@ def stage(ctx):
                 "branch": "gh-pages"
             }, {
                 "tool": "shell",
-                "cmd": "rake kk_ver=0.#{KK_FLOW_SEQ} helm_dest=./helm-repo/charts helm_release",
+                "cmd": "rake kk_ver=0.#{KK_FLOW_SEQ} helm_dest=../helm-repo/charts helm_release",
                 "cwd": "kraken",
                 "timeout": 120
             }, {
