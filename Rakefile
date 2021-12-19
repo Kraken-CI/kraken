@@ -537,6 +537,10 @@ task :helm_pkg => HELM do
   sh "#{HELM} package ./helm --app-version #{kk_ver} --version #{kk_ver}.0 -d #{helm_dest}"
 end
 
+task :helm_deploy => :helm_pkg do
+  sh "#{HELM} upgrade kk --install --create-namespace --namespace kk --debug --wait --set access.external_ips={`minikube ip`} --set access.method='external-ips' kraken-ci-#{kk_ver}.0.tgz"
+end
+
 task :helm_upload do
   sh "#{HELM} repo index #{helm_dest} --url https://kraken.ci/helm-repo/charts"
   Dir.chdir(helm_dest) do

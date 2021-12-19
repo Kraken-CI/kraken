@@ -63,7 +63,7 @@ def _left_time(job):
     # reduce slightly timeout
     timeout3 = timeout2 * 0.9
     log.info('%s-%s-%s: now: %s, slip:%s, to1: %s, to2: %s, to3: %s',
-             job.name, job.system, job.agents_group_id,
+             job.name, job.system.id, job.agents_group_id,
              now, slip, timeout, timeout2, timeout3)
     return int(timeout3)
 

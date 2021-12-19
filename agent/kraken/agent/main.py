@@ -59,7 +59,7 @@ def main():
 @click.option('-c', '--clickhouse-addr', envvar='KRAKEN_CLICKHOUSE_ADDR', help='ClickHouse address (host:port)')
 @click.option('--system-id', envvar='KRAKEN_SYSTEM_ID',
               help='System ID of currently running system, used in case of agents installed in VM e.g. in AWS EC2 or Azure VM')
-def install(server, data_dir, tools_dirs, minio_addr, clickhouse_addr):
+def install(server, data_dir, tools_dirs, minio_addr, clickhouse_addr, system_id):
     'Install Kraken Agent in the system as a systemd service'
     _intro()
     _load_cfg(server=server,
