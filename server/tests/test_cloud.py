@@ -223,8 +223,8 @@ def test_create_destroy_machines_k8s():
         minio_addr = '192.168.0.89:9001'
         clickhouse_addr = '192.168.0.89:9999'
 
-        with (patch.object(kubernetes.client.CoreV1Api, 'create_namespaced_pod') as cnp,
-              patch.object(kubernetes.client.CoreV1Api, 'list_namespaced_pod') as lnp):
+        with patch.object(kubernetes.client.CoreV1Api, 'create_namespaced_pod') as cnp, \
+             patch.object(kubernetes.client.CoreV1Api, 'list_namespaced_pod') as lnp:
 
             l = Mock()
             l.items = []
