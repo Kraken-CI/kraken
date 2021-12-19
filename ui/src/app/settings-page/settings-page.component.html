@@ -95,7 +95,6 @@
     </p-fieldset>
 
     <p-fieldset legend="Microsoft Azure" [toggleable]="true">
-      <form [formGroup]="cloudForm" class="form-style-2">
         <label for="azure_subscription_id"><span>Subscription ID</span>
           <input class="input-field" name="azure_subscription_id" formControlName="azure_subscription_id"/>
         </label>
@@ -108,7 +107,6 @@
         <label for="azure_client_secret"><span>Client Secret</span>
           <input type="password" class="input-field" name="azure_client_secret" pPassword [feedback]="false" formControlName="azure_client_secret"/>
         </label>
-      </form>
 
       <p-button label="Test Azure Access" icon="pi pi-check"
                 (onClick)="checkResourceWorkingState('azure')"
@@ -120,6 +118,28 @@
 
     </p-fieldset>
 
+    <p-fieldset legend="Kubernetes" [toggleable]="true">
+        <label for="api_server_url"><span>API Server URL</span>
+          <input class="input-field"  name="k8s_api_server_url" formControlName="k8s_api_server_url"/>
+        </label>
+
+        <label for="k8s_namespace"><span>Namespace</span>
+          <input class="input-field" name="k8s_namespace" formControlName="k8s_namespace"/>
+        </label>
+
+        <label for="k8s_token"><span>Token (base64 encoded)</span>
+          <textarea class="textarea-field" name="k8s_token" formControlName="k8s_token" [rows]="10" [cols]="70" style="font-family: monospace;" pInputTextarea></textarea>
+        </label>
+
+        <p-button label="Test Kubernetes Access" icon="pi pi-check"
+                  (onClick)="checkResourceWorkingState('kubernetes')"
+                  [loading]="kubernetesChecking"
+                  styleClass="p-button-outlined p-button-secondary p-button-sm"></p-button>
+        <span [ngStyle]="{ 'color': (kubernetesState === 'ok' ? '#2bc62b' : 'red'), 'font-size': '1.2rem', 'font-weight': 'bold', 'padding-left': '2em'  }">
+            {{ kubernetesState }}
+        </span>
+
+    </p-fieldset>
     </form>
 
   </p-tabPanel>

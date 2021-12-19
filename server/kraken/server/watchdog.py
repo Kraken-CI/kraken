@@ -28,15 +28,15 @@ import redis
 
 from . import logs
 from .models import db, Agent, AgentsGroup, Run, Job, get_setting
+from .bg import jobs as bg_jobs
+from .cloud import cloud
 from . import consts
 from . import srvcheck
 from .. import version
 from . import exec_utils
-from .bg import jobs as bg_jobs
 from . import kkrq
 from . import utils
 from . import dbutils
-from . import cloud
 
 log = logging.getLogger('watchdog')
 
@@ -98,7 +98,8 @@ def _check_jobs_if_expired():
 
 
 def _check_jobs_if_missing_agents():
-    groups = set()
+    groups_jobs = {}  # keep here groups that are needed and one, any job
+
     q = Job.query.filter_by(covered=False, deleted=None, state=consts.JOB_STATE_QUEUED)
     for job in q.all():
         ag = job.agents_group
@@ -106,13 +107,18 @@ def _check_jobs_if_missing_agents():
             ag.deployment['method'] in [consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2,
                                         consts.AGENT_DEPLOYMENT_METHOD_AWS_ECS_FARGATE,
                                         consts.AGENT_DEPLOYMENT_METHOD_AZURE_VM,
+                                        consts.AGENT_DEPLOYMENT_METHOD_K8S,
                                         ]):
-            groups.add(ag.id)
+            groups_jobs[ag.id] = job.id
 
-    for ag_id in groups:
+    for ag_id in groups_jobs:
         kkrq.enq_neck(bg_jobs.spawn_new_agents, ag_id)
-    if groups:
-        log.info('enqueued spawning new agents for groups with no agents but with waiting jobs')
+    if groups_jobs:
+        n = len(groups_jobs)
+        grps = list(groups_jobs.keys())[:5]
+        job = groups_jobs.popitem()[1]
+        log.info('enqueued spawning new agents for %d groups eg:%s with no agents but with waiting jobs, eg: %s',
+                 n, grps, job)
 
 
 def _check_jobs():
@@ -175,7 +181,8 @@ def _check_agents_keep_alive():
         if (ag and
             ag.deployment['method'] in [consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2,
                                         consts.AGENT_DEPLOYMENT_METHOD_AWS_ECS_FARGATE,
-                                        consts.AGENT_DEPLOYMENT_METHOD_AZURE_VM]):
+                                        consts.AGENT_DEPLOYMENT_METHOD_AZURE_VM,
+                                        consts.AGENT_DEPLOYMENT_METHOD_K8S]):
             if a.last_seen > ten_mins_ago:
                 continue
 
@@ -188,12 +195,22 @@ def _check_agents_keep_alive():
             _cancel_job_and_unassign_agent(a)
 
 
-def _destroy_and_delete_if_outdated(agent, depl):
+def _destroy_and_delete_if_outdated(agent, depl, method):
     destroy = False
 
+    if method == consts.AGENT_DEPLOYMENT_METHOD_K8S:
+        # if for some reason k8s pod still exists after completing the job
+        # then destroy it after 3 mins
+        destruction_after_time = 3
+    else:
+        if 'destruction_after_time' in depl:
+            destruction_after_time = int(depl['destruction_after_time'])
+        else:
+            destruction_after_time = 10  # default if somehow not set
+
     # check if idle time after job passed, then destroy VM
-    if 'destruction_after_time' in depl and int(depl['destruction_after_time']) > 0:
-        max_idle_time = datetime.timedelta(seconds=60 * int(depl['destruction_after_time']))
+    if destruction_after_time > 0:
+        max_idle_time = datetime.timedelta(seconds=60 * destruction_after_time)
 
         q = Job.query.filter_by(agent_used=agent)
         q = q.filter(Job.finished.isnot(None))
@@ -246,17 +263,14 @@ def _destroy_and_delete_if_outdated(agent, depl):
     return False
 
 
-def _delete_if_missing_in_cloud(agent, depl, depl_method):
+def _delete_if_missing_in_cloud(ag, agent):
     if not agent.extra_attrs or 'instance_id' not in agent.extra_attrs:
         log.warning('agent:%d, no instance id in extra_attrs', agent.id)
         return False
 
     exists = True
     try:
-        if depl_method == consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2:
-            exists = cloud.aws_ec2_vm_exists(depl, agent)
-        elif depl_method == consts.AGENT_DEPLOYMENT_METHOD_AZURE_VM:
-            exists = cloud.azure_vm_exists(agent)
+        exists = cloud.check_if_machine_exists(ag, agent)
     except Exception:
         pass
 
@@ -274,7 +288,8 @@ def _check_agents_to_destroy():
     q = q.filter(AgentsGroup.deployment.isnot(None))
     # TODO ECS
     q = q.filter(or_(cast(AgentsGroup.deployment['method'], Integer) == consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2,
-                     cast(AgentsGroup.deployment['method'], Integer) == consts.AGENT_DEPLOYMENT_METHOD_AZURE_VM))
+                     cast(AgentsGroup.deployment['method'], Integer) == consts.AGENT_DEPLOYMENT_METHOD_AZURE_VM,
+                     cast(AgentsGroup.deployment['method'], Integer) == consts.AGENT_DEPLOYMENT_METHOD_K8S))
 
     outdated_count = 0
     dangling_count = 0
@@ -291,21 +306,24 @@ def _check_agents_to_destroy():
             log.error('missing deployment in ag %s', ag)
             continue
 
-        if ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2:
-            depl = ag.deployment['aws']
-        elif ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AZURE_VM:
-            depl = ag.deployment['azure_vm']
-        else:
+        method = consts.AGENT_DEPLOYMENT_METHOD_MANUAL
+        try:
+            method, depl = ag.get_deployment()
+        except Exception:
+            pass
+        if method not in [consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2,
+                          consts.AGENT_DEPLOYMENT_METHOD_AZURE_VM,
+                          consts.AGENT_DEPLOYMENT_METHOD_K8S]:
             log.error('unsupported deployment method %s', ag.deployment['method'])
             continue
-        deleted = _destroy_and_delete_if_outdated(agent, depl)
+        deleted = _destroy_and_delete_if_outdated(agent, depl, method)
         if deleted:
             outdated_count += 1
             if agent.job:
                 _cancel_job_and_unassign_agent(agent)
             continue
 
-        deleted = _delete_if_missing_in_cloud(agent, depl, ag.deployment['method'])
+        deleted = _delete_if_missing_in_cloud(ag, agent)
         if deleted:
             dangling_count += 1
             if agent.job:
@@ -331,20 +349,21 @@ def _check_machines_with_no_agent():
     all_groups = 0
     aws_ec2_groups = 0
     azure_vm_groups = 0
+    k8s_groups = 0
 
     for ag in q.all():
         all_groups += 1
 
         if ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2:
-            depl = ag.deployment['aws']
             aws_ec2_groups += 1
-            counts = cloud.aws_ec2_cleanup_dangling_vms(depl, ag)
         elif ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AZURE_VM:
-            depl = ag.deployment['azure_vm']
             azure_vm_groups += 1
-            counts = cloud.azure_vm_cleanup_dangling_vms(depl, ag)
+        elif ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_K8S:
+            k8s_groups += 1
         else:
             continue
+
+        counts = cloud.cleanup_dangling_machines(ag)
 
         instances = counts[0]
         terminated_instances = counts[1]
@@ -361,8 +380,9 @@ def _check_machines_with_no_agent():
                      assigned_instances,
                      orphaned_instances,
                      orphaned_terminated_instances)
-    if aws_ec2_groups + azure_vm_groups > 0:
-        log.info('aws groups:%d, azure vm groups:%d / all:%d', aws_ec2_groups, azure_vm_groups, all_groups)
+    if aws_ec2_groups + azure_vm_groups + k8s_groups > 0:
+        log.info('machines with no agent by groups: aws:%d, azure vm:%d, k8s:%d / all:%d',
+                 aws_ec2_groups, azure_vm_groups, k8s_groups, all_groups)
 
 
 def _check_agents():

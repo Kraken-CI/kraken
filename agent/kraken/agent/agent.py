@@ -57,11 +57,15 @@ def _apply_cfg_changes(changes):
 def _collect_host_info():
     host_info = {}
 
+    sys = config.get('system_id', '')
+    host_info['system'] = sys
+
     # collect basic host and its system information
     s = platform.system().lower()
     host_info['system_type'] = s
     if s == 'linux':
-        host_info['system'] = '%s-%s' % (distro.id(), distro.version())
+        if not host_info['system']:
+            host_info['system'] = '%s-%s' % (distro.id(), distro.version())
         host_info['distro_name'] = distro.id()
         host_info['distro_version'] = distro.version()
 
@@ -129,6 +133,10 @@ def run():
         log.warning('agent is not authorized, sleeping for 10s')
         time.sleep(10)
 
+    one_job = config.get('one_job', False)
+    if one_job:
+        log.info("this is one job agent")
+
     while True:
         try:
             job, cfg_changes, version = srv.get_job()
@@ -146,6 +154,10 @@ def run():
 
             if job:
                 _dispatch_job(srv, job)
+
+                if one_job:
+                    log.info("one job so terminating")
+                    break
             else:
                 time.sleep(5)
         except KeyboardInterrupt:

@@ -35,8 +35,8 @@ from .models import db, Branch, Stage, Agent, AgentsGroup, Secret, AgentAssignme
 from .models import Project, BranchSequence
 from .schema import check_and_correct_stage_schema, SchemaError, execute_schema_code
 from .schema import prepare_new_planner_triggers
+from .cloud import aws, azure, k8s
 from . import notify
-from . import cloud
 from . import utils
 
 
@@ -650,7 +650,7 @@ def delete_group(group_id):
 
 
 def get_aws_ec2_regions():
-    credential = cloud.login_to_aws()
+    credential = aws.login_to_aws()
     if not credential:
         abort(500, "Incorrect AWS credential, set them in global cloud settings")
     ec2 = boto3.client('ec2', region_name='us-east-1', **credential)
@@ -659,7 +659,7 @@ def get_aws_ec2_regions():
 
 
 def get_aws_ec2_instance_types(region):
-    credential = cloud.login_to_aws()
+    credential = aws.login_to_aws()
     if not credential:
         abort(500, "Incorrect AWS credential, set them in global cloud settings")
     ec2 = boto3.client('ec2', region_name=region, **credential)
@@ -671,7 +671,7 @@ def get_aws_ec2_instance_types(region):
 
 def get_azure_locations():
     # Acquire a credential object using service principal authentication.
-    credential, subscription_id = cloud.login_to_azure()
+    credential, subscription_id = azure.login_to_azure()
     if not credential:
         abort(500, "Incorrect Azure credential, set them in global cloud settings")
     subscription_client = SubscriptionClient(credential)
@@ -686,7 +686,7 @@ def get_azure_locations():
 
 def get_azure_vm_sizes(location):
     # Acquire a credential object using service principal authentication.
-    credential, subscription_id = cloud.login_to_azure()
+    credential, subscription_id = azure.login_to_azure()
     if not credential:
         abort(500, "Incorrect Azure credential, set them in global cloud settings")
     compute_client = ComputeManagementClient(credential, subscription_id)
@@ -903,9 +903,11 @@ def get_settings_working_state(resource):
     elif resource == 'slack':
         state = notify.check_slack_settings()
     elif resource == 'aws':
-        state = cloud.check_aws_settings()
+        state = aws.check_aws_settings()
     elif resource == 'azure':
-        state = cloud.check_azure_settings()
+        state = azure.check_azure_settings()
+    elif resource == 'kubernetes':
+        state = k8s.check_k8s_settings()
     else:
         abort(400, "Unsupported resource type: %s" % resource)
 

@@ -63,14 +63,17 @@ def assign_jobs_to_agents():
 
     for j in waiting_jobs:
         log.info('job %s, executor %s', j, j.system.executor)
-        # find idle agent from given agents group
-        best_agent = None
-        if j.system.executor == 'local' and j.system.name != 'any' and not j.agents_group.deployment:
+
+        # system does not have to be taken into account when user selects ANY system
+        # or when executor is not local eg. it is a docker container
+        if j.system.name == 'any' or j.system.executor != 'local':
+            idle_agents = idle_agents_by_group.get(j.agents_group_id, [])
+        else:
             key = (j.agents_group_id, j.system.name)
             idle_agents = idle_agents_by_sys_group.get(key, [])
-        else:
-            idle_agents = idle_agents_by_group.get(j.agents_group_id, [])
 
+        # find idle agent from given agents groups
+        best_agent = None
         while best_agent is None:
             if len(idle_agents) == 0:
                 log.info('no avail agents for job %s', j)

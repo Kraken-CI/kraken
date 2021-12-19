@@ -36,5 +36,7 @@ def merge(config):
     return changes
 
 
-def get(name):
+def get(name, default_value=None):
+    if default_value is not None:
+        return _CFG.get(name, default_value)
     return _CFG[name]

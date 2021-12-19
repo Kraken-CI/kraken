@@ -57,6 +57,8 @@ def main():
 @click.option('-t', '--tools-dirs', envvar='KRAKEN_TOOLS_DIR', help='List of tools directories')
 @click.option('-m', '--minio-addr', envvar='KRAKEN_MINIO_ADDR', help='MinIO address (host:port)')
 @click.option('-c', '--clickhouse-addr', envvar='KRAKEN_CLICKHOUSE_ADDR', help='ClickHouse address (host:port)')
+@click.option('--system-id', envvar='KRAKEN_SYSTEM_ID',
+              help='System ID of currently running system, used in case of agents installed in VM e.g. in AWS EC2 or Azure VM')
 def install(server, data_dir, tools_dirs, minio_addr, clickhouse_addr):
     'Install Kraken Agent in the system as a systemd service'
     _intro()
@@ -64,7 +66,8 @@ def install(server, data_dir, tools_dirs, minio_addr, clickhouse_addr):
               data_dir=data_dir,
               tools_dirs=tools_dirs,
               minio_addr=minio_addr,
-              clickhouse_addr=clickhouse_addr)
+              clickhouse_addr=clickhouse_addr,
+              system_id=system_id)
 
     inst.install()
 
@@ -83,7 +86,11 @@ def check_integrity():
 @click.option('-m', '--minio-addr', envvar='KRAKEN_MINIO_ADDR', help='MinIO address (host:port)')
 @click.option('-c', '--clickhouse-addr', envvar='KRAKEN_CLICKHOUSE_ADDR', help='ClickHouse address (host:port)')
 @click.option('--no-update', default=False, is_flag=True, help='Do not update agent automatically (useful in agent development)')
-def run(server, data_dir, tools_dirs, minio_addr, clickhouse_addr, no_update):
+@click.option('--system-id', envvar='KRAKEN_SYSTEM_ID',
+              help='System ID of currently running system, used in case of agents spawned in containers e.g. in Kubernetes or AWS ECS'
+              ' or agents installed in VM e.g. in AWS EC2 or Azure VM')
+@click.option('--one-job', default=False, is_flag=True, help='If provided then the agent exits after performing one job')
+def run(server, data_dir, tools_dirs, minio_addr, clickhouse_addr, no_update, system_id, one_job):
     'Start Kraken Agent service'
     _intro()
     _load_cfg(server=server,
@@ -91,7 +98,9 @@ def run(server, data_dir, tools_dirs, minio_addr, clickhouse_addr, no_update):
               tools_dirs=tools_dirs,
               minio_addr=minio_addr,
               clickhouse_addr=clickhouse_addr,
-              no_update=no_update)
+              no_update=no_update,
+              system_id=system_id,
+              one_job=one_job)
 
     agent.run()
 

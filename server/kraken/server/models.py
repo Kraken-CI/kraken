@@ -778,6 +778,9 @@ class AgentsGroup(db.Model, DatesMixin):
             deployment['azure_vm'] = dict(location='', instances_limit=5, default_image='', vm_size='',
                                           destruction_after_jobs=1, destruction_after_time=30)
 
+        if 'kubernetes' not in deployment:
+            deployment['kubernetes'] = dict(instances_limit=5)
+
         return dict(id=self.id,
                     created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,
                     deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,
@@ -786,6 +789,23 @@ class AgentsGroup(db.Model, DatesMixin):
                     project_name=self.project.name if self.project else None,
                     agents_count=len([a for a in self.agents if not a.agent.deleted]),
                     deployment=deployment)
+
+    def get_deployment(self):
+        method = self.deployment['method']
+        if method == consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2:
+            depl = self.deployment['aws']
+        elif method == consts.AGENT_DEPLOYMENT_METHOD_AWS_ECS_FARGATE:
+            depl = self.deployment['aws_ecs_fargate']
+        elif method == consts.AGENT_DEPLOYMENT_METHOD_AZURE_VM:
+            depl = self.deployment['azure_vm']
+        elif method == consts.AGENT_DEPLOYMENT_METHOD_K8S:
+            depl = self.deployment['kubernetes']
+        else:
+            msg = 'deployment method %d in agents group id:%d not implemented' % (self.deployment['method'], self.id)
+            raise Exception(msg)
+        return method, depl
+
+
 
 
 class Agent(db.Model, DatesMixin):
@@ -871,6 +891,15 @@ def get_setting(group, name):
         raise Exception('cannot find setting %s:%s' % (group, name))
 
     return s.value
+
+
+def set_setting(group, name, val):
+    s = Setting.query.filter_by(group=group, name=name).one_or_none()
+    if s is None:
+        raise Exception('cannot find setting %s:%s' % (group, name))
+
+    s.value = val
+    db.session.commit()
 
 
 class User(db.Model, DatesMixin):

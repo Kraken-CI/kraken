@@ -299,6 +299,56 @@ def _store_artifacts(job, step):
     log.info('reporting %s artifacts took %ss', len(step.result['artifacts']), (t1 - t0))
 
 
+def destroy_machine_if_needed(agent, job):
+    to_destroy = False
+
+    # check if cloud machine should be destroyed now
+    ag = dbutils.find_cloud_assignment_group(agent)
+    if ag:
+        # aws ec2
+        if ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2:
+            depl = ag.deployment['aws']
+
+            if depl and 'destruction_after_jobs' in depl and int(depl['destruction_after_jobs']) > 0:
+                max_jobs = int(depl['destruction_after_jobs'])
+                q = Job.query.filter_by(agent_used=agent)
+                q = q.filter(Job.finished.isnot(None))
+                q = q.filter(Job.finished > agent.created)
+                jobs_num = q.count()
+                log.info('JOB %s, num %d, max %d', job.id, jobs_num, max_jobs)
+                if jobs_num >= max_jobs:
+                    to_destroy = True
+
+        # aws ecs fargate
+        elif ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS_ECS_FARGATE:
+            log.info('ECS FARGATE JOB %s - destroying task: %d', job.id, agent.id)
+            to_destroy = True
+
+        # azure vm
+        elif ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AZURE_VM:
+            depl = ag.deployment['azure_vm']
+
+            if depl and 'destruction_after_jobs' in depl and int(depl['destruction_after_jobs']) > 0:
+                max_jobs = int(depl['destruction_after_jobs'])
+                q = Job.query.filter_by(agent_used=agent)
+                q = q.filter(Job.finished.isnot(None))
+                q = q.filter(Job.finished > agent.created)
+                jobs_num = q.count()
+                log.info('JOB %s, num %d, max %d', job.id, jobs_num, max_jobs)
+                if jobs_num >= max_jobs:
+                    to_destroy = True
+
+        # kubernetes
+        elif ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_K8S:
+            log.info('K8S JOB %s - destroying pod: %d', job.id, agent.id)
+            to_destroy = True
+
+    # schedule destruction if needed
+    if to_destroy:
+        agent.disabled = True
+        kkrq.enq(bg_jobs.destroy_machine, agent.id)
+
+
 def _handle_step_result(agent, req):
     response = {}
     if agent.job is None:
@@ -372,45 +422,7 @@ def _handle_step_result(agent, req):
         job.finished = utils.utcnow()
         agent.job = None
 
-        # check if cloud machine should be destroyed now
-        ag = dbutils.find_cloud_assignment_group(agent)
-        if ag:
-            # aws ec2
-            if ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2:
-                depl = ag.deployment['aws']
-
-                if depl and 'destruction_after_jobs' in depl and int(depl['destruction_after_jobs']) > 0:
-                    max_jobs = int(depl['destruction_after_jobs'])
-                    q = Job.query.filter_by(agent_used=agent)
-                    q = q.filter(Job.finished.isnot(None))
-                    q = q.filter(Job.finished > agent.created)
-                    jobs_num = q.count()
-                    log.info('JOB %s, num %d, max %d', job.id, jobs_num, max_jobs)
-                    if jobs_num >= max_jobs:
-                        agent.disabled = True
-                        kkrq.enq(bg_jobs.destroy_machine, agent.id)
-
-            # aws ecs fargate
-            elif ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS_ECS_FARGATE:
-                log.info('ECS FARGATE JOB %s - destroying task', job.id)
-                agent.disabled = True
-                kkrq.enq(bg_jobs.destroy_machine, agent.id)
-
-            # azure vm
-            elif ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AZURE_VM:
-                depl = ag.deployment['azure_vm']
-
-                if depl and 'destruction_after_jobs' in depl and int(depl['destruction_after_jobs']) > 0:
-                    max_jobs = int(depl['destruction_after_jobs'])
-                    q = Job.query.filter_by(agent_used=agent)
-                    q = q.filter(Job.finished.isnot(None))
-                    q = q.filter(Job.finished > agent.created)
-                    jobs_num = q.count()
-                    log.info('JOB %s, num %d, max %d', job.id, jobs_num, max_jobs)
-                    if jobs_num >= max_jobs:
-                        agent.disabled = True
-                        kkrq.enq(bg_jobs.destroy_machine, agent.id)
-                        log.info('*' * 300)
+        destroy_machine_if_needed(agent, job)
 
         db.session.commit()
         kkrq.enq(bg_jobs.job_completed, job.id)
@@ -507,10 +519,25 @@ def _handle_dispatch_tests(agent, req):
 
 def _handle_host_info(agent, req):  # pylint: disable=unused-argument
     log.info('HOST INFO %s', req['info'])
+
+    system = req['info']['system']
+
+    sys = None
+    if system.isdigit():
+        # agent has already identified system so find its name
+        sys_id = int(system)
+        sys = System.query.filter_by(id=sys_id).one_or_none()
+        if sys is not None:
+            # if this is real system id then substitute it
+            req['info']['system'] = sys.name
+
     agent.host_info = req['info']
     db.session.commit()
 
-    system = req['info']['system']
+    if sys:
+        # agent has already identified system so it doesn't need to be created
+        return
+
     try:
         System(name=system, executor='local')
         db.session.commit()

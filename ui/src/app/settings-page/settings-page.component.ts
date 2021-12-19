@@ -26,6 +26,8 @@ export class SettingsPageComponent implements OnInit {
     awsChecking = false
     azureState = ''
     azureChecking = false
+    kubernetesState = ''
+    kubernetesChecking = false
 
     generalForm = new FormGroup({
         server_url: new FormControl(''),
@@ -55,6 +57,10 @@ export class SettingsPageComponent implements OnInit {
         azure_tenant_id: new FormControl(''),
         azure_client_id: new FormControl(''),
         azure_client_secret: new FormControl(''),
+        // Kubernetes
+        k8s_api_server_url: new FormControl(''),
+        k8s_namespace: new FormControl(''),
+        k8s_token: new FormControl(''),
     })
 
     constructor(
@@ -145,6 +151,9 @@ export class SettingsPageComponent implements OnInit {
             case 'azure':
                 this.azureChecking = true
                 break
+            case 'kubernetes':
+                this.kubernetesChecking = true
+                break
         }
         this.settingsService.checkResourceWorkingState(resource).subscribe(
             (data) => {
@@ -166,6 +175,10 @@ export class SettingsPageComponent implements OnInit {
                         this.azureState = data.state
                         this.azureChecking = false
                         break
+                    case 'kubernetes':
+                        this.kubernetesState = data.state
+                        this.kubernetesChecking = false
+                        break
                 }
             },
             (err) => {
@@ -181,6 +194,9 @@ export class SettingsPageComponent implements OnInit {
                         break
                     case 'azure':
                         this.azureChecking = false
+                        break
+                    case 'kubernetes':
+                        this.kubernetesChecking = false
                         break
                 }
                 let msg = err.statusText

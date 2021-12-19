@@ -30,13 +30,13 @@ from ..models import AgentsGroup, Agent, System
 from ..models import RepoChanges
 from ..schema import prepare_new_planner_triggers
 from ..schema import check_and_correct_stage_schema
+from ..cloud import cloud
 from .. import exec_utils  # pylint: disable=cyclic-import
 from .. import consts
 from .. import notify
 from .. import logs
 from .. import gitops
 from .. import kkrq
-from .. import cloud
 from .. import utils
 from .. import dbutils
 
@@ -956,15 +956,10 @@ def spawn_new_agents(agents_group_id):
             log.warning('cannot find agents group id: %d', agents_group_id)
             return
 
-        depl = None
-        if ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2:
-            depl = ag.deployment['aws']
-        elif ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS_ECS_FARGATE:
-            depl = ag.deployment['aws_ecs_fargate']
-        elif ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AZURE_VM:
-            depl = ag.deployment['azure_vm']
-        else:
-            log.error('deployment method %d in agents group id:%d not implemented', ag.deployment['method'], agents_group_id)
+        try:
+            _, depl = ag.get_deployment()
+        except Exception:
+            log.exception('IGNORED EXCEPTION')
             return
 
         # check if limit of agents is reached
@@ -1007,6 +1002,7 @@ def spawn_new_agents(agents_group_id):
             q = q.filter_by(agents_group=ag)
             agents = q.all()
             agents_count = 0
+            # log.info('potential agents num: %d', len(agents))
             for a in agents:
                 if a.extra_attrs and 'system' in a.extra_attrs and a.extra_attrs['system'] == sys_id:
                     agents_count += 1
@@ -1014,8 +1010,9 @@ def spawn_new_agents(agents_group_id):
             if num <= 0:
                 log.info('enough agents, avail: %d, needed: %d', agents_count, needed_count)
                 continue
+            log.info('NOT enough agents, avail: %d, needed: %d, new: %d', agents_count, needed_count, num)
 
-            cloud.create_machines(depl, ag, system, num,
+            cloud.create_machines(ag, system, num,
                                   server_url, minio_addr, clickhouse_addr)
 
 
@@ -1041,16 +1038,4 @@ def destroy_machine(agent_id):
 
         dbutils.delete_agent(agent)
 
-        depl = None
-        if ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2:
-            depl = ag.deployment['aws']
-        elif ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS_ECS_FARGATE:
-            depl = ag.deployment['aws_ecs_fargate']
-        elif ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AZURE_VM:
-            depl = ag.deployment['azure_vm']
-
-        if not depl:
-            log.error('cannot find deployment info for agent %s', agent_id)
-            return
-
-        cloud.destroy_machine(ag.deployment['method'], depl, agent, ag)
+        cloud.destroy_machine(ag, agent)

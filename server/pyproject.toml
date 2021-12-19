@@ -36,6 +36,7 @@ azure-mgmt-network = "^19.0.0"
 azure-mgmt-resource = "^19.0.0"
 azure-mgmt-storage = "^18.0.0"
 azure-mgmt-subscription = "^1.0.0"
+kubernetes = "^20.13.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

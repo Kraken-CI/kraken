@@ -61,6 +61,9 @@ KRAKEN_DATA_DIR={data_dir}
 
 # directory with tools for Kraken, optional
 KRAKEN_TOOLS_DIRS={tools_dirs}
+
+# currently installed system ID
+KRAKEN_SYSTEM_ID={system_id}
 '''
 
 def run(cmd):
@@ -128,7 +131,8 @@ def install_linux():
                              data_dir=data_dir,
                              tools_dirs=config.get('tools_dirs') or '',
                              minio_addr=config.get('minio_addr') or '',
-                             clickhouse_addr=config.get('clickhouse_addr') or '')
+                             clickhouse_addr=config.get('clickhouse_addr') or '',
+                             system_id=config.get('system_id', '') or '')
     run('sudo bash -c \'echo "%s" > /opt/kraken/kraken.env\'' % kenv)
 
     run("sudo bash -c 'chown kraken:kraken %s/* /opt/kraken/*'" % dest_dir)

@@ -46,6 +46,10 @@ INITIAL_SETTINGS = {
         'azure_tenant_id': '',
         'azure_client_id': '',
         'azure_client_secret': None,  # password
+        # Kubernetes
+        'k8s_api_server_url': '',
+        'k8s_namespace': '',
+        'k8s_token': None,  # password
     }
 }
 

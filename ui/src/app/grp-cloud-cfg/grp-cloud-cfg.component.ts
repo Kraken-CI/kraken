@@ -34,6 +34,7 @@ export class GrpCloudCfgComponent implements OnInit {
             { name: 'AWS EC2', val: 2 },
             { name: 'AWS ECS Fargate', val: 3 },
             { name: 'Azure VM', val: 4},
+            { name: 'Kubernetes', val: 5},
             // {name: 'Google Cloud Platform', val: 3},
             // {name: 'Digital Ocean', val: 5},
             // {name: 'Linode', val: 6},

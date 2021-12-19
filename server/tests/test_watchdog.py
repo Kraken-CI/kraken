@@ -57,8 +57,9 @@ def test__check_agents_to_destroy():
     with app.app_context():
         initdb._prepare_initial_preferences()
 
-        Setting(group='cloud', name='aws_access_key', value='val', val_type='text')
-        db.session.commit()
+        # define aws credentials
+        # TODO
+        #db.session.commit()
 
         # empty db, no records
         all_count, outdated_count, dangling_count = watchdog._check_agents_to_destroy()
@@ -192,7 +193,7 @@ def test__check_agents_to_destroy():
         ag.deployment = dict(method=consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2, aws=dict(region='region'))
         db.session.commit()
 
-        with patch('kraken.server.cloud.aws_ec2_vm_exists', return_value=False):
+        with patch('kraken.server.cloud.aws_ec2.vm_exists', return_value=False):
             all_count, outdated_count, dangling_count = watchdog._check_agents_to_destroy()
         assert all_count == 1
         assert outdated_count == 0

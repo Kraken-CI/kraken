@@ -321,4 +321,33 @@
     </div>
 
 
+    <!-- Kubernetes -->
+    <div *ngIf="deployment.method == 5" class="p-d-flex p-ai-start">
+      <!-- column 1 -->
+      <div class="p-mr-6">
+        <h4>General</h4>
+
+        <div class="p-field p-grid">
+          <label for="k8s-instancesLimit" class="p-col-fixed" style="width:100px">Instances Limit</label>
+          <div class="p-col">
+            <p-inputNumber [(ngModel)]="deployment.kubernetes.instances_limit" [showButtons]="true"
+                           inputId="k8s-instancesLimit"
+                           buttonLayout="horizontal"
+                           spinnerMode="horizontal"
+                           [min]="0"
+                           size="4"
+                           maxlength="5"
+                           decrementButtonClass="p-button-secondary p-button-outlined"
+                           incrementButtonClass="p-button-secondary p-button-outlined"
+                           incrementButtonIcon="pi pi-plus"
+                           decrementButtonIcon="pi pi-minus">
+            </p-inputNumber>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+
   </div>
