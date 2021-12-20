@@ -779,7 +779,7 @@ class AgentsGroup(db.Model, DatesMixin):
                                           destruction_after_jobs=1, destruction_after_time=30)
 
         if 'kubernetes' not in deployment:
-            deployment['kubernetes'] = dict(instances_limit=5)
+            deployment['kubernetes'] = dict(instances_limit=5, inside=False)
 
         return dict(id=self.id,
                     created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,

@@ -48,7 +48,7 @@ INITIAL_SETTINGS = {
         'azure_client_secret': None,  # password
         # Kubernetes
         'k8s_api_server_url': '',
-        'k8s_namespace': '',
+        'k8s_namespace': 'kraken',
         'k8s_token': None,  # password
     }
 }

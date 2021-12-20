@@ -60,9 +60,15 @@ def _login():
     return api_client, namespace
 
 
-def _get_core_api():
-    api_client, namespace = _login()
-    core_api = kubernetes.client.CoreV1Api(api_client)
+def _get_core_api(ag):
+    _, depl = ag.get_deployment()
+    if depl['inside']:
+        kubernetes.config.load_incluster_config()
+        core_api = kubernetes.client.CoreV1Api()
+        namespace = get_setting('cloud', 'k8s_namespace')
+    else:
+        api_client, namespace = _login()
+        core_api = kubernetes.client.CoreV1Api(api_client)
     return core_api, namespace
 
 
@@ -101,7 +107,7 @@ def check_k8s_settings():
 
 def create_pods(ag, system, num,
                 server_url, minio_addr, clickhouse_addr):
-    core_api, namespace = _get_core_api()
+    core_api, namespace = _get_core_api(ag)
 
     # prepare create_container
     cmd = 'apt-get update && apt-get install -y --no-install-recommends ca-certificates sudo wget python3'
@@ -188,7 +194,7 @@ def destroy_pod(ag, agent):  # pylint: disable=unused-argument
     namespace = agent.extra_attrs['namespace']
     pod_name = agent.extra_attrs['instance_id']
 
-    core_api, _ = _get_core_api()
+    core_api, _ = _get_core_api(ag)
 
     log.info('delete K8S pod %s', pod_name)
     try:
@@ -201,7 +207,7 @@ def pod_exists(ag, agent):  # pylint: disable=unused-argument
     namespace = agent.extra_attrs['namespace']
     pod_name = agent.extra_attrs['instance_id']
 
-    core_api, _ = _get_core_api()
+    core_api, _ = _get_core_api(ag)
 
     log.info('does K8S pod %s exist', pod_name)
     try:
@@ -214,7 +220,7 @@ def pod_exists(ag, agent):  # pylint: disable=unused-argument
 
 
 def cleanup_dangling_pods(ag):
-    core_api, namespace = _get_core_api()
+    core_api, namespace = _get_core_api(ag)
 
     now = utils.utcnow()
 
