@@ -38,3 +38,4 @@ spec:
             - name: planner
               containerPort: 7997
       restartPolicy: Always
+      serviceAccountName: kraken

@@ -138,7 +138,7 @@ def create_pods(ag, system, num,
     n = datetime.datetime.now(pytz.utc)
     dt = n - t0
     dt = int(dt.total_seconds())
-    series = 'kraken-series-ag-%d-sys-%d-ts-%d' % (ag.id, system.id, dt)
+    series = 'kk-%d-%d-%d' % (ag.id, system.id, dt)
 
     triggered_pods = []
     for i in range(num):
