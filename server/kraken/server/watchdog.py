@@ -283,7 +283,10 @@ def _delete_if_missing_in_cloud(ag, agent):
 
 
 def _check_agents_to_destroy():
-    q = Agent.query.filter_by(deleted=None, authorized=True)
+    # look for agents that are not deleted, still available for use ie. authorized
+    # and without currently running job
+    # that have some deployment method configured
+    q = Agent.query.filter_by(deleted=None, authorized=True, job=None)
     q = q.join('agents_groups', 'agents_group')
     q = q.filter(AgentsGroup.deployment.isnot(None))
     # TODO ECS
