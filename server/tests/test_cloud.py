@@ -14,7 +14,6 @@
 
 import base64
 import logging
-import datetime
 import collections
 from unittest.mock import patch, Mock
 
@@ -22,12 +21,12 @@ import pytest
 
 from flask import Flask
 
-import azure
+# import azure
 import kubernetes
 
-from kraken.server import consts, utils, initdb
-from kraken.server.models import db, Run, Job, Branch, Flow, Stage, Project, System, AgentsGroup
-from kraken.server.models import AgentAssignment, Agent, Setting, set_setting
+from kraken.server import consts, initdb
+from kraken.server.models import db, Job, Branch, Flow, Stage, Project, System, AgentsGroup
+from kraken.server.models import AgentAssignment, Agent, set_setting
 
 from kraken.server.cloud import cloud, k8s
 
@@ -127,7 +126,7 @@ def test_check_if_machine_exists_other():
     agent = None
 
     with pytest.raises(NotImplementedError):
-        res = cloud.check_if_machine_exists(ag, agent)
+        cloud.check_if_machine_exists(ag, agent)
 
 
 class Bc3:
@@ -223,7 +222,7 @@ def test_create_destroy_machines_k8s():
         minio_addr = '192.168.0.89:9001'
         clickhouse_addr = '192.168.0.89:9999'
 
-        with patch.object(kubernetes.client.CoreV1Api, 'create_namespaced_pod') as cnp, \
+        with patch.object(kubernetes.client.CoreV1Api, 'create_namespaced_pod'), \
              patch.object(kubernetes.client.CoreV1Api, 'list_namespaced_pod') as lnp:
 
             l = Mock()
@@ -241,7 +240,7 @@ def test_create_destroy_machines_k8s():
                               server_url, minio_addr, clickhouse_addr)
 
         for agent in Agent.query.all():
-            with patch.object(kubernetes.client.CoreV1Api, 'delete_namespaced_pod') as dnp:
+            with patch.object(kubernetes.client.CoreV1Api, 'delete_namespaced_pod'):
                 cloud.destroy_machine(ag, agent)
 
 
@@ -257,7 +256,7 @@ def test_check_k8s_settings():
         set_setting('cloud', 'k8s_namespace', 'kk')
         set_setting('cloud', 'k8s_api_server_url', 'url')
 
-        with patch.object(kubernetes.client.CoreV1Api, 'read_namespace') as rn, patch('kubernetes.client.VersionApi') as va:
+        with patch.object(kubernetes.client.CoreV1Api, 'read_namespace') as rn, patch('kubernetes.client.VersionApi'):
             ns = Mock()
             ns.status.phase = 'Active'
             rn.return_value = ns

@@ -13,10 +13,9 @@
 # limitations under the License.
 
 import os
-import json
 import subprocess
 from urllib.parse import urlparse
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -29,7 +28,7 @@ from kraken.server import consts
 from kraken.server.models import db
 from kraken.migrations import apply as migrations
 
-from dbtest import prepare_db, clear_db_postresql
+from dbtest import prepare_db  # , clear_db_postresql
 
 
 @pytest.mark.db
@@ -47,21 +46,15 @@ def test_create_db_at_once():
     # initialize SqlAlchemy
     db.init_app(app)
     db.create_all(app=app)
-    import time
-    print('\nSLEEP\n')
-    print('%s\n' % db_url)
-    #time.sleep(1000000)
 
     o = urlparse(db_url)
     env = os.environ.copy()
     env['PGPASSWORD'] = o.password
     cmd = 'pg_dump -U %s -h %s -p %s -d %s' % (o.username, o.hostname, o.port, o.path[1:])
     cmd = 'bash -c "%s"' % cmd
-    p = subprocess.run(cmd, shell=True,  env=env, capture_output=True, check=True)
-    # p.stdout
+    subprocess.run(cmd, shell=True,  env=env, capture_output=True, check=True)
 
-
-    #clear_db_postresql(db)
+    # clear_db_postresql(db)
 
 
 @pytest.mark.db
@@ -180,20 +173,20 @@ def test_compare_create_db():
           Column('result', JSONB),
           Column('status', Integer))
 
-    executors_tbl = Table('executors', meta,
-                          Column('created', DateTime, nullable=False),
-                          Column('updated', DateTime, nullable=False),
-                          Column('deleted', DateTime),
-                          Column('id', Integer, primary_key=True),
-                          Column('name', Unicode(50), nullable=False),
-                          Column('address', Unicode(25), index=True, nullable=False),
-                          Column('ip_address', Unicode(50)),
-                          Column('state', Integer, default=0),
-                          Column('disabled', Boolean, default=False),
-                          Column('comment', Text),
-                          Column('status_line', Text),
-                          #Column('extra_attrs', JSONB),
-                          Column('job_id', Integer, ForeignKey('jobs.id')))
+    Table('executors', meta,
+          Column('created', DateTime, nullable=False),
+          Column('updated', DateTime, nullable=False),
+          Column('deleted', DateTime),
+          Column('id', Integer, primary_key=True),
+          Column('name', Unicode(50), nullable=False),
+          Column('address', Unicode(25), index=True, nullable=False),
+          Column('ip_address', Unicode(50)),
+          Column('state', Integer, default=0),
+          Column('disabled', Boolean, default=False),
+          Column('comment', Text),
+          Column('status_line', Text),
+          #Column('extra_attrs', JSONB),
+          Column('job_id', Integer, ForeignKey('jobs.id')))
 
     Table('executor_groups', meta,
           Column('created', DateTime, nullable=False),
@@ -274,7 +267,7 @@ def test_compare_create_db():
     meta.create_all(engine)
 
     ins = alembic_version_tbl.insert().values(version_num='0731897c862e')  # this is first migration
-    result = conn.execute(ins)
+    conn.execute(ins)
 
     migrations.main()
 
