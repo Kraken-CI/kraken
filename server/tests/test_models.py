@@ -15,13 +15,12 @@
 import os
 import subprocess
 from urllib.parse import urlparse
-from unittest.mock import MagicMock
 
 import pytest
 
 from flask import Flask
 from sqlalchemy import create_engine, Table, Column, Unicode, MetaData, Boolean, Integer
-from sqlalchemy import ForeignKey, Index, DateTime, Text, UnicodeText, String
+from sqlalchemy import ForeignKey, DateTime, Text, UnicodeText, String
 from sqlalchemy.dialects.postgresql import JSONB, DOUBLE_PRECISION, BYTEA
 
 from kraken.server import consts

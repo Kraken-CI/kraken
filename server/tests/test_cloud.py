@@ -25,7 +25,7 @@ from flask import Flask
 import kubernetes
 
 from kraken.server import consts, initdb
-from kraken.server.models import db, Job, Branch, Flow, Stage, Project, System, AgentsGroup
+from kraken.server.models import db, System, AgentsGroup
 from kraken.server.models import AgentAssignment, Agent, set_setting
 
 from kraken.server.cloud import cloud, k8s
@@ -227,7 +227,7 @@ def test_create_destroy_machines_k8s():
 
             l = Mock()
             l.items = []
-            for i in range(3):
+            for _ in range(3):
                 p = Mock()
                 p.metadata.name = 'name'
                 p.status.phase = 'Running'
