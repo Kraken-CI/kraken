@@ -23,7 +23,7 @@
         "@ctrl/ngx-codemirror": "^4.1.1",
         "chart.js": "^2.9.4",
         "chartjs-plugin-error-bars": "^1.2.3",
-        "codemirror": "^5.60.0",
+        "codemirror": "^5.64.0",
         "font-awesome": "^4.7.0",
         "luxon": "^1.27.0",
         "primeflex": "^2.0.0",
