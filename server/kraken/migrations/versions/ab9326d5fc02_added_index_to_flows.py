@@ -40,7 +40,7 @@ def upgrade():
 
 def downgrade():
     conn = op.get_bind()
-    for name, table, _ in INDEXES:
+    for name, _, _ in INDEXES:
         print('dropping index %s' % name)
         cmd = "DROP INDEX IF EXISTS %s;" % name
         conn.execute(cmd)

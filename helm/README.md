@@ -2,16 +2,15 @@
 
 [Kraken CI](https://kraken.ci/) is a modern CI/CD, open-source, on-premise system that is highly scalable and focused on testing.
 
-
 Features:
-- flexible workflow planning using Starlark/Python
-- distributed building and testing
-- various executors: bare metal, Docker, LXD
-- highly scalable to thousands of executors
-- sophisticated test results analysis
-- integrated with AWS EC2 and ECS, Azure VM, with autoscaling
-- supported webhooks from GitHub, GitLab and Gitea
-- email and Slack notifications
+  - flexible workflow planning using Starlark/Python
+  - distributed building and testing
+  - various executors: bare metal, Docker, LXD
+  - highly scalable to thousands of executors
+  - sophisticated test results analysis
+  - integrated with AWS EC2 and ECS, Azure VM, with autoscaling
+  - supported webhooks from GitHub, GitLab and Gitea
+  - email and Slack notifications
 
 More details about Kraken CI installation in Kubernetes can be found
 in [the installation guide](https://kraken.ci/docs/install-helm).
@@ -68,7 +67,6 @@ $ helm upgrade  --install --create-namespace --namespace kraken --debug --wait k
 This command upgrades or installs Kraken Ci to 0.757 version in `kraken` namespace.
 
 _See [helm upgrade](https://helm.sh/docs/helm/helm_upgrade/) for command documentation._
-
 
 ## Configuration
 

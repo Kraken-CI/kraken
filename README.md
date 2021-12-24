@@ -17,7 +17,6 @@
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/kraken-ci)](https://artifacthub.io/packages/search?repo=kraken-ci)
 
 
-
 <!-- ABOUT THE PROJECT -->
 ## About Kraken CI
 
@@ -27,7 +26,6 @@ Kraken CI is a modern, open-source, on-premise CI/CD system
 that is highly scalable and focused on testing.
 
 More information can be found on https://kraken.ci
-
 
 
 <!-- GETTING STARTED -->
@@ -48,12 +46,10 @@ Guides can be found here: https://kraken.ci/docs/guide-intro
 Demo site is available here: https://lab.kraken.ci/
 
 
-
 <!-- ROADMAP -->
 ## Roadmap
 
 See the [open issues](https://github.com/kraken-ci/kraken/issues) for a list of proposed features (and known issues).
-
 
 
 <!-- CONTRIBUTING -->
@@ -64,12 +60,10 @@ Contributions are what make the open source community such an amazing place to b
 Details on https://kraken.ci/docs/contrib-kraken
 
 
-
 <!-- LICENSE -->
 ## License
 
 Distributed under the Apache 2.0 License. See `LICENSE` for more information.
-
 
 
 <!-- CONTACT -->
