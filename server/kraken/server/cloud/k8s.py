@@ -73,21 +73,24 @@ def _get_core_api(ag):
 
 
 def check_k8s_settings():
-    token = get_setting('cloud', 'k8s_token')
-    if not token:
-        return 'Kubernetes token is empty'
-
     namespace = get_setting('cloud', 'k8s_namespace')
     if not namespace:
         return 'Kubernetes namespace is empty'
 
+    token = get_setting('cloud', 'k8s_token')
     api_server_url = get_setting('cloud', 'k8s_api_server_url')
-    if not api_server_url:
-        return 'Kubernetes API server URL is empty'
 
-    api_client, _ = _login()
-    core_api = kubernetes.client.CoreV1Api(api_client)
-    ver_api = kubernetes.client.VersionApi(api_client)
+    if api_server_url and not token:
+        return 'Kubernetes token is empty while API server URL is provided'
+
+    if api_server_url:
+        api_client, _ = _login()
+        core_api = kubernetes.client.CoreV1Api(api_client)
+        ver_api = kubernetes.client.VersionApi(api_client)
+    else:
+        kubernetes.config.load_incluster_config()
+        core_api = kubernetes.client.CoreV1Api()
+        ver_api = kubernetes.client.VersionApi()
 
     try:
         res = ver_api.get_code()
