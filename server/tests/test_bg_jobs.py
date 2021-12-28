@@ -16,39 +16,18 @@ import logging
 
 import pytest
 
-from flask import Flask
-
 from kraken.server import consts, initdb
 from kraken.server.models import db, Run, Job, TestCaseResult, Branch, Flow, Stage, Project, Issue, System, AgentsGroup, TestCase, Tool
 from kraken.server.bg import jobs
 
-from dbtest import prepare_db
+from common import create_app
 
 log = logging.getLogger(__name__)
 
 
-def _create_app():
-    # addresses
-    db_url = prepare_db()
-
-    # Create  Flask app instance
-    app = Flask('Kraken Background')
-
-    # Configure the SqlAlchemy part of the app instance
-    app.config["SQLALCHEMY_ECHO"] = False
-    app.config["SQLALCHEMY_DATABASE_URI"] = db_url
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
-    # initialize SqlAlchemy
-    db.init_app(app)
-    db.create_all(app=app)
-
-    return app
-
-
 @pytest.mark.db
 def test__analyze_job_results_history__1_job_basic():
-    app = _create_app()
+    app = create_app()
 
     with app.app_context():
         initdb._prepare_initial_preferences()
@@ -131,7 +110,7 @@ def test__analyze_job_results_history__1_job_basic():
 
 @pytest.mark.db
 def test__analyze_job_results_history__1_job_with_cover():
-    app = _create_app()
+    app = create_app()
 
     with app.app_context():
         project = Project()
@@ -219,7 +198,7 @@ def test__analyze_job_results_history__1_job_with_cover():
 
 @pytest.mark.db
 def test__analyze_job_issues_history():
-    app = _create_app()
+    app = create_app()
 
     with app.app_context():
         project = Project()

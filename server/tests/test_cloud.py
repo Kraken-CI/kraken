@@ -19,8 +19,6 @@ from unittest.mock import patch, Mock
 
 import pytest
 
-from flask import Flask
-
 # import azure
 import kubernetes
 
@@ -30,35 +28,14 @@ from kraken.server.models import AgentAssignment, Agent, set_setting
 
 from kraken.server.cloud import cloud, k8s
 
-from dbtest import prepare_db
+from common import create_app
 
 log = logging.getLogger(__name__)
 
 
-
-
-def _create_app():
-    # addresses
-    db_url = prepare_db()
-
-    # Create  Flask app instance
-    app = Flask('Kraken Background')
-
-    # Configure the SqlAlchemy part of the app instance
-    app.config["SQLALCHEMY_ECHO"] = False
-    app.config["SQLALCHEMY_DATABASE_URI"] = db_url
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
-    # initialize SqlAlchemy
-    db.init_app(app)
-    db.create_all(app=app)
-
-    return app
-
-
 @pytest.mark.db
 def test_check_if_machine_exists_aws_ec2():
-    app = _create_app()
+    app = create_app()
 
     with app.app_context():
         initdb._prepare_initial_preferences()
@@ -88,7 +65,7 @@ def test_check_if_machine_exists_aws_ec2():
 
 @pytest.mark.db
 def test_check_if_machine_exists_azure():
-    app = _create_app()
+    app = create_app()
 
     with app.app_context():
         initdb._prepare_initial_preferences()
@@ -136,7 +113,7 @@ class Bc3:
 
 @pytest.mark.db
 def test_create_machines_aws_ec2():
-    app = _create_app()
+    app = create_app()
 
     with app.app_context():
         initdb._prepare_initial_preferences()
@@ -201,13 +178,13 @@ def test_create_machines_aws_ec2():
 
 @pytest.mark.db
 def test_create_destroy_machines_k8s():
-    app = _create_app()
+    app = create_app()
 
     with app.app_context():
         initdb._prepare_initial_preferences()
 
         ag = AgentsGroup(name='group', deployment=dict(method=consts.AGENT_DEPLOYMENT_METHOD_K8S,
-                                                       kubernetes={}))
+                                                       kubernetes={'inside': False}))
         system = System(name='ubuntu:20.04')
         db.session.commit()
 
@@ -246,7 +223,7 @@ def test_create_destroy_machines_k8s():
 
 @pytest.mark.db
 def test_check_k8s_settings():
-    app = _create_app()
+    app = create_app()
 
     with app.app_context():
         initdb._prepare_initial_preferences()

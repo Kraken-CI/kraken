@@ -18,41 +18,20 @@ from unittest.mock import patch
 
 import pytest
 
-from flask import Flask
-
 from kraken.server import consts, utils, initdb
 from kraken.server.models import db, Run, Job, Branch, Flow, Stage, Project, System, AgentsGroup
 from kraken.server.models import AgentAssignment, Agent
 
-from dbtest import prepare_db
+from common import create_app
 
 from kraken.server import watchdog
 
 log = logging.getLogger(__name__)
 
 
-def _create_app():
-    # addresses
-    db_url = prepare_db()
-
-    # Create  Flask app instance
-    app = Flask('Kraken Background')
-
-    # Configure the SqlAlchemy part of the app instance
-    app.config["SQLALCHEMY_ECHO"] = False
-    app.config["SQLALCHEMY_DATABASE_URI"] = db_url
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
-    # initialize SqlAlchemy
-    db.init_app(app)
-    db.create_all(app=app)
-
-    return app
-
-
 @pytest.mark.db
 def test__check_agents_to_destroy():
-    app = _create_app()
+    app = create_app()
 
     with app.app_context():
         initdb._prepare_initial_preferences()

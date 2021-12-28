@@ -61,8 +61,6 @@ def _get_waiting_jobs():
     q = Job.query.filter_by(state=consts.JOB_STATE_QUEUED, agent_used=None)
     q = q.join('run')
     waiting_jobs = q.order_by(asc(Run.created), asc(Job.created)).all()  # FIFO
-    if waiting_jobs:
-        log.info('idle agents: %s, waiting jobs %s', agents_count, waiting_jobs)
 
     return waiting_jobs
 
@@ -119,6 +117,9 @@ def assign_jobs_to_agents():
         return 0
 
     waiting_jobs = _get_waiting_jobs()
+
+    if len(waiting_jobs) > 0:
+        log.info('idle agents: %s, waiting jobs %s', agents_count, waiting_jobs)
 
     counter = _assign_jobs(agents_count, idle_agents_by_group, idle_agents_by_sys_group, waiting_jobs)
 

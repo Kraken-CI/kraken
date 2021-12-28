@@ -1,39 +1,18 @@
 from unittest.mock import patch
 
-from flask import Flask
-
 from kraken.server import initdb
 from kraken.server.models import db, Project
 from kraken.server.bg import jobs as bg_jobs
 
-from dbtest import prepare_db
+from common import create_app
 
 from kraken.server import webhooks
-
-
-def _create_app():
-    # addresses
-    db_url = prepare_db()
-
-    # Create  Flask app instance
-    app = Flask('Kraken Background')
-
-    # Configure the SqlAlchemy part of the app instance
-    app.config["SQLALCHEMY_ECHO"] = False
-    app.config["SQLALCHEMY_DATABASE_URI"] = db_url
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
-    # initialize SqlAlchemy
-    db.init_app(app)
-    db.create_all(app=app)
-
-    return app
 
 
 def test_handle_gitea_webhook_push():
     payload = b'{\n  "ref": "refs/heads/master",\n  "before": "20906836a5d8845c5febc634424ee613e7dd6143",\n  "after": "0c43dff0eef13ba0ccc06898fb23d7e58de39591",\n  "compare_url": "http://localhost:3000/gitea/demo/compare/20906836a5d8845c5febc634424ee613e7dd6143...0c43dff0eef13ba0ccc06898fb23d7e58de39591",\n  "commits": [\n    {\n      "id": "0c43dff0eef13ba0ccc06898fb23d7e58de39591",\n      "message": "aaa\\n",\n      "url": "http://localhost:3000/gitea/demo/commit/0c43dff0eef13ba0ccc06898fb23d7e58de39591",\n      "author": {\n        "name": "Michal Nowikowski",\n        "email": "godfryd@gmail.com",\n        "username": "gitea"\n      },\n      "committer": {\n        "name": "Michal Nowikowski",\n        "email": "godfryd@gmail.com",\n        "username": "gitea"\n      },\n      "verification": null,\n      "timestamp": "2021-10-28T06:37:12+02:00",\n      "added": [],\n      "removed": [],\n      "modified": [\n        "README.md"\n      ]\n    }\n  ],\n  "head_commit": {\n    "id": "0c43dff0eef13ba0ccc06898fb23d7e58de39591",\n    "message": "aaa\\n",\n    "url": "http://localhost:3000/gitea/demo/commit/0c43dff0eef13ba0ccc06898fb23d7e58de39591",\n    "author": {\n      "name": "Michal Nowikowski",\n      "email": "godfryd@gmail.com",\n      "username": "gitea"\n    },\n    "committer": {\n      "name": "Michal Nowikowski",\n      "email": "godfryd@gmail.com",\n      "username": "gitea"\n    },\n    "verification": null,\n    "timestamp": "2021-10-28T06:37:12+02:00",\n    "added": [],\n    "removed": [],\n    "modified": [\n      "README.md"\n    ]\n  },\n  "repository": {\n    "id": 1,\n    "owner": {"id":1,"login":"gitea","full_name":"","email":"godfryd@gmail.com","avatar_url":"http://localhost:3000/user/avatar/gitea/-1","language":"","is_admin":false,"last_login":"0001-01-01T00:00:00Z","created":"2021-10-27T07:01:38+02:00","restricted":false,"active":false,"prohibit_login":false,"location":"","website":"","description":"","visibility":"public","followers_count":0,"following_count":0,"starred_repos_count":0,"username":"gitea"},\n    "name": "demo",\n    "full_name": "gitea/demo",\n    "description": "",\n    "empty": false,\n    "private": false,\n    "fork": false,\n    "template": false,\n    "parent": null,\n    "mirror": false,\n    "size": 20,\n    "html_url": "http://localhost:3000/gitea/demo",\n    "ssh_url": "git@localhost:gitea/demo.git",\n    "clone_url": "http://localhost:3000/gitea/demo.git",\n    "original_url": "",\n    "website": "",\n    "stars_count": 0,\n    "forks_count": 0,\n    "watchers_count": 1,\n    "open_issues_count": 0,\n    "open_pr_counter": 0,\n    "release_counter": 0,\n    "default_branch": "master",\n    "archived": false,\n    "created_at": "2021-10-27T07:02:38+02:00",\n    "updated_at": "2021-10-27T07:18:00+02:00",\n    "permissions": {\n      "admin": true,\n      "push": true,\n      "pull": true\n    },\n    "has_issues": true,\n    "internal_tracker": {\n      "enable_time_tracker": true,\n      "allow_only_contributors_to_track_time": true,\n      "enable_issue_dependencies": true\n    },\n    "has_wiki": true,\n    "has_pull_requests": true,\n    "has_projects": true,\n    "ignore_whitespace_conflicts": false,\n    "allow_merge_commits": true,\n    "allow_rebase": true,\n    "allow_rebase_explicit": true,\n    "allow_squash_merge": true,\n    "default_merge_style": "merge",\n    "avatar_url": "",\n    "internal": false,\n    "mirror_interval": ""\n  },\n  "pusher": {"id":1,"login":"gitea","full_name":"","email":"godfryd@gmail.com","avatar_url":"http://localhost:3000/user/avatar/gitea/-1","language":"","is_admin":false,"last_login":"0001-01-01T00:00:00Z","created":"2021-10-27T07:01:38+02:00","restricted":false,"active":false,"prohibit_login":false,"location":"","website":"","description":"","visibility":"public","followers_count":0,"following_count":0,"starred_repos_count":0,"username":"gitea"},\n  "sender": {"id":1,"login":"gitea","full_name":"","email":"godfryd@gmail.com","avatar_url":"http://localhost:3000/user/avatar/gitea/-1","language":"","is_admin":false,"last_login":"0001-01-01T00:00:00Z","created":"2021-10-27T07:01:38+02:00","restricted":false,"active":false,"prohibit_login":false,"location":"","website":"","description":"","visibility":"public","followers_count":0,"following_count":0,"starred_repos_count":0,"username":"gitea"}\n}'
 
-    app = _create_app()
+    app = create_app()
 
     with app.app_context():
         initdb._prepare_initial_preferences()
@@ -98,7 +77,7 @@ def test_handle_gitea_webhook_pr_open_without_commits():
     with open('tests/gitea-pr-open-without-commits.json', 'rb') as f:
         payload = f.read()
 
-    app = _create_app()
+    app = create_app()
 
     with app.app_context():
         initdb._prepare_initial_preferences()
@@ -122,7 +101,7 @@ def test_handle_gitea_webhook_pr_sync():
     with open('tests/gitea-pr-sync.json', 'rb') as f:
         payload = f.read()
 
-    app = _create_app()
+    app = create_app()
 
     with app.app_context():
         initdb._prepare_initial_preferences()
@@ -357,7 +336,7 @@ def test_handle_gitea_webhook_pr_open_with_commits():
     with open('tests/gitea-pr-open-with-commits.json', 'rb') as f:
         payload = f.read()
 
-    app = _create_app()
+    app = create_app()
 
     with app.app_context():
         initdb._prepare_initial_preferences()
@@ -593,7 +572,7 @@ def test_handle_gitlab_webhook_push():
     with open('tests/gitlab-push.json', 'rb') as f:
         payload = f.read()
 
-    app = _create_app()
+    app = create_app()
 
     with app.app_context():
         initdb._prepare_initial_preferences()
@@ -636,7 +615,7 @@ def test_handle_gitlab_webhook_mr_update():
     with open('tests/gitlab-mr-update.json', 'rb') as f:
         payload = f.read()
 
-    app = _create_app()
+    app = create_app()
 
     with app.app_context():
         initdb._prepare_initial_preferences()
@@ -682,7 +661,7 @@ def test_handle_gitlab_webhook_mr_open():
     with open('tests/gitlab-mr-open.json', 'rb') as f:
         payload = f.read()
 
-    app = _create_app()
+    app = create_app()
 
     with app.app_context():
         initdb._prepare_initial_preferences()
