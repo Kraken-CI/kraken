@@ -286,9 +286,10 @@ def _create_azure_vm(ag, system,
                      exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
                      wget -O agent {server_url}/install/agent
                      chmod a+x agent
-                     ./agent install -s {server_url} -m {minio_addr} -c {clickhouse_addr}
+                     ./agent install -s {server_url} -m {minio_addr} -c {clickhouse_addr} --system-id {system_id}
                   """
-    init_script = init_script.format(server_url=server_url, minio_addr=minio_addr, clickhouse_addr=clickhouse_addr)
+    init_script = init_script.format(server_url=server_url, minio_addr=minio_addr, clickhouse_addr=clickhouse_addr,
+                                     system_id=system.id)
 
     poller = compute_client.virtual_machines.begin_create_or_update(
         group_rg,

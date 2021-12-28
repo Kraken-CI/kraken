@@ -31,13 +31,12 @@ from . import utils
 log = logging.getLogger('scheduler')
 
 
-def assign_jobs_to_agents():
-    counter = 0
-
-    all_idle_agents = Agent.query.filter_by(job=None, authorized=True, disabled=False).all()
+def _get_idle_agents():
+    all_idle_agents = Agent.query.filter_by(job=None, authorized=True, disabled=False, deleted=None).all()
     agents_count = len(all_idle_agents)
     if agents_count == 0:
-        return 0
+        return 0, {}, {}
+
     idle_agents_by_group = {}
     idle_agents_by_sys_group = {}
     for ag in all_idle_agents:
@@ -55,11 +54,22 @@ def assign_jobs_to_agents():
                 idle_agents_by_sys_group[sys_grp_key] = []
             idle_agents_by_sys_group[sys_grp_key].append(ag)
 
+    return agents_count, idle_agents_by_group, idle_agents_by_sys_group
+
+
+def _get_waiting_jobs():
     q = Job.query.filter_by(state=consts.JOB_STATE_QUEUED, agent_used=None)
     q = q.join('run')
     waiting_jobs = q.order_by(asc(Run.created), asc(Job.created)).all()  # FIFO
     if waiting_jobs:
         log.info('idle agents: %s, waiting jobs %s', agents_count, waiting_jobs)
+
+    return waiting_jobs
+
+
+def _assign_jobs(agents_count, idle_agents_by_group, idle_agents_by_sys_group,
+                 waiting_jobs):
+    counter = 0
 
     for j in waiting_jobs:
         log.info('job %s, executor %s', j, j.system.executor)
@@ -98,6 +108,19 @@ def assign_jobs_to_agents():
         # if all idle agents used then stop assigning
         if counter == agents_count:
             break
+
+    return counter
+
+
+def assign_jobs_to_agents():
+
+    agents_count, idle_agents_by_group, idle_agents_by_sys_group = _get_idle_agents()
+    if agents_count == 0:
+        return 0
+
+    waiting_jobs = _get_waiting_jobs()
+
+    counter = _assign_jobs(agents_count, idle_agents_by_group, idle_agents_by_sys_group, waiting_jobs)
 
     return counter
 
