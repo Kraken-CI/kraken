@@ -29,7 +29,7 @@ from .common import _create_agent
 log = logging.getLogger(__name__)
 
 
-def _login():
+def _login(api_server_url):
     # Define the bearer token we are going to use to authenticate.
     # See here to create the token:
     # https://kubernetes.io/docs/tasks/access-application-cluster/access-cluster/
@@ -40,7 +40,7 @@ def _login():
     cfg = kubernetes.client.Configuration()
 
     # Specify the endpoint of your Kube cluster
-    cfg.host = get_setting('cloud', 'k8s_api_server_url')
+    cfg.host = api_server_url
 
     # Security part.
     # In this simple example we are not going to verify the SSL certificate of
@@ -60,15 +60,15 @@ def _login():
     return api_client, namespace
 
 
-def _get_core_api(ag):
-    _, depl = ag.get_deployment()
-    if depl['inside']:
+def _get_core_api():
+    api_server_url = get_setting('cloud', 'k8s_api_server_url')
+    if api_server_url:
+        api_client, namespace = _login(api_server_url)
+        core_api = kubernetes.client.CoreV1Api(api_client)
+    else:
         kubernetes.config.load_incluster_config()
         core_api = kubernetes.client.CoreV1Api()
         namespace = get_setting('cloud', 'k8s_namespace')
-    else:
-        api_client, namespace = _login()
-        core_api = kubernetes.client.CoreV1Api(api_client)
     return core_api, namespace
 
 
@@ -84,7 +84,7 @@ def check_k8s_settings():
         return 'Kubernetes token is empty while API server URL is provided'
 
     if api_server_url:
-        api_client, _ = _login()
+        api_client, _ = _login(api_server_url)
         core_api = kubernetes.client.CoreV1Api(api_client)
         ver_api = kubernetes.client.VersionApi(api_client)
     else:
@@ -110,7 +110,7 @@ def check_k8s_settings():
 
 def create_pods(ag, system, num,
                 server_url, minio_addr, clickhouse_addr):
-    core_api, namespace = _get_core_api(ag)
+    core_api, namespace = _get_core_api()
 
     # prepare create_container
     cmd = 'apt-get update && apt-get install -y --no-install-recommends ca-certificates sudo wget python3'
@@ -197,7 +197,7 @@ def destroy_pod(ag, agent):  # pylint: disable=unused-argument
     namespace = agent.extra_attrs['namespace']
     pod_name = agent.extra_attrs['instance_id']
 
-    core_api, _ = _get_core_api(ag)
+    core_api, _ = _get_core_api()
 
     log.info('delete K8S pod %s', pod_name)
     try:
@@ -210,7 +210,7 @@ def pod_exists(ag, agent):  # pylint: disable=unused-argument
     namespace = agent.extra_attrs['namespace']
     pod_name = agent.extra_attrs['instance_id']
 
-    core_api, _ = _get_core_api(ag)
+    core_api, _ = _get_core_api()
 
     log.info('does K8S pod %s exist', pod_name)
     try:
@@ -223,7 +223,7 @@ def pod_exists(ag, agent):  # pylint: disable=unused-argument
 
 
 def cleanup_dangling_pods(ag):
-    core_api, namespace = _get_core_api(ag)
+    core_api, namespace = _get_core_api()
 
     now = utils.utcnow()
 
