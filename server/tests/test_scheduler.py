@@ -38,7 +38,7 @@ def test__get_idle_agents_check_availability():
         initdb._prepare_initial_preferences()
 
         # empty
-        count, by_grp, by_sys_grp = scheduler._get_idle_agents()
+        count, _, _ = scheduler._get_idle_agents()
         assert count == 0
 
         # agent but not authorized, etc
@@ -57,7 +57,7 @@ def test__get_idle_agents_check_availability():
         db.session.commit()
 
         # not available yet
-        count, by_grp, by_sys_grp = scheduler._get_idle_agents()
+        count, _, _ = scheduler._get_idle_agents()
         assert count == 0
 
         # fully available
@@ -67,7 +67,7 @@ def test__get_idle_agents_check_availability():
         a.job = None
         db.session.commit()
 
-        count, by_grp, by_sys_grp = scheduler._get_idle_agents()
+        count, _, _ = scheduler._get_idle_agents()
         assert count == 1
 
         # unauthorize
@@ -77,7 +77,7 @@ def test__get_idle_agents_check_availability():
         a.job = None
         db.session.commit()
 
-        count, by_grp, by_sys_grp = scheduler._get_idle_agents()
+        count, _, _ = scheduler._get_idle_agents()
         assert count == 0
 
         # disable
@@ -87,7 +87,7 @@ def test__get_idle_agents_check_availability():
         a.job = None
         db.session.commit()
 
-        count, by_grp, by_sys_grp = scheduler._get_idle_agents()
+        count, _, _ = scheduler._get_idle_agents()
         assert count == 0
 
         # delete
@@ -97,7 +97,7 @@ def test__get_idle_agents_check_availability():
         a.job = None
         db.session.commit()
 
-        count, by_grp, by_sys_grp = scheduler._get_idle_agents()
+        count, _, _ = scheduler._get_idle_agents()
         assert count == 0
 
         # busy
@@ -107,7 +107,7 @@ def test__get_idle_agents_check_availability():
         a.job = job  # this causes that agent is unavailable
         db.session.commit()
 
-        count, by_grp, by_sys_grp = scheduler._get_idle_agents()
+        count, _, _ = scheduler._get_idle_agents()
         assert count == 0
 
         # available again
@@ -117,7 +117,7 @@ def test__get_idle_agents_check_availability():
         a.job = None
         db.session.commit()
 
-        count, by_grp, by_sys_grp = scheduler._get_idle_agents()
+        count, _, _ = scheduler._get_idle_agents()
         assert count == 1
 
 
@@ -125,14 +125,14 @@ def test__get_idle_agents_check_availability():
 def test__get_idle_agents_groupped():
     app = create_app()
 
-    now = utils.utcnow()
-
     with app.app_context():
         initdb._prepare_initial_preferences()
 
         # empty
         count, by_grp, by_sys_grp = scheduler._get_idle_agents()
         assert count == 0
+        assert by_grp == {}
+        assert by_sys_grp == {}
 
         # agent but not authorized, etc
         a = Agent(name='agent', address='1.2.3.4', authorized=True, disabled=False)
