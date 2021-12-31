@@ -107,11 +107,11 @@
               </div>
               <div *ngIf="step.result && step.result['reason']">
                 Reason: {{ step.result['reason'] }}
-                <div *ngIf="step.result['reason'] == 'step-timeout'">
+                <div *ngIf="step.result['reason'] === 'step-timeout'">
                   Timeout: {{ step.timeout || '60' }}s
                   <br>
                 </div>
-                <div *ngIf="step.result['reason'] != 'step-timeout'">
+                <div *ngIf="step.result['reason'] !== 'step-timeout'">
                   <pre>{{ step.result['msg'] }}</pre>
                 </div>
               </div>

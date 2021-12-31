@@ -1,6 +1,5 @@
 import {
     Component,
-    OnInit,
     OnDestroy,
     Input,
     AfterViewInit,
@@ -17,7 +16,7 @@ import { ExecutionService } from '../backend/api/execution.service'
     templateUrl: './log-box.component.html',
     styleUrls: ['./log-box.component.sass'],
 })
-export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
+export class LogBoxComponent implements OnDestroy, AfterViewInit {
     @ViewChild('logBox') logBox: ElementRef
     @ViewChildren('logFrag') logFrags: QueryList<any>
     logBoxEl: any
@@ -52,8 +51,6 @@ export class LogBoxComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     constructor(protected executionService: ExecutionService) {}
-
-    ngOnInit() {}
 
     _showLogs(logs, job, startLineNo, prepend) {
         let fragment

@@ -283,7 +283,7 @@
         <!-- buttons -->
         <div>
           <button type="button" (click)="saveStage()" pButton icon="pi pi-check" label="Save Stage" style="margin: 0 30px 0 0;"
-                  [disabled]="stage.repo_state == 1 || !auth.hasPermission('manage')"
+                  [disabled]="stage.repo_state === 1 || !auth.hasPermission('manage')"
                   [pTooltip]="auth.permTip('manage')"></button>
           <button type="button" (click)="deleteStage()" pButton icon="pi pi-trash" class="p-button-danger p-button-outlined" label="Delete Stage"
                   [disabled]="!auth.hasPermission('manage')"

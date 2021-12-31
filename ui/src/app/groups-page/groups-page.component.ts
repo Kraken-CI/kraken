@@ -41,8 +41,7 @@ export class GroupsPageComponent implements OnInit {
         protected managementService: ManagementService,
         protected breadcrumbService: BreadcrumbsService,
         private titleService: Title
-    ) {
-    }
+    ) {}
 
     switchToTab(index) {
         if (this.activeTabIdx === index) {

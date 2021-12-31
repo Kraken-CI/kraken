@@ -18,7 +18,7 @@
 
 
 <!-- Agents tab -->
-<div *ngIf="activeTabIdx == 0">
+<div *ngIf="activeTabIdx === 0">
   <div style="display: flex; margin: 15px 5px;">
 
     <p-button label="Refresh" icon="pi pi-refresh" (onClick)="refreshAgents(agentsTable)" [style]="{'margin': '0 20px 0 60px'}"></p-button>
@@ -110,7 +110,7 @@
 </div>
 
 <!-- Single agent tab -->
-<div *ngIf="activeTabIdx != 0" class="p-component">
+<div *ngIf="activeTabIdx !== 0" class="p-component">
   <div class="grid"  style="margin-top: 10px;">
     <div class="col-4">
       <h3>General</h3>

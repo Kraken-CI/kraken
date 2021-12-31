@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core'
 
 import { ManagementService } from '../backend/api/management.service'
 
@@ -8,9 +8,9 @@ interface DeploymentMethod {
 }
 
 @Component({
-  selector: 'app-grp-cloud-cfg',
-  templateUrl: './grp-cloud-cfg.component.html',
-  styleUrls: ['./grp-cloud-cfg.component.sass']
+    selector: 'app-grp-cloud-cfg',
+    templateUrl: './grp-cloud-cfg.component.html',
+    styleUrls: ['./grp-cloud-cfg.component.sass'],
 })
 export class GrpCloudCfgComponent implements OnInit {
     @Input() deployment: any
@@ -25,16 +25,14 @@ export class GrpCloudCfgComponent implements OnInit {
     azureLocations: any[]
     azureVmSizes: any[]
 
-    constructor(
-        protected managementService: ManagementService)
-    {
+    constructor(protected managementService: ManagementService) {
         this.deploymentMethods = [
             { name: 'Manual', val: 0 },
             // {name: 'SSH', val: 1},
             { name: 'AWS EC2', val: 2 },
             { name: 'AWS ECS Fargate', val: 3 },
-            { name: 'Azure VM', val: 4},
-            { name: 'Kubernetes', val: 5},
+            { name: 'Azure VM', val: 4 },
+            { name: 'Kubernetes', val: 5 },
             // {name: 'Google Cloud Platform', val: 3},
             // {name: 'Digital Ocean', val: 5},
             // {name: 'Linode', val: 6},
@@ -97,10 +95,8 @@ export class GrpCloudCfgComponent implements OnInit {
 
     azureLocationChange() {
         const location = this.deployment.azure_vm.location
-        this.managementService
-            .getAzureVmSizes(location)
-            .subscribe((data) => {
-                this.azureVmSizes = data.items
-            })
+        this.managementService.getAzureVmSizes(location).subscribe((data) => {
+            this.azureVmSizes = data.items
+        })
     }
 }

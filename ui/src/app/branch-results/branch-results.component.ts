@@ -210,7 +210,10 @@ export class BranchResultsComponent implements OnInit, OnDestroy {
             if (flow.trigger.commits) {
                 for (const c of flow.trigger.commits) {
                     html += `<p>`
-                    html += `<a href="${c.url}" target="blank"><b>${c.id.slice(0, 8)}</b></a>`
+                    html += `<a href="${c.url}" target="blank"><b>${c.id.slice(
+                        0,
+                        8
+                    )}</b></a>`
                     html += ` by <a href="mailto:${c.author.email}">${c.author.name}</a>`
                     const ts = datetimeToLocal(c.timestamp, null)
                     html += ` at ${ts}<br>`

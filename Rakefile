@@ -111,14 +111,14 @@ end
 task :lint_ui => [NG, :gen_client] do
   Dir.chdir('ui') do
     sh 'npm ci'
-#    sh 'npx ng lint'
+    sh 'npx ng lint'
     sh 'npx prettier --config .prettierrc --check \'**/*\''
   end
 end
 
 task :fix_ui => [NG, :gen_client] do
   Dir.chdir('ui') do
-#    sh 'npx ng lint --fix'
+    sh 'npx ng lint --fix'
     sh 'npx prettier --config .prettierrc --write \'**/*\''
   end
 end

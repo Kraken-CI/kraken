@@ -69,10 +69,10 @@
               <!-- processed -->
               <div class="round-shadow"  [ngStyle]="{ 'background-color': (selectedNode.run.finished ? '#e1fbe1' : ''), 'margin-right': '1em' }">
                 <div style="font-size: 1.3em; font-weight: bold; margin-bottom: 0.8em;">Processed</div>
-                <div *ngIf="selectedNode.run.state == 'processed'">
+                <div *ngIf="selectedNode.run.state === 'processed'">
                   {{ selectedNode.run.started | localtime }}
                 </div>
-                <div *ngIf="selectedNode.run.state != 'processed'">
+                <div *ngIf="selectedNode.run.state !== 'processed'">
                   not yet
                 </div>
               </div>

@@ -6,12 +6,12 @@
     <b *ngIf="!run" style="font-size: 1.1rem; flex: 1; color: #aaa;">{{ stage.name }}</b>
     <div *ngIf="run" style="font-size: 0.7rem; margin-right: 10px; display: flex; flex-direction: column; align-items: end;">
       <div>{{(run.started || run.created) | localtime}}</div>
-      <div *ngIf="run.state != 'manual'">{{run.duration}}
-        <span *ngIf="run.state == 'in-progress'">
+      <div *ngIf="run.state !== 'manual'">{{run.duration}}
+        <span *ngIf="run.state === 'in-progress'">
           <i class="pi pi-spin pi-spinner" style="font-size: 16px; vertical-align: text-top;"></i>
         </span>
       </div>
-      <div *ngIf="run.state == 'manual'">waiting for manual trigger
+      <div *ngIf="run.state === 'manual'">waiting for manual trigger
       </div>
     </div>
     <span style="float:right; cursor: pointer; padding-right: 8px;" aria-hidden="true" class="pi pi-bars" (click)="showRunMenu($event, runBoxMenu, run)"></span>

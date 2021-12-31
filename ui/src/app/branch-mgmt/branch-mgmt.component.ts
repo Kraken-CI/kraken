@@ -443,7 +443,7 @@ export class BranchMgmtComponent implements OnInit {
                 id: this.branchId,
                 name: this.forkBranchDisplayName,
                 branch_name: this.forkBranchRepoName,
-                forking_model: this.forkingModel
+                forking_model: this.forkingModel,
             })
             .subscribe(
                 (branch) => {

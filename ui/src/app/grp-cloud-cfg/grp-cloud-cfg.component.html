@@ -6,12 +6,12 @@
                   (onChange)="deploymentMethodChange()"></p-selectButton>
 
   <div style="margin: 12px 6px 18px 12px;">
-    <div *ngIf="deployment.method == 0">
+    <div *ngIf="deployment.method === 0">
       <i>No extra configuration needed.</i>
     </div>
 
     <!-- AWS EC2 -->
-    <div *ngIf="deployment.method == 2" class="flex align-items-start">
+    <div *ngIf="deployment.method === 2" class="flex align-items-start">
       <!-- column 1 -->
       <div class="mr-4">
         <h4>General</h4>
@@ -150,7 +150,7 @@
     </div>
 
     <!-- AWS ECS Fargate -->
-    <div *ngIf="deployment.method == 3" class="flex align-items-start">
+    <div *ngIf="deployment.method === 3" class="flex align-items-start">
       <!-- column 1 -->
       <div class="mr-4">
         <h4>General</h4>
@@ -214,7 +214,7 @@
     </div>
 
     <!-- AZURE VM -->
-    <div *ngIf="deployment.method == 4" class="flex align-items-start">
+    <div *ngIf="deployment.method === 4" class="flex align-items-start">
       <!-- column 1 -->
       <div class="mr-4">
         <h4>General</h4>
@@ -322,7 +322,7 @@
 
 
     <!-- Kubernetes -->
-    <div *ngIf="deployment.method == 5" class="flex align-items-start">
+    <div *ngIf="deployment.method === 5" class="flex align-items-start">
       <!-- column 1 -->
       <div class="mr-6">
         <h4>General</h4>

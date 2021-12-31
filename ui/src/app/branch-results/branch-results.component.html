@@ -25,7 +25,7 @@
               </div>
               <div>{{flow.created | localtime}}</div>
               <div>{{flow.duration}}
-                <span *ngIf="flow.state == 'in-progress'">
+                <span *ngIf="flow.state === 'in-progress'">
                   <i class="pi pi-spin pi-spinner" style="font-size: 16px; vertical-align: text-top;"></i>
                 </span>
               </div>
@@ -49,7 +49,7 @@
     </div>
     <div class="col" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr)); gap: 6px;">
       <ng-container *ngFor="let run of flow.runs">
-        <app-run-box *ngIf="filterStageName=='All' || run.stage_name==filterStageName"
+        <app-run-box *ngIf="filterStageName === 'All' || run.stage_name === filterStageName"
                      [run]="run" [flowId]="flow.id" (stageRun)="onStageRun($event)">
         </app-run-box>
       </ng-container>

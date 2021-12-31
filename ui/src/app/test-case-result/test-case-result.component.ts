@@ -89,7 +89,8 @@ export class TestCaseResultComponent implements OnInit {
                 'Kraken - Test ' + this.result.test_case_name + ' ' + this.tcrId
             )
 
-            this.statusOptions['plugins'].title.text = 'Test case ' + this.result.test_case_name + ' results in flows'
+            this.statusOptions['plugins'].title.text =
+                'Test case ' + this.result.test_case_name + ' results in flows'
 
             const valueNames = []
             if (result.values) {

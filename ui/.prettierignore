@@ -16,3 +16,7 @@ nginx.conf
 dist
 .browserslistrc
 openapi-generator-cli.jar
+.angular
+src/assets/Forking branch.drawio
+src/assets/*png
+src/assets/*svg

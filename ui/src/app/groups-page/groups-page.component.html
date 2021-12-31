@@ -36,7 +36,7 @@
 
 
 <!-- Groups tab -->
-<div *ngIf="activeTabIdx == 0">
+<div *ngIf="activeTabIdx === 0">
     <div style="display: flex; justify-content: space-between; margin: 10px;">
         <div style="display: flex;">
             <button
@@ -109,7 +109,7 @@
 </div>
 
 <!-- Single group tab -->
-<div *ngIf="activeTabIdx != 0" class="p-component" style="margin: 8px;">
+<div *ngIf="activeTabIdx !== 0" class="p-component" style="margin: 8px;">
   <div style="margin: 12px 0;">
     <h3>
     <span>Group Name: {{ groupTab.group.name }}</span>

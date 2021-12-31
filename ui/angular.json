@@ -34,12 +34,7 @@
                             "./node_modules/codemirror/addon/lint/lint.css",
                             "./src/styles.sass"
                         ],
-                        "scripts": [
-                            //"./node_modules/chart.js/dist/chart.js",
-                            //"./node_modules/chartjs-chart-error-bars/build/index.umd.min.js",
-                            //"./node_modules/codemirror/addon/lint/json-lint.js",
-                            //"./node_modules/codemirror/addon/lint/lint.js"
-                        ],
+                        "scripts": [],
                         "vendorChunk": true,
                         "extractLicenses": false,
                         "buildOptimizer": false,
@@ -118,9 +113,18 @@
                             "devServerTarget": "kraken:serve:production"
                         }
                     }
+                },
+                "lint": {
+                    "builder": "@angular-eslint/builder:lint",
+                    "options": {
+                        "lintFilePatterns": ["src/**/*.ts", "src/**/*.html"]
+                    }
                 }
             }
         }
     },
-    "defaultProject": "kraken"
+    "defaultProject": "kraken",
+    "cli": {
+        "defaultCollection": "@angular-eslint/schematics"
+    }
 }
