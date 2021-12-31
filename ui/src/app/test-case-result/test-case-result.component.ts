@@ -91,6 +91,8 @@ export class TestCaseResultComponent implements OnInit {
                 'Kraken - Test ' + this.result.test_case_name + ' ' + this.tcrId
             )
 
+            this.statusOptions['plugins'].title.text = 'Test case ' + this.result.test_case_name + ' results in flows'
+
             const valueNames = []
             if (result.values) {
                 for (const name of Object.keys(result.values)) {
@@ -103,20 +105,39 @@ export class TestCaseResultComponent implements OnInit {
 
         this.statusOptions = {
             elements: {
-                rectangle: {
+                bar: {
                     backgroundColor: this.statusColors,
                 },
             },
-            tooltips: {
-                mode: 'index',
-                callbacks: {
-                    title(tooltipItems, data) {
-                        const res =
-                            data.datasets[0].origData[tooltipItems[0].index]
-                        return TestCaseResults.resultToTxt(res)
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Test case results in flows',
+                },
+                legend: {
+                    display: false,
+                },
+                tooltip: {
+                    callbacks: {
+                        label: (tooltipItem) => {
+                            const resultMappingRev = {
+                                0: 0, // 'Not run',
+                                1: 3, // 'ERROR',
+                                2: 2, // 'Failed',
+                                3: 4, // 'Disabled',
+                                4: 5, // 'Unsupported',
+                                5: 1, // 'Passed',
+                            }
+
+                            const res = resultMappingRev[tooltipItem.raw]
+                            return TestCaseResults.resultToTxt(res)
+                        },
                     },
                 },
-                footerFontStyle: 'normal',
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index',
             },
         }
     }
@@ -127,13 +148,14 @@ export class TestCaseResultComponent implements OnInit {
     }
 
     resultToChartVal(res) {
+        // from most severe to lease severe
         const resultMapping = {
             0: 0, // 'Not run',
-            1: 5, // 'Passed',
-            2: 2, // 'Failed',
             3: 1, // 'ERROR',
+            2: 2, // 'Failed',
             4: 3, // 'Disabled',
             5: 4, // 'Unsupported',
+            1: 5, // 'Passed',
         }
         return resultMapping[res]
     }
@@ -229,14 +251,12 @@ export class TestCaseResultComponent implements OnInit {
 
         this.valueOptions = {
             scales: {
-                yAxes: [
-                    {
-                        ticks: {
-                            suggestedMin: minVal,
-                            suggestedMax: maxVal,
-                        },
+                y: {
+                    ticks: {
+                        suggestedMin: minVal,
+                        suggestedMax: maxVal,
                     },
-                ],
+                },
             },
         }
     }
@@ -254,7 +274,6 @@ export class TestCaseResultComponent implements OnInit {
                 for (const res of this.results.slice().reverse()) {
                     flowIds.push(res.flow_id)
                     statuses.push(this.resultToChartVal(res.result))
-                    // statuses.push(TestCaseResults.resultToTxt(res.result));
                     origStatuses.push(res.result)
                 }
 
