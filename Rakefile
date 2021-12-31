@@ -3,8 +3,8 @@ require 'json'
 # tools versions
 NODE_VER = 'v16.13.1'
 OPENAPI_GENERATOR_VER = '5.3.0'
-HELM_VER = 'v3.7.1'
-DOCKER_COMPOSE_VER = '1.29.1'
+HELM_VER = 'v3.7.2'
+DOCKER_COMPOSE_VER = '2.2.2'
 
 # Check host OS
 UNAME=`uname -s`
@@ -50,7 +50,7 @@ MINIO_SECRET_KEY='HICSHuhIIUhiuhMIUHIUhGFfUHugy6fGJuyyfiGY'
 
 file DOCKER_COMPOSE do
   sh "mkdir -p #{TOOLS_DIR}"
-  sh "wget -nv https://github.com/docker/compose/releases/download/#{DOCKER_COMPOSE_VER}/docker-compose-#{sysname}-x86_64 -O #{DOCKER_COMPOSE}"
+  sh "wget -nv https://github.com/docker/compose/releases/download/v#{DOCKER_COMPOSE_VER}/docker-compose-#{sysname}-x86_64 -O #{DOCKER_COMPOSE}"
   sh "chmod a+x #{DOCKER_COMPOSE}"
 end
 
@@ -100,7 +100,7 @@ end
 task :build_ui => [NG, :gen_client] do
   Dir.chdir('ui') do
     sh "sed -e 's/0\.0/#{kk_ver}/g' src/environments/environment.prod.ts.in > src/environments/environment.prod.ts"
-    sh 'npx ng build --prod'
+    sh 'npx ng build --configuration production'
   end
 end
 
