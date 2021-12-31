@@ -8,7 +8,7 @@ Features:
   - various executors: bare metal, Docker, LXD
   - highly scalable to thousands of executors
   - sophisticated test results analysis
-  - integrated with AWS EC2 and ECS, Azure VM, with autoscaling
+  - integrated with AWS EC2 and ECS, Azure VM and Kubernetes, with autoscaling
   - supported webhooks from GitHub, GitLab and Gitea
   - email and Slack notifications
 
