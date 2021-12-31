@@ -43,18 +43,18 @@
     </p-table>
   </p-tabPanel>
   <p-tabPanel header="Charts">
-    <div class="p-grid">
-      <div class="p-col-6">
+    <div class="grid">
+      <div class="col-6">
       </div>
-      <div class="p-col-6">
+      <div class="col-6">
         <p-selectButton [options]="valueNames" [(ngModel)]="selectedValue" optionLabel="name" (onChange)="valueChange()"></p-selectButton>
         iterations: {{ iterations }}
       </div>
 
-      <div class="p-col-6">
+      <div class="col-6">
         <p-chart type="bar" [data]="statusData" [options]="statusOptions"></p-chart>
       </div>
-      <div class="p-col-6" *ngIf="valueData && valueData.datasets">
+      <div class="col-6" *ngIf="valueData && valueData.datasets">
         <p-chart type="line" [data]="valueData" [options]="valueOptions" [plugins]="chartPlugins"></p-chart>
       </div>
     </div>

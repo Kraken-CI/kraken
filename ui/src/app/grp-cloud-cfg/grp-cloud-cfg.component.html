@@ -11,13 +11,13 @@
     </div>
 
     <!-- AWS EC2 -->
-    <div *ngIf="deployment.method == 2" class="p-d-flex p-ai-start">
+    <div *ngIf="deployment.method == 2" class="flex align-items-start">
       <!-- column 1 -->
-      <div class="p-mr-4">
+      <div class="mr-4">
         <h4>General</h4>
-        <div class="p-field p-grid">
-          <label for="region" class="p-col-fixed" style="width:100px">Region</label>
-          <div class="p-col">
+        <div class="field grid">
+          <label for="region" class="col-fixed" style="width:100px">Region</label>
+          <div class="col">
             <p-dropdown id="region"
                         [options]="awsRegions"
                         [(ngModel)]="deployment.aws.region"
@@ -28,9 +28,9 @@
                         (onChange)="regionChange()"></p-dropdown>
           </div>
         </div>
-        <div class="p-field p-grid">
-          <label for="instancesLimit" class="p-col-fixed" style="width:100px">Instances Limit</label>
-          <div class="p-col">
+        <div class="field grid">
+          <label for="instancesLimit" class="col-fixed" style="width:100px">Instances Limit</label>
+          <div class="col">
             <p-inputNumber [(ngModel)]="deployment.aws.instances_limit" [showButtons]="true"
                            inputId="instancesLimit"
                            buttonLayout="horizontal"
@@ -46,20 +46,20 @@
 
           </div>
         </div>
-        <div class="p-field p-grid">
-          <label for="defaultImage" class="p-col-fixed" style="width:100px">Default AMI Image</label>
-          <div class="p-col">
+        <div class="field grid">
+          <label for="defaultImage" class="col-fixed" style="width:100px">Default AMI Image</label>
+          <div class="col">
             <input id="defaultImage" type="text" [(ngModel)]="deployment.aws.default_image" pInputText>
           </div>
         </div>
       </div>
 
       <!-- column 2 -->
-      <div class="p-mr-4">
+      <div class="mr-4">
         <h4>VM Options</h4>
-        <div class="p-field p-grid">
-          <label for="instanceType" class="p-col-fixed" style="width:100px">Instance Type</label>
-          <div class="p-col">
+        <div class="field grid">
+          <label for="instanceType" class="col-fixed" style="width:100px">Instance Type</label>
+          <div class="col">
             <p-dropdown id="instanceType"
                         [options]="awsInstanceTypes"
                         [(ngModel)]="deployment.aws.instance_type"
@@ -70,21 +70,21 @@
                         [filter]="true"></p-dropdown>
           </div>
         </div>
-        <div class="p-field-checkbox">
+        <div class="field-checkbox">
           <p-checkbox [(ngModel)]="deployment.aws.spot_instance" binary="true" inputId="spotInstance"></p-checkbox>
           <label for="spotInstance">Spot Instance</label>
         </div>
-        <div class="p-field-checkbox">
+        <div class="field-checkbox">
           <p-checkbox [(ngModel)]="deployment.aws.monitoring" binary="true" inputId="monitoring"></p-checkbox>
           <label for="monitoring">Monitoring</label>
         </div>
-        <div class="p-field-checkbox">
+        <div class="field-checkbox">
           <p-checkbox [(ngModel)]="deployment.aws.cpu_credits_unlimited" binary="true" inputId="cpuCreditsUnlimited"></p-checkbox>
           <label for="cpuCreditsUnlimited">CPU Credits Unlimited</label>
         </div>
-        <div class="p-field p-grid">
-          <label for="diskSize" class="p-col-fixed" style="width:100px">Disk Size</label>
-          <div class="p-col">
+        <div class="field grid">
+          <label for="diskSize" class="col-fixed" style="width:100px">Disk Size</label>
+          <div class="col">
             <p-inputNumber [(ngModel)]="deployment.aws.disk_size" [showButtons]="true"
                            inputId="diskSize"
                            buttonLayout="horizontal"
@@ -103,7 +103,7 @@
       </div>
 
       <!-- column 3 -->
-      <div class="p-mr-4">
+      <div class="mr-4">
         <h4>Init Script</h4>
         <textarea [(ngModel)]="deployment.aws.init_script" [rows]="10" [cols]="50" style="font-family: monospace;" pInputTextarea></textarea>
       </div>
@@ -150,13 +150,13 @@
     </div>
 
     <!-- AWS ECS Fargate -->
-    <div *ngIf="deployment.method == 3" class="p-d-flex p-ai-start">
+    <div *ngIf="deployment.method == 3" class="flex align-items-start">
       <!-- column 1 -->
-      <div class="p-mr-4">
+      <div class="mr-4">
         <h4>General</h4>
-        <div class="p-field p-grid">
-          <label for="ecs-fg-region" class="p-col-fixed" style="width:100px">Region</label>
-          <div class="p-col">
+        <div class="field grid">
+          <label for="ecs-fg-region" class="col-fixed" style="width:100px">Region</label>
+          <div class="col">
             <p-dropdown id="ecs-fg-region"
                         [options]="awsRegions"
                         [(ngModel)]="deployment.aws_ecs_fargate.region"
@@ -166,9 +166,9 @@
                         [filter]="true"></p-dropdown>
           </div>
         </div>
-        <div class="p-field p-grid">
-          <label for="ecs-fg-instancesLimit" class="p-col-fixed" style="width:100px">Instances Limit</label>
-          <div class="p-col">
+        <div class="field grid">
+          <label for="ecs-fg-instancesLimit" class="col-fixed" style="width:100px">Instances Limit</label>
+          <div class="col">
             <p-inputNumber [(ngModel)]="deployment.aws_ecs_fargate.instances_limit" [showButtons]="true"
                            inputId="ecs-fg-instancesLimit"
                            buttonLayout="horizontal"
@@ -187,25 +187,25 @@
       </div>
 
       <!-- column 2 -->
-      <div class="p-mr-4">
+      <div class="mr-4">
         <h4>ECS Task Options</h4>
-        <div class="p-field p-grid">
-          <label for="ecs-fg-cluster" class="p-col-fixed" style="width:100px">Cluster</label>
-          <div class="p-col">
+        <div class="field grid">
+          <label for="ecs-fg-cluster" class="col-fixed" style="width:100px">Cluster</label>
+          <div class="col">
               <input type="text" pInputText [(ngModel)]="deployment.aws_ecs_fargate.cluster" id="ecs-fg-cluster"/>
           </div>
         </div>
 
-        <div class="p-field p-grid">
-          <label for="ecs-fg-subnets" class="p-col-fixed" style="width:100px">Subnets</label>
-          <div class="p-col">
+        <div class="field grid">
+          <label for="ecs-fg-subnets" class="col-fixed" style="width:100px">Subnets</label>
+          <div class="col">
               <input type="text" pInputText [(ngModel)]="deployment.aws_ecs_fargate.subnets"/>
           </div>
         </div>
 
-        <div class="p-field p-grid">
-          <label for="ecs-fg-security_groups" class="p-col-fixed" style="width:100px">Security Groups</label>
-          <div class="p-col">
+        <div class="field grid">
+          <label for="ecs-fg-security_groups" class="col-fixed" style="width:100px">Security Groups</label>
+          <div class="col">
               <input type="text" pInputText [(ngModel)]="deployment.aws_ecs_fargate.security_groups" id="ecs-fg-security_groups"/>
           </div>
         </div>
@@ -214,13 +214,13 @@
     </div>
 
     <!-- AZURE VM -->
-    <div *ngIf="deployment.method == 4" class="p-d-flex p-ai-start">
+    <div *ngIf="deployment.method == 4" class="flex align-items-start">
       <!-- column 1 -->
-      <div class="p-mr-4">
+      <div class="mr-4">
         <h4>General</h4>
-        <div class="p-field p-grid">
-          <label for="azure-vm-location" class="p-col-fixed" style="width:100px">Location</label>
-          <div class="p-col">
+        <div class="field grid">
+          <label for="azure-vm-location" class="col-fixed" style="width:100px">Location</label>
+          <div class="col">
             <p-dropdown id="azure-vm-location"
                         [options]="azureLocations"
                         [(ngModel)]="deployment.azure_vm.location"
@@ -229,9 +229,9 @@
                         (onChange)="azureLocationChange()"></p-dropdown>
           </div>
         </div>
-        <div class="p-field p-grid">
-          <label for="instancesLimit" class="p-col-fixed" style="width:100px">Instances Limit</label>
-          <div class="p-col">
+        <div class="field grid">
+          <label for="instancesLimit" class="col-fixed" style="width:100px">Instances Limit</label>
+          <div class="col">
             <p-inputNumber [(ngModel)]="deployment.azure_vm.instances_limit" [showButtons]="true"
                            inputId="instancesLimit"
                            buttonLayout="horizontal"
@@ -247,20 +247,20 @@
 
           </div>
         </div>
-        <div class="p-field p-grid">
-          <label for="defaultImage" class="p-col-fixed" style="width:100px">Default Image</label>
-          <div class="p-col">
+        <div class="field grid">
+          <label for="defaultImage" class="col-fixed" style="width:100px">Default Image</label>
+          <div class="col">
             <input id="defaultImage" type="text" [(ngModel)]="deployment.azure_vm.default_image" pInputText>
           </div>
         </div>
       </div>
 
       <!-- column 2 -->
-      <div class="p-mr-4">
+      <div class="mr-4">
         <h4>VM Options</h4>
-        <div class="p-field p-grid">
-          <label for="vmSize" class="p-col-fixed" style="width:100px">VM Size</label>
-          <div class="p-col">
+        <div class="field grid">
+          <label for="vmSize" class="col-fixed" style="width:100px">VM Size</label>
+          <div class="col">
             <p-dropdown id="vmSize"
                         [options]="azureVmSizes"
                         [(ngModel)]="deployment.azure_vm.vm_size"
@@ -274,7 +274,7 @@
       </div>
 
       <!-- column 3 -->
-      <div class="p-mr-4">
+      <div class="mr-4">
         <h4>Init Script</h4>
         <textarea [(ngModel)]="deployment.azure_vm.init_script" [rows]="10" [cols]="50" style="font-family: monospace;" pInputTextarea></textarea>
       </div>
@@ -322,14 +322,14 @@
 
 
     <!-- Kubernetes -->
-    <div *ngIf="deployment.method == 5" class="p-d-flex p-ai-start">
+    <div *ngIf="deployment.method == 5" class="flex align-items-start">
       <!-- column 1 -->
-      <div class="p-mr-6">
+      <div class="mr-6">
         <h4>General</h4>
 
-        <div class="p-field p-grid">
-          <label for="k8s-instancesLimit" class="p-col-fixed" style="width:100px">Instances Limit</label>
-          <div class="p-col">
+        <div class="field grid">
+          <label for="k8s-instancesLimit" class="col-fixed" style="width:100px">Instances Limit</label>
+          <div class="col">
             <p-inputNumber [(ngModel)]="deployment.kubernetes.instances_limit" [showButtons]="true"
                            inputId="k8s-instancesLimit"
                            buttonLayout="horizontal"

@@ -103,11 +103,11 @@
   <!-- login box -->
   <div style="width: 20vw; margin: auto;">
     <div class="p-fluid">
-      <div class="p-field">
+      <div class="field">
         <label for="username">Username</label>
         <input id="username" type="username" pInputText [(ngModel)]="username" />
       </div>
-      <div class="p-field">
+      <div class="field">
         <label for="password">Password</label>
         <input id="password" type="password" pPassword [(ngModel)]="password" [feedback]="false"
                (keyup)="passwdKeyUp($event.key)"/>
@@ -130,15 +130,15 @@
 <!-- change password box -->
 <p-dialog header="Change Password" [(visible)]="displayPasswdBox">
   <div class="p-fluid">
-    <div class="p-field">
+    <div class="field">
       <label for="password-old">Old Password</label>
       <input id="password-old" type="password" pPassword [(ngModel)]="passwordOld" [feedback]="false"/>
     </div>
-    <div class="p-field">
+    <div class="field">
       <label for="password-new1">New Password</label>
       <input id="password-new1" type="password" pPassword [(ngModel)]="passwordNew1" [feedback]="true"/>
     </div>
-    <div class="p-field">
+    <div class="field">
       <label for="password-new2">Repeat New Password</label>
       <input id="password-new2" type="password" pPassword [(ngModel)]="passwordNew2" [feedback]="false"
              (keyup)="passwdChangeKeyUp($event.key)"/>

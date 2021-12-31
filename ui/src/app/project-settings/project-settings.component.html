@@ -12,15 +12,15 @@
 </div>
 
 <p-dialog header="New Branch in {{project.name}}" [(visible)]="newBranchDlgVisible">
-    <div class="p-field p-grid">
-        <label for="branchDisplayName" class="p-col-fixed" style="width: 10rem;">Display Name</label>
-        <div class="p-col">
+    <div class="field grid">
+        <label for="branchDisplayName" class="col-fixed" style="width: 10rem;">Display Name</label>
+        <div class="col">
             <input id="branchDisplayName" type="text" [(ngModel)]="branchDisplayName" (keydown)="newBranchKeyDown($event)" autofocus pInputText>
         </div>
     </div>
-    <div class="p-field p-grid">
-        <label for="branchRepoName" class="p-col-fixed" style="width: 10rem;">Name in the Repo</label>
-        <div class="p-col">
+    <div class="field grid">
+        <label for="branchRepoName" class="col-fixed" style="width: 10rem;">Name in the Repo</label>
+        <div class="col">
             <input id="branchRepoName" type="text" [(ngModel)]="branchRepoName" (keydown)="newBranchKeyDown($event)" pInputText>
         </div>
     </div>
@@ -34,8 +34,8 @@
 <p-tabView>
     <!-- RESULTS OVERVIEW -->
     <p-tabPanel header="Results Overview">
-      <div class="p-grid">
-        <div *ngFor="let branch of project.branches" style="padding: 15px;" class="p-col-6">
+      <div class="grid">
+        <div *ngFor="let branch of project.branches" style="padding: 15px;" class="col-6">
           <div style="font-weight: bold; font-size: 1.5em; margin: 0 0 10px 0; background: #eee; padding: 10px;">
             <i class="fa fa-code-fork" style="vertical-align: bottom; font-size: 1.7em; margin-right: 10px;"></i>
             <a routerLink="/branches/{{ branch.id }}">
@@ -43,8 +43,8 @@
             </a>
           </div>
 
-          <div class="p-grid">
-            <div class="p-col-6" *ngFor="let flows of getFlows(branch)">
+          <div class="grid">
+            <div class="col-6" *ngFor="let flows of getFlows(branch)">
               <b style="width: 100px; display: inline-block; font-size: 1.4em; margin: 0 0 10px 2px;">
                 <a routerLink="/branches/{{ branch.id }}/{{ flows.name.toLowerCase() }}">{{ flows.name }} flows</a>
               </b>
@@ -73,8 +73,8 @@
       <p-button label="New Secret" icon="pi pi-plus" (onClick)="newSecret()"
                 [disabled]="!auth.hasPermission('manage')"
                 [pTooltip]="auth.permTip('manage')"></p-button>
-      <div class="p-grid">
-        <div class="p-col-3">
+      <div class="grid">
+        <div class="col-3">
           <div *ngFor="let s of project.secrets" style="margin: 6px 0 12px 6px; cursor: pointer;" class="round-shadow {{ s.selectedClass }}" (click)="selectSecret(s)">
             <div style="font-size: 1.1rem; font-weight: bold; margin-bottom: 4px;">{{s.name}}</div>
             <div style="font-size: 1.05rem;">Type: {{ s.kind }}</div>
@@ -84,10 +84,10 @@
           </div>
         </div>
 
-        <div class="p-col-1">
+        <div class="col-1">
         </div>
 
-        <div *ngIf="secretMode > 0" class="p-col-5 form-style-2">
+        <div *ngIf="secretMode > 0" class="col-5 form-style-2">
 
           <!-- https://www.sanwebe.com/2014/08/css-html-forms-designs -->
           <div class="form-style-2-heading">Secret Details</div>

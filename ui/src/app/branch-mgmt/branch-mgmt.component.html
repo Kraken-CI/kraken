@@ -1,14 +1,14 @@
 <!-- change branch names dialog -->
 <p-dialog header="Branch display and repo names" [(visible)]="branchNameDlgVisible" [style]="{width: '30rem'}">
-    <div class="p-field p-grid">
-        <label for="branchDisplayName" class="p-col-fixed" style="width: 10rem;">Display Name</label>
-        <div class="p-col">
+    <div class="field grid">
+        <label for="branchDisplayName" class="col-fixed" style="width: 10rem;">Display Name</label>
+        <div class="col">
             <input id="branchDisplayName" type="text" [(ngModel)]="newBranchDisplayName" (keydown)="branchNameKeyDown($event)" autofocus pInputText>
         </div>
     </div>
-    <div class="p-field p-grid">
-        <label for="branchRepoName" class="p-col-fixed" style="width: 10rem;">Name in the Repo</label>
-        <div class="p-col">
+    <div class="field grid">
+        <label for="branchRepoName" class="col-fixed" style="width: 10rem;">Name in the Repo</label>
+        <div class="col">
             <input id="branchRepoName" type="text" [(ngModel)]="newBranchRepoName" (keydown)="branchNameKeyDown($event)" pInputText>
         </div>
     </div>
@@ -23,15 +23,15 @@
 <!-- fork branch dialog -->
 <p-dialog header="Fork branch {{branch.name}}" [(visible)]="forkBranchDlgVisible">
     <!-- name fields -->
-    <div class="p-field p-grid">
-        <label for="forkBranchDisplayName" class="p-col-fixed" style="width: 10rem;">Display Name</label>
-        <div class="p-col">
+    <div class="field grid">
+        <label for="forkBranchDisplayName" class="col-fixed" style="width: 10rem;">Display Name</label>
+        <div class="col">
             <input id="forkBranchDisplayName" type="text" [(ngModel)]="forkBranchDisplayName" (keydown)="forkBranchKeyDown($event)" autofocus pInputText>
         </div>
     </div>
-    <div class="p-field p-grid">
-        <label for="forkBranchRepoName" class="p-col-fixed" style="width: 10rem;">Name in the Repo</label>
-        <div class="p-col">
+    <div class="field grid">
+        <label for="forkBranchRepoName" class="col-fixed" style="width: 10rem;">Name in the Repo</label>
+        <div class="col">
             <input id="forkBranchRepoName" type="text" [(ngModel)]="forkBranchRepoName" (keydown)="forkBranchKeyDown($event)" pInputText>
         </div>
     </div>
@@ -40,11 +40,11 @@
     <div style="width: 100%; margin-bottom: 15px;">
         <img src="/assets/forking-branch.png" style="width: 700px; display: block; margin: 0 auto; border: 1px solid #aaa; box-shadow: 0 3px 10px #ddd; padding: 15px;">
     </div>
-    <div class="p-field-radiobutton">
+    <div class="field-radiobutton">
         <p-radioButton name="forkingModel" value="model-1" [(ngModel)]="forkingModel" inputId="forkingModel1"></p-radioButton>
         <label for="forkingModel1">Model 1</label>
     </div>
-    <div class="p-field-radiobutton">
+    <div class="field-radiobutton">
         <p-radioButton name="forkingModel" value="model-2" [(ngModel)]="forkingModel" inputId="forkingModel2"></p-radioButton>
         <label for="forkingModel2">Model 2</label>
     </div>
@@ -143,8 +143,8 @@
 
 <p-tabView>
   <p-tabPanel header="Stages">
-    <div class="p-grid">
-      <div class="p-col-3">
+    <div class="grid">
+      <div class="col-3">
         <button type="button" (click)="newStage()" pButton icon="pi pi-plus" label="New Stage"
                 [disabled]="!auth.hasPermission('manage')"
                 [pTooltip]="auth.permTip('manage')"></button>
@@ -169,10 +169,10 @@
           <div *ngIf="stage.schema.parameters" style="font-size: 1.05rem;">Parameters: {{stage.schema.parameters.length}}</div>
         </div>
       </div>
-      <div class="p-col-9" style="padding-left: 40px;" *ngIf="branch.stages && branch.stages.length">
+      <div class="col-9" style="padding-left: 40px;" *ngIf="branch.stages && branch.stages.length">
         <div>
-          <div class="p-d-flex">
-            <div class="p-m-2" style="min-width: 18em;">
+          <div class="flex">
+            <div class="m-2" style="min-width: 18em;">
               <p-inplace #stageNameInplace (onActivate)="stageNameInplaceActivated()">
                 <span pInplaceDisplay style="font-size: 1.5rem; font-weight: bold;">
                   <span style="color: #999;">Stage</span> {{stage.name}}
@@ -191,16 +191,16 @@
                 </span>
               </p-inplace>
             </div>
-            <div class="p-m-2" style="margin-top: 25px;">
+            <div class="m-2" style="margin-top: 25px;">
               <p-checkbox [(ngModel)]="stage.enabled" binary="true" label="Enabled"></p-checkbox>
             </div>
-            <div class="p-m-2" style="margin-top: 25px;">
+            <div class="m-2" style="margin-top: 25px;">
               <p-checkbox [(ngModel)]="stage.schema_from_repo_enabled" binary="true" label="Schema from Repo"></p-checkbox>
             </div>
-            <div class="p-m-2" style="margin-top: 5px;" *ngIf="stage.repo_version">
+            <div class="m-2" style="margin-top: 5px;" *ngIf="stage.repo_version">
               Current rev: {{ stage.repo_version.slice(0, 8) }}
             </div>
-            <div class="p-m-2">
+            <div class="m-2">
               <a pButton label="Schema Help" href="https://kraken.ci/docs/schema" class="p-button-text" target="blank" icon="pi pi-question-circle" style="padding: 0 16px 4px 16px;"></a>
               <a pButton label="Schema Reference" href="https://kraken.ci/docs/schema-ref" class="p-button-text" target="blank" icon="pi pi-question-circle" style="padding: 0 16px 4px 16px;"></a>
             </div>
@@ -291,7 +291,7 @@
         </div>
 
       </div>
-      <div class="p-col-9" style="padding-left: 40px;" *ngIf="!branch.stages || branch.stages.length === 0">
+      <div class="col-9" style="padding-left: 40px;" *ngIf="!branch.stages || branch.stages.length === 0">
         No stages yet.
       </div>
     </div>

@@ -7,8 +7,8 @@
 
 <p-tabView [activeIndex]="activeTabIndex">
   <p-tabPanel header="Stages">
-    <div class="p-grid">
-      <div class="p-col-5">
+    <div class="grid">
+      <div class="col-5">
         <div style="display: flex; flex-direction: column; align-items: flex-end;">
           <div *ngFor="let n of flatTree" class="level{{n.level - 1}}" style="margin-bottom: 8px; display: flex; align-items: stretch;">
             <!--
@@ -27,7 +27,7 @@
           </div>
         </div>
       </div>
-      <div class="p-col-7">
+      <div class="col-7">
         <div style="font-size: 2em; margin: -10px 0 0 20px;">
           <span *ngIf="selectedNode.run">
             Run <b>{{ selectedNode.run.label || (selectedNode.run.id + '.') }}</b> of stage

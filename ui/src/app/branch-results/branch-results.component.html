@@ -13,8 +13,8 @@
     <p-dropdown [options]="stagesAvailable" optionLabel="name" (onChange)="filterStages($event)"></p-dropdown>
   </div>
 
-  <div *ngFor="let flow of flows" class="p-grid p-align-stretch">
-    <div class="p-col-1">
+  <div *ngFor="let flow of flows" class="grid p-align-stretch">
+    <div class="col-1">
         <div style="display: flex; justify-content: space-between;">
           <a routerLink="/flows/{{flow.id}}" style="color: unset; display: block;">
             <b style="font-size: 1.2rem;">{{ flow.label }}</b>
@@ -47,7 +47,7 @@
           </div>
         </div>
     </div>
-    <div class="p-col" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr)); gap: 6px;">
+    <div class="col" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr)); gap: 6px;">
       <ng-container *ngFor="let run of flow.runs">
         <app-run-box *ngIf="filterStageName=='All' || run.stage_name==filterStageName"
                      [run]="run" [flowId]="flow.id" (stageRun)="onStageRun($event)">

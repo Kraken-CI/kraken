@@ -1,7 +1,7 @@
 <p-tabView [(activeIndex)]="tabIndex" (onChange)="handleTabChange($event)">
   <p-tabPanel header="Overview">
     <div style="display: flex;">
-      <div *ngFor="let s of data | keyvalue" class="p-m-2">
+      <div *ngFor="let s of data | keyvalue" class="m-2">
         <p-card>
           <ng-template pTemplate="title">
             {{ s.value.name }}
@@ -50,16 +50,16 @@
     </div>
 
     <div style="display: flex; margin: 6px 0 0 6px;">
-      <div class="p-field p-grid">
-        <label for="log-level" class="p-col-fixed" style="width:100px">Log Level</label>
-        <div class="p-col">
+      <div class="field grid">
+        <label for="log-level" class="col-fixed" style="width:100px">Log Level</label>
+        <div class="col">
           <p-dropdown id="log-level"  [options]="logLevels" [(ngModel)]="logLevel" (onChange)="loadServicesLogs()"></p-dropdown>
         </div>
       </div>
 
-      <div *ngIf="isRQSelected()" class="p-field p-grid" style="margin-left: 3em;">
-        <label for="rq-jobs" class="p-col-fixed" style="width: 9em;">Backgroud Tasks</label>
-        <div class="p-col">
+      <div *ngIf="isRQSelected()" class="field grid" style="margin-left: 3em;">
+        <label for="rq-jobs" class="col-fixed" style="width: 9em;">Backgroud Tasks</label>
+        <div class="col">
           <div class="p-inputgroup">
             <p-dropdown id="rq-jobs"  [options]="rqJobs" [(ngModel)]="rqJob" (onChange)="loadServicesLogs()"></p-dropdown>
             <button type="button" pButton pRipple icon="pi pi-refresh" styleClass="p-button-warn" (click)="loadLastRQJobsNames()"></button>

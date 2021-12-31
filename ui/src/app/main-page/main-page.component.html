@@ -25,8 +25,8 @@
 </div>
 
 <!-- Grid with all projects -->
-<div class="p-grid">
-  <div class="p-col-6" *ngFor="let proj of projects">
+<div class="grid">
+  <div class="col-6" *ngFor="let proj of projects">
     <div class="round-shadow" style="height: 100%;">
       <div style="display: flex; justify-content: space-between;">
         <div style="font-size: 1.7em; margin-top: 2px;">
@@ -40,8 +40,8 @@
         </div>
       </div>
 
-      <div class="p-grid" style="margin: 6px 0 0 12px;">
-        <div *ngFor="let branch of proj.branches" style="padding: 0px 0 0 0px;" class="p-col-4">
+      <div class="grid" style="margin: 6px 0 0 12px;">
+        <div *ngFor="let branch of proj.branches" style="padding: 0px 0 0 0px;" class="col-4">
           <div style="margin: 0 0 10px 0; display: flex;">
             <div style="font-weight: bold; font-size: 2.2rem; margin-right: 10px;">
               <i class="fa fa-code-fork"></i>

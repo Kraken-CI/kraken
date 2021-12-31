@@ -111,8 +111,8 @@
 
 <!-- Single agent tab -->
 <div *ngIf="activeTabIdx != 0" class="p-component">
-  <div class="p-grid"  style="margin-top: 10px;">
-    <div class="p-col-4">
+  <div class="grid"  style="margin-top: 10px;">
+    <div class="col-4">
       <h3>General</h3>
       <table>
         <tr>
@@ -197,7 +197,7 @@
                 [pTooltip]="auth.permTip('manage')"></p-button>
     </div>
 
-    <div class="p-col-4">
+    <div class="col-4">
       <h3>Host Info</h3>
       <table>
         <tr>
@@ -216,7 +216,7 @@
       </table>
     </div>
 
-    <div *ngIf="agentTab.agent.extra_attrs" class="p-col-4">
+    <div *ngIf="agentTab.agent.extra_attrs" class="col-4">
       <h3>Other</h3>
       <table>
         <tr>
@@ -235,7 +235,7 @@
       </table>
     </div>
 
-    <div class="p-col-12" style="padding: 12px">
+    <div class="col-12" style="padding: 12px">
         <h3>Jobs</h3>
         <p-table #agentJobsTable
                  id="agentJobs"

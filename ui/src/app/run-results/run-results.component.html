@@ -7,8 +7,8 @@
 
 <!-- JOBS TAB -->
 <div *ngIf="activeTabIdx === 0">
-  <div class="p-grid" style="margin-top: 0;">
-    <div class="p-col-5">
+  <div class="grid" style="margin-top: 0;">
+    <div class="col-5">
 
       <div style="margin: 0 0 10px 0; display: flex; justify-content: space-between;">
         <div style="display: flex;">
@@ -66,7 +66,7 @@
 
     </div>
 
-    <div class="p-col-7">
+    <div class="col-7">
       <div *ngIf="job">
         <div style="display: flex; justify-content: space-between;">
           <div style="margin: 10px 0;">
@@ -167,17 +167,17 @@
   </div>
 
   <!-- tests filters -->
-  <div style="margin: 15px 5px;" class="p-grid p-fluid">
+  <div style="margin: 15px 5px;" class="grid p-fluid">
     <strong style="margin: 2px 20px 0 0; font-size: 1.5em; width: 3em;">Filters</strong>
 
-    <div class="p-field p-mr-3">
+    <div class="field mr-3">
       <label>Result Status:</label>
       <p-multiSelect
         [options]="resultStatuses" [(ngModel)]="filterStatuses" optionLabel="name"
         [filter]="false" [scrollHeight]="500" (onChange)="refreshResults(resultsTable)"></p-multiSelect>
     </div>
 
-    <div class="p-field p-mr-3">
+    <div class="field mr-3">
       <label>Result Change:</label>
       <p-multiSelect
         [options]="resultChanges" [(ngModel)]="filterChanges" optionLabel="name"
@@ -185,7 +185,7 @@
         [style]="{'vertical-align': 'middle'}"></p-multiSelect>
     </div>
 
-    <div class="p-field p-mr-3">
+    <div class="field mr-3">
       <label>Age:</label>
       <div style="display: flex; align-items: center;">
         <p-inputNumber [showButtons]="true" [(ngModel)]="filterMinAge" [min]="0" [max]="filterMaxAge" size="2"
@@ -196,11 +196,11 @@
       </div>
     </div>
 
-    <div style="align-self: flex-end;" class="p-field p-mr-3">
-      <p-button label="New" (onClick)="showLastTestChanges(resultsTable)" class="p-ml-1 p-mr-2" pTooltip="Show changes that happened in the last run"></p-button>
+    <div style="align-self: flex-end;" class="field mr-3">
+      <p-button label="New" (onClick)="showLastTestChanges(resultsTable)" class="ml-1 mr-2" pTooltip="Show changes that happened in the last run"></p-button>
     </div>
 
-    <div class="p-field p-mr-3">
+    <div class="field mr-3">
       <label>Instability:</label>
       <div style="display: flex; align-items: center;">
         <p-inputNumber [showButtons]="true" [(ngModel)]="filterMinInstability" [min]="0" [max]="filterMaxInstability" size="2"
@@ -211,18 +211,18 @@
       </div>
     </div>
 
-    <div class="p-field p-mr-3">
+    <div class="field mr-3">
       <label>Test Case:</label>
       <input type="text" pInputText [(ngModel)]="filterTestCaseText" (keydown)="filterResultsKeyDown($event, resultsTable)"/>
     </div>
 
-    <div class="p-field p-mr-3">
+    <div class="field mr-3">
       <label>Job:</label>
       <input type="text" pInputText [(ngModel)]="filterResultJob" (keydown)="filterResultsKeyDown($event, resultsTable)"/>
     </div>
 
-    <div style="display: flex; align-self: flex-end;" class="p-field">
-      <p-button label="Refresh" icon="pi pi-refresh" (onClick)="refreshResults(resultsTable)" class="p-ml-1 p-mr-2"></p-button>
+    <div style="display: flex; align-self: flex-end;" class="field">
+      <p-button label="Refresh" icon="pi pi-refresh" (onClick)="refreshResults(resultsTable)" class="ml-1 mr-2"></p-button>
       <p-button label="Reset" icon="pi pi-times-circle" (onClick)="resetResultsFilter(resultsTable)"></p-button>
     </div>
 
@@ -302,10 +302,10 @@
   </div>
 
   <!-- issues filters -->
-  <div style="margin: 15px 5px;" class="p-grid p-fluid">
+  <div style="margin: 15px 5px;" class="grid p-fluid">
     <strong style="margin: 2px 20px 0 0; font-size: 1.5em; width: 3em;">Filters</strong>
 
-    <div style="margin-right: 20px;" class="p-field">
+    <div style="margin-right: 20px;" class="field">
       <label>Type:</label>
       <p-multiSelect
         [options]="issueTypes" [(ngModel)]="filterIssueTypes" optionLabel="name"
@@ -313,22 +313,22 @@
         [style]="{'vertical-align': 'middle'}"></p-multiSelect>
     </div>
 
-    <div style="margin-right: 20px;" class="p-field">
+    <div style="margin-right: 20px;" class="field">
       <label>Location:</label>
       <input type="text" pInputText [(ngModel)]="filterIssueLocation" (keydown)="filterIssuesKeyDown($event, issuesTable)"/>
     </div>
 
-    <div style="margin-right: 20px;" class="p-field">
+    <div style="margin-right: 20px;" class="field">
       <label>Message:</label>
       <input type="text" pInputText [(ngModel)]="filterIssueMessage" (keydown)="filterIssuesKeyDown($event, issuesTable)"/>
     </div>
 
-    <div style="margin-right: 20px;" class="p-field">
+    <div style="margin-right: 20px;" class="field">
       <label>Symbol:</label>
       <input type="text" size="8" pInputText [(ngModel)]="filterIssueSymbol" (keydown)="filterIssuesKeyDown($event, issuesTable)"/>
     </div>
 
-    <div style="margin-right: 20px;" class="p-field">
+    <div style="margin-right: 20px;" class="field">
       <label>Age:</label>
       <div style="display: flex; align-items: center;">
         <p-inputNumber [showButtons]="true" [(ngModel)]="filterIssueMinAge" [min]="0" [max]="filterIssueMaxAge" size="2"
@@ -339,17 +339,17 @@
       </div>
     </div>
 
-    <div style="align-self: flex-end;" class="p-field p-mr-3">
-      <p-button label="New" (onClick)="showLastIssuesChanges(issuesTable)" class="p-ml-1 p-mr-2" pTooltip="Show changes that happened in the last run"></p-button>
+    <div style="align-self: flex-end;" class="field mr-3">
+      <p-button label="New" (onClick)="showLastIssuesChanges(issuesTable)" class="ml-1 mr-2" pTooltip="Show changes that happened in the last run"></p-button>
     </div>
 
-    <div class="p-field">
+    <div class="field">
       <label>Job:</label>
       <input type="text" pInputText [(ngModel)]="filterIssueJob" (keydown)="filterIssuesKeyDown($event, issuesTable)"/>
     </div>
 
-    <div style="display: flex; align-self: flex-end;" class="p-field">
-      <p-button label="Refresh" icon="pi pi-refresh" (onClick)="refreshIssues(issuesTable)" class="p-ml-4 p-mr-2"></p-button>
+    <div style="display: flex; align-self: flex-end;" class="field">
+      <p-button label="Refresh" icon="pi pi-refresh" (onClick)="refreshIssues(issuesTable)" class="ml-4 mr-2"></p-button>
       <p-button label="Reset" icon="pi pi-times-circle" (onClick)="resetIssuesFilter(issuesTable)"></p-button>
     </div>
 
