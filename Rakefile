@@ -1,5 +1,11 @@
 require 'json'
 
+# tools versions
+NODE_VER = 'v16.13.1'
+OPENAPI_GENERATOR_VER = '5.3.0'
+HELM_VER = 'v3.7.1'
+DOCKER_COMPOSE_VER = '1.29.1'
+
 # Check host OS
 UNAME=`uname -s`
 
@@ -16,17 +22,13 @@ case UNAME.rstrip
   end
 
 TOOLS_DIR = File.expand_path('tools')
-NODE_VER = 'v16.13.1'
 ENV['PATH'] = "#{TOOLS_DIR}/node-#{NODE_VER}-#{sysnamel}-x64/bin:#{ENV['PATH']}"
 NPX = "#{TOOLS_DIR}/node-#{NODE_VER}-#{sysnamel}-x64/bin/npx"
 NG = File.expand_path('ui/node_modules/.bin/ng')
-OPENAPI_GENERATOR_VER = '5.0.0'
 OPENAPI_GENERATOR = "#{TOOLS_DIR}/swagger-codegen-cli-#{OPENAPI_GENERATOR_VER}.jar"
 SWAGGER_FILE = File.expand_path("server/kraken/server/swagger.yml")
-HELM_VER = 'v3.7.1'
 HELM = "#{TOOLS_DIR}/helm"
 
-DOCKER_COMPOSE_VER = '1.29.1'
 DOCKER_COMPOSE = "#{TOOLS_DIR}/docker-compose-#{DOCKER_COMPOSE_VER}"
 ENV['DOCKER_BUILDKIT']='1'
 ENV['COMPOSE_DOCKER_CLI_BUILD']='1'
@@ -72,7 +74,7 @@ end
 # UI
 task :gen_client => [OPENAPI_GENERATOR, SWAGGER_FILE] do
   Dir.chdir('ui') do
-    sh "java -jar #{OPENAPI_GENERATOR} generate  -g typescript-angular -i #{SWAGGER_FILE} -o src/app/backend --additional-properties snapshot=true,ngVersion=10.1.5,modelPropertyNaming=snake_case"
+    sh "java -jar #{OPENAPI_GENERATOR} generate  -g typescript-angular -i #{SWAGGER_FILE} -o src/app/backend --additional-properties snapshot=true,ngVersion=12.0.0,modelPropertyNaming=snake_case"
   end
 end
 
