@@ -4,7 +4,7 @@ import { Title } from '@angular/platform-browser'
 
 import { MenuItem } from 'primeng/api'
 
-import 'chartjs-plugin-error-bars'
+import 'chartjs-chart-error-bars'
 
 import { ExecutionService } from '../backend/api/execution.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'

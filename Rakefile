@@ -16,7 +16,7 @@ case UNAME.rstrip
   end
 
 TOOLS_DIR = File.expand_path('tools')
-NODE_VER = 'v12.19.0'
+NODE_VER = 'v16.13.1'
 ENV['PATH'] = "#{TOOLS_DIR}/node-#{NODE_VER}-#{sysnamel}-x64/bin:#{ENV['PATH']}"
 NPX = "#{TOOLS_DIR}/node-#{NODE_VER}-#{sysnamel}-x64/bin/npx"
 NG = File.expand_path('ui/node_modules/.bin/ng')
