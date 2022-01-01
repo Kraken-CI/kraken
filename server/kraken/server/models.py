@@ -365,8 +365,8 @@ class Run(db.Model, DatesMixin):
     __tablename__ = "runs"
     id = Column(Integer, primary_key=True)
     started = Column(DateTime(timezone=True))    # time when the run got a first non-deleted job
-    finished = Column(DateTime(timezone=True))    # time when all tasks finished first time
-    finished_again = Column(DateTime(timezone=True))    # time when all tasks finished
+    finished = Column(DateTime(timezone=True))    # time when all jobs finished first time
+    finished_again = Column(DateTime(timezone=True))    # time when all jobs finished
     state = Column(Integer, default=consts.RUN_STATE_IN_PROGRESS)
     email_sent = Column(DateTime(timezone=True))
     note = Column(UnicodeText)
@@ -396,6 +396,7 @@ class Run(db.Model, DatesMixin):
     reason = Column(JSONB, nullable=False)
     repo_data_id = Column(Integer, ForeignKey('repo_changes.id'))
     repo_data = relationship('RepoChanges')
+    processed_at = Column(DateTime(timezone=True))    # time when results analysis completed
 
     def get_json(self, with_project=True, with_branch=True, with_artifacts=True):
         jobs_processing = 0
@@ -443,6 +444,7 @@ class Run(db.Model, DatesMixin):
                     deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,
                     started=self.started.strftime("%Y-%m-%dT%H:%M:%SZ") if self.started else None,
                     finished=self.finished.strftime("%Y-%m-%dT%H:%M:%SZ") if self.finished else None,
+                    processed_at=self.processed_at.strftime("%Y-%m-%dT%H:%M:%SZ") if self.processed_at else None,
                     duration=duration_to_txt(duration),
                     state=consts.RUN_STATES_NAME[self.state],
                     stage_name=self.stage.name,
@@ -606,6 +608,7 @@ class TestCaseResult(db.Model):
     age = Column(Integer, default=0)
     change = Column(Integer, default=consts.TC_RESULT_CHANGE_NO)
     relevancy = Column(Integer, default=0)
+    Index('ix_test_case_results_test_case_id', test_case_id)
 
     def __repr__(self):
         txt = 'TCR %s, result:%s' % (self.id, consts.TC_RESULTS_NAME[self.result])

@@ -243,7 +243,7 @@ def _analyze_ci_test_case_result(job, job_tcr):
     tcrs.reverse() # sort from oldest to latest
     # determine instability
     for idx, tcr in enumerate(tcrs):
-        log.info('TCR: %s %s %s', tcr, tcr.test_case.name, tcr.job.run.flow.created)
+        # log.info('TCR: %s %s %s', tcr, tcr.test_case.name, tcr.job.run.flow.created)
         if idx == 0:
             job_tcr.instability = 0
         elif tcr.result != tcrs[idx - 1].result:
@@ -420,9 +420,9 @@ def analyze_results_history(run_id):
             if prev_run is None:
                 log.info('skip anlysis of run %s as there is no prev run', run)
                 return
-            if prev_run.state == consts.RUN_STATE_IN_PROGRESS:
-                # prev run is not completed yet
-                log.info('postpone anlysis of run %s as prev run %s is not completed yet', run, prev_run)
+            if prev_run.state != consts.RUN_STATE_PROCESSED:
+                # prev run is not processed yet
+                log.info('postpone anlysis of run %s as prev run %s is not processed yet', run, prev_run)
                 return
 
         # analyze jobs of this run
@@ -447,6 +447,7 @@ def analyze_results_history(run_id):
         log.set_ctx(job=None)
 
         run.state = consts.RUN_STATE_PROCESSED
+        run.processed_at = utils.utcnow()
         db.session.commit()
         log.info('history anlysis of run %s completed', run)
 
@@ -462,6 +463,9 @@ def analyze_results_history(run_id):
         next_run = q.first()
         if next_run is not None and next_run.state in [consts.RUN_STATE_COMPLETED, consts.RUN_STATE_PROCESSED]:
             kkrq.enq(analyze_results_history, next_run.id)
+
+        log.info('finised results history analysis of run %s, flow %s [%s] ',
+                 run, run.flow, 'CI' if run.flow.kind == 0 else 'DEV')
 
 
 def notify_about_started_run(run_id):
