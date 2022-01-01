@@ -13,6 +13,14 @@
           </ng-template>
 
           <div *ngIf="s.key === 'rq'">
+            <b>Scheduled Jobs:</b>
+            <div *ngFor="let t of s.value.scheduled_jobs">
+                {{ t.created_at | localtime }} {{ t.description }}
+            </div>
+            <div *ngIf="!s.value.scheduled_jobs || s.value.scheduled_jobs.length === 0">
+              no scheduled jobs
+            </div>
+
             <b>Current Jobs:</b>
             <div *ngFor="let t of s.value.current_jobs">
                 {{ t.created_at | localtime }} {{ t.description }}
@@ -35,6 +43,14 @@
             </div>
             <div *ngIf="!s.value.finished_jobs || s.value.finished_jobs.length === 0">
               no finished jobs
+            </div>
+
+            <b>Deferred Jobs:</b>
+            <div *ngFor="let t of s.value.deferred_jobs">
+                {{ t.started_at | localtime }} {{ t.description }}
+            </div>
+            <div *ngIf="!s.value.deferred_jobs || s.value.deferred_jobs.length === 0">
+              no deferred jobs
             </div>
           </div>
 

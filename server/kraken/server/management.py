@@ -790,10 +790,14 @@ def get_diagnostics():
     }
 
     # get current RQ jobs
+    now = datetime.datetime.now()
+    week_ago = now - datetime.timedelta(days=7)
     all_jobs = kkrq.get_jobs()
-    for jobs, name in zip(all_jobs, ['current', 'finished', 'failed']):
+    for jobs, name in zip(all_jobs, ['scheduled', 'current', 'finished', 'failed', 'deferred']):
         jobs2 = []
         for job in jobs:
+            if job.ended_at and job.ended_at < week_ago:
+                continue
             job = dict(id=job.id,
                        created_at=job.created_at,
                        ended_at=job.ended_at,

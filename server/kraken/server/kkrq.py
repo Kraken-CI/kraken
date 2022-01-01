@@ -36,7 +36,7 @@ def enq(func, *args, **kwargs):
     rds = redis.Redis(host=redis_addr, port=6379, db=consts.REDIS_RQ_DB)
     q = rq.Queue('kq', connection=rds)
     j = q.enqueue(func, args=args, kwargs=kwargs, retry=rq.Retry(max=10), job_timeout=1200)  # timeout is 20mins
-    log.info('bg processing: %s', j)
+    log.info('put to bg processing: %s', j)
     return j
 
 
@@ -56,6 +56,9 @@ def get_jobs():
     rds = redis.Redis(host=redis_addr, port=6379, db=consts.REDIS_RQ_DB)
     q = rq.Queue('kq', connection=rds)
 
+    jobs_ids = q.scheduled_job_registry.get_job_ids()
+    scheduled_jobs = rq.job.Job.fetch_many(jobs_ids, connection=rds)
+
     jobs_ids = q.started_job_registry.get_job_ids()
     started_jobs = rq.job.Job.fetch_many(jobs_ids, connection=rds)
 
@@ -65,7 +68,10 @@ def get_jobs():
     jobs_ids = q.failed_job_registry.get_job_ids()
     failed_jobs = rq.job.Job.fetch_many(jobs_ids, connection=rds)
 
-    return started_jobs, finished_jobs, failed_jobs
+    jobs_ids = q.deferred_job_registry.get_job_ids()
+    deferred_jobs = rq.job.Job.fetch_many(jobs_ids, connection=rds)
+
+    return scheduled_jobs, started_jobs, finished_jobs, failed_jobs, deferred_jobs
 
 
 def _exception_handler(job, exc_type, exc_value, traceback):  # pylint: disable=unused-argument
