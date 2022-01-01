@@ -1241,6 +1241,15 @@ schema = {
                                                 "type": "string"
                                             }]
                                         },
+                                        "override_result": {
+                                            "description": "A result.",
+                                            "oneOf": [{
+                                                "type": "integer",
+                                                "minimum": 1
+                                            }, {
+                                                "type": "string"
+                                            }]
+                                        },
                                         "attempts": {
                                             "description": "A number of times the step is retried if if it returns error.",
                                             "default": 1,

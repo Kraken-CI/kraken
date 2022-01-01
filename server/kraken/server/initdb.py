@@ -93,7 +93,7 @@ def prepare_initial_data():
         'git': {'checkout': 'text', 'branch': 'text', 'destination': 'text'},
         'shell': {'cmd': 'text', 'env': 'dict'},
         'pytest': {'params': 'text', 'directory': 'text'},
-        'rndtest': {'count': 'text'},
+        'rndtest': {'count': 'text', 'override_result': 'text'},
         'artifacts': {'type': 'choice:file', 'upload': 'text'},
         'pylint': {'rcfile': 'text', 'modules_or_packages': 'text'},
         'cloc': {'not-match-f': 'text', 'exclude-dir': 'text'},

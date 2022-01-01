@@ -18,6 +18,7 @@ import statistics
 import time
 
 from . import tool
+from . import consts
 
 log = logging.getLogger(__name__)
 
@@ -54,6 +55,10 @@ ANIMALS = ['Aardvark', 'Albatross', 'Alligator', 'Alpaca', 'Ant', 'Anteater', 'A
            'Turkey', 'Turtle', 'Vicuna', 'Viper', 'Vulture', 'Wallaby', 'Walrus', 'Wasp', 'Weasel', 'Whale', 'Wolf',
            'Wolverine', 'Wombat', 'Woodcock', 'Woodpecker', 'Worm', 'Wren', 'Yak', 'Zebra']
 
+TEST_UNSTABLE = 'test_0_special.unstable'
+TEST_SPORADIC = 'test_0_special.sporadic'
+TEST_MANUAL = 'test_0_special.manual'
+
 
 def _generate_test_case_name():
     animal = random.choice(ANIMALS).replace(' ', '-')
@@ -64,8 +69,8 @@ def _generate_test_case_name():
 def collect_tests(step):
     random.seed(1)
     count = int(step.get('count', 10))
-    tests = []
-    for _ in range(count):
+    tests = [TEST_UNSTABLE, TEST_SPORADIC, TEST_MANUAL]
+    for _ in range(count - 3):
         tests.append(_generate_test_case_name())
     return tests
 
@@ -78,8 +83,29 @@ def run_tests(step, report_result=None):
         log.info('executing test %s', test)
         cmd = 'random_test %s' % test
 
+        result = dict(cmd=cmd, test=test)
+
         random.seed(time.time())
-        result = dict(cmd=cmd, test=test, status=random.choice([0, 1, 2, 3, 4, 5]))
+        if test == TEST_UNSTABLE:
+            result['status'] = random.choice([consts.TC_RESULT_PASSED,
+                                              consts.TC_RESULT_FAILED])
+        elif test == TEST_SPORADIC:
+            if random.randint(0, 8) == 0:
+                result['status'] = consts.TC_RESULT_FAILED
+            else:
+                result['status'] = consts.TC_RESULT_PASSED
+        elif test == TEST_MANUAL:
+            log.info('STEP: %s', step)
+            res = int(step.get('override_result', consts.TC_RESULT_PASSED))
+            result['status'] = res
+        else:
+            result['status'] = random.choice([consts.TC_RESULT_NOT_RUN,     # 0,
+                                              consts.TC_RESULT_PASSED,      # 1,
+                                              consts.TC_RESULT_FAILED,      # 2,
+                                              consts.TC_RESULT_ERROR,       # 3,
+                                              consts.TC_RESULT_DISABLED,    # 4,
+                                              consts.TC_RESULT_UNSUPPORTED  # 5,
+                                              ])
 
         random.seed(idx1)
         num = random.randint(0, 3)
