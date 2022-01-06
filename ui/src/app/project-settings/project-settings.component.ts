@@ -43,6 +43,17 @@ export class ProjectSettingsComponent implements OnInit {
         secret: new FormControl(''),
     })
 
+    secretKinds = [
+        {
+            name: 'Simple Secret',
+            value: 'simple',
+        },
+        {
+            name: 'SSH Username & Key',
+            value: 'ssh-key',
+        },
+    ]
+
     selectedSecret: any
 
     webhookServices = [
@@ -219,13 +230,13 @@ export class ProjectSettingsComponent implements OnInit {
             .createSecret(this.projectId, secretVal)
             .subscribe(
                 (data) => {
-                    console.info(data)
                     this.msgSrv.add({
                         severity: 'success',
                         summary: 'New secret succeeded',
                         detail: 'New secret operation succeeded.',
                     })
                     this.project.secrets.push(data)
+                    this.selectSecret(data)
                 },
                 (err) => {
                     console.info(err)
@@ -286,7 +297,7 @@ export class ProjectSettingsComponent implements OnInit {
             accept: () => {
                 this.managementService.deleteSecret(secretVal.id).subscribe(
                     (secret) => {
-                        this.selectSecret(this.project.secrets[0]) // TODO: what if this is deleted, same in list of stages
+                        this.refresh()
                         this.msgSrv.add({
                             severity: 'success',
                             summary: 'Secret deletion succeeded',

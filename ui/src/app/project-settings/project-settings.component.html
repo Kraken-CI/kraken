@@ -73,9 +73,12 @@
       <p-button label="New Secret" icon="pi pi-plus" (onClick)="newSecret()"
                 [disabled]="!auth.hasPermission('manage')"
                 [pTooltip]="auth.permTip('manage')"></p-button>
+
       <div class="grid">
+
+        <!-- secrets list -->
         <div class="col-3">
-          <div *ngFor="let s of project.secrets" style="margin: 6px 0 12px 6px; cursor: pointer;" class="round-shadow {{ s.selectedClass }}" (click)="selectSecret(s)">
+          <div *ngFor="let s of project.secrets" style="margin: 6px 0 12px 0; cursor: pointer;" class="round-shadow {{ s.selectedClass }}" (click)="selectSecret(s)">
             <div style="font-size: 1.1rem; font-weight: bold; margin-bottom: 4px;">{{s.name}}</div>
             <div style="font-size: 1.05rem;">Type: {{ s.kind }}</div>
             <div *ngIf="s.kind === 'ssh-key'">
@@ -84,55 +87,75 @@
           </div>
         </div>
 
-        <div class="col-1">
+        <!-- secret details -->
+        <div *ngIf="secretMode > 0" class="col-9 pl-5">
+            <h3 class="">Secret <b>{{ secretForm.value.name }}</b></h3>
+            <form [formGroup]="secretForm">
+                <div class="formgrid grid">
+                    <!-- common fields -->
+                    <div class="col-6 grid field">
+                        <label for="name" class="col-fixed" style="width: 5em">Name</label>
+                        <div class="col">
+                            <input id="name" type="text" class="inputfield w-full" formControlName="name" pInputText>
+                        </div>
+                    </div>
+                    <div class="col-6 grid field">
+                        <label for="kind" class="col-fixed" style="width: 5em">Type</label>
+                        <div class="col">
+                            <p-dropdown name="kind"
+                                        formControlName="kind"
+                                        [options]="secretKinds"
+                                        optionLabel="name"
+                                        optionValue="value"
+                                        [style]="{width: '100%'}"
+                                        ></p-dropdown>
+                        </div>
+                    </div>
+
+                    <!-- simple secret -->
+                    <div *ngIf="secretForm.value.kind === 'simple'" class="col-12 grid field">
+                        <label for="secret" class="col-fixed align-items-start" style="width: 5em">Secret</label>
+                        <div class="col">
+                            <textarea name="secret" formControlName="secret" style="height: calc(100vh - 32rem)" class="monospace w-full" pInputTextarea></textarea>
+                        </div>
+                    </div>
+
+                    <!-- ssh-key -->
+                    <ng-container *ngIf="secretForm.value.kind === 'ssh-key'">
+                        <div class="col-12 grid field">
+                            <label for="username" class="col-fixed" style="width: 5em">Username</label>
+                            <div class="col">
+                                <input id="username" type="text" class="inputfield w-full" formControlName="username" pInputText>
+                            </div>
+                        </div>
+
+                        <div class="col-12 grid field">
+                            <label for="key" class="col-fixed align-items-start" style="width: 5em">Private Key</label>
+                            <div class="col">
+                                <textarea name="key" formControlName="key" style="height: calc(100vh - 34rem)" class="monospace w-full" pInputTextarea></textarea>
+                            </div>
+                        </div>
+                    </ng-container>
+                </div>
+
+                <!-- action buttons -->
+                <div class="flex justify-content-between">
+                    <p-button *ngIf="secretMode === 1" label="Add" icon="pi pi-plus" (onClick)="secretAdd()"
+                              [disabled]="!auth.hasPermission('manage')"
+                              [pTooltip]="auth.permTip('manage')"></p-button>
+                    <p-button *ngIf="secretMode === 2" label="Save" icon="pi pi-plus" (onClick)="secretSave()"
+                              [disabled]="!auth.hasPermission('manage')"
+                              [pTooltip]="auth.permTip('manage')"></p-button>
+
+                    <p-button *ngIf="secretMode === 2" label="Delete" icon="pi pi-trash" [style]="{'margin-left': '20px'}"
+                              styleClass="p-button-danger p-button-outlined"
+                              (onClick)="secretDelete()"
+                              [disabled]="!auth.hasPermission('manage')"
+                              [pTooltip]="auth.permTip('manage')"></p-button>
+                </div>
+            </form>
         </div>
 
-        <div *ngIf="secretMode > 0" class="col-5 form-style-2">
-
-          <!-- https://www.sanwebe.com/2014/08/css-html-forms-designs -->
-          <div class="form-style-2-heading">Secret Details</div>
-          <form [formGroup]="secretForm">
-            <label for="name"><span>Name <span class="required">*</span></span>
-              <input type="text" class="input-field" name="name" pInputText formControlName="name"/>
-            </label>
-
-            <label for="kind"><span>Type</span>
-              <select name="kind" class="select-field" formControlName="kind">
-                <option value="simple">Simple Secret</option>
-                <option value="ssh-key">SSH Username & Key</option>
-              </select>
-            </label>
-
-            <div *ngIf="secretForm.value.kind === 'simple'">
-              <label for="secret"><span>Secret <span class="required">*</span></span>
-                <textarea name="secret" formControlName="secret" class="textarea-field"  rows="30" cols="65"></textarea>
-              </label>
-            </div>
-
-            <div *ngIf="secretForm.value.kind === 'ssh-key'">
-              <label for="username"><span>Username <span class="required">*</span></span>
-                <input type="text" class="input-field" name="username" pInputText formControlName="username"/>
-              </label>
-
-              <label for="key"><span>Private Key <span class="required">*</span></span>
-                <textarea name="key" formControlName="key" class="textarea-field"  rows="30" cols="65"></textarea>
-              </label>
-            </div>
-
-            <label><span> </span>
-              <p-button *ngIf="secretMode === 1" label="Add" icon="pi pi-plus" (onClick)="secretAdd()"
-                        [disabled]="!auth.hasPermission('manage')"
-                        [pTooltip]="auth.permTip('manage')"></p-button>
-              <p-button *ngIf="secretMode === 2" label="Save" icon="pi pi-plus" (onClick)="secretSave()"
-                        [disabled]="!auth.hasPermission('manage')"
-                        [pTooltip]="auth.permTip('manage')"></p-button>
-              <p-button *ngIf="secretMode === 2" label="Delete" icon="pi pi-trash" [style]="{'margin-left': '20px'}" styleClass="p-button-danger" (onClick)="secretDelete()"
-                        [disabled]="!auth.hasPermission('manage')"
-                        [pTooltip]="auth.permTip('manage')"></p-button>
-            </label>
-          </form>
-
-        </div>
       </div>
     </p-tabPanel>
 
