@@ -15,7 +15,6 @@
 import os
 import json
 import logging
-import subprocess
 
 from . import utils
 from . import tool
