@@ -143,7 +143,7 @@
                     <p-button *ngIf="secretMode === 1" label="Add" icon="pi pi-plus" (onClick)="secretAdd()"
                               [disabled]="!auth.hasPermission('manage')"
                               [pTooltip]="auth.permTip('manage')"></p-button>
-                    <p-button *ngIf="secretMode === 2" label="Save" icon="pi pi-plus" (onClick)="secretSave()"
+                    <p-button *ngIf="secretMode === 2" label="Save" icon="pi pi-check" (onClick)="secretSave()"
                               [disabled]="!auth.hasPermission('manage')"
                               [pTooltip]="auth.permTip('manage')"></p-button>
 

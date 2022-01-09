@@ -8,7 +8,7 @@ def stage(ctx):
             "cmd": "tar -zxf kraken.tar.gz",
         }, {
             "tool": "shell",
-            "cmd": "echo \"${GOOGLE_KEY}\" | docker login -u _json_key --password-stdin https://us-docker.pkg.dev",
+            "cmd": "echo \"${GOOGLE_KEY}\" | docker login -u _json_key_base64 --password-stdin https://us-docker.pkg.dev",
             "env": {
                 "GOOGLE_KEY": "#{KK_SECRET_SIMPLE_google_key}"
             },
