@@ -1,25 +1,25 @@
 services:
   server:
-    image: eu.gcr.io/kraken-261806/kkserver:kk_ver
+    image: us-docker.pkg.dev/kraken-261806/kk/kkserver:kk_ver
     deploy:
       replicas: 2
   controller:
-    image: eu.gcr.io/kraken-261806/kkcontroller:kk_ver
+    image: us-docker.pkg.dev/kraken-261806/kk/kkcontroller:kk_ver
   rq:
-    image: eu.gcr.io/kraken-261806/kkrq:kk_ver
+    image: us-docker.pkg.dev/kraken-261806/kk/kkrq:kk_ver
   clickhouse:
-    image: eu.gcr.io/kraken-261806/clickhouse-server:20.11.4.13.kk_ver
+    image: us-docker.pkg.dev/kraken-261806/kk/clickhouse-server:20.11.4.13.kk_ver
   clickhouse-proxy:
-    image: eu.gcr.io/kraken-261806/kkchproxy:kk_ver
+    image: us-docker.pkg.dev/kraken-261806/kk/kkchproxy:kk_ver
   agent:
-    image: eu.gcr.io/kraken-261806/kkagent:kk_ver
+    image: us-docker.pkg.dev/kraken-261806/kk/kkagent:kk_ver
     deploy:
       replicas: 3
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /var/snap/lxd/common/lxd/unix.socket:/var/snap/lxd/common/lxd/unix.socket
   ui:
-    image: eu.gcr.io/kraken-261806/kkui:kk_ver
+    image: us-docker.pkg.dev/kraken-261806/kk/kkui:kk_ver
 
 networks:
   db_net:

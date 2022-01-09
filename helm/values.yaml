@@ -1,5 +1,5 @@
 image:
-  baseUrl: eu.gcr.io/kraken-261806
+  baseUrl: us-docker.pkg.dev/kraken-261806/kk
 
 postgresql:
   db: kraken

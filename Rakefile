@@ -458,7 +458,7 @@ task :build_docker => DOCKER_COMPOSE do
   # generate docker-compose config for installing kraken under the desk and for pushing images to docker images repository
   sh "cp docker-compose.yaml kraken-docker-compose-#{kk_ver}-tmp.yaml"
   sh "sed -i -e s/kk_ver/#{kk_ver}/g kraken-docker-compose-#{kk_ver}-tmp.yaml"
-  sh "sed -i -e 's#127.0.0.1:5000#eu.gcr.io/kraken-261806#g' kraken-docker-compose-#{kk_ver}-tmp.yaml"
+  sh "sed -i -e 's#127.0.0.1:5000#us-docker.pkg.dev/kraken-261806/kk#g' kraken-docker-compose-#{kk_ver}-tmp.yaml"
   sh "cp agent/kkagent agent/kktool server/"
 
   # build images, in case of server everything is build in containers
@@ -493,7 +493,7 @@ task :publish_docker_aws => DOCKER_COMPOSE do
            'clickhouse-server:20.11.4.13.',
            'kkchproxy:']
   names.each do |name|
-    sh "docker tag eu.gcr.io/kraken-261806/#{name}#{kk_ver} public.ecr.aws/kraken-ci/#{name}#{kk_ver}"
+    sh "docker tag us-docker.pkg.dev/kraken-261806/kk/#{name}#{kk_ver} public.ecr.aws/kraken-ci/#{name}#{kk_ver}"
     sh "docker push public.ecr.aws/kraken-ci/#{name}#{kk_ver}"
   end
 end
