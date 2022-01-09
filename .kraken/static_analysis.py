@@ -88,7 +88,7 @@ def stage(ctx):
             "name": "ng lint",
             "steps": [{
                 "tool": "shell",
-                "cmd": "curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash - && sudo DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends git nodejs npm || ps axf",
+                "cmd": "curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash - && sudo DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends git nodejs=16.13.1-deb-1nodesource1",
                 "timeout": 300
             }, {
                 "tool": "artifacts",
