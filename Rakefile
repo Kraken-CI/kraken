@@ -1,4 +1,5 @@
 require 'json'
+require 'date'
 
 # tools versions
 NODE_VER = 'v16.13.1'
@@ -486,7 +487,7 @@ task :publish_docker => DOCKER_COMPOSE do
 #  Rake::Task["publish_docker_aws"].invoke
 end
 
-task :publish_docker_aws => DOCKER_COMPOSE do
+task :publish_docker_aws do
   names = ['kkserver:',
            'kkcontroller:',
            'kkrq:',
@@ -499,6 +500,30 @@ task :publish_docker_aws => DOCKER_COMPOSE do
     sh "docker push public.ecr.aws/kraken-ci/#{name}#{kk_ver}"
   end
 end
+
+task :prune_gcp_artifacts do
+  ago = (Date.today - 20)
+  sh "gcloud artifacts docker images list us-docker.pkg.dev/kraken-261806/kk --filter='tags!~released AND createTime<=#{ago}' --format='value[separator=\"@\"](package,version)' | xargs -n1 gcloud artifacts docker images delete --delete-tags --async"
+end
+
+task :show_old_gcp_artifacts do
+  ago = (Date.today - 20)
+  sh "gcloud artifacts docker images list us-docker.pkg.dev/kraken-261806/kk --include-tags --filter='tags!~released AND createTime<=#{ago}'"
+end
+
+task :mark_images_as_published do
+  names = ['kkserver:',
+           'kkcontroller:',
+           'kkrq:',
+           'kkagent:',
+           'kkui:',
+           'clickhouse-server:20.11.4.13.',
+           'kkchproxy:']
+  names.each do |name|
+    sh "gcloud artifacts docker tags add us-docker.pkg.dev/kraken-261806/kk/#{name}#{kk_ver} us-docker.pkg.dev/kraken-261806/kk/#{name}#{kk_ver}-released"
+  end
+end
+
 
 task :compose_to_swarm => DOCKER_COMPOSE do
   sh 'cp lab.env .env'
