@@ -23,6 +23,7 @@ from sqlalchemy.orm import joinedload
 import clickhouse_driver
 
 from . import consts
+from . import utils
 from .models import db, Branch, Flow, Run, Stage, Job, Step, TestCaseResult
 from .models import TestCase, Issue, Artifact
 from .schema import SchemaError
@@ -421,8 +422,24 @@ def cancel_run(run_id):
     if run is None:
         abort(404, "Run not found")
 
+    # if run is completed then do nothing
+    if run.state == consts.RUN_STATE_COMPLETED:
+        return {}
+
+    # cancel any pending job
+    all_completed = True
     for job in run.jobs:
-        exec_utils.cancel_job(job, 'canceled by user', consts.JOB_CMPLT_USER_CANCEL)
+        if job.state != consts.JOB_STATE_COMPLETED:
+            exec_utils.cancel_job(job, 'canceled by user', consts.JOB_CMPLT_USER_CANCEL)
+            all_completed = False
+
+    # if all jobs already completed or there is no jobs then complete run
+    if all_completed:
+        now = utils.utcnow()
+        exec_utils.complete_run(run, now)
+
+    run.note = 'run %d canceled by user' % run.id
+    db.session.commit()
 
     return {}
 

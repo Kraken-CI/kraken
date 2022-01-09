@@ -35,7 +35,8 @@ def enq(func, *args, **kwargs):
     redis_addr = os.environ.get('KRAKEN_REDIS_ADDR', consts.DEFAULT_REDIS_ADDR)
     rds = redis.Redis(host=redis_addr, port=6379, db=consts.REDIS_RQ_DB)
     q = rq.Queue('kq', connection=rds)
-    j = q.enqueue(func, args=args, kwargs=kwargs, retry=rq.Retry(max=10), job_timeout=1200)  # timeout is 20mins
+    # job timeout is 20mins (1200s), interval between retries is 60s
+    j = q.enqueue(func, args=args, kwargs=kwargs, retry=rq.Retry(max=2, interval=5), job_timeout=1200)
     log.info('put to bg processing: %s', j)
     return j
 
@@ -74,12 +75,13 @@ def get_jobs():
     return scheduled_jobs, started_jobs, finished_jobs, failed_jobs, deferred_jobs
 
 
-def _exception_handler(job, exc_type, exc_value, traceback):  # pylint: disable=unused-argument
-    ignore_excs = ['ix_agents_address']
-    for ex in ignore_excs:
-        if ex in str(exc_value) or ex in str(traceback):
-            return
-    log.exception('IGNORED')
+# TODO: it does not work because rq always traces the exception
+# def _exception_handler(job, exc_type, exc_value, traceback):  # pylint: disable=unused-argument
+#     ignore_excs = ['ix_agents_address']
+#     for ex in ignore_excs:
+#         if ex in str(exc_value) or ex in str(traceback):
+#             return
+#     log.exception('IGNORED')
 
 
 def main():
@@ -111,8 +113,8 @@ def main():
         sentry_url = get_setting('monitoring', 'sentry_dsn')
         logs.setup_sentry(sentry_url)
 
-    worker = rq.Worker('kq', connection=rds, exception_handlers=[_exception_handler])
-    worker.work()
+    worker = rq.Worker('kq', connection=rds)  # , exception_handlers=[_exception_handler])  TODO: see above
+    worker.work(with_scheduler=True)
 
 
 if __name__ == "__main__":
