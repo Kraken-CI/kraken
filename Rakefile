@@ -513,6 +513,7 @@ task :compose_to_swarm => DOCKER_COMPOSE do
   sh "#{DOCKER_COMPOSE} -f docker-compose-swarm.yaml config > kraken-docker-stack-#{kk_ver}.yaml"
   sh 'rm docker-compose-swarm.yaml'
   sh "sed -i -e s/kk_ver/#{kk_ver}/g kraken-docker-stack-#{kk_ver}.yaml"
+  sh "yq e '.version = \"3.6\"'                                  -i kraken-docker-stack-#{kk_ver}.yaml"
 end
 
 task :run_swarm => :build_docker_deploy do
