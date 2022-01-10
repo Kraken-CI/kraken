@@ -83,7 +83,11 @@ def stage(ctx):
                 "cwd": "kraken/server",
                 "timeout": 300
             }],
-            "environments": envs
+            "environments": [{
+                "system": "ami-0967f290f3533e5a8", # my made by packer
+                "agents_group": "aws-t3-micro",
+                "config": "default"
+            }]
         }, {
             "name": "ng lint",
             "steps": [{
