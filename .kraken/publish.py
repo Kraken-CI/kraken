@@ -32,10 +32,19 @@ def stage(ctx):
                 "branch": "gh-pages"
             }, {
                 "tool": "shell",
-                "cmd": "echo \"${GOOGLE_KEY}\" | docker login -u _json_key_base64 --password-stdin https://us-docker.pkg.dev",
+                "cmd": "curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add - && "
+                       "echo 'deb https://packages.cloud.google.com/apt cloud-sdk main' | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && "
+                       "sudo apt update && "
+                       "sudo apt install google-cloud-sdk"
+            }, {
+                "tool": "shell",
+                "cmd": "echo \"${GOOGLE_KEY}\" | base64 -d > /tmp/key.json",
                 "env": {
                     "GOOGLE_KEY": "#{KK_SECRET_SIMPLE_google_key}"
                 }
+            }, {
+                "tool": "shell",
+                "cmd": "gcloud auth activate-service-account lab-kraken-ci@kraken-261806.iam.gserviceaccount.com --project=kraken-261806 --key-file=/tmp/key.json"
             }, {
                 "tool": "shell",
                 "cmd": "rake kk_ver=0.#{KK_FLOW_SEQ} mark_images_as_published",

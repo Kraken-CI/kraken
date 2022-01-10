@@ -483,8 +483,6 @@ task :publish_docker => DOCKER_COMPOSE do
   # validate final docker compose file
   sh "#{DOCKER_COMPOSE} -f kraken-docker-compose-#{kk_ver}-tmp.yaml config > /dev/null"
   sh "mv kraken-docker-compose-#{kk_ver}-tmp.yaml kraken-docker-compose-#{kk_ver}.yaml"
-
-#  Rake::Task["publish_docker_aws"].invoke
 end
 
 task :publish_docker_aws do
