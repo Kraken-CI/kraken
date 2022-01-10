@@ -35,7 +35,8 @@ def stage(ctx):
                 "cmd": "curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add - && "
                        "echo 'deb https://packages.cloud.google.com/apt cloud-sdk main' | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && "
                        "sudo apt update && "
-                       "sudo apt install -y --no-install-recommends google-cloud-sdk"
+                       "sudo apt install -y --no-install-recommends google-cloud-sdk",
+                "timeout": 300
             }, {
                 "tool": "shell",
                 "cmd": "echo \"${GOOGLE_KEY}\" | base64 -d > /tmp/key.json",
