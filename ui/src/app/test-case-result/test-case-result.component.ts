@@ -7,6 +7,7 @@ import { MenuItem } from 'primeng/api'
 import { ExecutionService } from '../backend/api/execution.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
 import { TestCaseResults } from '../test-case-results'
+import { datetimeToLocal } from '../utils'
 
 @Component({
     selector: 'app-test-case-result',
@@ -89,9 +90,6 @@ export class TestCaseResultComponent implements OnInit {
                 'Kraken - Test ' + this.result.test_case_name + ' ' + this.tcrId
             )
 
-            this.statusOptions['plugins'].title.text =
-                'Test case ' + this.result.test_case_name + ' results in flows'
-
             const valueNames = []
             if (result.values) {
                 for (const name of Object.keys(result.values)) {
@@ -106,6 +104,34 @@ export class TestCaseResultComponent implements OnInit {
             elements: {
                 bar: {
                     backgroundColor: this.statusColors,
+                },
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Flows',
+                    },
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Test Case Results',
+                    },
+                    ticks: {
+                        stepSize: 1,
+                        callback: (val, idx) => {
+                            const resultMapping = {
+                                0: 'Not run',
+                                1: 'ERROR',
+                                2: 'Failed',
+                                3: 'Disabled',
+                                4: 'Unsupported',
+                                5: 'Passed',
+                            }
+                            return resultMapping[val]
+                        },
+                    },
                 },
             },
             plugins: {
@@ -131,6 +157,15 @@ export class TestCaseResultComponent implements OnInit {
                             const res = resultMappingRev[tooltipItem.raw]
                             return TestCaseResults.resultToTxt(res)
                         },
+                        title: (tooltipItems) => {
+                            const idx = tooltipItems[0].dataIndex
+                            const data = tooltipItems[0].dataset.origData[idx]
+                            return (
+                                data.flow_label +
+                                ' @ ' +
+                                datetimeToLocal(data.flow_created_at, null)
+                            )
+                        },
                     },
                 },
             },
@@ -142,7 +177,7 @@ export class TestCaseResultComponent implements OnInit {
     }
 
     statusColors(ctx) {
-        const res = ctx.dataset.origData[ctx.dataIndex]
+        const res = ctx.dataset.origData[ctx.dataIndex].result
         return TestCaseResults.resultColor(res)
     }
 
@@ -174,13 +209,14 @@ export class TestCaseResultComponent implements OnInit {
             }
         }
 
-        const flowIds = []
+        const flowLabels = []
         const values = []
         const median = []
         const errorBars = {}
         let errorBarsOk = true
         let minVal = 0
         let maxVal = null
+        const origData = []
         for (const res of this.results.slice().reverse()) {
             if (!res.values) {
                 continue
@@ -189,13 +225,14 @@ export class TestCaseResultComponent implements OnInit {
             if (val === undefined || val.value === undefined) {
                 continue
             }
-            flowIds.push(res.flow_id)
+            origData.push(res)
+            flowLabels.push(res.flow_label)
             values.push(val.value)
             if (val.median) {
                 median.push(val.median)
             }
             if (val.stddev !== undefined) {
-                errorBars[res.flow_id] = {
+                errorBars[res.flow_label] = {
                     plus: val.stddev,
                     minus: -val.stddev,
                 }
@@ -214,11 +251,12 @@ export class TestCaseResultComponent implements OnInit {
         }
 
         const valueData = {
-            labels: flowIds,
+            labels: flowLabels,
             datasets: [
                 {
-                    label: this.selectedValue.name,
+                    label: 'value',
                     data: values,
+                    origData: origData,
                     fill: false,
                     borderColor: '#f00',
                     backgroundColor: '#f00',
@@ -235,6 +273,7 @@ export class TestCaseResultComponent implements OnInit {
             valueData.datasets.push({
                 label: 'median',
                 data: median,
+                origData: origData,
                 fill: false,
                 borderColor: '#f88',
                 backgroundColor: '#f88',
@@ -249,8 +288,33 @@ export class TestCaseResultComponent implements OnInit {
         this.valueData = valueData
 
         this.valueOptions = {
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        title: (tooltipItems) => {
+                            const idx = tooltipItems[0].dataIndex
+                            const data = tooltipItems[0].dataset.origData[idx]
+                            return (
+                                data.flow_label +
+                                ' @ ' +
+                                datetimeToLocal(data.flow_created_at, null)
+                            )
+                        },
+                    },
+                },
+            },
             scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Flows',
+                    },
+                },
                 y: {
+                    title: {
+                        display: true,
+                        text: this.selectedValue.name,
+                    },
                     ticks: {
                         suggestedMin: minVal,
                         suggestedMax: maxVal,
@@ -267,23 +331,22 @@ export class TestCaseResultComponent implements OnInit {
                 this.results = data.items
                 this.totalRecords = data.total
 
-                const flowIds = []
+                const flowLabels = []
                 const statuses = []
-                const origStatuses = []
+                const origData = []
                 for (const res of this.results.slice().reverse()) {
-                    flowIds.push(res.flow_id)
+                    flowLabels.push(res.flow_label)
                     statuses.push(this.resultToChartVal(res.result))
-                    origStatuses.push(res.result)
+                    origData.push(res)
                 }
 
                 this.statusData = {
-                    labels: flowIds,
-                    // yLabels: ['Not run', 'ERROR', 'Failed', 'Disabled', 'Unsupported', 'Passed'],
+                    labels: flowLabels,
                     datasets: [
                         {
                             label: 'Status',
                             data: statuses,
-                            origData: origStatuses,
+                            origData: origData,
                         },
                     ],
                 }

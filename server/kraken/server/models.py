@@ -639,6 +639,9 @@ class TestCaseResult(db.Model):
             data['branch_name'] = self.job.run.flow.branch.name
             data['flow_id'] = self.job.run.flow_id
             data['flow_kind'] = 'ci' if self.job.run.flow.kind == 0 else 'dev'
+            data['flow_label'] = self.job.run.flow.get_label()
+            created_at = self.job.run.flow.created
+            data['flow_created_at'] = created_at.strftime("%Y-%m-%dT%H:%M:%SZ") if created_at else None,
             data['run_id'] = self.job.run_id
             data['stage_id'] = self.job.run.stage_id
             data['stage_name'] = self.job.run.stage.name

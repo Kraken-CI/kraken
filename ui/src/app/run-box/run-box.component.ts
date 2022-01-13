@@ -57,7 +57,10 @@ export class RunBoxComponent implements OnInit {
                 },
             ]
 
-            if (this.run.state === 'in-progress' || this.run.state === 'creating') {
+            if (
+                this.run.state === 'in-progress' ||
+                this.run.state === 'creating'
+            ) {
                 this.runBoxMenuItems.push({
                     label: 'Cancel',
                     icon: 'pi pi-times',
