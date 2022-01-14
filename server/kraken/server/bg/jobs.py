@@ -224,6 +224,8 @@ def _analyze_ci_test_case_result(job, job_tcr):
     regr_cnt = 0
     fix_cnt = 0
 
+    # log.info('TCR: %s %s %s %s', job_tcr, job_tcr.test_case.name, job_tcr.job.run.flow, job_tcr.job.run.flow.created)
+
     # get previous 10 results
     q = TestCaseResult.query
     q = q.filter(TestCaseResult.id != job_tcr.id)
@@ -252,19 +254,26 @@ def _analyze_ci_test_case_result(job, job_tcr):
     # determine age and change
     if len(tcrs) > 0:
         prev_tcr = tcrs[-1]
+        # log.info('PREV TCR: %s %s %s %s', prev_tcr, prev_tcr.test_case.name, prev_tcr.job.run.flow, prev_tcr.job.run.flow.created)
         if prev_tcr.result == job_tcr.result:
             job_tcr.age = prev_tcr.age + 1
             no_change_cnt += 1
+            # log.info('PREV TCR: %s no change', prev_tcr)
         else:
             job_tcr.instability += 1
             job_tcr.age = 0
             if job_tcr.result == consts.TC_RESULT_PASSED and prev_tcr.result != consts.TC_RESULT_PASSED:
                 job_tcr.change = consts.TC_RESULT_CHANGE_FIX
                 fix_cnt += 1
+                # log.info('PREV TCR: %s fix', prev_tcr)
             elif job_tcr.result != consts.TC_RESULT_PASSED and prev_tcr.result == consts.TC_RESULT_PASSED:
                 job_tcr.change = consts.TC_RESULT_CHANGE_REGR
                 regr_cnt += 1
+                # log.info('PREV TCR: %s regr', prev_tcr)
+            # else:
+            #     log.info('PREV TCR: %s %s vs %s', prev_tcr, job_tcr.result, prev_tcr.result)
     else:
+        # log.info('NO PREV TCR')
         job_tcr.change = consts.TC_RESULT_CHANGE_NEW
         new_cnt += 1
 
@@ -444,7 +453,12 @@ def analyze_results_history(run_id):
             issues_new = _analyze_job_issues_history(job)
             run.issues_new += issues_new
             db.session.commit()
+            # log.info('job %s: new:%d no-change:%d regr:%d fix:%d',
+            #          job, new_cnt, no_change_cnt, regr_cnt, fix_cnt)
         log.set_ctx(job=None)
+
+        log.info('run %s: new:%d no-change:%d regr:%d fix:%d',
+                 run, run.new_cnt, run.no_change_cnt, run.regr_cnt, run.fix_cnt)
 
         run.state = consts.RUN_STATE_PROCESSED
         run.processed_at = utils.utcnow()
@@ -462,7 +476,7 @@ def analyze_results_history(run_id):
         q = q.order_by(asc(Flow.created))
         next_run = q.first()
         if next_run is not None and next_run.state in [consts.RUN_STATE_COMPLETED, consts.RUN_STATE_PROCESSED]:
-            kkrq.enq(analyze_results_history, next_run.id)
+            kkrq.enq_neck(analyze_results_history, next_run.id)
 
         log.info('finised results history analysis of run %s, flow %s [%s] ',
                  run, run.flow, 'CI' if run.flow.kind == 0 else 'DEV')

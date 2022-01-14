@@ -21,7 +21,7 @@ import datetime
 from urllib.parse import urlparse
 
 from flask import Flask
-from sqlalchemy.sql.expression import desc, cast, or_
+from sqlalchemy.sql.expression import asc, desc, cast, or_
 from sqlalchemy import Integer
 import clickhouse_driver
 import redis
@@ -126,7 +126,7 @@ def _check_jobs():
     _check_jobs_if_missing_agents()
 
 
-def _check_runs():
+def _check_runs_timeout():
     now = utils.utcnow()
 
     q = Run.query.filter_by(finished=None)
@@ -156,6 +156,30 @@ def _check_runs():
         # if there is no pending jobs then complete run now
         if canceled_jobs_count == 0:
             exec_utils.complete_run(run, now)
+
+
+def _check_runs_missing_history_analysis():
+    now = utils.utcnow()
+    one_day = now - datetime.timedelta(days=1)
+    twenty_mins = now - datetime.timedelta(minutes=20)
+
+    q = Run.query.filter(Run.finished > one_day)
+    q = q.filter(Run.finished < twenty_mins)
+    q = q.filter(Run.state != consts.RUN_STATE_PROCESSED)
+    q = q.order_by(asc(Run.finished))
+
+    visited_branches = set()
+    for run in q.all():
+        if run.flow.branch_id in visited_branches:
+            continue
+        log.info('run with missing history %s', run)
+        visited_branches.add(run.flow.branch_id)
+        kkrq.enq_neck(bg_jobs.analyze_results_history, run.id)
+
+
+def _check_runs():
+    _check_runs_timeout()
+    _check_runs_missing_history_analysis()
 
 
 def _cancel_job_and_unassign_agent(agent):
