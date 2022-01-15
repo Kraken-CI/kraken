@@ -300,14 +300,18 @@ def _analyze_dev_test_case_result(job, job_tcr):
     q = q.filter_by(state=consts.JOB_STATE_COMPLETED)
     q = q.join('job', 'run', 'flow', 'branch')
     q = q.filter(Branch.id == job.run.flow.branch_id)
-    q = q.filter(Flow.kind == 0)  # CI
+    q = q.filter(Flow.kind == consts.FLOW_KIND_CI)
     q = q.order_by(desc(Flow.created))
 
     ref_tcr = q.first()
 
     # determine change
     if ref_tcr:
-        log.info('REF TCR: %s %s %s %s', ref_tcr, ref_tcr.test_case.name, ref_tcr.job.run.flow, ref_tcr.job.run.flow.created)
+        # log.info('REF TCR: %s %s %s %s', ref_tcr, ref_tcr.test_case.name, ref_tcr.job.run.flow, ref_tcr.job.run.flow.created)
+        # copy ref tcr stats to current dev results so user can see how it behaves
+        job_tcr.age = ref_tcr.age
+        job_tcr.instability = ref_tcr.instability
+
         if ref_tcr.result == job_tcr.result:
             job_tcr.change = consts.TC_RESULT_CHANGE_NO
         else:
@@ -326,7 +330,7 @@ def _analyze_job_results_history(job):
     counts = [0, 0, 0, 0]
     for job_tcr in job.results:
         # analyze history
-        if job.run.flow.kind == 0:  # CI
+        if job.run.flow.kind == consts.FLOW_KIND_CI:  # CI
             _analyze_ci_test_case_result(job, job_tcr)
         else:  # DEV
             _analyze_dev_test_case_result(job, job_tcr)
@@ -355,7 +359,7 @@ def _analyze_job_issues_history(job):
     q = q.order_by(desc(Flow.created))
     prev_job = q.first()
     if prev_job is None:
-        log.info('prev job not found')
+        log.info('prev job for issues not found')
         return 0
 
     issues_new = 0
@@ -385,82 +389,86 @@ def _analyze_job_issues_history(job):
     return issues_new
 
 
+def _analyze_results_history(run_id):
+    run = Run.query.filter_by(id=run_id).one_or_none()
+    if run is None:
+        log.error('got unknown run to analyze results history: %s', run_id)
+        return
+
+    log.info('starting results history analysis of run %s, flow %s [%s] ',
+             run, run.flow, 'CI' if run.flow.kind == 0 else 'DEV')
+
+    # check prev run in case of CI
+    if run.flow.kind == 0:
+        q = Run.query
+        q = q.filter_by(deleted=None)
+        q = q.filter_by(stage_id=run.stage_id)
+        q = q.join('flow')
+        q = q.filter(Flow.created < run.flow.created)
+        q = q.filter(Flow.kind == run.flow.kind)
+        q = q.order_by(desc(Flow.created))
+        prev_run = q.first()
+        if prev_run is None:
+            log.info('skip anlysis of run %s as there is no prev run', run)
+            return
+        if prev_run.state != consts.RUN_STATE_PROCESSED:
+            # prev run is not processed yet
+            log.info('postpone anlysis of run %s as prev run %s is not processed yet', run, prev_run)
+            return
+
+    # analyze jobs of this run
+    run.new_cnt = run.no_change_cnt = run.regr_cnt = run.fix_cnt = 0
+    run.issues_new = 0
+    non_covered_jobs = Job.query.filter_by(run=run).filter_by(covered=False).all()
+    for job in non_covered_jobs:
+        log.set_ctx(job=job.id)
+        # analyze results history
+        counts = _analyze_job_results_history(job)
+        no_change_cnt, fix_cnt, regr_cnt, new_cnt = counts
+        run.no_change_cnt += no_change_cnt
+        run.fix_cnt += fix_cnt
+        run.regr_cnt += regr_cnt
+        run.new_cnt += new_cnt
+        db.session.commit()
+
+        # analyze issues history
+        issues_new = _analyze_job_issues_history(job)
+        run.issues_new += issues_new
+        db.session.commit()
+        # log.info('job %s: new:%d no-change:%d regr:%d fix:%d',
+        #          job, new_cnt, no_change_cnt, regr_cnt, fix_cnt)
+    log.set_ctx(job=None)
+
+    log.info('run %s: new:%d no-change:%d regr:%d fix:%d',
+             run, run.new_cnt, run.no_change_cnt, run.regr_cnt, run.fix_cnt)
+
+    run.state = consts.RUN_STATE_PROCESSED
+    run.processed_at = utils.utcnow()
+    db.session.commit()
+    log.info('history anlysis of run %s completed', run)
+
+    kkrq.enq(notify_about_completed_run, run.id)
+
+    # trigger analysis of the following run
+    q = Run.query
+    q = q.filter_by(stage_id=run.stage_id)
+    q = q.join('flow')
+    q = q.filter(Flow.created > run.flow.created)
+    q = q.filter(Flow.kind == run.flow.kind)
+    q = q.order_by(asc(Flow.created))
+    next_run = q.first()
+    if next_run is not None and next_run.state in [consts.RUN_STATE_COMPLETED, consts.RUN_STATE_PROCESSED]:
+        kkrq.enq_neck(analyze_results_history, next_run.id)
+
+    log.info('finished results history analysis of run %s, flow %s [%s]',
+             run, run.flow, 'CI' if run.flow.kind == 0 else 'DEV')
+
+
 def analyze_results_history(run_id):
     app = _create_app('analyze_results_history_%d' % run_id)
 
     with app.app_context():
-        run = Run.query.filter_by(id=run_id).one_or_none()
-        if run is None:
-            log.error('got unknown run to analyze results history: %s', run_id)
-            return
-
-        log.info('starting results history analysis of run %s, flow %s [%s] ',
-                 run, run.flow, 'CI' if run.flow.kind == 0 else 'DEV')
-
-        # check prev run in case of CI
-        if run.flow.kind == 0:
-            q = Run.query
-            q = q.filter_by(deleted=None)
-            q = q.filter_by(stage_id=run.stage_id)
-            q = q.join('flow')
-            q = q.filter(Flow.created < run.flow.created)
-            q = q.filter(Flow.kind == run.flow.kind)
-            q = q.order_by(desc(Flow.created))
-            prev_run = q.first()
-            if prev_run is None:
-                log.info('skip anlysis of run %s as there is no prev run', run)
-                return
-            if prev_run.state != consts.RUN_STATE_PROCESSED:
-                # prev run is not processed yet
-                log.info('postpone anlysis of run %s as prev run %s is not processed yet', run, prev_run)
-                return
-
-        # analyze jobs of this run
-        run.new_cnt = run.no_change_cnt = run.regr_cnt = run.fix_cnt = 0
-        run.issues_new = 0
-        non_covered_jobs = Job.query.filter_by(run=run).filter_by(covered=False).all()
-        for job in non_covered_jobs:
-            log.set_ctx(job=job.id)
-            # analyze results history
-            counts = _analyze_job_results_history(job)
-            no_change_cnt, fix_cnt, regr_cnt, new_cnt = counts
-            run.no_change_cnt += no_change_cnt
-            run.fix_cnt += fix_cnt
-            run.regr_cnt += regr_cnt
-            run.new_cnt += new_cnt
-            db.session.commit()
-
-            # analyze issues history
-            issues_new = _analyze_job_issues_history(job)
-            run.issues_new += issues_new
-            db.session.commit()
-            # log.info('job %s: new:%d no-change:%d regr:%d fix:%d',
-            #          job, new_cnt, no_change_cnt, regr_cnt, fix_cnt)
-        log.set_ctx(job=None)
-
-        log.info('run %s: new:%d no-change:%d regr:%d fix:%d',
-                 run, run.new_cnt, run.no_change_cnt, run.regr_cnt, run.fix_cnt)
-
-        run.state = consts.RUN_STATE_PROCESSED
-        run.processed_at = utils.utcnow()
-        db.session.commit()
-        log.info('history anlysis of run %s completed', run)
-
-        kkrq.enq(notify_about_completed_run, run.id)
-
-        # trigger analysis of the following run
-        q = Run.query
-        q = q.filter_by(stage_id=run.stage_id)
-        q = q.join('flow')
-        q = q.filter(Flow.created > run.flow.created)
-        q = q.filter(Flow.kind == run.flow.kind)
-        q = q.order_by(asc(Flow.created))
-        next_run = q.first()
-        if next_run is not None and next_run.state in [consts.RUN_STATE_COMPLETED, consts.RUN_STATE_PROCESSED]:
-            kkrq.enq_neck(analyze_results_history, next_run.id)
-
-        log.info('finised results history analysis of run %s, flow %s [%s] ',
-                 run, run.flow, 'CI' if run.flow.kind == 0 else 'DEV')
+        _analyze_results_history(run_id)
 
 
 def notify_about_started_run(run_id):
