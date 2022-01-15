@@ -218,12 +218,6 @@ def analyze_run(run_id):
 
 
 def _analyze_ci_test_case_result(job, job_tcr):
-    # history stats
-    new_cnt = 0
-    no_change_cnt = 0
-    regr_cnt = 0
-    fix_cnt = 0
-
     # log.info('TCR: %s %s %s %s', job_tcr, job_tcr.test_case.name, job_tcr.job.run.flow, job_tcr.job.run.flow.created)
 
     # get previous 10 results
@@ -257,25 +251,22 @@ def _analyze_ci_test_case_result(job, job_tcr):
         # log.info('PREV TCR: %s %s %s %s', prev_tcr, prev_tcr.test_case.name, prev_tcr.job.run.flow, prev_tcr.job.run.flow.created)
         if prev_tcr.result == job_tcr.result:
             job_tcr.age = prev_tcr.age + 1
-            no_change_cnt += 1
+            job_tcr.change = consts.TC_RESULT_CHANGE_NO
             # log.info('PREV TCR: %s no change', prev_tcr)
         else:
             job_tcr.instability += 1
             job_tcr.age = 0
             if job_tcr.result == consts.TC_RESULT_PASSED and prev_tcr.result != consts.TC_RESULT_PASSED:
                 job_tcr.change = consts.TC_RESULT_CHANGE_FIX
-                fix_cnt += 1
                 # log.info('PREV TCR: %s fix', prev_tcr)
             elif job_tcr.result != consts.TC_RESULT_PASSED and prev_tcr.result == consts.TC_RESULT_PASSED:
                 job_tcr.change = consts.TC_RESULT_CHANGE_REGR
-                regr_cnt += 1
                 # log.info('PREV TCR: %s regr', prev_tcr)
             # else:
             #     log.info('PREV TCR: %s %s vs %s', prev_tcr, job_tcr.result, prev_tcr.result)
     else:
         # log.info('NO PREV TCR')
         job_tcr.change = consts.TC_RESULT_CHANGE_NEW
-        new_cnt += 1
 
     # determine relevancy
     # 0 initial
@@ -297,16 +288,8 @@ def _analyze_ci_test_case_result(job, job_tcr):
         job_tcr.relevancy += 1
     # TODO: +1 no comment
 
-    return new_cnt, no_change_cnt, regr_cnt, fix_cnt
-
 
 def _analyze_dev_test_case_result(job, job_tcr):
-    # history stats
-    new_cnt = 0
-    no_change_cnt = 0
-    regr_cnt = 0
-    fix_cnt = 0
-
     # get reference result from CI flow
     q = TestCaseResult.query
     q = q.filter_by(test_case_id=job_tcr.test_case_id)
@@ -326,20 +309,15 @@ def _analyze_dev_test_case_result(job, job_tcr):
     if ref_tcr:
         log.info('REF TCR: %s %s %s %s', ref_tcr, ref_tcr.test_case.name, ref_tcr.job.run.flow, ref_tcr.job.run.flow.created)
         if ref_tcr.result == job_tcr.result:
-            no_change_cnt += 1
+            job_tcr.change = consts.TC_RESULT_CHANGE_NO
         else:
             if job_tcr.result == consts.TC_RESULT_PASSED and ref_tcr.result != consts.TC_RESULT_PASSED:
                 job_tcr.change = consts.TC_RESULT_CHANGE_FIX
-                fix_cnt += 1
             elif job_tcr.result != consts.TC_RESULT_PASSED and ref_tcr.result == consts.TC_RESULT_PASSED:
                 job_tcr.change = consts.TC_RESULT_CHANGE_REGR
-                regr_cnt += 1
     else:
         log.info('NO REF TCR, ie. new')
         job_tcr.change = consts.TC_RESULT_CHANGE_NEW
-        new_cnt += 1
-
-    return new_cnt, no_change_cnt, regr_cnt, fix_cnt
 
 
 def _analyze_job_results_history(job):
@@ -348,14 +326,17 @@ def _analyze_job_results_history(job):
     counts = [0, 0, 0, 0]
     for job_tcr in job.results:
         # analyze history
-        log.info('Analyze result %s %s', job_tcr, job_tcr.test_case.name)
-
         if job.run.flow.kind == 0:  # CI
-            counts = _analyze_ci_test_case_result(job, job_tcr)
+            _analyze_ci_test_case_result(job, job_tcr)
         else:  # DEV
-            counts = _analyze_dev_test_case_result(job, job_tcr)
+            _analyze_dev_test_case_result(job, job_tcr)
 
         db.session.commit()
+
+        log.info('Analyzed result %s %s: %s', job_tcr, job_tcr.test_case.name,
+                 consts.TC_RESULT_CHANGES_NAME[job_tcr.change])
+
+        counts[job_tcr.change] += 1
 
     return counts
 
@@ -442,11 +423,11 @@ def analyze_results_history(run_id):
             log.set_ctx(job=job.id)
             # analyze results history
             counts = _analyze_job_results_history(job)
-            new_cnt, no_change_cnt, regr_cnt, fix_cnt = counts
-            run.new_cnt += new_cnt
+            no_change_cnt, fix_cnt, regr_cnt, new_cnt = counts
             run.no_change_cnt += no_change_cnt
-            run.regr_cnt += regr_cnt
             run.fix_cnt += fix_cnt
+            run.regr_cnt += regr_cnt
+            run.new_cnt += new_cnt
             db.session.commit()
 
             # analyze issues history

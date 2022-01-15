@@ -53,7 +53,7 @@ def test__analyze_job_results_history__1_job_basic():
         # result 0 - PASSED
         log.info('result 0 - PASSED')
         job, tcr = new_result(consts.TC_RESULT_PASSED)
-        new_cnt, no_change_cnt, regr_cnt, fix_cnt = jobs._analyze_job_results_history(job)
+        no_change_cnt, fix_cnt, regr_cnt, new_cnt = jobs._analyze_job_results_history(job)
         assert new_cnt == 1
         assert no_change_cnt == 0
         assert regr_cnt == 0
@@ -65,7 +65,7 @@ def test__analyze_job_results_history__1_job_basic():
         # result 1 - PASSED
         log.info('result 1 - PASSED')
         job, tcr = new_result(consts.TC_RESULT_PASSED)
-        new_cnt, no_change_cnt, regr_cnt, fix_cnt = jobs._analyze_job_results_history(job)
+        no_change_cnt, fix_cnt, regr_cnt, new_cnt = jobs._analyze_job_results_history(job)
         assert new_cnt == 0
         assert no_change_cnt == 1
         assert regr_cnt == 0
@@ -76,7 +76,7 @@ def test__analyze_job_results_history__1_job_basic():
 
         # result 2 - FAILED
         job, tcr = new_result(consts.TC_RESULT_FAILED)
-        new_cnt, no_change_cnt, regr_cnt, fix_cnt = jobs._analyze_job_results_history(job)
+        no_change_cnt, fix_cnt, regr_cnt, new_cnt = jobs._analyze_job_results_history(job)
         assert new_cnt == 0
         assert no_change_cnt == 0
         assert regr_cnt == 1
@@ -87,7 +87,7 @@ def test__analyze_job_results_history__1_job_basic():
 
         # result 3 - PASSED
         job, tcr = new_result(consts.TC_RESULT_PASSED)
-        new_cnt, no_change_cnt, regr_cnt, fix_cnt = jobs._analyze_job_results_history(job)
+        no_change_cnt, fix_cnt, regr_cnt, new_cnt = jobs._analyze_job_results_history(job)
         assert new_cnt == 0
         assert no_change_cnt == 0
         assert regr_cnt == 0
@@ -98,7 +98,7 @@ def test__analyze_job_results_history__1_job_basic():
 
         # result 4 - PASSED
         job, tcr = new_result(consts.TC_RESULT_PASSED)
-        new_cnt, no_change_cnt, regr_cnt, fix_cnt = jobs._analyze_job_results_history(job)
+        no_change_cnt, fix_cnt, regr_cnt, new_cnt = jobs._analyze_job_results_history(job)
         assert new_cnt == 0
         assert no_change_cnt == 1
         assert regr_cnt == 0
@@ -133,7 +133,7 @@ def test__analyze_job_results_history__1_job_with_cover():
 
         # result 0 - PASSED
         job, tcr = new_result(consts.TC_RESULT_PASSED)
-        new_cnt, no_change_cnt, regr_cnt, fix_cnt = jobs._analyze_job_results_history(job)
+        no_change_cnt, fix_cnt, regr_cnt, new_cnt = jobs._analyze_job_results_history(job)
         assert new_cnt == 1
         assert no_change_cnt == 0
         assert regr_cnt == 0
@@ -149,7 +149,7 @@ def test__analyze_job_results_history__1_job_with_cover():
         tcr = TestCaseResult(test_case=test_case, result=consts.TC_RESULT_FAILED)
         job1.results = [tcr]
         db.session.commit()
-        new_cnt, no_change_cnt, regr_cnt, fix_cnt = jobs._analyze_job_results_history(job1)
+        no_change_cnt, fix_cnt, regr_cnt, new_cnt = jobs._analyze_job_results_history(job1)
         assert new_cnt == 0
         assert no_change_cnt == 0
         assert regr_cnt == 1
@@ -164,7 +164,7 @@ def test__analyze_job_results_history__1_job_with_cover():
         tcr = TestCaseResult(test_case=test_case, result=consts.TC_RESULT_PASSED)
         job2.results = [tcr]
         db.session.commit()
-        new_cnt, no_change_cnt, regr_cnt, fix_cnt = jobs._analyze_job_results_history(job2)
+        no_change_cnt, fix_cnt, regr_cnt, new_cnt = jobs._analyze_job_results_history(job2)
         assert new_cnt == 0
         assert no_change_cnt == 1
         assert regr_cnt == 0
@@ -175,7 +175,7 @@ def test__analyze_job_results_history__1_job_with_cover():
 
         # result 2 - FAILED
         job, tcr = new_result(consts.TC_RESULT_FAILED)
-        new_cnt, no_change_cnt, regr_cnt, fix_cnt = jobs._analyze_job_results_history(job)
+        no_change_cnt, fix_cnt, regr_cnt, new_cnt = jobs._analyze_job_results_history(job)
         assert new_cnt == 0
         assert no_change_cnt == 0
         assert regr_cnt == 1
@@ -186,7 +186,7 @@ def test__analyze_job_results_history__1_job_with_cover():
 
         # result 3 - PASSED
         job, tcr = new_result(consts.TC_RESULT_PASSED)
-        new_cnt, no_change_cnt, regr_cnt, fix_cnt = jobs._analyze_job_results_history(job)
+        no_change_cnt, fix_cnt, regr_cnt, new_cnt = jobs._analyze_job_results_history(job)
         assert new_cnt == 0
         assert no_change_cnt == 0
         assert regr_cnt == 0
