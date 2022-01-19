@@ -68,7 +68,6 @@ export class AgentsPageComponent implements OnInit {
             agent,
             name: agent.name,
         })
-        console.info('agent.groups', agent.groups)
         this.tabs.push({
             label: agent.name,
             routerLink: '/agents/' + agent.id,
@@ -164,7 +163,6 @@ export class AgentsPageComponent implements OnInit {
             this.agentGroups = data.items.map((g) => {
                 return { id: g.id, name: g.name }
             })
-            console.info(this.agentGroups)
         })
     }
 

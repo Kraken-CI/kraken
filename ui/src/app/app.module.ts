@@ -74,6 +74,7 @@ import { SettingsPageComponent } from './settings-page/settings-page.component'
 import { DiagsPageComponent } from './diags-page/diags-page.component'
 import { RepoChangesComponent } from './repo-changes/repo-changes.component'
 import { GrpCloudCfgComponent } from './grp-cloud-cfg/grp-cloud-cfg.component'
+import { TcrTableComponent } from './tcr-table/tcr-table.component'
 
 export function cfgFactory() {
     const params: ConfigurationParameters = {
@@ -106,6 +107,7 @@ export function cfgFactory() {
         DiagsPageComponent,
         RepoChangesComponent,
         GrpCloudCfgComponent,
+        TcrTableComponent,
     ],
     imports: [
         BrowserModule,

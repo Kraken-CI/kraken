@@ -1130,6 +1130,39 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
+  /test_case_results/{test_case_result_id}/comment:
+    post:
+      tags:
+      - Execution
+      summary: Create or update a comment to the result
+      description: Create or update a comment to the result
+      operationId: create_or_update_test_case_comment
+      parameters:
+      - name: test_case_result_id
+        in: path
+        description: ID of test case result
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        description: Comment to create
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+                author:
+                  type: string
+                state:
+                  type: integer
+                  format: int64
+      responses:
+        201:
+          description: Successfully created comment
+          content: {}
   /jobs:
     post:
       tags:

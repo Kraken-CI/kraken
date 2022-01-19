@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core'
+import { Component, OnInit, ViewChild, OnDestroy } from '@angular/core'
 import { Router, ActivatedRoute } from '@angular/router'
 import { Title } from '@angular/platform-browser'
 
@@ -10,6 +10,7 @@ import { ExecutionService } from '../backend/api/execution.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
 import { TestCaseResults } from '../test-case-results'
 import { Job, Run } from '../backend/model/models'
+import { TcrTableComponent } from '../tcr-table/tcr-table.component'
 
 @Component({
     selector: 'app-run-results',
@@ -37,19 +38,7 @@ export class RunResultsComponent implements OnInit, OnDestroy {
     selectedJobId = 0
 
     // results
-    results: any[]
-    totalResults = 0
-    loadingResults = true
-    resultStatuses: any[]
-    filterStatuses: any[] = []
-    resultChanges: any[]
-    filterChanges: any[] = []
-    filterMinAge = 0
-    filterMaxAge = 1000
-    filterMinInstability = 0
-    filterMaxInstability = 10
-    filterTestCaseText = ''
-    filterResultJob = ''
+    @ViewChild('tcrTable') tcrTable: TcrTableComponent
 
     // issues
     issues: any[]
@@ -78,22 +67,6 @@ export class RunResultsComponent implements OnInit, OnDestroy {
         private msgSrv: MessageService,
         private titleService: Title
     ) {
-        this.resultStatuses = [
-            { name: 'Not Run', code: 0 },
-            { name: 'Passed', code: 1 },
-            { name: 'Failed', code: 2 },
-            { name: 'Error', code: 3 },
-            { name: 'Disabled', code: 4 },
-            { name: 'Unsupported', code: 5 },
-        ]
-
-        this.resultChanges = [
-            { name: 'No changes', code: 0 },
-            { name: 'Fixes', code: 1 },
-            { name: 'Regressions', code: 2 },
-            { name: 'New', code: 3 },
-        ]
-
         this.issueTypes = [
             { name: 'error', code: 0 },
             { name: 'warning', code: 1 },
@@ -155,20 +128,18 @@ export class RunResultsComponent implements OnInit, OnDestroy {
                         routerLink: '/runs/' + this.runId + '/reports',
                     },
                     {
-                        label: 'Details',
+                        label: 'Run Details',
                         routerLink: '/runs/' + this.runId + '/details',
                     },
                 ]
 
                 this.jobs = []
-                this.results = []
-                this.resetResultsFilter(null)
                 this.issues = []
                 this.resetIssuesFilter(null)
                 if (tab === 'jobs') {
                     this.loadJobsLazy({ first: 0, rows: 30 })
                 } else if (tab === 'results') {
-                    this.loadResultsLazy({ first: 0, rows: 30 })
+                    // it loads on its one I think
                 } else if (tab === 'issues') {
                     this.loadIssuesLazy({ first: 0, rows: 30 })
                 } else if (tab === 'artifacts') {
@@ -244,7 +215,7 @@ export class RunResultsComponent implements OnInit, OnDestroy {
                 this.loadJobsLazy({ first: 0, rows: 30 })
                 break
             case 1: // results
-                this.loadResultsLazy({ first: 0, rows: 30 })
+                this.tcrTable.refreshResults()
                 break
             case 2: // issues
                 this.loadIssuesLazy({ first: 0, rows: 30 })
@@ -272,70 +243,6 @@ export class RunResultsComponent implements OnInit, OnDestroy {
                 }, 5000)
             }
         })
-    }
-
-    formatResult(result) {
-        return TestCaseResults.formatResult(result)
-    }
-
-    resultToTxt(result) {
-        return TestCaseResults.resultToTxt(result)
-    }
-
-    resultToClass(result) {
-        return 'result' + result
-    }
-
-    loadResultsLazy(event) {
-        let statuses = this.filterStatuses.map((e) => e.code)
-        if (statuses.length === 0) {
-            statuses = null
-        }
-        let changes = this.filterChanges.map((e) => e.code)
-        if (changes.length === 0) {
-            changes = null
-        }
-        let sortField = 'name'
-        if (event.sortField) {
-            sortField = event.sortField
-        }
-        let sortDir = 'asc'
-        if (event.sortOrder === -1) {
-            sortDir = 'desc'
-        }
-
-        this.loadingResults = true
-        this.executionService
-            .getRunResults(
-                this.runId,
-                event.first,
-                event.rows,
-                sortField,
-                sortDir,
-                statuses,
-                changes,
-                this.filterMinAge,
-                this.filterMaxAge,
-                this.filterMinInstability,
-                this.filterMaxInstability,
-                this.filterTestCaseText,
-                this.filterResultJob
-            )
-            .subscribe((data) => {
-                this.results = data.items
-                this.totalResults = data.total
-                this.loadingResults = false
-            })
-    }
-
-    refreshResults(resultsTable) {
-        resultsTable.onLazyLoad.emit(resultsTable.createLazyLoadMetadata())
-    }
-
-    showLastTestChanges(resultsTable) {
-        this.filterMinAge = 0
-        this.filterMaxAge = 0
-        this.refreshResults(resultsTable)
     }
 
     loadJobsLazy(event) {
@@ -591,53 +498,6 @@ export class RunResultsComponent implements OnInit, OnDestroy {
 
     coveredChange(jobsTable) {
         this.refreshJobs(jobsTable)
-    }
-
-    getResultChangeTxt(change) {
-        switch (change) {
-            case 0:
-                return ''
-            case 1:
-                return 'FIX'
-            case 2:
-                return 'REGR'
-            case 3:
-                return 'NEW'
-            default:
-                return 'UNKN'
-        }
-    }
-
-    getResultChangeCls(change) {
-        switch (change) {
-            case 1:
-                return 'result-fix'
-            case 2:
-                return 'result-regr'
-            case 3:
-                return 'result-new'
-            default:
-                return ''
-        }
-    }
-
-    resetResultsFilter(resultsTable) {
-        this.filterStatuses = []
-        this.filterChanges = []
-        this.filterMinAge = 0
-        this.filterMaxAge = 1000
-        this.filterMinInstability = 0
-        this.filterMaxInstability = 10
-
-        if (resultsTable) {
-            this.refreshResults(resultsTable)
-        }
-    }
-
-    filterResultsKeyDown(event, resultsTable) {
-        if (event.key === 'Enter') {
-            this.refreshResults(resultsTable)
-        }
     }
 
     filterIssuesKeyDown(event, issuesTable) {

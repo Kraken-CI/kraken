@@ -98,6 +98,7 @@ class Branch(db.Model, DatesMixin):
     ci_last_incomplete_flow = relationship('Flow', foreign_keys=[ci_last_incomplete_flow_id])
     stages = relationship("Stage", back_populates="branch", order_by="Stage.name")
     sequences = relationship("BranchSequence", back_populates="branch")
+    comments = relationship("TestCaseComment", back_populates="branch")
 
     #base_branch = relationship('BaseBranch', uselist=False, primaryjoin="or_(Branch.id==BaseBranch.ci_branch_id, Branch.id==BaseBranch.dev_branch_id)")
 
@@ -314,6 +315,8 @@ class Flow(db.Model, DatesMixin):
     trigger_data_id = Column(Integer, ForeignKey('repo_changes.id'))
     trigger_data = relationship('RepoChanges')
     artifacts_files = relationship('Artifact', back_populates="flow")
+    comments = relationship("TestCaseComment", back_populates="last_flow")
+
     Index('ix_flows_branch_id_kind', branch_id, kind)
 
     def get_label(self):
@@ -591,6 +594,7 @@ class TestCase(db.Model, DatesMixin):
     tool_id = Column(Integer, ForeignKey('tools.id'), nullable=False)
     tool = relationship('Tool', back_populates="test_cases")
     results = relationship("TestCaseResult", back_populates="test_case")
+    comments = relationship("TestCaseComment", back_populates="test_case")
 
 
 class TestCaseResult(db.Model):
@@ -609,12 +613,14 @@ class TestCaseResult(db.Model):
     change = Column(Integer, default=consts.TC_RESULT_CHANGE_NO)
     relevancy = Column(Integer, default=0)
     Index('ix_test_case_results_test_case_id', test_case_id)
+    comment_id = Column(Integer, ForeignKey('test_case_comments.id'), nullable=True)
+    comment = relationship('TestCaseComment', back_populates="test_case_results")
 
     def __repr__(self):
         txt = 'TCR %s, result:%s' % (self.id, consts.TC_RESULTS_NAME[self.result])
         return "<%s>" % txt
 
-    def get_json(self, with_extra=False):
+    def get_json(self, with_extra=False, with_comment=False):
         data = dict(id=self.id,
                     test_case_id=self.test_case_id,
                     test_case_name=self.test_case.name,
@@ -629,6 +635,8 @@ class TestCaseResult(db.Model):
                     job_name=self.job.name,
                     agents_group_name=self.job.agents_group.name,
                     agents_group_id=self.job.agents_group_id,
+                    system_name=self.job.system.name,
+                    system_id=self.job.system_id,
                     agent_name=self.job.agent_used.name if self.job.agent_used else '',
                     agent_id=self.job.agent_used_id if self.job.agent_used else 0)
 
@@ -646,7 +654,30 @@ class TestCaseResult(db.Model):
             data['stage_id'] = self.job.run.stage_id
             data['stage_name'] = self.job.run.stage.name
 
+        if with_comment and self.comment and self.comment.data:
+            data['comment'] = dict(state=self.comment.state,
+                                   data=list(reversed(self.comment.data)))
+
         return data
+
+
+class TestCaseComment(db.Model):
+    __tablename__ = "test_case_comments"
+    id = Column(Integer, primary_key=True)
+    test_case_id = Column(Integer, ForeignKey('test_cases.id'), nullable=True)
+    test_case = relationship('TestCase', back_populates="comments")
+    branch_id = Column(Integer, ForeignKey('branches.id'), nullable=True)
+    branch = relationship('Branch', back_populates="comments")
+    last_flow_id = Column(Integer, ForeignKey('flows.id'), nullable=True)
+    last_flow = relationship('Flow', back_populates="comments")
+    test_case_results = relationship('TestCaseResult', back_populates="comment")
+    state = Column(Integer, default=consts.TC_COMMENT_NEW)
+    data = Column(JSONB)
+
+    def get_json(self):
+        return dict(id=self.id,
+                    state=self.state,
+                    data=self.data)
 
 
 class Issue(db.Model):

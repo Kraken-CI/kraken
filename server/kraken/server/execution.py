@@ -20,12 +20,13 @@ from urllib.parse import urljoin, urlparse
 from flask import abort
 from sqlalchemy.sql.expression import asc, desc
 from sqlalchemy.orm import joinedload
+from sqlalchemy.orm.attributes import flag_modified
 import clickhouse_driver
 
 from . import consts
 from . import utils
 from .models import db, Branch, Flow, Run, Stage, Job, Step, TestCaseResult
-from .models import TestCase, Issue, Artifact
+from .models import TestCase, Issue, Artifact, TestCaseComment
 from .schema import SchemaError
 from . import exec_utils
 
@@ -263,7 +264,7 @@ def get_run_results(run_id, start=0, limit=10, sort_field="name", sort_dir="asc"
     q = q.offset(start).limit(limit)
     results = []
     for tcr in q.all():
-        results.append(tcr.get_json())
+        results.append(tcr.get_json(with_comment=True))
     return {'items': results, 'total': total}, 200
 
 
@@ -362,7 +363,7 @@ def get_result_history(test_case_result_id, start=0, limit=10):
 def get_result(test_case_result_id):
     tcr = TestCaseResult.query.filter_by(id=test_case_result_id).one_or_none()
     if tcr is None:
-        abort(404, "Run not found")
+        abort(404, "Test case result not found")
     return tcr.get_json(with_extra=True), 200
 
 
@@ -464,3 +465,70 @@ def get_agent_jobs(agent_id, start=0, limit=10):
     for j in q.all():
         jobs.append(j.get_json())
     return {'items': jobs, 'total': total}, 200
+
+
+def create_or_update_test_case_comment(test_case_result_id, body):
+    author = body.get('author', None)
+    state = body.get('state', None)
+    text = body.get('text', None)
+    if author is None:
+        abort(400, "Missing author in request")
+    if state is None:
+        abort(400, "Missing state in request")
+    if text is None:
+        abort(400, "Missing text in request")
+
+    tcr = TestCaseResult.query.filter_by(id=test_case_result_id).one_or_none()
+    if tcr is None:
+        abort(404, "Run not found")
+
+    if tcr.comment:
+        tcc = tcr.comment
+    else:
+        # find if there exists a TestCaseComment for this test case and this branch
+        q = TestCaseComment.query
+        q = q.filter_by(test_case=tcr.test_case)
+        q = q.filter_by(branch=tcr.job.run.flow.branch)
+        tcc = q.one_or_none()
+
+        if tcc is None:
+            tcc = TestCaseComment(test_case=tcr.test_case,
+                                  branch=tcr.job.run.flow.branch,
+                                  last_flow=tcr.job.run.flow)
+        elif tcc.last_flow.created < tcr.job.run.flow.created:
+            tcc.last_flow = tcr.job.run.flow
+
+        tcr.comment = tcc
+
+    # find all other tcrs for the same test case and flow as current tcr
+    # and assign this comment to them
+    q = TestCaseResult.query
+    q = q.filter_by(test_case=tcr.test_case)
+    q = q.join('job', 'run', 'flow')
+    q = q.filter(Flow.id == tcr.job.run.flow_id)
+    for tcr2 in q.all():
+        tcr2.comment = tcc
+
+    # adjust relevancy is root cause found
+    if (tcc.state not in [consts.TC_COMMENT_BUG_IN_PRODUCT, consts.TC_COMMENT_BUG_IN_TEST] and
+        state in [consts.TC_COMMENT_BUG_IN_PRODUCT, consts.TC_COMMENT_BUG_IN_TEST]):
+        tcr.relevancy -= 1
+
+    # set user provided values in the comment
+    tcc.state = state
+    if not tcc.data:
+        tcc.data = []
+    tcc.data.append({
+        'author': author,
+        'date': utils.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+        'text': text,
+        'state': state,
+        'tcr': test_case_result_id
+    })
+    flag_modified(tcc, 'data')
+    db.session.commit()
+
+    resp = tcc.get_json()
+    resp['data'] = list(reversed(resp['data']))
+
+    return resp, 200

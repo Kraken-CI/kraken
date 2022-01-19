@@ -26,7 +26,7 @@ import pytimeparse
 import redis
 
 from ..models import db, Run, Job, TestCaseResult, Branch, Flow, Stage, Project, get_setting
-from ..models import AgentsGroup, Agent, System
+from ..models import AgentsGroup, Agent, System, TestCaseComment
 from ..models import RepoChanges
 from ..schema import prepare_new_planner_triggers
 from ..schema import check_and_correct_stage_schema
@@ -237,13 +237,33 @@ def _analyze_ci_test_case_result(job, job_tcr):
 
     tcrs = q.all()
     tcrs.reverse() # sort from oldest to latest
-    # determine instability
+    # determine instability and find last test case comment
+    tcc = None
     for idx, tcr in enumerate(tcrs):
         # log.info('TCR: %s %s %s', tcr, tcr.test_case.name, tcr.job.run.flow.created)
         if idx == 0:
             job_tcr.instability = 0
         elif tcr.result != tcrs[idx - 1].result:
             job_tcr.instability += 1
+
+        if tcr.comment:
+            tcc = tcr.comment
+
+    # if there is no comment in current tcr and there was some in the past, and current result is not passed
+    # then assing it to current one
+    if not job_tcr.comment and job_tcr.result != consts.TC_RESULT_PASSED:
+        if tcc is None:
+            q = TestCaseComment.query
+            q = q.filter_by(test_case=job_tcr.test_case, branch=job_tcr.job.run.flow.branch)
+            tcc = q.one_or_none()
+            if tcc:
+                # comment was not present in last 10 flows so move it to new state
+                tcc.state = consts.TC_COMMENT_NEW
+        job_tcr.comment = tcc
+
+        # update last flow in tcc if needed
+        if tcc and tcc.last_flow.created < job_tcr.job.run.flow.created:
+            tcc.last_flow = job_tcr.job.run.flow
 
     # determine age and change
     if len(tcrs) > 0:
@@ -274,6 +294,9 @@ def _analyze_ci_test_case_result(job, job_tcr):
     # +1 not pass
     if job_tcr.result != consts.TC_RESULT_PASSED:
         job_tcr.relevancy += 1
+        # +1 no comment or not root caused comment state
+        if not job_tcr.comment or job_tcr.comment.state not in [consts.TC_COMMENT_BUG_IN_PRODUCT, consts.TC_COMMENT_BUG_IN_TEST]:
+            job_tcr.relevancy += 1
     # +1 failure
     if job_tcr.result == consts.TC_RESULT_FAILED:
         job_tcr.relevancy += 1
@@ -286,7 +309,6 @@ def _analyze_ci_test_case_result(job, job_tcr):
     # +1 regression (age=0)
     if job_tcr.change == consts.TC_RESULT_CHANGE_REGR:
         job_tcr.relevancy += 1
-    # TODO: +1 no comment
 
 
 def _analyze_dev_test_case_result(job, job_tcr):
