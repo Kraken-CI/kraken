@@ -1,0 +1,214 @@
+<!-- comments dialog -->
+<p-dialog header="Comments for {{ tcrCommentName }}" [(visible)]="tcrCommentDlgVisible" [style]="{width: '60rem'}">
+    <div class="grid">
+        <div class="col field grid">
+            <label for="commentAuthor" class="col-fixed" style="width: 4rem;">Author</label>
+            <div class="col">
+                <input id="commentAuthor" type="text" class="inputfield w-full" [(ngModel)]="commentAuthor" autofocus pInputText>
+            </div>
+        </div>
+        <div class="col field grid">
+            <label for="commentState" class="col-fixed" style="width: 4rem;">State</label>
+            <div class="col">
+                <p-dropdown name="commentState"
+                            [(ngModel)]="commentState"
+                            [options]="commentStates"
+                            optionLabel="name"
+                            optionValue="value"
+                            [style]="{width: '100%'}"
+                            ></p-dropdown>
+
+            </div>
+        </div>
+    </div>
+    <div class="grid mb-2">
+        <label for="commentText" class="col-fixed align-items-start" style="width: 4em">Text</label>
+        <div class="col">
+            <textarea *ngIf="!preview" name="commentText" class="w-full" rows="5" [(ngModel)]="commentText" pInputTextarea></textarea>
+            <div *ngIf="preview" name="commentText" class="w-full"
+                 style="height: 8.5em; overflow-y: scroll; border: 1px solid #ccc; padding: 4px 10px;"
+                 [innerHTML]="previewHtml"></div>
+        </div>
+    </div>
+
+    <div class="grid justify-content-between">
+        <div class="grid justify-content-start mt-1 mb-4 ml-8">
+            <button type="button" (click)="previewComment()" pButton icon="pi pi-eye" label="Preview Markdown" class="p-button-sm p-button-outlined p-button-secondary"></button>
+        </div>
+        <div class="grid justify-content-end mt-1 mb-4">
+            <button type="button" (click)="cancelTcrComment()" pButton icon="pi pi-times" label="Cancel" class="p-button-outlined p-button-secondary mr-3"></button>
+            <button type="button" (click)="addTcrComment()" pButton icon="pi pi-plus" label="Add" class="mr-3"></button>
+        </div>
+    </div>
+
+
+    <ng-container *ngIf="tcr.comment">
+        <div *ngFor="let cmt of tcr.comment.data">
+            <div class="bg-blue-50 border-round-2 shadow-2 mt-1 p-2 grid">
+                <div class="mr-1">
+                    {{ cmt.date | localtime:'yyyy-LL-dd' }}
+                </div>
+                <div class="text-500 mr-3">
+                    {{ cmt.date | localtime:'HH:mm' }}
+                </div>
+                <div class="col-2 p-0">
+                    by {{ cmt.author }}
+                </div>
+                <div class="col-2 p-0">
+                    <span class="text-500">state:</span>
+                    {{ cmt.stateTxt }}
+                </div>
+                <div>
+                    <span class="text-500">test case result:</span>
+                    <a href="/test_case_results/{{ cmt.tcr }}" target="blank">{{ cmt.tcr }}</a>
+                </div>
+            </div>
+            <div class="mb-5 pl-2" [innerHTML]="cmt.html">
+            </div>
+        </div>
+    </ng-container>
+</p-dialog>
+
+<!-- overall stats -->
+<div style="display: flex; margin: 15px 5px;">
+    <strong style="margin: 2px 30px 0 0; font-size: 1.5em; width: 3em;">Stats</strong>
+
+    <div style="margin-right: 15px; align-self: center;">
+        Passed: {{ run.tests_passed }}
+    </div>
+    <div style="margin-right: 15px; align-self: center;">
+        Total: {{ run.tests_total }}
+    </div>
+    <div style="margin-right: 15px; align-self: center;">
+        Pass Ratio: {{ run.tests_total > 0 ? (run.tests_passed * 100 / run.tests_total).toFixed(1) : '-' }} %
+    </div>
+    <div style="margin-right: 20px; align-self: center;">
+        Not run: {{ run.tests_not_run }}
+    </div>
+</div>
+
+<!-- tests filters -->
+<div style="margin: 15px 5px;" class="grid p-fluid">
+    <strong style="margin: 2px 20px 0 0; font-size: 1.5em; width: 3em;">Filters</strong>
+
+    <div class="field mr-3">
+        <label>Result Status:</label>
+        <p-multiSelect
+            [options]="resultStatuses" [(ngModel)]="filterStatuses" optionLabel="name"
+            [filter]="false" [scrollHeight]="500" (onChange)="refreshResults()"></p-multiSelect>
+    </div>
+
+    <div class="field mr-3">
+        <label>Result Change:</label>
+        <p-multiSelect
+            [options]="resultChanges" [(ngModel)]="filterChanges" optionLabel="name"
+            [filter]="false" [scrollHeight]="500" (onChange)="refreshResults()"
+            [style]="{'vertical-align': 'middle'}"></p-multiSelect>
+    </div>
+
+    <div class="field mr-3">
+        <label>Age:</label>
+        <div style="display: flex; align-items: center;">
+            <p-inputNumber [showButtons]="true" [(ngModel)]="filterMinAge" [min]="0" [max]="filterMaxAge" size="2"
+                           (onInput)="refreshResults()"></p-inputNumber>
+            <div style="width: 1em; text-align: center;"> - </div>
+            <p-inputNumber [showButtons]="true" [(ngModel)]="filterMaxAge" [min]="filterMinAge" size="2"
+                           (onInput)="refreshResults()"></p-inputNumber>
+        </div>
+    </div>
+
+    <div style="align-self: flex-end;" class="field mr-3">
+        <p-button label="New" (onClick)="showLastTestChanges(resultsTable)" class="ml-1 mr-2" pTooltip="Show changes that happened in the last run"></p-button>
+    </div>
+
+    <div class="field mr-3">
+        <label>Instability:</label>
+        <div style="display: flex; align-items: center;">
+            <p-inputNumber [showButtons]="true" [(ngModel)]="filterMinInstability" [min]="0" [max]="filterMaxInstability" size="2"
+                           (onInput)="refreshResults()"></p-inputNumber>
+            <div style="width: 1em; text-align: center;"> - </div>
+            <p-inputNumber [showButtons]="true" [(ngModel)]="filterMaxInstability" [min]="filterMinInstability" [max]="10" size="2"
+                           (onInput)="refreshResults()"></p-inputNumber>
+        </div>
+    </div>
+
+    <div class="field mr-3">
+        <label>Test Case:</label>
+        <input type="text" pInputText [(ngModel)]="filterTestCaseText" (keydown)="filterResultsKeyDown($event, resultsTable)"/>
+    </div>
+
+    <div class="field mr-3">
+        <label>Job:</label>
+        <input type="text" pInputText [(ngModel)]="filterResultJob" (keydown)="filterResultsKeyDown($event, resultsTable)"/>
+    </div>
+
+    <div style="display: flex; align-self: flex-end;" class="field">
+        <p-button label="Refresh" icon="pi pi-refresh" (onClick)="refreshResults()" class="ml-1 mr-2"></p-button>
+        <p-button label="Reset" icon="pi pi-times-circle" (onClick)="resetResultsFilter(resultsTable)"></p-button>
+    </div>
+
+</div>
+
+<p-table #resultsTable
+         id="results"
+         [value]="results"
+         [lazy]="true"
+         (onLazyLoad)="loadResultsLazy($event)"
+         [paginator]="true"
+         [rows]="30"
+         [totalRecords]="totalResults"
+         [loading]="loadingResults"
+         [rowsPerPageOptions]="[10,20,30,50,100]"
+         [showCurrentPageReport]="true"
+         sortField="name">
+    <ng-template pTemplate="header">
+        <tr>
+            <th style="width: 100px;">Job</th>
+            <th style="width: 110px;" pSortableColumn="result">Result <p-sortIcon field="result"></p-sortIcon></th>
+            <th style="width: 100px;" pSortableColumn="change">Change <p-sortIcon field="change"></p-sortIcon></th>
+            <th style="width: 30%;" pSortableColumn="name">Name <p-sortIcon field="name"></p-sortIcon></th>
+            <th style="width: 80px;" pTooltip="Age, number of runs with no status change." pSortableColumn="age">Age <p-sortIcon field="age"></p-sortIcon></th>
+            <th style="width: 80px;" pTooltip="Instability, number of status changes in last 10 runs." pSortableColumn="instability">Ins. <p-sortIcon field="instability"></p-sortIcon></th>
+            <th style="width: 80px;" pTooltip="Relevancy,<br>+1 for not passed<br>+1 for not root caused problem<br>+1 for failure<br>+1 for instability <= 3<br>+1 for age < 5<br>+1 for regression." [escape]="false" pSortableColumn="relevancy">Rlvc <p-sortIcon field="relevancy"></p-sortIcon></th>
+            <th style="width: 160px;">Values</th>
+            <th style="width: 10%;">System</th>
+            <th style="width: 10%;">Config</th>
+            <th style="width: 10%;">Agent Group</th>
+            <th style="width: 10%;">Agent</th>
+            <!--<th style="width: 90px;">Cmd Line</th>-->
+            <th style="width: 4em;">Comment</th>
+            <th style="width: 4em;">Comment State</th>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-res>
+        <tr>
+            <td><a routerLink="/jobs/{{ res.job_id }}">{{ res.job_name }}</a></td>
+            <td [class]="resultToClass(res.result)">{{ resultToTxt(res.result) }}</td>
+            <td [class]="getResultChangeCls(res.change)">{{ getResultChangeTxt(res.change) }}</td>
+            <td><a routerLink="/test_case_results/{{res.id}}">{{ res.test_case_name }}</a></td>
+            <td>{{ res.age }}</td>
+            <td>{{ res.instability }}</td>
+            <td pTooltip="{{ getRelevancyDescr(res) }}" [escape]="false" >{{ res.relevancy }}</td>
+            <td>
+                <div *ngFor="let v of res.values | keyvalue">
+                    {{ v.key }}:&nbsp;{{ v.value.value }}
+                </div>
+            </td>
+            <td>{{ res.system_name }}</td>
+            <td>default</td>
+            <td>{{ res.agents_group_name }}</td>
+            <td>{{ res.agent_name }}</td>
+            <!--<td><p-button label="CmdLine" (onClick)="showCmdLine()" styleClass="p-button-outlined cmd-line-btn"></p-button></td>-->
+            <td (click)="showCommentDialog(res)" pTooltip="Click to add comment to test case result">
+                <span *ngIf="res.comment">{{ res.comment.data[0].text.slice(0, 10) }}...</span>
+                <i *ngIf="!res.comment" class="fa fa-edit" style="font-size: 0.9rem; padding-left: 0.5rem; color: #bbb;"></i>
+            </td>
+            <td (click)="showCommentDialog(res)" pTooltip="Click to add comment to test case result">
+                {{ res.comment && cmtStateToTxt(res.comment.state) }}
+            </td>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="paginatorright" let-state>
+        Total Records: {{ state.totalRecords }}
+    </ng-template>
+</p-table>
