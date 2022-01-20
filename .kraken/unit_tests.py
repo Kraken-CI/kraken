@@ -57,7 +57,7 @@ def stage(ctx):
                 "timeout": 300
             }, {
                 "tool": "shell",
-                "cmd": "docker run --name kkut -p 15432:5432 -e POSTGRES_DB=kkut -e POSTGRES_USER=kkut -e POSTGRES_PASSWORD=kkut postgres:11",
+                "cmd": "docker run --rm --name kkut -p 15432:5432 -e POSTGRES_DB=kkut -e POSTGRES_USER=kkut -e POSTGRES_PASSWORD=kkut postgres:11",
                 "background": True,
                 "timeout": 12400
             }, {
