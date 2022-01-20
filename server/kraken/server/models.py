@@ -612,9 +612,12 @@ class TestCaseResult(db.Model):
     age = Column(Integer, default=0)
     change = Column(Integer, default=consts.TC_RESULT_CHANGE_NO)
     relevancy = Column(Integer, default=0)
-    Index('ix_test_case_results_test_case_id', test_case_id)
     comment_id = Column(Integer, ForeignKey('test_case_comments.id'), nullable=True)
     comment = relationship('TestCaseComment', back_populates="test_case_results")
+
+    Index('ix_test_case_results_test_case_id', test_case_id)
+    Index('ix_test_case_results_job_id', job_id)
+    Index('ix_test_case_results_comment_id', comment_id)
 
     def __repr__(self):
         txt = 'TCR %s, result:%s' % (self.id, consts.TC_RESULTS_NAME[self.result])

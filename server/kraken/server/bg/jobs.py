@@ -14,6 +14,7 @@
 
 import os
 import json
+import time
 import logging
 import xmlrpc.client
 from collections import defaultdict
@@ -21,6 +22,7 @@ from collections import defaultdict
 from flask import Flask
 from sqlalchemy.sql.expression import asc, desc
 from sqlalchemy.orm.attributes import flag_modified
+from sqlalchemy.orm import joinedload
 import giturlparse
 import pytimeparse
 import redis
@@ -222,6 +224,7 @@ def _analyze_ci_test_case_result(job, job_tcr):
 
     # get previous 10 results
     q = TestCaseResult.query
+    q = q.options(joinedload('comment'))
     q = q.filter(TestCaseResult.id != job_tcr.id)
     q = q.filter_by(test_case_id=job_tcr.test_case_id)
     q = q.join('job')
@@ -234,6 +237,11 @@ def _analyze_ci_test_case_result(job, job_tcr):
     q = q.filter(Flow.created < job.run.flow.created)
     q = q.order_by(desc(Flow.created))
     q = q.limit(10)
+
+    # import sqlalchemy.dialects.postgresql
+    # s = q.statement.compile(compile_kwargs={"literal_binds": True},
+    #                         dialect=sqlalchemy.dialects.postgresql.dialect())
+    # log.info(' query: %s', s)
 
     tcrs = q.all()
     tcrs.reverse() # sort from oldest to latest
@@ -349,8 +357,15 @@ def _analyze_dev_test_case_result(job, job_tcr):
 def _analyze_job_results_history(job):
     # TODO: if branch is forked from another base branch take base branch results into account
 
+
+    q = TestCaseResult.query
+    q = q.filter_by(job=job)
+
     counts = [0, 0, 0, 0]
-    for job_tcr in job.results:
+    cnt = 0
+    total = 0
+    for job_tcr in q.all():
+        t0 = time.time()
         # analyze history
         if job.run.flow.kind == consts.FLOW_KIND_CI:  # CI
             _analyze_ci_test_case_result(job, job_tcr)
@@ -359,10 +374,16 @@ def _analyze_job_results_history(job):
 
         db.session.commit()
 
-        log.info('Analyzed result %s %s: %s', job_tcr, job_tcr.test_case.name,
+        t1 = time.time()
+        total += t1 - t0
+        cnt += 1
+        log.info('Analyzed result dt:%0.5f %s %s: %s', t1 - t0, job_tcr, job_tcr.test_case.name,
                  consts.TC_RESULT_CHANGES_NAME[job_tcr.change])
 
         counts[job_tcr.change] += 1
+
+    # current avg time is 0.0295s,
+    log.info('Analyzed in time:%0.5f, avg:%0.5f, count:%d', total, total / cnt, cnt)
 
     return counts
 
