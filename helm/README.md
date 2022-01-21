@@ -3,14 +3,14 @@
 [Kraken CI](https://kraken.ci/) is a modern CI/CD, open-source, on-premise system that is highly scalable and focused on testing.
 
 Features:
-  - flexible workflow planning using Starlark/Python
-  - distributed building and testing
-  - various executors: bare metal, Docker, LXD
-  - highly scalable to thousands of executors
-  - sophisticated test results analysis
-  - integrated with AWS EC2 and ECS, Azure VM and Kubernetes, with autoscaling
-  - supported webhooks from GitHub, GitLab and Gitea
-  - email and Slack notifications
+- flexible workflow planning using Starlark/Python
+- distributed building and testing
+- various executors: bare metal, Docker, LXD
+- highly scalable to thousands of executors
+- sophisticated test results analysis
+- integrated with AWS EC2 and ECS, Azure VM and Kubernetes, with autoscaling
+- supported webhooks from GitHub, GitLab and Gitea
+- email and Slack notifications
 
 More details about Kraken CI installation in Kubernetes can be found
 in [the installation guide](https://kraken.ci/docs/install-helm).

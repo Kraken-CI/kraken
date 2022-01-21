@@ -6,7 +6,6 @@ Create Date: 2022-01-20 07:45:48.954451
 
 """
 from alembic import op
-import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
@@ -52,8 +51,6 @@ def downgrade():
         if name.startswith('uq'):
             cmd = 'ALTER TABLE %s DROP CONSTRAINT %s' % (table, name)
             conn.execute(cmd)
-        else:
-            uq = ''
         print('dropping index %s' % name)
         cmd = "DROP INDEX IF EXISTS %s;" % name
         conn.execute(cmd)

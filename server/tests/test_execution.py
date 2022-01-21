@@ -13,12 +13,11 @@
 # limitations under the License.
 
 import logging
-from unittest.mock import patch
 
 import pytest
 
 from kraken.server import consts, initdb
-from kraken.server.models import db, Run, Job, TestCaseResult, Branch, Flow, Stage, Project, Issue, System, AgentsGroup, TestCase, Tool
+from kraken.server.models import db, Run, Job, TestCaseResult, Branch, Flow, Stage, Project, System, AgentsGroup, TestCase, Tool
 from kraken.server import execution
 
 from common import create_app
