@@ -33,7 +33,11 @@ def upgrade():
         if name.startswith('uq'):
             uq = ' UNIQUE '
             cmd = 'ALTER TABLE %s ADD CONSTRAINT %s UNIQUE (%s)' % (table, name, columns)
-            conn.execute(cmd)
+            with op.get_context().autocommit_block():
+                try:
+                    conn.execute(cmd)
+                except Exception:
+                    pass
         else:
             uq = ''
         cmd = "CREATE %s INDEX IF NOT EXISTS %s ON public.%s USING btree (%s);" % (uq, name, table, columns)
