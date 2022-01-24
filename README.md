@@ -2,6 +2,7 @@
 
 ![Release Version](https://img.shields.io/github/v/release/Kraken-CI/kraken)
 ![Release Date](https://img.shields.io/github/release-date/Kraken-CI/kraken)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FKraken-CI%2Fkraken.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FKraken-CI%2Fkraken?ref=badge_shield)
 
 ![Kraken Build](https://lab.kraken.ci/branch-badge/2)
 ![Kraken Tests](https://lab.kraken.ci/branch-badge/2/tests)
@@ -67,6 +68,9 @@ Distributed under the Apache 2.0 License. See `LICENSE` for more information.
 
 
 <!-- CONTACT -->
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FKraken-CI%2Fkraken.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FKraken-CI%2Fkraken?ref=badge_large)
+
 ## Contact
 
 Michal Nowikowski - godfryd@gmail.com
