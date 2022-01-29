@@ -502,7 +502,7 @@ class Step(db.Model, DatesMixin):
     status = Column(Integer)
     # services
 
-    def get_json(self):
+    def get_json(self, mask_secrets=None):
         data = dict(id=self.id,
                     index=self.index,
                     tool=self.tool.name,
@@ -511,6 +511,9 @@ class Step(db.Model, DatesMixin):
                     status=self.status,
                     result=self.result)
         for f, v in self.fields.items():
+            if mask_secrets:
+                for s in mask_secrets:
+                    v = v.replace(s, '******')
             data[f] = v
         return data
 
@@ -543,7 +546,7 @@ class Job(db.Model, DatesMixin):
     results = relationship('TestCaseResult', back_populates="job")
     issues = relationship('Issue', back_populates="job")
 
-    def get_json(self):
+    def get_json(self, mask_secrets=None):
         if self.started:
             if self.finished:
                 duration = self.finished - self.started
@@ -552,6 +555,11 @@ class Job(db.Model, DatesMixin):
             duration = duration_to_txt(duration)
         else:
             duration = ''
+
+        steps = []
+        for s in sorted(self.steps, key=lambda s: s.index):
+            s = s.get_json(mask_secrets=mask_secrets)
+            steps.append(s)
 
         return dict(id=self.id,
                     created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,
@@ -576,7 +584,7 @@ class Job(db.Model, DatesMixin):
                     agents_group_name=self.agents_group.name,
                     agent_id=self.agent_used_id if self.agent_used else 0,
                     agent_name=self.agent_used.name if self.agent_used else '',
-                    steps=[s.get_json() for s in sorted(self.steps, key=lambda s: s.index)])
+                    steps=steps)
 
     def __repr__(self):
         txt = 'Job %s, state:%s' % (self.id, consts.JOB_STATES_NAME[self.state])

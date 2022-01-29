@@ -26,9 +26,10 @@ import clickhouse_driver
 from . import consts
 from . import utils
 from .models import db, Branch, Flow, Run, Stage, Job, Step, TestCaseResult
-from .models import TestCase, Issue, Artifact, TestCaseComment
+from .models import TestCase, Issue, Artifact, TestCaseComment, Project
 from .schema import SchemaError
 from . import exec_utils
+from . import dbutils
 
 log = logging.getLogger(__name__)
 
@@ -269,6 +270,11 @@ def get_run_results(run_id, start=0, limit=10, sort_field="name", sort_dir="asc"
 
 
 def get_run_jobs(run_id, start=0, limit=10, include_covered=False):
+    run = Run.query.filter_by(id=run_id).one_or_none()
+    if not run:
+        abort(404, "Run not found")
+    mask_secrets = dbutils.get_secret_values(run.flow.branch.project)
+
     q = Job.query
     q = q.filter_by(run_id=run_id)
     if not include_covered:
@@ -278,7 +284,8 @@ def get_run_jobs(run_id, start=0, limit=10, include_covered=False):
     q = q.offset(start).limit(limit)
     jobs = []
     for j in q.all():
-        jobs.append(j.get_json())
+        j = j.get_json(mask_secrets=mask_secrets)
+        jobs.append(j)
     return {'items': jobs, 'total': total}, 200
 
 
