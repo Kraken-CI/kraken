@@ -36,6 +36,8 @@ from . import consts
 class StructLogger(logging.Logger):
     initial_context = {}
     context = {}
+    secrets_multi = []
+    secrets_single = []
 
     def _log(self, level, msg, args, exc_info=None, extra=None, stack_info=False, **kwargs):  # pylint: disable=arguments-differ
         if not extra:
@@ -56,6 +58,20 @@ class StructLogger(logging.Logger):
     def reset_ctx(self):
         StructLogger.context = StructLogger.initial_context.copy()
 
+    def set_secrets(self, secrets):
+        secrets_single = []
+        secrets_multi = []
+        for s in secrets:
+            s = s.splitlines()
+            if len(s) == 1:
+                secrets_single.append(s[0])
+            else:
+                secrets_multi.append(s)
+        secrets_single.sort(key=lambda e: len(e), reverse=True)
+        secrets_multi.sort(key=lambda e: len(e), reverse=True)
+        StructLogger.secrets_single = secrets_single
+        StructLogger.secrets_multi = secrets_multi
+
 
 logging.setLoggerClass(StructLogger)
 root_logger = StructLogger('root', logging.WARNING)  # pylint: disable=invalid-name
@@ -68,6 +84,169 @@ log = logging.getLogger(__name__)
 
 g_clickhouse_handler = None
 g_basic_logger_done = False
+g_masking_handler = None
+
+
+class MaskingLogRecord(logging.LogRecord):
+    def __init__(self, *args, **kwargs):
+        logging.LogRecord.__init__(self, *args, **kwargs)
+        self._msg = None
+        self._secrets = []
+
+    def add_mask_secret(self, secret, where):
+        self._secrets.append((secret, where))
+        self._msg = None
+
+    def mask_secrets(self, msg):
+        if not self._secrets:
+            return msg
+
+        for s, where in self._secrets:
+            if where == 'start':
+                msg2 = '******' + msg[len(s):]
+            elif where == 'end':
+                msg2 = msg[:-len(s)] + '******'
+            else:
+                msg2 = msg.replace(s, '******')
+            msg = msg2
+
+        return msg
+
+    def getMessage(self):
+        if self._msg:
+            return self._msg
+        msg = logging.LogRecord.getMessage(self)
+        msg = self.mask_secrets(msg)
+        self._msg = msg
+        return self._msg
+
+
+class MaskingHandler(logging.Handler):
+    def __init__(self):
+        super().__init__()
+        self._buffer = []
+        self._hanlders = {}
+
+    def add_handler(self, name, handler):
+        self._hanlders[name] = handler
+        handler.setLevel(self.level)
+
+    def remove_handler(self, name):
+        if name in self._hanlders:
+            del self._hanlders[name]
+
+    def setLevel(self, level):
+        super().setLevel(level)
+        for handler in self._hanlders.values():
+            handler.setLevel(level)
+
+    def setFormatter(self, fmt):
+        super().setFormatter(fmt)
+        for handler in self._hanlders.values():
+            handler.setFormatter(fmt)
+
+    def flush(self):
+        super().flush()
+        for handler in self._hanlders.values():
+            handler.flush()
+
+    def close(self):
+        super().close()
+        for handler in self._hanlders.values():
+            handler.close()
+
+    def true_emit(self, record):
+        for handler in self._hanlders.values():
+            handler.emit(record)
+
+    def emit(self, record):
+        # if there are no secrets them emit the record now
+        if not StructLogger.secrets_single and not StructLogger.secrets_multi:
+            # if there are some buffered records then flush them now
+            if self._buffer:
+                for rec in self._buffer:
+                    self.true_emit(rec)
+                self._buffer = []
+            self.true_emit(record)
+            return
+
+        max_secrets_lines = len(StructLogger.secrets_multi[0])
+        min_secrets_lines = len(StructLogger.secrets_multi[-1])
+
+        # if there are multi line secrets then buffer records
+        # and process them when the number of buffered records
+        # is equal or greater then min number of lines of all secrets
+        if StructLogger.secrets_multi:
+            self._buffer.append(record)
+
+            if len(self._buffer) < min_secrets_lines:
+                return
+
+            matched = False
+            for s in StructLogger.secrets_multi:
+                if len(s) > len(self._buffer):
+                    continue
+
+                # moving window over buffer if it is longer than secret
+                for w in range(0, len(self._buffer) - len(s) + 1):
+
+                    # match lines in secret and buffer window
+                    for idx, line in enumerate(s):
+                        rec = self._buffer[w + idx]
+                        msg = rec.getMessage()
+                        if idx == 0 and not msg.endswith(line):
+                            continue
+                        if idx == len(s) - 1 and not msg.startswith(line):
+                            continue
+                        if msg != line:
+                            continue
+                        # matched, so perform masking
+                        matched = True
+
+                    if matched:
+                        break
+
+                if matched:
+                    break
+
+            if matched:
+                # flush any lines before window
+                for i in range(0, w):
+                    rec = self._buffer[0]
+                    del self._buffer[0]
+                    self.true_emit(rec)
+
+                # replace secret in afected lines
+                for idx, line in enumerate(s):
+                    rec = self._buffer[0]
+                    del self._buffer[0]
+
+                    if idx == 0:
+                        rec.add_mask_secret(line, 'end')
+                    elif idx == len(s) - 1:
+                        rec.add_mask_secret(line, 'start')
+
+                    # drop lines between first and last lines
+
+                    if idx == 0 or idx == len(s) - 1:
+                        for ss in StructLogger.secrets_single:
+                            rec.add_mask_secret(ss, 'middle')
+                        self.true_emit(rec)
+
+            elif len(self._buffer) == max_secrets_lines:
+                # if number of buffered lines is equal to the number of the longest secret
+                # then make a space for new line in a buffer
+                rec = self._buffer[0]
+                del self._buffer[0]
+                for ss in StructLogger.secrets_single:
+                    rec.add_mask_secret(ss, 'middle')
+                self.true_emit(rec)
+
+        # if there are only single line secrets then process them now
+        if StructLogger.secrets_single and not StructLogger.secrets_multi:
+            for ss in StructLogger.secrets_single:
+                record.add_mask_secret(ss, 'middle')
+            self.true_emit(record)
 
 
 class ClickhouseFormatter(logging.Formatter):
@@ -170,8 +349,8 @@ class ClickhouseFormatter(logging.Formatter):
         return self.serialize(message)
 
 
-class ClickhouseHandler(DatagramHandler, SocketHandler):
-    """Python logging handler for Clickhouse. Sends events over TCP.
+class ClickhouseHandler(DatagramHandler):
+    """Python logging handler for Clickhouse. Sends events over UDP.
     :param host: The host of the Clickhouse server.
     :param port: The port of the Clickhouse server (default 9001).
     :param fqdn; Indicates whether to show fully qualified domain name or not (default False).
@@ -187,16 +366,21 @@ class ClickhouseHandler(DatagramHandler, SocketHandler):
 
 
 def setup_logging(service, clickhouse_addr=None):
-    global g_clickhouse_handler, g_basic_logger_done  # pylint: disable=global-statement
+    global g_clickhouse_handler, g_basic_logger_done, g_masking_handler  # pylint: disable=global-statement
+
+    logging.setLogRecordFactory(MaskingLogRecord)
 
     if not g_basic_logger_done:
-        logging.basicConfig(format=consts.LOG_FMT, level=logging.INFO)
+        g_masking_handler = MaskingHandler()
+        sh = logging.StreamHandler()
+        g_masking_handler.add_handler('stream', sh)
+        logging.basicConfig(format=consts.LOG_FMT, level=logging.INFO, handlers=[g_masking_handler])
         g_basic_logger_done = True
 
     l = logging.getLogger()
 
     if g_clickhouse_handler:
-        l.removeHandler(g_clickhouse_handler)
+        g_masking_handler.remove_handler('clickhouse')
         g_clickhouse_handler = None
 
     ch_addr = os.environ.get('KRAKEN_CLICKHOUSE_ADDR', None)
@@ -207,7 +391,7 @@ def setup_logging(service, clickhouse_addr=None):
     host, port = ch_addr.split(':')
     g_clickhouse_handler = ClickhouseHandler(host, int(port), fqdn=True)
     l.set_initial_ctx(service=service)
-    l.addHandler(g_clickhouse_handler)
+    g_masking_handler.add_handler('clickhouse', g_clickhouse_handler)
     log.info('setup logging on %s to clickhouse: %s', service, ch_addr)
 
 

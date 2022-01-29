@@ -173,6 +173,10 @@ def _handle_get_job(agent):
         agent.job.state = consts.JOB_STATE_ASSIGNED
         db.session.commit()
 
+    # prepare secrets
+    secrets = dbutils.get_secret_values(agent.job.run.flow.branch.project)
+    job['secrets'] = secrets
+
     return {'job': job}
 
 

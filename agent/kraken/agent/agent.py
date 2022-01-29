@@ -93,6 +93,18 @@ def check_integrity():
     return True
 
 
+def _enable_masking_secrets_in_logs(job):
+    secrets = []
+    if 'secrets' in job:
+        secrets = job['secrets']
+    log.set_secrets(secrets)
+
+
+def _disable_masking_secrets_in_logs():
+    log.set_secrets([])
+    log.info('')
+
+
 def run():
     kraken_version = pkg_resources.get_distribution('kraken-agent').version
 
@@ -150,10 +162,16 @@ def run():
 
             if job:
                 log.set_ctx(job=job['id'], run=job['run_id'])
+
+                _enable_masking_secrets_in_logs(job)
+
             log.info('received job: %s', str(job)[:200])
 
             if job:
                 _dispatch_job(srv, job)
+
+                # disable masking secrets in logs
+                _disable_masking_secrets_in_logs()
 
                 if one_job:
                     log.info("one job so terminating")

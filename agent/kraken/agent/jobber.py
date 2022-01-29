@@ -274,7 +274,8 @@ def _write_step_file(job_dir, step, idx):
 def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
     tool_name = step['tool']
     t0, t1, timeout = utils.get_times(deadline)
-    log.info('step %d. %s, now %s, deadline %s, time: %ds', idx, str(step)[:200], t0, t1, timeout)
+    step_str = '<id:%d tool:%s>' % (step['id'], step['tool'])
+    log.info('step %d. %s, now %s, deadline %s, time: %ds', idx, step_str, t0, t1, timeout)
     if tool_name not in tools:
         raise Exception('No such Kraken tool: %s' % tool_name)
     tool_path = tools[tool_name]

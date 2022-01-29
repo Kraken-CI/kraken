@@ -16,6 +16,7 @@ from sqlalchemy.sql.expression import desc
 
 from .models import Run, Flow, db
 from . import utils
+from . import consts
 
 
 def get_prev_run(stage_id, flow_kind):
@@ -44,3 +45,15 @@ def delete_agent(agent):
     for aa in agent.agents_groups:
         db.session.delete(aa)
     db.session.commit()
+
+
+def get_secret_values(project):
+    secrets = []
+    for s in project.secrets:
+        if s.deleted:
+            continue
+        if s.kind == consts.SECRET_KIND_SSH_KEY:
+            secrets.append(s.data['key'])
+        elif s.kind == consts.SECRET_KIND_SIMPLE:
+            secrets.append(s.data['secret'])
+    return secrets

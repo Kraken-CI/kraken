@@ -176,7 +176,7 @@
             <th style="width: 10%;">Agent Group</th>
             <th style="width: 10%;">Agent</th>
             <!--<th style="width: 90px;">Cmd Line</th>-->
-            <th style="width: 4em;">Comment</th>
+            <th style="width: 8%;">Comment</th>
             <th style="width: 4em;">Comment State</th>
         </tr>
     </ng-template>
@@ -200,7 +200,7 @@
             <td>{{ res.agent_name }}</td>
             <!--<td><p-button label="CmdLine" (onClick)="showCmdLine()" styleClass="p-button-outlined cmd-line-btn"></p-button></td>-->
             <td (click)="showCommentDialog(res)" pTooltip="Click to add comment to test case result">
-                <span *ngIf="res.comment">{{ res.comment.data[0].text.slice(0, 10) }}...</span>
+                <span *ngIf="res.comment">{{ res.comment.data[0].text.slice(0, 32) }}...</span>
                 <i *ngIf="!res.comment" class="fa fa-edit" style="font-size: 0.9rem; padding-left: 0.5rem; color: #bbb;"></i>
             </td>
             <td (click)="showCommentDialog(res)" pTooltip="Click to add comment to test case result">
