@@ -357,7 +357,6 @@ def _analyze_dev_test_case_result(job, job_tcr):
 def _analyze_job_results_history(job):
     # TODO: if branch is forked from another base branch take base branch results into account
 
-
     q = TestCaseResult.query
     q = q.filter_by(job=job)
 
@@ -383,7 +382,8 @@ def _analyze_job_results_history(job):
         counts[job_tcr.change] += 1
 
     # current avg time is 0.0295s,
-    log.info('Analyzed in time:%0.5f, avg:%0.5f, count:%d', total, total / cnt, cnt)
+    log.info('Analyzed in time:%0.5f, avg:%0.5f, count:%d',
+             total, total / cnt if cnt > 0 else 0, cnt)
 
     return counts
 
@@ -452,14 +452,15 @@ def _analyze_results_history(run_id):
         q = q.order_by(desc(Flow.created))
         prev_run = q.first()
         if prev_run is None:
-            log.info('skip anlysis of run %s as there is no prev run', run)
-            return
-        if prev_run.state != consts.RUN_STATE_PROCESSED:
+            log.info('this is the first run %s in the first flow %s of branch %s',
+                     run, run.flow, run.flow.branch)
+
+        elif prev_run.state != consts.RUN_STATE_PROCESSED:
             # prev run is not processed yet
             log.info('postpone anlysis of run %s as prev run %s is not processed yet', run, prev_run)
             return
 
-    # analyze jobs of this run
+    # analyze jobs history of this run
     run.new_cnt = run.no_change_cnt = run.regr_cnt = run.fix_cnt = 0
     run.issues_new = 0
     non_covered_jobs = Job.query.filter_by(run=run).filter_by(covered=False).all()
