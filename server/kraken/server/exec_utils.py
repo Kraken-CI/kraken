@@ -324,7 +324,7 @@ def trigger_jobs(run, replay=False):
         envs = j['environments']
         for env in envs:
             # get agents group
-            ag_name = substitute_val(env['agents_group'], run.args)
+            ag_name, _ = substitute_val(env['agents_group'], run.args)
             q = AgentsGroup.query
             q = q.filter_by(project=run.stage.branch.project, name=ag_name)
             agents_group = q.one_or_none()
@@ -345,9 +345,9 @@ def trigger_jobs(run, replay=False):
                 agents_count[agents_group.name] = cnt
 
             if not isinstance(env['system'], list):
-                systems = [substitute_val(env['system'], run.args)]
+                systems = [substitute_val(env['system'], run.args)[0]]
             else:
-                systems = [substitute_val(s, run.args) for s in env['system']]
+                systems = [substitute_val(s, run.args)[0] for s in env['system']]
 
             for system_name in systems:
                 # prepare system and executor
@@ -413,7 +413,7 @@ def trigger_jobs(run, replay=False):
                             # TODO: we should cancel these jobs if they are still running
 
                 db.session.commit()
-                log.info('created job %s', job.get_json())
+                log.info('created job %s', job.get_json(mask_secrets=True))
 
     run.started = now
     run.state = consts.RUN_STATE_IN_PROGRESS  # need to be set in case of replay

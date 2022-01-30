@@ -502,7 +502,26 @@ class Step(db.Model, DatesMixin):
     status = Column(Integer)
     # services
 
-    def get_json(self, mask_secrets=None):
+    def _filter_masked_fields(self, fields):
+        data = {}
+        masked_fields = [f[:-7] for f in fields if f.endswith('.masked')]
+
+        for f, v in fields.items():
+            if f.endswith('.masked'):
+                continue
+
+            if isinstance(v, dict):
+                data[f] = self._filter_masked_fields(v)
+                continue
+
+            if f in masked_fields:
+                data[f] = fields[f + '.masked']
+            else:
+                data[f] = v
+
+        return data
+
+    def get_json(self, mask_secrets=False):
         data = dict(id=self.id,
                     index=self.index,
                     tool=self.tool.name,
@@ -510,11 +529,13 @@ class Step(db.Model, DatesMixin):
                     job_id=self.job_id,
                     status=self.status,
                     result=self.result)
-        for f, v in self.fields.items():
-            if mask_secrets:
-                for s in mask_secrets:
-                    v = v.replace(s, '******')
-            data[f] = v
+
+        if mask_secrets:
+            d = self._filter_masked_fields(self.fields)
+            data.update(d)
+        else:
+            for f, v in self.fields.items():
+                data[f] = v
         return data
 
 
@@ -546,7 +567,7 @@ class Job(db.Model, DatesMixin):
     results = relationship('TestCaseResult', back_populates="job")
     issues = relationship('Issue', back_populates="job")
 
-    def get_json(self, mask_secrets=None):
+    def get_json(self, mask_secrets=False):
         if self.started:
             if self.finished:
                 duration = self.finished - self.started

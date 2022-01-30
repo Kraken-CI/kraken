@@ -175,10 +175,12 @@ def prepare_secrets(run):
 
 def substitute_val(val, args):
     if isinstance(val, dict):
-        return substitute_vars(val, args)
+        return substitute_vars(val, args), None
     if not isinstance(val, str):
-        return val
+        return val, None
 
+    val_masked = val
+    secret_present = False
     for var in re.findall(r'#{[A-Za-z_ ]+}', val):
         name = var[2:-1]
         if name in args:
@@ -186,14 +188,22 @@ def substitute_val(val, args):
             if  not isinstance(arg_val, str):
                 raise Exception("value '%s' of '%s' should have string type but has '%s'" % (str(arg_val), name, str(type(arg_val))))
             val = val.replace(var, arg_val)
-    return val
+            if name.startswith('KK_SECRET_'):
+                val_masked = val_masked.replace(var, '******')
+                secret_present = True
+
+    if secret_present:
+        return val, val_masked
+    return val, None
 
 
 def substitute_vars(fields, args):
     new_fields = {}
     for f, val in fields.items():
-        val = substitute_val(val, args)
+        val, val_masked = substitute_val(val, args)
         new_fields[f] = val
+        if val_masked is not None:
+            new_fields[f + '.masked'] = val_masked
     return new_fields
 
 
