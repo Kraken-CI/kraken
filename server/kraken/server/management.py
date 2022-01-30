@@ -44,6 +44,8 @@ log = logging.getLogger(__name__)
 
 
 def create_project(body):
+    if 'name' not in body:
+        abort(400, "Missing name in project")
     project = Project.query.filter_by(name=body['name']).one_or_none()
     if project is not None:
         abort(400, "Project with name %s already exists" % body['name'])

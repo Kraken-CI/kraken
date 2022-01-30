@@ -80,7 +80,7 @@ class Server():
         self.srv_addr = config.get('server')
         self.checks_num = 0
         self.last_check = datetime.datetime.now()
-        slot = os.environ.get('KRAKEN_AGENT_SLOT', None)
+        slot = os.environ.get('KRAKEN_AGENT_SLOT', None)  # this is used in the case when agent is run in Docker Swarm
         builtin = os.environ.get('KRAKEN_AGENT_BUILTIN', None)
         if slot is not None:
             self.my_addr = 'agent.%s' % slot

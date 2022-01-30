@@ -424,6 +424,17 @@ task :docker_down => DOCKER_COMPOSE do
   sh "#{DOCKER_COMPOSE} down -v --remove-orphans"
 end
 
+task :docker_test_up => [DOCKER_COMPOSE] do
+  sh "cp dot.env .env"
+  sh "cp docker-compose.yaml docker-compose-test.yaml"
+  sh "sed -i -e s/kk_ver/#{kk_ver}/g docker-compose-test.yaml"
+  sh "sed -i -e 's#127.0.0.1:5000#us-docker.pkg.dev/kraken-261806/kk#g' docker-compose-test.yaml"
+  sh "yq e 'del(.services.*.build)' -i docker-compose-test.yaml"
+  sh "yq e 'del(.services.agent.deploy)' -i docker-compose-test.yaml"
+  sh "#{DOCKER_COMPOSE} -f docker-compose-test.yaml down -v"
+  sh "#{DOCKER_COMPOSE} -f docker-compose-test.yaml up"
+end
+
 task :run_ch => DOCKER_COMPOSE do
   sh "#{DOCKER_COMPOSE} up clickhouse clickhouse-proxy"
 end
