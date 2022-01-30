@@ -28,10 +28,18 @@ export class BreadcrumbsComponent implements OnInit {
     flows = {}
     runs = {}
 
+    page = ''
+
     currProjectId = 0
     currBranchId = 0
     currFlowKind = 'CI'
+
     currFlowId = 0
+    prevFlowId = 0
+    prevFlowLabel = ''
+    nextFlowId = 0
+    nextFlowLabel = ''
+
     currRunId = 0
 
     constructor(
@@ -42,6 +50,30 @@ export class BreadcrumbsComponent implements OnInit {
         protected breadcrumbService: BreadcrumbsService
     ) {}
 
+    getFlowsKey() {
+        return '' + this.currFlowId + '-' + this.currFlowKind
+    }
+
+    establishPrevNextFlows() {
+        const flowsKey = this.getFlowsKey()
+        const flows = this.flows[flowsKey]
+
+        this.nextFlowId = 0
+        this.prevFlowId = 0
+        for (let i = 0; i < flows.length; i++) {
+            if (flows[i].id === this.currFlowId) {
+                if (i - 1 >= 0) {
+                    this.nextFlowId = flows[i - 1].id
+                    this.nextFlowLabel = flows[i - 1].label
+                }
+                if (i + 1 < flows.length) {
+                    this.prevFlowId = flows[i + 1].id
+                    this.prevFlowLabel = flows[i + 1].label
+                }
+            }
+        }
+    }
+
     ngOnInit() {
         this.breadcrumbsIn = this.breadcrumbService.getCrumbs()
 
@@ -49,6 +81,9 @@ export class BreadcrumbsComponent implements OnInit {
             if (data.length === 0) {
                 return
             }
+
+            this.page = data[data.length - 1].label
+
             let getBranches = false
             let getFlows = false
             let getRuns = false
@@ -124,11 +159,11 @@ export class BreadcrumbsComponent implements OnInit {
             }
 
             if (getFlows) {
-                const flowsKey =
-                    '' + this.currBranchId + '-' + this.currFlowKind
+                const flowsKey = this.getFlowsKey()
                 if (
                     this.flows[flowsKey] === undefined ||
-                    this.flows[flowsKey].length === 0
+                    this.flows[flowsKey].length === 0 ||
+                    this.nextFlowId === 0
                 ) {
                     this.executionService
                         .getFlows(
@@ -140,7 +175,10 @@ export class BreadcrumbsComponent implements OnInit {
                         )
                         .subscribe((flows) => {
                             this.flows[flowsKey] = flows.items
+                            this.establishPrevNextFlows()
                         })
+                } else {
+                    this.establishPrevNextFlows()
                 }
             }
 
@@ -182,11 +220,14 @@ export class BreadcrumbsComponent implements OnInit {
                 )
                 break
             case 'Flows':
-                const flowsKey =
-                    '' + this.currBranchId + '-' + this.currFlowKind
+                const flowsKey = this.getFlowsKey()
                 this.crumbMenuItems = this.flows[flowsKey].map((f) => {
+                    let label = f.label
+                    if (f.id === this.currFlowId) {
+                        label += ' <='
+                    }
                     return {
-                        label: f.id + ' - ' + f.label,
+                        label: label,
                         routerLink: '/flows/' + f.id,
                     }
                 })
