@@ -97,10 +97,9 @@ export class RunResultsComponent implements OnInit, OnDestroy {
             const runId = parseInt(params.get('id'), 10)
             this.run.id = runId
 
-            const tab = params.get('tab')
+            let tab = params.get('tab')
             if (tab === '') {
-                this.router.navigate(['/runs/' + runId + '/jobs'])
-                return
+                tab = 'jobs'
             }
 
             if (runId !== this.runId) {
