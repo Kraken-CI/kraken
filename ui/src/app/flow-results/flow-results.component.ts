@@ -79,11 +79,15 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
         })
     }
 
-    ngOnDestroy() {
+    cancelRefreshTimer() {
         if (this.refreshTimer) {
             clearTimeout(this.refreshTimer)
             this.refreshTimer = null
         }
+    }
+
+    ngOnDestroy() {
+        this.cancelRefreshTimer()
     }
 
     _getRunForStage(stageName) {
@@ -151,7 +155,9 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
     }
 
     refresh() {
+        this.cancelRefreshTimer()
         this.refreshing = true
+
         this.executionService.getFlow(this.flowId).subscribe((flow) => {
             this.refreshing = false
 
