@@ -345,8 +345,10 @@ good-names=a,
            rf,
            rx,
            s,
+           ss,
            sa,
            s2,
+           sh,
            db,
            ds,
            dt,
@@ -360,11 +362,13 @@ good-names=a,
            ts,
            us,
            vm,
+           w,
            Run,
            _,
            log,
            g_clickhouse_handler,
-           g_basic_logger_done
+           g_basic_logger_done,
+           g_masking_handler
 
 # Include a hint for the correct naming format with invalid-name.
 include-naming-hint=no

@@ -26,7 +26,7 @@ import clickhouse_driver
 from . import consts
 from . import utils
 from .models import db, Branch, Flow, Run, Stage, Job, Step, TestCaseResult
-from .models import TestCase, Issue, Artifact, TestCaseComment, Project
+from .models import TestCase, Issue, Artifact, TestCaseComment
 from .schema import SchemaError
 from . import exec_utils
 from . import dbutils

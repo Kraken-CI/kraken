@@ -18,7 +18,7 @@ import socket
 import logging
 import datetime
 import traceback
-from logging.handlers import DatagramHandler, SocketHandler
+from logging.handlers import DatagramHandler
 
 # try to import sentry SDK
 try:
@@ -67,8 +67,8 @@ class StructLogger(logging.Logger):
                 secrets_single.append(s[0])
             else:
                 secrets_multi.append(s)
-        secrets_single.sort(key=lambda e: len(e), reverse=True)
-        secrets_multi.sort(key=lambda e: len(e), reverse=True)
+        secrets_single.sort(key=len, reverse=True)
+        secrets_multi.sort(key=len, reverse=True)
         StructLogger.secrets_single = secrets_single
         StructLogger.secrets_multi = secrets_multi
 
@@ -183,6 +183,7 @@ class MaskingHandler(logging.Handler):
                 return
 
             matched = False
+            s = None
             for s in StructLogger.secrets_multi:
                 if len(s) > len(self._buffer):
                     continue
@@ -209,9 +210,9 @@ class MaskingHandler(logging.Handler):
                 if matched:
                     break
 
-            if matched:
+            if s and matched:
                 # flush any lines before window
-                for i in range(0, w):
+                for _ in range(0, w):
                     rec = self._buffer[0]
                     del self._buffer[0]
                     self.true_emit(rec)
@@ -228,7 +229,7 @@ class MaskingHandler(logging.Handler):
 
                     # drop lines between first and last lines
 
-                    if idx == 0 or idx == len(s) - 1:
+                    if idx in [0, len(s) - 1]:
                         for ss in StructLogger.secrets_single:
                             rec.add_mask_secret(ss, 'middle')
                         self.true_emit(rec)
