@@ -454,6 +454,7 @@ class Run(db.Model, DatesMixin):
                     stage_id=self.stage_id,
                     flow_id=self.flow_id,
                     flow_kind='ci' if self.flow.kind == 0 else 'dev',
+                    flow_label=self.flow.get_label(),
                     args=self.args,
                     jobs_total=jobs_total,
                     jobs_waiting=jobs_waiting,

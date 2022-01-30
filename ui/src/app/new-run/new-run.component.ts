@@ -62,6 +62,7 @@ export class NewRunComponent implements OnInit {
                 {
                     label: 'Flows',
                     flow_id: flow.id,
+                    flow_label: flow.label,
                 },
             ]
             this.breadcrumbService.setCrumbs(crumbs)

@@ -1898,6 +1898,10 @@ components:
         flow_id:
           type: integer
           format: int64
+        flow_kind:
+          type: string
+        flow_label:
+          type: string
         stage_id:
           type: integer
           format: int64
@@ -1906,8 +1910,6 @@ components:
         args:
           type: object
           properties: {}
-        flow_kind:
-          type: string
         created:
           type: string
           format: date-time

@@ -178,6 +178,7 @@ export class RunResultsComponent implements OnInit, OnDestroy {
                         {
                             label: 'Flows',
                             flow_id: run.flow_id,
+                            flow_label: run.flow_label,
                         },
                         {
                             label: 'Stages',

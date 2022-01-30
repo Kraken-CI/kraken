@@ -72,6 +72,7 @@ export class TestCaseResultComponent implements OnInit {
                 {
                     label: 'Flows',
                     flow_id: this.result.flow_id,
+                    flow_label: '' + this.result.flow_id,
                 },
                 {
                     label: 'Stages',

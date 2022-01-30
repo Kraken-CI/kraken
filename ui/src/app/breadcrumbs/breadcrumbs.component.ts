@@ -127,7 +127,7 @@ export class BreadcrumbsComponent implements OnInit {
                         break
                     case 'Flows':
                         it2.url = '/flows/' + it.flow_id
-                        it2.id = it.flow_id
+                        it2.id = it.flow_label
                         this.currFlowId = it.flow_id
                         getFlows = true
                         break

@@ -181,6 +181,7 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
                 {
                     label: 'Flows',
                     flow_id: flow.id,
+                    flow_label: flow.label,
                 },
             ]
             this.breadcrumbService.setCrumbs(crumbs)
