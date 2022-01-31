@@ -7,6 +7,7 @@ import { MenuItem } from 'primeng/api'
 import { ManagementService } from '../backend/api/management.service'
 import { ExecutionService } from '../backend/api/execution.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
+import { datetimeToLocal } from '../utils'
 
 @Component({
     selector: 'app-breadcrumbs',
@@ -222,13 +223,16 @@ export class BreadcrumbsComponent implements OnInit {
             case 'Flows':
                 const flowsKey = this.getFlowsKey()
                 this.crumbMenuItems = this.flows[flowsKey].map((f) => {
-                    let label = f.label
+                    let d = datetimeToLocal(f.created, 'yyyy-LL-dd')
+                    let label = `${f.label} &nbsp;&nbsp;&nbsp;&nbsp;<small style="color:#aaa">${d}</small>`
                     if (f.id === this.currFlowId) {
                         label += ' <='
+                        label = `<b>${label}</b>`
                     }
                     return {
                         label: label,
                         routerLink: '/flows/' + f.id,
+                        escape: false,
                     }
                 })
                 break
