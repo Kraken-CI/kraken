@@ -5,6 +5,7 @@ import { Title } from '@angular/platform-browser'
 import { MenuItem } from 'primeng/api'
 
 import { ExecutionService } from '../backend/api/execution.service'
+import { ResultsService } from '../backend/api/results.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
 import { TestCaseResults } from '../test-case-results'
 import { datetimeToLocal } from '../utils'
@@ -35,6 +36,7 @@ export class TestCaseResultComponent implements OnInit {
         private route: ActivatedRoute,
         private router: Router,
         protected executionService: ExecutionService,
+        protected resultsService: ResultsService,
         protected breadcrumbService: BreadcrumbsService,
         private titleService: Title
     ) {}
@@ -51,7 +53,7 @@ export class TestCaseResultComponent implements OnInit {
             },
         ])
 
-        this.executionService.getResult(this.tcrId).subscribe((result) => {
+        this.resultsService.getResult(this.tcrId).subscribe((result) => {
             this.result = result
             const crumbs = [
                 {
@@ -326,7 +328,7 @@ export class TestCaseResultComponent implements OnInit {
     }
 
     loadResultsLazy(event) {
-        this.executionService
+        this.resultsService
             .getResultHistory(this.tcrId, event.first, event.rows)
             .subscribe((data) => {
                 this.results = data.items

@@ -1,4 +1,4 @@
-# Copyright 2020 The Kraken Authors
+# Copyright 2020-2022 The Kraken Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,13 +20,12 @@ from urllib.parse import urljoin, urlparse
 from flask import abort
 from sqlalchemy.sql.expression import asc, desc
 from sqlalchemy.orm import joinedload
-from sqlalchemy.orm.attributes import flag_modified
 import clickhouse_driver
 
 from . import consts
 from . import utils
-from .models import db, Branch, Flow, Run, Stage, Job, Step, TestCaseResult
-from .models import TestCase, Issue, Artifact, TestCaseComment
+from .models import db, Branch, Flow, Run, Stage, Job, Step
+from .models import Issue, Artifact
 from .schema import SchemaError
 from . import exec_utils
 
@@ -208,66 +207,6 @@ def get_runs(stage_id):
     return runs, 200
 
 
-def get_run_results(run_id, start=0, limit=10, sort_field="name", sort_dir="asc",
-                    statuses=None, changes=None,
-                    min_age=None, max_age=None,
-                    min_instability=None, max_instability=None,
-                    test_case_text=None, job=None):
-    log.info('filters %s %s %s %s %s %s', statuses, changes, min_age, max_age, min_instability, max_instability)
-    q = TestCaseResult.query
-    q = q.options(joinedload('test_case'),
-                  joinedload('job'),
-                  joinedload('job.agents_group'),
-                  joinedload('job.agent_used'))
-    q = q.join('job')
-    q = q.filter(Job.run_id == run_id, Job.covered.is_(False))
-    if statuses:
-        q = q.filter(TestCaseResult.result.in_(statuses))
-    if changes:
-        q = q.filter(TestCaseResult.change.in_(changes))
-    if min_age is not None:
-        q = q.filter(TestCaseResult.age >= min_age)
-    if max_age is not None:
-        q = q.filter(TestCaseResult.age <= max_age)
-    if min_instability is not None:
-        q = q.filter(TestCaseResult.instability >= min_instability)
-    if max_instability is not None:
-        q = q.filter(TestCaseResult.instability <= max_instability)
-    if test_case_text is not None:
-        q = q.join('test_case').filter(TestCase.name.ilike('%' + test_case_text + '%'))
-    if job is not None:
-        if job.isdigit():
-            job_id = int(job)
-            q = q.filter(Job.id == job_id)
-        else:
-            q = q.filter(Job.name.ilike('%' + job + '%'))
-
-    total = q.count()
-
-    sort_func = asc
-    if sort_dir == "desc":
-        sort_func = desc
-
-    if sort_field == "result":
-        q = q.order_by(sort_func('result'))
-    elif sort_field == "change":
-        q = q.order_by(sort_func('change'))
-    elif sort_field == "age":
-        q = q.order_by(sort_func('age'))
-    elif sort_field == "instability":
-        q = q.order_by(sort_func('instability'))
-    elif sort_field == "relevancy":
-        q = q.order_by(sort_func('relevancy'))
-    else:
-        q = q.join('test_case').order_by(sort_func('name'))
-
-    q = q.offset(start).limit(limit)
-    results = []
-    for tcr in q.all():
-        results.append(tcr.get_json(with_comment=True))
-    return {'items': results, 'total': total}, 200
-
-
 def get_run_jobs(run_id, start=0, limit=10, include_covered=False):
     q = Job.query
     q = q.filter_by(run_id=run_id)
@@ -331,41 +270,6 @@ def get_run_artifacts(run_id):
         art['url'] = urljoin(base_url, art['path'].strip('/'))
         artifacts.append(art)
     return {'items': artifacts, 'total': len(artifacts)}, 200
-
-
-def get_result_history(test_case_result_id, start=0, limit=10):
-    tcr = TestCaseResult.query.filter_by(id=test_case_result_id).one_or_none()
-
-    q = TestCaseResult.query
-    q = q.options(joinedload('test_case'),
-                  joinedload('job'),
-                  joinedload('job.agents_group'),
-                  joinedload('job.agent_used'))
-    q = q.filter_by(test_case_id=tcr.test_case_id)
-    q = q.join('job')
-    q = q.filter_by(agents_group=tcr.job.agents_group)
-    q = q.filter_by(system=tcr.job.system)
-    q = q.join('job', 'run', 'flow', 'branch')
-    q = q.filter(Branch.id == tcr.job.run.flow.branch_id)
-    q = q.filter(Flow.kind == 0)  # CI
-    q = q.filter(Flow.created <= tcr.job.run.flow.created)
-    q = q.order_by(desc(Flow.created))
-
-    total = q.count()
-    q = q.offset(start).limit(limit)
-    results = []
-    if tcr.job.run.flow.kind == 1:  # DEV
-        results.append(tcr.get_json(with_extra=True))
-    for tcr in q.all():
-        results.append(tcr.get_json(with_extra=True))
-    return {'items': results, 'total': total}, 200
-
-
-def get_result(test_case_result_id):
-    tcr = TestCaseResult.query.filter_by(id=test_case_result_id).one_or_none()
-    if tcr is None:
-        abort(404, "Test case result not found")
-    return tcr.get_json(with_extra=True), 200
 
 
 def get_run(run_id):
@@ -466,70 +370,3 @@ def get_agent_jobs(agent_id, start=0, limit=10):
     for j in q.all():
         jobs.append(j.get_json())
     return {'items': jobs, 'total': total}, 200
-
-
-def create_or_update_test_case_comment(test_case_result_id, body):
-    author = body.get('author', None)
-    state = body.get('state', None)
-    text = body.get('text', None)
-    if author is None:
-        abort(400, "Missing author in request")
-    if state is None:
-        abort(400, "Missing state in request")
-    if text is None:
-        abort(400, "Missing text in request")
-
-    tcr = TestCaseResult.query.filter_by(id=test_case_result_id).one_or_none()
-    if tcr is None:
-        abort(404, "Run not found")
-
-    if tcr.comment:
-        tcc = tcr.comment
-    else:
-        # find if there exists a TestCaseComment for this test case and this branch
-        q = TestCaseComment.query
-        q = q.filter_by(test_case=tcr.test_case)
-        q = q.filter_by(branch=tcr.job.run.flow.branch)
-        tcc = q.one_or_none()
-
-        if tcc is None:
-            tcc = TestCaseComment(test_case=tcr.test_case,
-                                  branch=tcr.job.run.flow.branch,
-                                  last_flow=tcr.job.run.flow)
-        elif tcc.last_flow.created < tcr.job.run.flow.created:
-            tcc.last_flow = tcr.job.run.flow
-
-        tcr.comment = tcc
-
-    # find all other tcrs for the same test case and flow as current tcr
-    # and assign this comment to them
-    q = TestCaseResult.query
-    q = q.filter_by(test_case=tcr.test_case)
-    q = q.join('job', 'run', 'flow')
-    q = q.filter(Flow.id == tcr.job.run.flow_id)
-    for tcr2 in q.all():
-        tcr2.comment = tcc
-
-    # adjust relevancy is root cause found
-    if (tcc.state not in [consts.TC_COMMENT_BUG_IN_PRODUCT, consts.TC_COMMENT_BUG_IN_TEST] and
-        state in [consts.TC_COMMENT_BUG_IN_PRODUCT, consts.TC_COMMENT_BUG_IN_TEST]):
-        tcr.relevancy -= 1
-
-    # set user provided values in the comment
-    tcc.state = state
-    if not tcc.data:
-        tcc.data = []
-    tcc.data.append({
-        'author': author,
-        'date': utils.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
-        'text': text,
-        'state': state,
-        'tcr': test_case_result_id
-    })
-    flag_modified(tcc, 'data')
-    db.session.commit()
-
-    resp = tcc.get_json()
-    resp['data'] = list(reversed(resp['data']))
-
-    return resp, 200

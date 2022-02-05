@@ -8,7 +8,6 @@ import { MessageService } from 'primeng/api'
 import { AuthService } from '../auth.service'
 import { ExecutionService } from '../backend/api/execution.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
-import { TestCaseResults } from '../test-case-results'
 import { Job, Run } from '../backend/model/models'
 import { TcrTableComponent } from '../tcr-table/tcr-table.component'
 
@@ -76,20 +75,13 @@ export class RunResultsComponent implements OnInit, OnDestroy {
     }
 
     switchToTab(tabName) {
-        let idx = 0
-        if (tabName === 'results') {
-            idx = 1
-        } else if (tabName === 'issues') {
-            idx = 2
-        } else if (tabName === 'artifacts') {
-            idx = 3
-        } else if (tabName === 'reports') {
-            idx = 4
-        } else if (tabName === 'details') {
-            idx = 5
+        for (let idx = 0; idx < this.tabs.length; idx++) {
+            if (this.tabs[idx].routerLink.endsWith('/' + tabName)) {
+                this.activeTab = this.tabs[idx]
+                this.activeTabIdx = idx
+                return
+            }
         }
-        this.activeTab = this.tabs[idx]
-        this.activeTabIdx = idx
     }
 
     ngOnInit() {
@@ -97,11 +89,15 @@ export class RunResultsComponent implements OnInit, OnDestroy {
             const runId = parseInt(params.get('id'), 10)
             this.run.id = runId
 
-            let tab = params.get('tab')
-            if (tab === '') {
-                tab = 'jobs'
+            const tab = params.get('tab')
+            if (!tab) {
+                this.router.navigate(['/runs/' + runId + '/jobs'], {
+                    replaceUrl: true,
+                })
+                return
             }
 
+            // only when it is the first load or a run is changed
             if (runId !== this.runId) {
                 this.runId = runId
 

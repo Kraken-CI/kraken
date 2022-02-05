@@ -49,6 +49,10 @@ const routes: Routes = [
         component: FlowResultsComponent,
     },
     {
+        path: 'flows/:id/:tab',
+        component: FlowResultsComponent,
+    },
+    {
         path: 'runs/:id',
         redirectTo: 'runs/:id/',
     },

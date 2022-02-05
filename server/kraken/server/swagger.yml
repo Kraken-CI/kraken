@@ -81,12 +81,32 @@ paths:
         201:
           description: Successfully
           content: {}
+  /systems:
+    get:
+      tags:
+      - Management
+      summary: Get systems
+      description: Get systems
+      operationId: get_systems
+      responses:
+        200:
+          description: An array of system
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Systems'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
   /projects:
     get:
       tags:
       - Management
-      summary: Create a project
-      description: Create a new project
+      summary: Get projects
+      description: Get projects
       operationId: get_projects
       responses:
         201:
@@ -596,6 +616,33 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
+  /flows/{flow_id}/analysis:
+    get:
+      tags:
+      - Results
+      summary: Results analysis of given flow
+      operationId: get_flow_analysis
+      parameters:
+      - name: flow_id
+        in: path
+        description: ID of pet to return
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        200:
+          description: A paged array of runs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlowAnalysis'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
   /stages/{stage_id}:
     get:
       tags:
@@ -755,7 +802,7 @@ paths:
   /runs/{run_id}/results:
     get:
       tags:
-      - Execution
+      - Results
       summary: List all results
       operationId: get_run_results
       parameters:
@@ -826,6 +873,18 @@ paths:
         in: query
         schema:
           type: string
+      - name: systems
+        in: query
+        schema:
+          type: array
+          items:
+            type: integer
+      - name: groups
+        in: query
+        schema:
+          type: array
+          items:
+            type: integer
       responses:
         200:
           description: A paged array of runs
@@ -1067,7 +1126,7 @@ paths:
   /test_case_results/{test_case_result_id}:
     get:
       tags:
-      - Execution
+      - Results
       summary: List all results
       operationId: get_result
       parameters:
@@ -1094,7 +1153,7 @@ paths:
   /test_case_results/{test_case_result_id}/history:
     get:
       tags:
-      - Execution
+      - Results
       summary: List all results
       operationId: get_result_history
       parameters:
@@ -1133,7 +1192,7 @@ paths:
   /test_case_results/{test_case_result_id}/comment:
     post:
       tags:
-      - Execution
+      - Results
       summary: Create or update a comment to the result
       description: Create or update a comment to the result
       operationId: create_or_update_test_case_comment
@@ -2042,6 +2101,13 @@ components:
         total:
           type: integer
           format: int64
+    FlowAnalysis:
+      type: object
+      properties:
+        stats:
+          type: object
+        recs_map:
+          type: object
     ReportEntry:
       type: object
       properties:
@@ -2427,6 +2493,26 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Group'
+        total:
+          type: integer
+          format: int64
+    System:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        executor:
+          type: string
+    Systems:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/System'
         total:
           type: integer
           format: int64

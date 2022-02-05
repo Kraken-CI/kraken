@@ -1,13 +1,17 @@
 import { Component, Input, OnInit, ViewChild } from '@angular/core'
+import { ActivatedRoute } from '@angular/router'
 
 import { MessageService } from 'primeng/api'
 import { Table } from 'primeng/table'
 
 import { marked } from 'marked'
+import { combineLatest } from 'rxjs'
 
+import { ManagementService } from '../backend/api/management.service'
 import { ExecutionService } from '../backend/api/execution.service'
+import { ResultsService } from '../backend/api/results.service'
 import { TestCaseResults } from '../test-case-results'
-import { Run } from '../backend/model/models'
+import { Run, System, Group } from '../backend/model/models'
 
 @Component({
     selector: 'app-tcr-table',
@@ -17,6 +21,9 @@ import { Run } from '../backend/model/models'
 export class TcrTableComponent implements OnInit {
     @Input()
     run: Run = { state: 'in-progress', tests_passed: 0 }
+
+    systems: System[] = []
+    groups: Group[] = []
 
     // results
     results: any[]
@@ -28,10 +35,11 @@ export class TcrTableComponent implements OnInit {
     filterChanges: any[] = []
     filterMinAge = 0
     filterMaxAge = 1000
-    filterMinInstability = 0
-    filterMaxInstability = 10
+    filterInstabilityRange: number[] = [0, 10]
     filterTestCaseText = ''
     filterResultJob = ''
+    filterResultSystems: System[] = []
+    filterResultGroups: Group[] = []
 
     @ViewChild('resultsTable') resultsTable: Table
 
@@ -47,7 +55,10 @@ export class TcrTableComponent implements OnInit {
     commentStates = []
 
     constructor(
+        private route: ActivatedRoute,
+        protected managementService: ManagementService,
         protected executionService: ExecutionService,
+        protected resultsService: ResultsService,
         private msgSrv: MessageService
     ) {
         this.resultStatuses = [
@@ -89,7 +100,33 @@ export class TcrTableComponent implements OnInit {
     ngOnInit(): void {
         this.results = []
         this.resetResultsFilter(null)
-        this.loadResultsLazy({ first: 0, rows: 30 })
+
+        const systems$ = this.managementService.getSystems()
+        const groups$ = this.managementService.getGroups(0, 1000)
+        combineLatest(systems$, groups$, this.route.queryParams).subscribe(
+            ([systems, groups, params]) => {
+                this.systems = systems.items
+                this.groups = groups.items
+
+                const sysId = parseInt(params.system, 10)
+                if (sysId) {
+                    const sys = this.systems.find((s) => s.id === sysId)
+                    if (sys) {
+                        this.filterResultSystems = [sys]
+                    }
+                }
+
+                const grpId = parseInt(params.group, 10)
+                if (grpId) {
+                    const grp = this.groups.find((g) => g.id === grpId)
+                    if (grp) {
+                        this.filterResultGroups = [grp]
+                    }
+                }
+
+                this.loadResultsLazy({ first: 0, rows: 30 })
+            }
+        )
     }
 
     loadResultsLazy(event) {
@@ -111,7 +148,7 @@ export class TcrTableComponent implements OnInit {
         }
 
         this.loadingResults = true
-        this.executionService
+        this.resultsService
             .getRunResults(
                 this.run.id,
                 event.first,
@@ -122,10 +159,12 @@ export class TcrTableComponent implements OnInit {
                 changes,
                 this.filterMinAge,
                 this.filterMaxAge,
-                this.filterMinInstability,
-                this.filterMaxInstability,
+                this.filterInstabilityRange[0],
+                this.filterInstabilityRange[1],
                 this.filterTestCaseText,
-                this.filterResultJob
+                this.filterResultJob,
+                this.filterResultSystems.map((x) => x.id),
+                this.filterResultGroups.map((x) => x.id)
             )
             .subscribe((data) => {
                 this.results = data.items
@@ -151,8 +190,9 @@ export class TcrTableComponent implements OnInit {
         this.filterChanges = []
         this.filterMinAge = 0
         this.filterMaxAge = 1000
-        this.filterMinInstability = 0
-        this.filterMaxInstability = 10
+        this.filterInstabilityRange = [0, 10]
+        this.filterResultSystems = []
+        this.filterResultGroups = []
 
         if (resultsTable) {
             this.refreshResults()
@@ -277,7 +317,7 @@ export class TcrTableComponent implements OnInit {
     }
 
     addTcrComment() {
-        this.executionService
+        this.resultsService
             .createOrUpdateTestCaseComment(this.tcr.id, {
                 author: this.commentAuthor,
                 state: parseInt(this.commentState, 10),

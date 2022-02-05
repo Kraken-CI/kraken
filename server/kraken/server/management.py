@@ -32,7 +32,7 @@ from azure.mgmt.compute import ComputeManagementClient
 
 from . import consts, srvcheck, kkrq
 from .models import db, Branch, Stage, Agent, AgentsGroup, Secret, AgentAssignment, Setting
-from .models import Project, BranchSequence
+from .models import Project, BranchSequence, System
 from .schema import check_and_correct_stage_schema, SchemaError, execute_schema_code
 from .schema import prepare_new_planner_triggers
 from .cloud import aws, azure, k8s
@@ -918,3 +918,13 @@ def get_settings_working_state(resource):
         abort(400, "Unsupported resource type: %s" % resource)
 
     return {'state': state}, 200
+
+
+def get_systems():
+    q = System.query
+    q = q.order_by(System.name)
+
+    systems = []
+    for s in q.all():
+        systems.append(s.get_json())
+    return {'items': systems, 'total': len(systems)}, 200

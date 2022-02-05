@@ -69,84 +69,103 @@
     </ng-container>
 </p-dialog>
 
-<!-- overall stats -->
-<div style="display: flex; margin: 15px 5px;">
-    <strong style="margin: 2px 30px 0 0; font-size: 1.5em; width: 3em;">Stats</strong>
 
-    <div style="margin-right: 15px; align-self: center;">
-        Passed: {{ run.tests_passed }}
-    </div>
-    <div style="margin-right: 15px; align-self: center;">
-        Total: {{ run.tests_total }}
-    </div>
-    <div style="margin-right: 15px; align-self: center;">
-        Pass Ratio: {{ run.tests_total > 0 ? (run.tests_passed * 100 / run.tests_total).toFixed(1) : '-' }} %
-    </div>
-    <div style="margin-right: 20px; align-self: center;">
-        Not run: {{ run.tests_not_run }}
-    </div>
-</div>
+<!-- stats & filters bar -->
+<div class="flex">
 
-<!-- tests filters -->
-<div style="margin: 15px 5px;" class="grid p-fluid">
-    <strong style="margin: 2px 20px 0 0; font-size: 1.5em; width: 3em;">Filters</strong>
+    <!-- overall stats -->
+    <div style="display: block; margin: 15px 5px;">
+        <strong style="margin: 2px 30px 0 0; font-size: 1.5em; width: 3em;">Stats</strong>
 
-    <div class="field mr-3">
-        <label>Result Status:</label>
-        <p-multiSelect
-            [options]="resultStatuses" [(ngModel)]="filterStatuses" optionLabel="name"
-            [filter]="false" [scrollHeight]="500" (onChange)="refreshResults()"></p-multiSelect>
-    </div>
-
-    <div class="field mr-3">
-        <label>Result Change:</label>
-        <p-multiSelect
-            [options]="resultChanges" [(ngModel)]="filterChanges" optionLabel="name"
-            [filter]="false" [scrollHeight]="500" (onChange)="refreshResults()"
-            [style]="{'vertical-align': 'middle'}"></p-multiSelect>
-    </div>
-
-    <div class="field mr-3">
-        <label>Age:</label>
-        <div style="display: flex; align-items: center;">
-            <p-inputNumber [showButtons]="true" [(ngModel)]="filterMinAge" [min]="0" [max]="filterMaxAge" size="2"
-                           (onInput)="refreshResults()"></p-inputNumber>
-            <div style="width: 1em; text-align: center;"> - </div>
-            <p-inputNumber [showButtons]="true" [(ngModel)]="filterMaxAge" [min]="filterMinAge" size="2"
-                           (onInput)="refreshResults()"></p-inputNumber>
+        <div style="margin-right: 15px; align-self: center;">
+            {{ run.tests_passed }} / {{ run.tests_total }}
+            =
+            {{ run.tests_total > 0 ? (run.tests_passed * 100 / run.tests_total).toFixed(1) : '-' }} %
+        </div>
+        <div style="margin-right: 20px; align-self: center;">
+            Not run: {{ run.tests_not_run }}
         </div>
     </div>
 
-    <div style="align-self: flex-end;" class="field mr-3">
-        <p-button label="New" (onClick)="showLastTestChanges(resultsTable)" class="ml-1 mr-2" pTooltip="Show changes that happened in the last run"></p-button>
-    </div>
+    <!-- tests filters -->
+    <div style="margin: 15px 5px; gap:0.8em" class="grid p-fluid">
+        <strong style="margin: 2px 20px 0 0; font-size: 1.5em; width: 3em;">Filters</strong>
 
-    <div class="field mr-3">
-        <label>Instability:</label>
-        <div style="display: flex; align-items: center;">
-            <p-inputNumber [showButtons]="true" [(ngModel)]="filterMinInstability" [min]="0" [max]="filterMaxInstability" size="2"
-                           (onInput)="refreshResults()"></p-inputNumber>
-            <div style="width: 1em; text-align: center;"> - </div>
-            <p-inputNumber [showButtons]="true" [(ngModel)]="filterMaxInstability" [min]="filterMinInstability" [max]="10" size="2"
-                           (onInput)="refreshResults()"></p-inputNumber>
+        <div class="field mr-3">
+            <label>Result Status:</label>
+            <p-multiSelect
+                [options]="resultStatuses" [(ngModel)]="filterStatuses" optionLabel="name"
+                [filter]="false" [scrollHeight]="500" (onChange)="refreshResults()"></p-multiSelect>
         </div>
-    </div>
 
-    <div class="field mr-3">
-        <label>Test Case:</label>
-        <input type="text" pInputText [(ngModel)]="filterTestCaseText" (keydown)="filterResultsKeyDown($event, resultsTable)"/>
-    </div>
+        <div class="field mr-3">
+            <label>Result Change:</label>
+            <p-multiSelect
+                [options]="resultChanges" [(ngModel)]="filterChanges" optionLabel="name"
+                [filter]="false" [scrollHeight]="500" (onChange)="refreshResults()"
+                [style]="{'vertical-align': 'middle'}"></p-multiSelect>
+        </div>
 
-    <div class="field mr-3">
-        <label>Job:</label>
-        <input type="text" pInputText [(ngModel)]="filterResultJob" (keydown)="filterResultsKeyDown($event, resultsTable)"/>
-    </div>
+        <div class="field">
+            <label>Age:</label>
+            <div style="display: flex; align-items: center;">
+                <p-inputNumber [showButtons]="true" [(ngModel)]="filterMinAge" [min]="0" [max]="filterMaxAge" size="2"
+                               (onInput)="refreshResults()"></p-inputNumber>
+                <div style="width: 1em; text-align: center;"> - </div>
+                <p-inputNumber [showButtons]="true" [(ngModel)]="filterMaxAge" [min]="filterMinAge" size="2"
+                               (onInput)="refreshResults()"></p-inputNumber>
+            </div>
+        </div>
 
-    <div style="display: flex; align-self: flex-end;" class="field">
-        <p-button label="Refresh" icon="pi pi-refresh" (onClick)="refreshResults()" class="ml-1 mr-2"></p-button>
-        <p-button label="Reset" icon="pi pi-times-circle" (onClick)="resetResultsFilter(resultsTable)"></p-button>
-    </div>
+        <div style="align-self: flex-end;" class="field mr-3">
+            <p-button label="New" (onClick)="showLastTestChanges(resultsTable)" class="ml-1 mr-2" pTooltip="Show changes that happened in the last run"></p-button>
+        </div>
 
+        <div class="field ml-2 mr-3">
+            <label>Instability: {{ filterInstabilityRange[0] }} - {{ filterInstabilityRange[1] }} </label>
+            <p-slider [(ngModel)]="filterInstabilityRange" [range]="true" [step]="1" [min]="0" [max]="10"
+                      (onSlideEnd)="refreshResults()"
+                      [style]="{width: '8em', 'margin-top': '14px'}">
+            </p-slider>
+        </div>
+
+        <div class="field mr-3" style="width: 9em">
+            <label>Test Case:</label>
+            <input type="text" pInputText [(ngModel)]="filterTestCaseText" (keydown)="filterResultsKeyDown($event, resultsTable)"/>
+        </div>
+
+        <div class="field mr-3" style="width: 9em">
+            <label>Job:</label>
+            <input type="text" pInputText [(ngModel)]="filterResultJob" (keydown)="filterResultsKeyDown($event, resultsTable)"/>
+        </div>
+
+        <div class="field mr-3" style="width: 11em">
+            <label>System:</label>
+            <p-multiSelect [options]="systems" [(ngModel)]="filterResultSystems" defaultLabel="any system" optionLabel="name"
+                           [panelStyle]="{'min-width': '20em'}" scrollHeight='calc(100vh - 340px)'
+                           (onChange)="refreshResults()">
+                <ng-template let-sys pTemplate="item">
+                    <div>
+                        {{ sys.name }} <small class="text-400">{{ sys.executor }}</small>
+                    </div>
+                </ng-template>
+            </p-multiSelect>
+        </div>
+
+        <div class="field mr-3" style="width: 11em">
+            <label>Groups:</label>
+            <p-multiSelect [options]="groups" [(ngModel)]="filterResultGroups" defaultLabel="any group" optionLabel="name"
+                           [panelStyle]="{'min-width': '20em'}" scrollHeight='calc(100vh - 340px)'
+                           (onChange)="refreshResults()"></p-multiSelect>
+
+        </div>
+
+        <div style="display: flex; align-self: flex-end;" class="field">
+            <p-button label="Refresh" icon="pi pi-refresh" (onClick)="refreshResults()" class="ml-1 mr-2"></p-button>
+            <p-button label="Reset" icon="pi pi-times-circle" (onClick)="resetResultsFilter(resultsTable)"></p-button>
+        </div>
+
+    </div>
 </div>
 
 <p-table #resultsTable
@@ -171,9 +190,9 @@
             <th style="width: 80px;" pTooltip="Instability, number of status changes in last 10 runs." pSortableColumn="instability">Ins. <p-sortIcon field="instability"></p-sortIcon></th>
             <th style="width: 80px;" pTooltip="Relevancy,<br>+1 for not passed<br>+1 for not root caused problem<br>+1 for failure<br>+1 for instability <= 3<br>+1 for age < 5<br>+1 for regression." [escape]="false" pSortableColumn="relevancy">Rlvc <p-sortIcon field="relevancy"></p-sortIcon></th>
             <th style="width: 160px;">Values</th>
-            <th style="width: 10%;">System</th>
+            <th style="width: 10%;" pSortableColumn="system">System <p-sortIcon field="system"></p-sortIcon></th>
             <th style="width: 10%;">Config</th>
-            <th style="width: 10%;">Agent Group</th>
+            <th style="width: 10%;" pSortableColumn="group">Agent Group <p-sortIcon field="group"></p-sortIcon></th>
             <th style="width: 10%;">Agent</th>
             <!--<th style="width: 90px;">Cmd Line</th>-->
             <th style="width: 8%;">Comment</th>

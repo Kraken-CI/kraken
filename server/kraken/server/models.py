@@ -792,6 +792,11 @@ class System(db.Model):
     jobs = relationship('Job', back_populates="system")
     UniqueConstraint(name, executor, name='uq_system_name_executor')
 
+    def get_json(self):
+        return dict(id=self.id,
+                    name=self.name,
+                    executor=self.executor)
+
 
 class Tool(db.Model, DatesMixin):
     __tablename__ = "tools"

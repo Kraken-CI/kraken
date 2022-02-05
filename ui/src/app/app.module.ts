@@ -40,6 +40,7 @@ import { ToggleButtonModule } from 'primeng/togglebutton'
 import { FieldsetModule } from 'primeng/fieldset'
 import { RadioButtonModule } from 'primeng/radiobutton'
 import { CardModule } from 'primeng/card'
+import { SliderModule } from 'primeng/slider'
 
 // REST API
 import {
@@ -75,6 +76,7 @@ import { DiagsPageComponent } from './diags-page/diags-page.component'
 import { RepoChangesComponent } from './repo-changes/repo-changes.component'
 import { GrpCloudCfgComponent } from './grp-cloud-cfg/grp-cloud-cfg.component'
 import { TcrTableComponent } from './tcr-table/tcr-table.component'
+import { FlowAnalysisComponent } from './flow-analysis/flow-analysis.component'
 
 export function cfgFactory() {
     const params: ConfigurationParameters = {
@@ -108,6 +110,7 @@ export function cfgFactory() {
         RepoChangesComponent,
         GrpCloudCfgComponent,
         TcrTableComponent,
+        FlowAnalysisComponent,
     ],
     imports: [
         BrowserModule,
@@ -154,6 +157,7 @@ export function cfgFactory() {
         FieldsetModule,
         RadioButtonModule,
         CardModule,
+        SliderModule,
     ],
     providers: [
         Title,

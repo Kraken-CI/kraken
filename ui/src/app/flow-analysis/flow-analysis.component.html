@@ -1,0 +1,93 @@
+<!-- Split by dropboxes -->
+<div class="grid m-3 align-items-center">
+
+    <div class="grid align-items-center" style="gap: 10px; width: 50em">
+        <b class="text-2xl block mr-3">Split by:</b>
+        <p-dropdown [options]="dims" [(ngModel)]="dim1" optionLabel="name" (onChange)="calculateStats()"></p-dropdown>
+        <p-dropdown [options]="dims" [(ngModel)]="dim2" optionLabel="name" (onChange)="calculateStats()" *ngIf="dim1.code !== 'NN'"></p-dropdown>
+        <p-dropdown [options]="dims" [(ngModel)]="dim3" optionLabel="name" (onChange)="calculateStats()" *ngIf="dim1.code !== 'NN' && dim2.code !== 'NN'"></p-dropdown>
+    </div>
+
+    <button (click)="randomizeLayout()" pButton icon="pi pi-table" label="Randomize Layout" class="block p-button-outlined p-button-secondary"></button>
+
+</div>
+
+<!-- TOTAL -->
+<div *ngIf="dim1.code === 'NN'" class="ml-2 mt-4">
+    <div style="background-color: {{ getBgColor(stats) }}; border: 1px solid black; width: 8em" class="p-2">
+        {{ stats.passed }} / {{ stats.total }}
+        <br>
+        {{ getPassRatio(stats.passed, stats.total) }}
+    </div>
+</div>
+
+<!-- 1 DIM -->
+<div *ngIf="dim1.code !== 'NN' && dim2.code === 'NN'" class="ml-2">
+    <table class="stats-table">
+        <tr>
+            <th style="width: 8em">{{ dim1.name }}</th>
+            <th style="width: 8em">Stats</th>
+        </tr>
+        <tr *ngFor="let row of stats | keyvalue">
+            <td>{{ row.key }}</td>
+            <td style="background-color: {{ getBgColor(row.value) }}">
+                {{ row.value.passed }} / {{ row.value.total }}
+                <br>
+                {{ getPassRatio(row.value.passed, row.value.total) }}
+            </td>
+        </tr>
+    </table>
+</div>
+
+<!-- 2 DIMs -->
+<div *ngIf="dim1.code !== 'NN' && dim2.code !== 'NN' && dim3.code === 'NN'" class="ml-2">
+    <table class="stats-table">
+        <tr>
+            <th style="width: 8em"></th>
+            <th *ngFor="let col of statsCols" style="width: 8em">{{ col }}</th>
+        </tr>
+        <tr *ngFor="let row of stats | keyvalue">
+            <td>{{ row.key }}</td>
+            <td *ngFor="let col of statsCols" style="background-color: {{ getBgColor(row.value[col]) }}">
+                <ng-container *ngIf="row.value[col]">
+                    {{ row.value[col].passed }} / {{ row.value[col].total }}
+                    <br>
+                    {{ getPassRatio(row.value[col].passed, row.value[col].total) }}
+                </ng-container>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<!-- 3 DIMs -->
+<div *ngIf="dim1.code !== 'NN' && dim2.code !== 'NN' && dim3.code !== 'NN'" class="ml-2">
+    <table class="stats-table">
+        <tr>
+            <th rowspan="2" style="width: 8em"></th>
+            <th *ngFor="let col of statsCols | keyvalue" style="width: 8em" [attr.colspan]="getLen(col.value)">{{ col.key }}</th>
+        </tr>
+        <tr>
+            <ng-container *ngFor="let col of statsCols | keyvalue">
+                <th *ngFor="let subcol of col.value | keyvalue" style="width: 8em">{{ subcol.key }}</th>
+            </ng-container>
+        </tr>
+        <tr *ngFor="let row of stats | keyvalue">
+            <td>{{ row.key }}</td>
+            <ng-container *ngFor="let col of statsCols | keyvalue">
+                <td *ngFor="let subcol of col.value | keyvalue" style="background-color: {{ getBgColor2(row.value, col.key, subcol.key) }}">
+                    <div *ngIf="row.value[col.key] && row.value[col.key][subcol.key]" class="grid justify-content-between m-1">
+                        <div>
+                            {{ row.value[col.key][subcol.key].passed }} / {{ row.value[col.key][subcol.key].total }}
+                            <br>
+                            {{ getPassRatio(row.value[col.key][subcol.key].passed, row.value[col.key][subcol.key].total) }}
+                        </div>
+                        <a [routerLink]="row.value[col.key][subcol.key].runRouterLink"
+                           [queryParams]="row.value[col.key][subcol.key].runQueryParams">
+                            <i class="pi pi-eye text-xl block"></i>
+                        </a>
+                    </div>
+                </td>
+            </ng-container>
+        </tr>
+    </table>
+</div>

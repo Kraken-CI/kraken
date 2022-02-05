@@ -24,7 +24,9 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
     runsTree: TreeNode[]
     flatTree: any[]
 
-    activeTabIndex = 0
+    tabs: MenuItem[] = []
+    activeTab: MenuItem
+    activeTabIdx = 0
 
     args: any[]
 
@@ -60,22 +62,47 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
         private titleService: Title
     ) {}
 
+    switchToTab(tabName) {
+        for (let idx = 0; idx < this.tabs.length; idx++) {
+            if (this.tabs[idx].routerLink.endsWith('/' + tabName)) {
+                this.activeTab = this.tabs[idx]
+                this.activeTabIdx = idx
+                return
+            }
+        }
+    }
+
     ngOnInit() {
         this.route.paramMap.subscribe((params) => {
-            this.flowId = parseInt(params.get('id'), 10)
-            this.titleService.setTitle('Kraken - Flow ' + this.flowId)
+            const flowId = parseInt(params.get('id'), 10)
 
-            this.runsTree = [
-                {
-                    label: `Flow [${this.flowId}]`,
-                    expanded: true,
-                    type: 'root',
-                    data: { created: '' },
-                    children: [],
-                },
-            ]
+            let tab = params.get('tab')
+            if (!tab) {
+                this.router.navigate(['/flows/' + flowId + '/stages'], {
+                    replaceUrl: true,
+                })
+                return
+            }
 
-            this.refresh()
+            // only when it is the first load or a flow is changed
+            if (flowId !== this.flowId) {
+                this.flowId = flowId
+                this.titleService.setTitle('Kraken - Flow ' + this.flowId)
+
+                this.runsTree = [
+                    {
+                        label: `Flow [${this.flowId}]`,
+                        expanded: true,
+                        type: 'root',
+                        data: { created: '' },
+                        children: [],
+                    },
+                ]
+
+                this.refresh()
+            }
+
+            this.switchToTab(tab)
         })
     }
 
@@ -186,6 +213,46 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
             ]
             this.breadcrumbService.setCrumbs(crumbs)
 
+            // prepare tabs
+            this.tabs = []
+            this.tabs.push({
+                label: 'Stages',
+                routerLink: `/flows/${this.flowId}/stages`,
+            })
+            this.tabs.push({
+                label: 'Results Analysis',
+                routerLink: `/flows/${this.flowId}/results-analysis`,
+            })
+            this.tabs.push({
+                label: 'Arguments',
+                routerLink: `/flows/${this.flowId}/arguments`,
+            })
+            this.tabs.push({
+                label: 'Repo Changes',
+                routerLink: `/flows/${this.flowId}/repo-changes`,
+                visible: this.hasFlowCommits(),
+            })
+            const artifactsVisible =
+                flow.artifacts &&
+                ((flow.artifacts['private'] &&
+                    flow.artifacts['private'].count > 0) ||
+                    (flow.artifacts['public'] &&
+                        flow.artifacts['public'].count > 0))
+            this.tabs.push({
+                label: 'Artifacts',
+                routerLink: `/flows/${this.flowId}/artifacts`,
+                visible: artifactsVisible === true,
+            })
+            this.tabs.push({
+                label: 'Reports',
+                routerLink: `/flows/${this.flowId}/reports`,
+                visible: flow.report_entries && flow.report_entries.length > 0,
+            })
+            this.tabs.push({
+                label: 'Stages Chart',
+                routerLink: `/flows/${this.flowId}/stages-chart`,
+            })
+
             // collect args from flow
             const args = []
             let sectionArgs = []
@@ -261,7 +328,7 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
                 flow.artifacts._public.count > 0
             ) {
                 setTimeout(() => {
-                    this.activeTabIndex = 3
+                    this.activeTabIdx = 3
                 }, 100)
             }
 
@@ -370,11 +437,11 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
         }
     }
 
-    hasFlowCommits(flow) {
+    hasFlowCommits() {
         if (
-            flow &&
-            flow.trigger &&
-            (flow.trigger.commits || flow.trigger.pull_request)
+            this.flow &&
+            this.flow.trigger &&
+            (this.flow.trigger.commits || this.flow.trigger.pull_request)
         ) {
             return true
         }
