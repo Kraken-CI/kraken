@@ -1,0 +1,11 @@
+<div>
+
+    <ng-container *ngTemplateOutlet="headerTemplate"></ng-container>
+
+    <p-tabMenu [model]="tabMenuItems" [activeItem]="activeTab">
+    </p-tabMenu>
+
+    <div class="m-3">
+        <ng-content></ng-content>
+    </div>
+</div>

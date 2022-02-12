@@ -7,7 +7,7 @@ import { BranchResultsComponent } from './branch-results/branch-results.componen
 import { BranchMgmtComponent } from './branch-mgmt/branch-mgmt.component'
 import { RunResultsComponent } from './run-results/run-results.component'
 import { TestCaseResultComponent } from './test-case-result/test-case-result.component'
-import { FlowResultsComponent } from './flow-results/flow-results.component'
+import { FlowPageComponent } from './flow-page/flow-page.component'
 import { NewFlowComponent } from './new-flow/new-flow.component'
 import { NewRunComponent } from './new-run/new-run.component'
 import { ProjectSettingsComponent } from './project-settings/project-settings.component'
@@ -45,12 +45,12 @@ const routes: Routes = [
         component: NewRunComponent,
     },
     {
-        path: 'flows/:id',
-        component: FlowResultsComponent,
+        path: 'flows/:id/:tab',
+        component: FlowPageComponent,
     },
     {
-        path: 'flows/:id/:tab',
-        component: FlowResultsComponent,
+        path: 'flows/:id',
+        component: FlowPageComponent,
     },
     {
         path: 'runs/:id',

@@ -206,8 +206,10 @@ def get_flow_analysis(flow_id):
     recs_map = dict(systems={}, groups={})
     stats = {}
     analysis = dict(recs_map=recs_map,
-                    stats=stats)
+                    stats=stats,
+                    total_tests=0)
 
+    total_tests = 0
     for run in q.all():
         log.info('run %s', run)
 
@@ -248,6 +250,10 @@ def get_flow_analysis(flow_id):
             if tcr_res not in system:
                 system[tcr_res] = 0
             system[tcr_res] += 1
+
+            total_tests += 1
+
+    analysis['total_tests'] = total_tests
 
 
     return analysis, 200

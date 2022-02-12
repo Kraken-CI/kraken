@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core'
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core'
 import { Router, ActivatedRoute } from '@angular/router'
 import { Title } from '@angular/platform-browser'
 
@@ -13,20 +13,16 @@ import { ExecutionService } from '../backend/api/execution.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
 
 @Component({
-    selector: 'app-flow-results',
-    templateUrl: './flow-results.component.html',
-    styleUrls: ['./flow-results.component.sass'],
+    selector: 'app-flow-page',
+    templateUrl: './flow-page.component.html',
+    styleUrls: ['./flow-page.component.sass'],
 })
-export class FlowResultsComponent implements OnInit, OnDestroy {
+export class FlowPageComponent implements OnInit, OnDestroy {
     flowId = 0
     flow = null
     runs: any[]
     runsTree: TreeNode[]
     flatTree: any[]
-
-    tabs: MenuItem[] = []
-    activeTab: MenuItem
-    activeTabIdx = 0
 
     args: any[]
 
@@ -59,30 +55,13 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
         protected executionService: ExecutionService,
         protected breadcrumbService: BreadcrumbsService,
         private msgSrv: MessageService,
-        private titleService: Title
+        private titleService: Title,
+        private cd: ChangeDetectorRef
     ) {}
 
-    switchToTab(tabName) {
-        for (let idx = 0; idx < this.tabs.length; idx++) {
-            if (this.tabs[idx].routerLink.endsWith('/' + tabName)) {
-                this.activeTab = this.tabs[idx]
-                this.activeTabIdx = idx
-                return
-            }
-        }
-    }
-
-    ngOnInit() {
+    ngOnInit(): void {
         this.route.paramMap.subscribe((params) => {
             const flowId = parseInt(params.get('id'), 10)
-
-            let tab = params.get('tab')
-            if (!tab) {
-                this.router.navigate(['/flows/' + flowId + '/stages'], {
-                    replaceUrl: true,
-                })
-                return
-            }
 
             // only when it is the first load or a flow is changed
             if (flowId !== this.flowId) {
@@ -101,8 +80,6 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
 
                 this.refresh()
             }
-
-            this.switchToTab(tab)
         })
     }
 
@@ -213,46 +190,6 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
             ]
             this.breadcrumbService.setCrumbs(crumbs)
 
-            // prepare tabs
-            this.tabs = []
-            this.tabs.push({
-                label: 'Stages',
-                routerLink: `/flows/${this.flowId}/stages`,
-            })
-            this.tabs.push({
-                label: 'Results Analysis',
-                routerLink: `/flows/${this.flowId}/results-analysis`,
-            })
-            this.tabs.push({
-                label: 'Arguments',
-                routerLink: `/flows/${this.flowId}/arguments`,
-            })
-            this.tabs.push({
-                label: 'Repo Changes',
-                routerLink: `/flows/${this.flowId}/repo-changes`,
-                visible: this.hasFlowCommits(),
-            })
-            const artifactsVisible =
-                flow.artifacts &&
-                ((flow.artifacts['private'] &&
-                    flow.artifacts['private'].count > 0) ||
-                    (flow.artifacts['public'] &&
-                        flow.artifacts['public'].count > 0))
-            this.tabs.push({
-                label: 'Artifacts',
-                routerLink: `/flows/${this.flowId}/artifacts`,
-                visible: artifactsVisible === true,
-            })
-            this.tabs.push({
-                label: 'Reports',
-                routerLink: `/flows/${this.flowId}/reports`,
-                visible: flow.report_entries && flow.report_entries.length > 0,
-            })
-            this.tabs.push({
-                label: 'Stages Chart',
-                routerLink: `/flows/${this.flowId}/stages-chart`,
-            })
-
             // collect args from flow
             const args = []
             let sectionArgs = []
@@ -314,23 +251,9 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
                 },
             ]
             this._buildSubtree(this.runsTree[0], allParents, allParents.root)
-            // console.info(this.runsTree);
 
             this.flatTree = []
             this._traverseTree(this.runsTree[0], 0)
-            // console.info('flatTree', this.flatTree);
-
-            const tab = this.route.snapshot.queryParamMap.get('tab')
-            if (
-                tab === 'artifacts' &&
-                flow.artifacts &&
-                flow.artifacts._public &&
-                flow.artifacts._public.count > 0
-            ) {
-                setTimeout(() => {
-                    this.activeTabIdx = 3
-                }, 100)
-            }
 
             // put back selection
             if (this.selectedNode.stage.id) {
@@ -345,7 +268,7 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
     }
 
     showNodeMenu($event, nodeMenu, node) {
-        console.info(node)
+        // console.info(node)
 
         if (node.data.run) {
             this.nodeMenuItems = [
@@ -368,7 +291,7 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
                     icon: 'pi pi-caret-right',
                     command: () => {
                         const stage = node.data.stage
-                        console.info(stage.schema.parameters)
+                        // console.info(stage.schema.parameters)
                         if (stage.schema.parameters.length === 0) {
                             this.executionService
                                 .createRun(this.flowId, stage.id)
@@ -416,13 +339,21 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
     }
 
     loadArtifactsLazy(event) {
+        // as this method is invoked in child component p-table
+        // we need to check changes in parent ie this
+        // that were made here to this.loadingArtifacts
+
         this.loadingArtifacts = true
+        this.cd.detectChanges()
+
         this.executionService
             .getFlowArtifacts(this.flowId, event.first, event.rows)
             .subscribe((data) => {
                 this.artifacts = data.items
                 this.totalArtifacts = data.total
                 this.loadingArtifacts = false
+
+                this.cd.detectChanges()
             })
     }
 
@@ -442,6 +373,31 @@ export class FlowResultsComponent implements OnInit, OnDestroy {
             this.flow &&
             this.flow.trigger &&
             (this.flow.trigger.commits || this.flow.trigger.pull_request)
+        ) {
+            return true
+        }
+        return false
+    }
+
+    hasFlowArtifacts() {
+        if (
+            this.flow &&
+            this.flow.artifacts &&
+            ((this.flow.artifacts['private'] &&
+                this.flow.artifacts['private'].count > 0) ||
+                (this.flow.artifacts['public'] &&
+                    this.flow.artifacts['public'].count > 0))
+        ) {
+            return true
+        }
+        return false
+    }
+
+    hasFlowReports() {
+        if (
+            this.flow &&
+            this.flow.report_entries &&
+            this.flow.report_entries.length > 0
         ) {
             return true
         }

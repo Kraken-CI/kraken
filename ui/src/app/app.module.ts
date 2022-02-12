@@ -61,7 +61,6 @@ import { RunResultsComponent } from './run-results/run-results.component'
 import { BreadcrumbsComponent } from './breadcrumbs/breadcrumbs.component'
 import { MainPageComponent } from './main-page/main-page.component'
 import { TestCaseResultComponent } from './test-case-result/test-case-result.component'
-import { FlowResultsComponent } from './flow-results/flow-results.component'
 import { BranchMgmtComponent } from './branch-mgmt/branch-mgmt.component'
 import { RunBoxComponent } from './run-box/run-box.component'
 import { NewFlowComponent } from './new-flow/new-flow.component'
@@ -77,6 +76,11 @@ import { RepoChangesComponent } from './repo-changes/repo-changes.component'
 import { GrpCloudCfgComponent } from './grp-cloud-cfg/grp-cloud-cfg.component'
 import { TcrTableComponent } from './tcr-table/tcr-table.component'
 import { FlowAnalysisComponent } from './flow-analysis/flow-analysis.component'
+import {
+    TabbedPageComponent,
+    TabbedPageTabComponent,
+} from './tabbed-page/tabbed-page.component'
+import { FlowPageComponent } from './flow-page/flow-page.component'
 
 export function cfgFactory() {
     const params: ConfigurationParameters = {
@@ -94,7 +98,6 @@ export function cfgFactory() {
         BreadcrumbsComponent,
         MainPageComponent,
         TestCaseResultComponent,
-        FlowResultsComponent,
         BranchMgmtComponent,
         RunBoxComponent,
         LocaltimePipe,
@@ -111,6 +114,9 @@ export function cfgFactory() {
         GrpCloudCfgComponent,
         TcrTableComponent,
         FlowAnalysisComponent,
+        TabbedPageComponent,
+        TabbedPageTabComponent,
+        FlowPageComponent,
     ],
     imports: [
         BrowserModule,

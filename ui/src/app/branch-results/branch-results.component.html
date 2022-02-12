@@ -33,7 +33,7 @@
           </a>
           <div style="margin: 4px 0 0 6px; color: #888;">
             <div style="margin: 4px 0 0 0;" *ngIf="flow.artifacts && flow.artifacts.public && flow.artifacts.public.count > 0">
-              <a routerLink="/flows/{{flow.id}}" [queryParams]="{tab: 'artifacts'}" style="color: unset; display: block;">
+              <a routerLink="/flows/{{flow.id}}/artifacts" style="color: unset; display: block;">
                 <i class="pi pi-download" style="font-size: 1.6em;"
                    pTooltip="Files: {{ flow.artifacts.public.count }}<br>Size: {{ humanFileSize(flow.artifacts.public.size) }}"
                    tooltipStyleClass="artifacts-tooltip" [escape]="false" hideDelay="1000"></i>

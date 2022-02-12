@@ -2108,6 +2108,8 @@ components:
           type: object
         recs_map:
           type: object
+        total_tests:
+          type: integer
     ReportEntry:
       type: object
       properties:

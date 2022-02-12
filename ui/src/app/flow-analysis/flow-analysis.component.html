@@ -1,3 +1,10 @@
+<div *ngIf="totalTests === 0">
+    <h3>No tests, no results</h3>
+</div>
+
+
+<div *ngIf="totalTests > 0">
+
 <!-- Split by dropboxes -->
 <div class="grid m-3 align-items-center">
 
@@ -90,4 +97,7 @@
             </ng-container>
         </tr>
     </table>
+</div>
+
+
 </div>

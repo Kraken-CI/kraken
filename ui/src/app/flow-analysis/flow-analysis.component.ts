@@ -17,6 +17,7 @@ export class FlowAnalysisComponent implements OnInit {
 
     data: any = {}
     recsMap: any = {}
+    totalTests: number = 0
 
     dims: Dim[]
     dim1: Dim
@@ -43,9 +44,9 @@ export class FlowAnalysisComponent implements OnInit {
 
     ngOnInit(): void {
         this.resultsService.getFlowAnalysis(this.flow.id).subscribe((data) => {
-            console.info(data)
             this.data = data.stats
             this.recsMap = data.recs_map
+            this.totalTests = data.total_tests
             this.calculateStats()
         })
     }
