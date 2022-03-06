@@ -283,6 +283,12 @@ def  get_job_logs(job_id, start=0, limit=200, order=None, internals=False, filte
     if order not in [None, 'asc', 'desc']:
         abort(400, "incorrect order value: %s" % str(order))
 
+    if start < 0:
+        abort(400, "incorrect start value: %s" % str(start))
+
+    if limit < 0:
+        abort(400, "incorrect limit value: %s" % str(limit))
+
     job = Job.query.filter_by(id=job_id).one()
     job_json = job.get_json()
 
