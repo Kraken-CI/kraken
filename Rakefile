@@ -512,7 +512,7 @@ end
 
 task :prune_gcp_artifacts do
   ago = (Date.today - 20)
-  sh "gcloud artifacts docker images list us-docker.pkg.dev/kraken-261806/kk --filter='tags!~released AND createTime<=#{ago}' --format='value[separator=\"@\"](package,version)' | xargs -n1 gcloud artifacts docker images delete --delete-tags --async"
+  sh "gcloud artifacts docker images list us-docker.pkg.dev/kraken-261806/kk --include-tags --filter='tags!~released AND createTime<=#{ago}' --format='value[separator=\"@\"](package,version)' | xargs -n1 gcloud artifacts docker images delete --quiet --delete-tags --async"
 end
 
 task :show_old_gcp_artifacts do
