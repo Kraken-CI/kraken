@@ -485,19 +485,20 @@ def test_analyze_results_history(flow_kind):
             assert mylog.info.call_args_list[0][0][2].id == run.flow.id
             assert mylog.info.call_args_list[0][0][3] == 'CI' if flow_kind == consts.FLOW_KIND_CI else 'DEV'
             if flow_kind == consts.FLOW_KIND_CI:
-                assert mylog.info.call_count == 2
-                assert mylog.info.call_args_list[1][0][0] == 'skip anlysis of run %s as there is no prev run'
+                assert mylog.info.call_count == 19
+                assert mylog.info.call_args_list[1][0][0].startswith('this is the first run')
             else:
-                assert mylog.info.call_count == 20
+                assert mylog.info.call_count == 24
                 assert mylog.info.call_args_list[1][0][0] == 'NO REF TCR, ie. new'
-                assert mylog.info.call_args_list[17][0][0] == 'run %s: new:%d no-change:%d regr:%d fix:%d'
-                assert mylog.info.call_args_list[17][0][2] == 6
-                assert mylog.info.call_args_list[17][0][3] == 0
-                assert mylog.info.call_args_list[17][0][4] == 0
-                assert mylog.info.call_args_list[17][0][5] == 0
+                assert mylog.info.call_args_list[21][0][0] == 'run %s: new:%d no-change:%d regr:%d fix:%d'
+                assert mylog.info.call_args_list[21][0][2] == 6
+                assert mylog.info.call_args_list[21][0][3] == 0
+                assert mylog.info.call_args_list[21][0][4] == 0
+                assert mylog.info.call_args_list[21][0][5] == 0
 
-        # flow 1 - introduced all other results
+        # flow 1 - introduced all other types of results
         run.flow.kind = consts.FLOW_KIND_CI  # move prev flow from dev to ci
+        run.state = consts.RUN_STATE_IN_PROGRESS
         db.session.commit()
         prev_run = run
         run, tcrs = new_results(consts.TC_RESULT_PASSED, consts.TC_RESULT_FAILED,
@@ -517,7 +518,7 @@ def test_analyze_results_history(flow_kind):
                 assert mylog.info.call_args_list[1][0][2].id == prev_run.id
 
         def _check_logs_ci(mylog, tcrs, run):
-            assert mylog.info.call_count == 10
+            assert mylog.info.call_count == 14
             assert mylog.info.call_args_list[0][0][0] == 'starting results history analysis of run %s, flow %s [%s] '
             assert mylog.info.call_args_list[0][0][1].id == run.id
             assert mylog.info.call_args_list[0][0][2].id == run.flow.id
@@ -525,21 +526,21 @@ def test_analyze_results_history(flow_kind):
             tcr_ids = [tcr.id for tcr in tcrs]
             tc_names = [tcr.test_case.name for tcr in tcrs]
             calls = mylog.info.call_args_list
-            for idx in range(1, 7):
-                assert calls[idx][0][0] == 'Analyzed result %s %s: %s'
-                assert calls[idx][0][1].id in tcr_ids
-                tcr_ids.remove(calls[idx][0][1].id)
-                assert calls[idx][0][2] in tc_names
-                tc_names.remove(calls[idx][0][2])
-            assert len(tcr_ids) == 0
+            for idx in [1, 3, 5, 6, 8, 9]:
+                assert calls[idx][0][0] == 'Analyzed result dt:%0.5f %s %s: %s'
+                assert calls[idx][0][2].id in tcr_ids
+                tcr_ids.remove(calls[idx][0][2].id)
+                assert calls[idx][0][3] in tc_names
+                tc_names.remove(calls[idx][0][3])
+            assert len(tcr_ids) == 0  # all tcr should have been found
             assert len(tc_names) == 0
 
-            assert calls[7][0][0] == 'run %s: new:%d no-change:%d regr:%d fix:%d'
-            assert calls[8][0][0] == 'history anlysis of run %s completed'
-            assert calls[9][0][0] == 'finished results history analysis of run %s, flow %s [%s]'
+            assert calls[11][0][0] == 'run %s: new:%d no-change:%d regr:%d fix:%d'
+            assert calls[12][0][0] == 'history anlysis of run %s completed'
+            assert calls[13][0][0] == 'finished results history analysis of run %s, flow %s [%s]'
 
         def _check_logs_dev(mylog, tcrs, run):
-            assert mylog.info.call_count == 10
+            assert mylog.info.call_count == 14
             assert mylog.info.call_args_list[0][0][0] == 'starting results history analysis of run %s, flow %s [%s] '
             assert mylog.info.call_args_list[0][0][1].id == run.id
             assert mylog.info.call_args_list[0][0][2].id == run.flow.id
@@ -547,18 +548,18 @@ def test_analyze_results_history(flow_kind):
             tcr_ids = [tcr.id for tcr in tcrs]
             tc_names = [tcr.test_case.name for tcr in tcrs]
             calls = mylog.info.call_args_list
-            for idx in range(1, 7):
-                assert calls[idx][0][0] == 'Analyzed result %s %s: %s'
-                assert calls[idx][0][1].id in tcr_ids
-                tcr_ids.remove(calls[idx][0][1].id)
-                assert calls[idx][0][2] in tc_names
-                tc_names.remove(calls[idx][0][2])
+            for idx in [1, 3, 5, 6, 8, 9]:
+                assert calls[idx][0][0] == 'Analyzed result dt:%0.5f %s %s: %s'
+                assert calls[idx][0][2].id in tcr_ids
+                tcr_ids.remove(calls[idx][0][2].id)
+                assert calls[idx][0][3] in tc_names
+                tc_names.remove(calls[idx][0][3])
             assert len(tcr_ids) == 0
             assert len(tc_names) == 0
 
-            assert calls[7][0][0] == 'run %s: new:%d no-change:%d regr:%d fix:%d'
-            assert calls[8][0][0] == 'history anlysis of run %s completed'
-            assert calls[9][0][0] == 'finished results history analysis of run %s, flow %s [%s]'
+            assert calls[11][0][0] == 'run %s: new:%d no-change:%d regr:%d fix:%d'
+            assert calls[12][0][0] == 'history anlysis of run %s completed'
+            assert calls[13][0][0] == 'finished results history analysis of run %s, flow %s [%s]'
 
         def _check_logs(mylog, tcrs, run):
             if flow_kind == consts.FLOW_KIND_CI:
