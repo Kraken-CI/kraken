@@ -993,9 +993,8 @@ def spawn_new_agents(agents_group_id):
 
     with app.app_context():
         server_url = get_setting('general', 'server_url')
-        minio_addr = get_setting('general', 'minio_addr')
         clickhouse_addr = get_setting('general', 'clickhouse_addr')
-        settings = ['server_url', 'minio_addr', 'clickhouse_addr']
+        settings = ['server_url', 'clickhouse_addr']
         for s in settings:
             val = locals()[s]
             if not val:
@@ -1064,7 +1063,7 @@ def spawn_new_agents(agents_group_id):
             log.info('NOT enough agents, avail: %d, needed: %d, new: %d', agents_count, needed_count, num)
 
             cloud.create_machines(ag, system, num,
-                                  server_url, minio_addr, clickhouse_addr)
+                                  server_url, clickhouse_addr)
 
 
 def destroy_machine(agent_id):

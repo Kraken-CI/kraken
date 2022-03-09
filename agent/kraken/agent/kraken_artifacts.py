@@ -159,7 +159,6 @@ def _download_all(mc, minio_bucket, flow_id, run_id, cwd, source, dest):
 def run_artifacts(step, report_artifact=None):
 
     minio_addr = step['minio_addr']
-    minio_addr = os.environ.get('KRAKEN_MINIO_ADDR', minio_addr)
     minio_bucket = step['minio_bucket']
     minio_access_key = step['minio_access_key']
     minio_secret_key = step['minio_secret_key']

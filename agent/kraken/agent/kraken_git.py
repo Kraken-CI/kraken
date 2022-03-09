@@ -64,7 +64,6 @@ def run(step, **kwargs):  # pylint: disable=unused-argument
 
     # setup connection to minio
     minio_addr = step['minio_addr']
-    minio_addr = os.environ.get('KRAKEN_MINIO_ADDR', minio_addr)
     minio_access_key = step['minio_access_key']
     minio_secret_key = step['minio_secret_key']
     minio_bucket = step['minio_bucket']

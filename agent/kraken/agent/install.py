@@ -53,9 +53,6 @@ KRAKEN_SERVER_ADDR={server_addr}
 # address of clickhouse-proxy, used for sending logs there
 KRAKEN_CLICKHOUSE_ADDR={clickhouse_addr}
 
-# address of minio, used for storing and retrieving build artifacts and for a cache
-KRAKEN_MINIO_ADDR={minio_addr}
-
 # directory with data dir, optional
 KRAKEN_DATA_DIR={data_dir}
 
@@ -130,7 +127,6 @@ def install_linux():
     kenv = KRAKEN_ENV.format(server_addr=config.get('server'),
                              data_dir=data_dir,
                              tools_dirs=config.get('tools_dirs') or '',
-                             minio_addr=config.get('minio_addr') or '',
                              clickhouse_addr=config.get('clickhouse_addr') or '',
                              system_id=config.get('system_id', '') or '')
     run('sudo bash -c \'echo "%s" > /opt/kraken/kraken.env\'' % kenv)

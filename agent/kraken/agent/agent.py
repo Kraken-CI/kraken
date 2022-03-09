@@ -120,12 +120,6 @@ def run():
         raise Exception('incorrect server URL (no http/https schema): %s' % srv_addr)
     log.info('server address: %s', srv_addr)
 
-    # check minio address
-    minio_addr = config.get('minio_addr')
-    if not minio_addr:
-        raise Exception('missing MinIO address')
-    log.info('MinIO address: %s', minio_addr)
-
     data_dir = config.get('data_dir')
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)

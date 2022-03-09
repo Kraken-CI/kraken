@@ -25,23 +25,23 @@ log = logging.getLogger(__name__)
 
 
 def create_machines(ag, system, num,
-                    server_url, minio_addr, clickhouse_addr):
+                    server_url, clickhouse_addr):
     method, _ = ag.get_deployment()
     if method == consts.AGENT_DEPLOYMENT_METHOD_AWS_EC2:
         aws_ec2.create_vms(ag, system, num,
-                           server_url, minio_addr, clickhouse_addr)
+                           server_url, clickhouse_addr)
 
     elif method == consts.AGENT_DEPLOYMENT_METHOD_AWS_ECS_FARGATE:
         aws_ecs.create_fargate_tasks(ag, system, num,
-                                     server_url, minio_addr, clickhouse_addr)
+                                     server_url, clickhouse_addr)
 
     elif method == consts.AGENT_DEPLOYMENT_METHOD_AZURE_VM:
         azure.create_vms(ag, system, num,
-                         server_url, minio_addr, clickhouse_addr)
+                         server_url, clickhouse_addr)
 
     elif method == consts.AGENT_DEPLOYMENT_METHOD_K8S:
         k8s.create_pods(ag, system, num,
-                        server_url, minio_addr, clickhouse_addr)
+                        server_url, clickhouse_addr)
 
     else:
         raise NotImplementedError('deployment method %s not supported' % method)

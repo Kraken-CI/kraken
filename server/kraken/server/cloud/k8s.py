@@ -109,7 +109,7 @@ def check_k8s_settings():
 
 
 def create_pods(ag, system, num,
-                server_url, minio_addr, clickhouse_addr):
+                server_url, clickhouse_addr):
     core_api, namespace = _get_core_api()
 
     # prepare create_container
@@ -119,9 +119,9 @@ def create_pods(ag, system, num,
     cmd += ' && wget -O /opt/kraken/kktool {server_url}/install/tool'
     cmd += ' && chmod a+x /opt/kraken/kkagent /opt/kraken/kktool'
     cmd += ' && mkdir -p /tmp/kk-jobs'
-    cmd += ' && /opt/kraken/kkagent run -d /tmp/kk-jobs -s {server_url} -m {minio_addr} -c {clickhouse_addr}'
+    cmd += ' && /opt/kraken/kkagent run -d /tmp/kk-jobs -s {server_url} -c {clickhouse_addr}'
     cmd += ' --system-id {system_id} --one-job'
-    cmd = cmd.format(server_url=server_url, minio_addr=minio_addr, clickhouse_addr=clickhouse_addr,
+    cmd = cmd.format(server_url=server_url, clickhouse_addr=clickhouse_addr,
                      system_id=system.id)
 
     container = kubernetes.client.V1Container(

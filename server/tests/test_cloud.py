@@ -172,7 +172,7 @@ def test_create_machines_aws_ec2():
 
         with patch('boto3.client', return_value=b3c), patch('boto3.resource', return_value=b3r):
             cloud.create_machines(ag, system, 1,
-                                  'server_url', 'minio_addr', 'clickhouse_addr')
+                                  'server_url', 'clickhouse_addr')
 
 
 
@@ -196,7 +196,6 @@ def test_create_destroy_machines_k8s():
 
         # TODO: set proper server_url
         server_url = 'http://192.168.0.89:8080'
-        minio_addr = '192.168.0.89:9001'
         clickhouse_addr = '192.168.0.89:9999'
 
         with patch.object(kubernetes.client.CoreV1Api, 'create_namespaced_pod'), \
@@ -214,7 +213,7 @@ def test_create_destroy_machines_k8s():
             lnp.return_value = l
 
             cloud.create_machines(ag, system, 3,
-                              server_url, minio_addr, clickhouse_addr)
+                              server_url, clickhouse_addr)
 
         for agent in Agent.query.all():
             with patch.object(kubernetes.client.CoreV1Api, 'delete_namespaced_pod'):

@@ -230,22 +230,22 @@ class DockerExecContext:
             except Exception:
                 log.exception('IGNORED EXCEPTION')
 
-    def _async_run(self, cmd, deadline, cwd='/', env=None, user='root'):
-        logs, exit_code = asyncio.run(self._dkr_run(None, cmd, cwd, deadline, env, user))
+    def _async_run(self, cmd, deadline, cwd='/', user='root'):
+        logs, exit_code = asyncio.run(self._dkr_run(None, cmd, cwd, deadline, user))
         if exit_code != 0:
             t0, t1, timeout = utils.get_times(deadline)
             raise Exception("non-zero %d exit code from '%s', cwd:%s, user:%s, now:%s, deadline:%s, time: %ds" % (
                 exit_code, cmd, str(cwd), str(user), t0, t1, timeout))
         return logs
 
-    async def _dkr_run(self, proc_coord, cmd, cwd, deadline, env, user, log_ctx=None):
+    async def _dkr_run(self, proc_coord, cmd, cwd, deadline, user, log_ctx=None):
         t0, t1, timeout = utils.get_times(deadline)
-        log.info("cmd '%s' in '%s', now %s, deadline %s, time: %ds, env: %s", cmd, cwd, t0, t1, timeout, env)
+        log.info("cmd '%s' in '%s', now %s, deadline %s, time: %ds", cmd, cwd, t0, t1, timeout)
 
         if log_ctx:
             log.set_ctx(**log_ctx)
 
-        exe = self.cntr.client.api.exec_create(self.cntr.id, cmd, workdir=cwd, environment=env, user=user)
+        exe = self.cntr.client.api.exec_create(self.cntr.id, cmd, workdir=cwd, user=user)
         sock = self.cntr.client.api.exec_start(exe['Id'], socket=True)
 
         logs = ''
@@ -340,19 +340,6 @@ class DockerExecContext:
         cmd = "/kktool -m %s -r %s -s %s %s" % (mod, return_addr, step_file_path2, command)
         log.info("exec: '%s' in '%s', timeout %ss", cmd, docker_cwd, timeout)
 
-        env = {}
-
-        # pass address to minio via env
-        if self.minio_ip:
-            port = consts.DEFAULT_MINIO_ADDR.split(':')[1]
-            minio_addr = '%s:%s' % (self.minio_ip, port)
-            env['KRAKEN_MINIO_ADDR'] = minio_addr
-        elif 'KRAKEN_MINIO_ADDR' in os.environ:
-            env['KRAKEN_MINIO_ADDR'] = os.environ['KRAKEN_MINIO_ADDR']
-
-        if not env:
-            env = None
-
         if not user:
             user = 'kraken'
 
@@ -365,7 +352,7 @@ class DockerExecContext:
         # run tool
         deadline = time.time() + timeout
         try:
-            await self._dkr_run(proc_coord, cmd, docker_cwd, deadline, env, user, log_ctx)
+            await self._dkr_run(proc_coord, cmd, docker_cwd, deadline, None, user, log_ctx)
         except Timeout:
             if proc_coord.result == {}:
                 t0, t1, timeout = utils.get_times(deadline)

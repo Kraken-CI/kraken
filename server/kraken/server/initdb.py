@@ -23,7 +23,6 @@ from . import consts
 INITIAL_SETTINGS = {
     'general': {
         'server_url': '',
-        'minio_addr': '',
         'clickhouse_addr': '',
     },
     'notification': {

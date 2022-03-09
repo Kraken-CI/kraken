@@ -31,7 +31,6 @@ export class SettingsPageComponent implements OnInit {
 
     generalForm = new FormGroup({
         server_url: new FormControl(''),
-        minio_addr: new FormControl(''),
         clickhouse_addr: new FormControl(''),
     })
 

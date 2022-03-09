@@ -169,7 +169,6 @@ def _restore_from_cache(mc, minio_bucket, minio_folders):
 
 def run(step):
     minio_addr = step['minio_addr']
-    minio_addr = os.environ.get('KRAKEN_MINIO_ADDR', minio_addr)
     minio_bucket = step['minio_bucket']
     minio_access_key = step['minio_access_key']
     minio_secret_key = step['minio_secret_key']

@@ -68,7 +68,6 @@ else
 fi
 chmod a+x /tmp/kkagent
 
-export KRAKEN_MINIO_ADDR="{minio-addr}"
 export KRAKEN_CLICKHOUSE_ADDR="{clickhouse-addr}"
 
 /tmp/kkagent install -s ${KRAKEN_URL}
@@ -88,12 +87,6 @@ def serve_agent_blob(blob):
             abort(500, 'Cannot get server URL and put it in Kraken agent install script. ' +
                   'The URL should be set on Kraken Settings page first.')
 
-        # get and check minio addr
-        minio_addr = get_setting('general', 'minio_addr')
-        if not minio_addr:
-            abort(500, 'Cannot get MinIO address and put it in Kraken agent install script. ' +
-                  'The MinIO address should be set on Kraken Settings page first.')
-
         # get and check clickhouse addr
         clickhouse_addr = get_setting('general', 'clickhouse_addr')
         if not clickhouse_addr:
@@ -102,7 +95,6 @@ def serve_agent_blob(blob):
 
         # patch install script with url and addresses
         script = INSTALL_SCRIPT.replace('{url}', url)
-        script = script.replace('{minio-addr}', minio_addr)
         script = script.replace('{clickhouse-addr}', clickhouse_addr)
 
         resp = make_response(script)

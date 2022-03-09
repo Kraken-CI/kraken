@@ -87,7 +87,7 @@ def login_to_azure():
 
 
 def _create_azure_vm(ag, system,
-                     server_url, minio_addr, clickhouse_addr,
+                     server_url, clickhouse_addr,
                      credential, subscription_id):
     instance_id = str(random.randrange(9999999999))
 
@@ -286,9 +286,9 @@ def _create_azure_vm(ag, system,
                      exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
                      wget -O agent {server_url}/install/agent
                      chmod a+x agent
-                     ./agent install -s {server_url} -m {minio_addr} -c {clickhouse_addr} --system-id {system_id}
+                     ./agent install -s {server_url} -c {clickhouse_addr} --system-id {system_id}
                   """
-    init_script = init_script.format(server_url=server_url, minio_addr=minio_addr, clickhouse_addr=clickhouse_addr,
+    init_script = init_script.format(server_url=server_url, clickhouse_addr=clickhouse_addr,
                                      system_id=system.id)
 
     poller = compute_client.virtual_machines.begin_create_or_update(
@@ -341,7 +341,7 @@ def _create_azure_vm(ag, system,
 
 
 def create_vms(ag, system, num,
-               server_url, minio_addr, clickhouse_addr):
+               server_url, clickhouse_addr):
 
     # Acquire a credential object using service principal authentication.
     credential, subscription_id = login_to_azure()
@@ -350,7 +350,7 @@ def create_vms(ag, system, num,
 
     for _ in range(num):
         _create_azure_vm(ag, system,
-                         server_url, minio_addr, clickhouse_addr,
+                         server_url, clickhouse_addr,
                          credential, subscription_id)
 
 

@@ -28,7 +28,7 @@ log = logging.getLogger(__name__)
 # AWS ECS FARGATE #############################################################
 
 def create_fargate_tasks(ag, system, num,
-                         server_url, minio_addr, clickhouse_addr):
+                         server_url, clickhouse_addr):
     credential = login_to_aws()
     if not credential:
         return
@@ -73,9 +73,9 @@ def create_fargate_tasks(ag, system, num,
     cmd += ' && wget -O /opt/kraken/kktool {server_url}/install/tool'
     cmd += ' && chmod a+x /opt/kraken/kkagent /opt/kraken/kktool'
     cmd += ' && mkdir -p /tmp/kk-jobs'
-    cmd += ' && /opt/kraken/kkagent run -d /tmp/kk-jobs -s {server_url} -m {minio_addr} -c {clickhouse_addr}'
+    cmd += ' && /opt/kraken/kkagent run -d /tmp/kk-jobs -s {server_url} -c {clickhouse_addr}'
     cmd += ' --system-id {system_id} --one-job'
-    cmd = cmd.format(server_url=server_url, minio_addr=minio_addr, clickhouse_addr=clickhouse_addr,
+    cmd = cmd.format(server_url=server_url, clickhouse_addr=clickhouse_addr,
                      system_id=system.id)
 
     cluster = aws['cluster']
@@ -102,7 +102,6 @@ def create_fargate_tasks(ag, system, num,
                 ],
                 'environment': [
                     {'name': 'KRAKEN_SERVER_ADDR', 'value': server_url},
-                    {'name': 'KRAKEN_MINIO_ADDR', 'value': minio_addr},
                     {'name': 'KRAKEN_CLICKHOUSE_ADDR', 'value': clickhouse_addr},
                 ],
                 #'cpu': 123,
