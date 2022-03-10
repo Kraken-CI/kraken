@@ -162,7 +162,7 @@ end
 task :run_server => 'server/kraken/version.py' do
   sh 'cp dot.env .env'
   Dir.chdir('server') do
-    sh "KRAKEN_CLICKHOUSE_ADDR=#{CLICKHOUSE_ADDR} MINIO_ACCESS_KEY='#{MINIO_ACCESS_KEY}' MINIO_SECRET_KEY='#{MINIO_SECRET_KEY}' ../venv/bin/poetry run python -m kraken.server.server"
+    sh "KRAKEN_CLICKHOUSE_ADDR=#{CLICKHOUSE_ADDR} KRAKEN_MINIO_ADDR=#{MINIO_ADDR} MINIO_ACCESS_KEY='#{MINIO_ACCESS_KEY}' MINIO_SECRET_KEY='#{MINIO_SECRET_KEY}' ../venv/bin/poetry run python -m kraken.server.server"
   end
 end
 
@@ -184,7 +184,7 @@ task :run_agent => ['./agent/venv/bin/kkagent', :build_agent] do
   sh 'cp server/kraken/server/logs.py agent/kraken/agent/'
   sh 'rm -rf /tmp/kk-jobs/ /opt/kraken/*'
   sh 'cp agent/kkagent agent/kktool /opt/kraken'
-  sh "LANGUAGE=en_US:en LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 KRAKEN_CLICKHOUSE_ADDR=#{CLICKHOUSE_ADDR} KRAKEN_MINIO_ADDR=#{MINIO_ADDR} /opt/kraken/kkagent run -d /tmp/kk-jobs -s http://localhost:8080 --no-update"
+  sh "LANGUAGE=en_US:en LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 KRAKEN_CLICKHOUSE_ADDR=#{CLICKHOUSE_ADDR} /opt/kraken/kkagent run -d /tmp/kk-jobs -s http://localhost:8080 --no-update"
 end
 
 task :run_agent_in_docker do
@@ -192,7 +192,7 @@ task :run_agent_in_docker do
   Dir.chdir('agent') do
     sh 'docker build -f docker-agent.txt -t kkagent .'
   end
-  sh "docker run --rm -ti  -v /var/run/docker.sock:/var/run/docker.sock -v /var/snap/lxd/common/lxd/unix.socket:/var/snap/lxd/common/lxd/unix.socket -v `pwd`/agent:/agent -e KRAKEN_AGENT_SLOT=7 -e KRAKEN_CLICKHOUSE_ADDR=#{CLICKHOUSE_ADDR} -e KRAKEN_MINIO_ADDR=#{MINIO_ADDR} kkagent /opt/kraken/kkagent run -s http://#{LOCALHOST_IP}:8080"
+  sh "docker run --rm -ti  -v /var/run/docker.sock:/var/run/docker.sock -v /var/snap/lxd/common/lxd/unix.socket:/var/snap/lxd/common/lxd/unix.socket -v `pwd`/agent:/agent -e KRAKEN_AGENT_SLOT=7 -e KRAKEN_CLICKHOUSE_ADDR=#{CLICKHOUSE_ADDR} kkagent /opt/kraken/kkagent run -s http://#{LOCALHOST_IP}:8080"
 end
 
 task :run_agent_in_lxd_all do
