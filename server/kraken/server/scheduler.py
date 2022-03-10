@@ -114,6 +114,7 @@ def assign_jobs_to_agents():
 
     agents_count, idle_agents_by_group, idle_agents_by_sys_group = _get_idle_agents()
     if agents_count == 0:
+        log.info('no idle agents')
         return 0
 
     waiting_jobs = _get_waiting_jobs()
