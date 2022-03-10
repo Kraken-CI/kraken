@@ -170,13 +170,13 @@ class MaskingHandler(logging.Handler):
             self.true_emit(record)
             return
 
-        max_secrets_lines = len(StructLogger.secrets_multi[0])
-        min_secrets_lines = len(StructLogger.secrets_multi[-1])
-
         # if there are multi line secrets then buffer records
         # and process them when the number of buffered records
         # is equal or greater then min number of lines of all secrets
         if StructLogger.secrets_multi:
+            max_secrets_lines = len(StructLogger.secrets_multi[0])
+            min_secrets_lines = len(StructLogger.secrets_multi[-1])
+
             self._buffer.append(record)
 
             if len(self._buffer) < min_secrets_lines:
