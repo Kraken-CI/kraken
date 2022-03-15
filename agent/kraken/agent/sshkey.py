@@ -34,16 +34,17 @@ class SshAgent:
 
     def shutdown(self):
         subprocess.run(['kill', self.pid], check=True)
+        del os.environ['SSH_AUTH_SOCK']
+        del os.environ['SSH_AGENT_PID']
 
     def add_key(self, key):
-        env = os.environ.copy()
-        env['SSH_AUTH_SOCK'] = self.sock
-        env['SSH_AGENT_PID'] = self.pid
+        os.environ['SSH_AUTH_SOCK'] = self.sock
+        os.environ['SSH_AGENT_PID'] = self.pid
 
         key = key.strip() + '\n'  # key must be finished with new line
         key = bytes(key, 'ascii')
 
-        process = subprocess.run('ssh-add -', shell=True, input=key, env=env)  # pylint: disable=subprocess-run-check
+        process = subprocess.run('ssh-add -', shell=True, input=key)  # pylint: disable=subprocess-run-check
         if process.returncode != 0:
             raise Exception('failed to add the key')
 
