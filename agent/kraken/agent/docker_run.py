@@ -352,7 +352,7 @@ class DockerExecContext:
         # run tool
         deadline = time.time() + timeout
         try:
-            await self._dkr_run(proc_coord, cmd, docker_cwd, deadline, None, user, log_ctx)
+            await self._dkr_run(proc_coord, cmd, docker_cwd, deadline, user, log_ctx)
         except Timeout:
             if proc_coord.result == {}:
                 t0, t1, timeout = utils.get_times(deadline)
