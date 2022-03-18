@@ -99,6 +99,8 @@ def install_linux():
             run('sudo usermod -a -G docker kraken')
         elif dstr in ['fedora', 'centos', 'rocky']:
             run('sudo usermod -aG docker kraken')
+        elif 'suse' in dstr:
+            run('sudo usermod -a kraken -G docker')
         else:
             raise Exception('distro %s is not supported yet' % dstr)
     except KeyError:
