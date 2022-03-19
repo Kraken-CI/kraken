@@ -17,10 +17,13 @@ import os
 import minio
 
 from . import consts
+from .models import get_setting
 
 
 def get_minio_addr():
-    minio_addr = os.environ.get('KRAKEN_MINIO_ADDR', consts.DEFAULT_MINIO_ADDR)
+    minio_addr = get_setting('general', 'minio_addr')
+    if not minio_addr:
+        minio_addr = os.environ.get('KRAKEN_MINIO_ADDR', consts.DEFAULT_MINIO_ADDR)
     access_key = os.environ['MINIO_ACCESS_KEY']
     secret_key = os.environ['MINIO_SECRET_KEY']
     return minio_addr, access_key, secret_key

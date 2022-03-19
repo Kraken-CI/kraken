@@ -1,9 +1,21 @@
 <p-tabView [(activeIndex)]="tabIndex">
-  <p-tabPanel header="General">
+    <p-tabPanel header="General">
+        <div style="max-width: 60em">
+        The addresses below are used when Kraken Agent is connecting to
+        Kraken Server remotelly from different network, ie. internal
+        address of Kraken Server e.g. from Docker Compose cannot be
+        used as it is unreachable. The same applies to Clickhouse for
+        collecting logs and Minio for storing artifacts.
+        </div>
+
       <!-- https://www.sanwebe.com/2014/08/css-html-forms-designs -->
       <form [formGroup]="generalForm" class="form-style-2">
         <label for="server_url"><span>Kraken Server URL</span>
           <input type="text" class="input-field" name="server_url" pInputText formControlName="server_url" placeholder="ex: https://kraken.mycorp.com"/>
+        </label>
+
+        <label for="minio_addr"><span>MinIO / S3 Address</span> <!-- (storage for artifacts) (ip:port) -->
+          <input type="text" class="input-field" name="minio_addr" pInputText formControlName="minio_addr" placeholder="ex: 1.2.3.4:9999"/>
         </label>
 
         <label for="clickhouse_addr"><span>ClickHouse Proxy Address</span> <!-- (storage for logs) (ip:port) -->
