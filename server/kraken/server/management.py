@@ -769,7 +769,7 @@ def get_diagnostics():
 
     # check redis
     rds_addr = os.environ.get('KRAKEN_REDIS_ADDR', consts.DEFAULT_REDIS_ADDR)
-    rds_open = srvcheck.is_service_open(rds_addr)
+    rds_open = srvcheck.is_service_open(rds_addr, 6379)
     diags['redis'] = {
         'name': 'Redis',
         'address': rds_addr,
