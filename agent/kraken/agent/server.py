@@ -15,6 +15,7 @@
 import os
 import json
 import time
+import socket
 import logging
 import datetime
 import urllib.request
@@ -51,7 +52,7 @@ def _send_http_request(url, data):
 
     while resp is None:
         try:
-            with urllib.request.urlopen(req) as f:
+            with urllib.request.urlopen(req, timeout=120) as f:
                 resp = f.read().decode('utf-8')
         # except socket.error as e:
         #     if e.errno in connection_errors:
@@ -65,6 +66,9 @@ def _send_http_request(url, data):
                 raise
         except ConnectionError as e:
             log.warning('connection problem to %s: %s, trying one more time in 5s', url, str(e))
+            time.sleep(5)
+        except socket.timeout:
+            log.warning('connection timeout to %s, trying one more time in 5s', url)
             time.sleep(5)
         except Exception:
             log.exception('some problem with connecting to server to %s', url)
