@@ -51,7 +51,6 @@ def test_create_or_update_test_case_comment():
         resp, code = results.create_or_update_test_case_comment(tcr.id,
                                                                 dict(text='text', author='author', state=consts.TC_COMMENT_INVESTIGATING))
         assert code == 200
-        assert resp['id'] == 1
         assert resp['state'] == consts.TC_COMMENT_INVESTIGATING
         assert len(resp['data']) == 1
         assert resp['data'][0]['author'] == 'author'
@@ -60,10 +59,13 @@ def test_create_or_update_test_case_comment():
         # checkc if assigning other tcrs with the same tc and flow works
         assert tcr2.comment_id == tcr.comment_id
 
+        tcc_id = resp['id']
+
+        # just update the comment
         resp, code = results.create_or_update_test_case_comment(tcr.id,
                                                                 dict(text='text2', author='author2', state=consts.TC_COMMENT_BUG_IN_PRODUCT))
         assert code == 200
-        assert resp['id'] == 1
+        assert resp['id'] == tcc_id
         assert resp['state'] == consts.TC_COMMENT_BUG_IN_PRODUCT
         assert len(resp['data']) == 2
         assert resp['data'][0]['author'] == 'author2'
