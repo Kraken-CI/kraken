@@ -13,11 +13,17 @@
 # limitations under the License.
 
 import os
+import logging
 
 import minio
+import urllib3
+from urllib3.exceptions import MaxRetryError
 
 from . import consts
 from .models import get_setting
+
+
+log = logging.getLogger(__name__)
 
 
 def get_minio_addr():
@@ -31,8 +37,38 @@ def get_minio_addr():
 
 def get_minio():
     minio_addr, access_key, secret_key = get_minio_addr()
-    mc = minio.Minio(minio_addr, access_key=access_key, secret_key=secret_key, secure=False)
+    http_client = urllib3.PoolManager(
+        timeout=5,
+        maxsize=10,
+        cert_reqs='CERT_REQUIRED',
+        retries=urllib3.Retry(
+            total=3,
+            backoff_factor=0.2,
+            status_forcelist=[500, 502, 503, 504]
+        )
+    )
+    mc = minio.Minio(minio_addr, access_key=access_key, secret_key=secret_key, secure=False, http_client=http_client)
     return mc
+
+
+def check_connection():
+    minio_addr, access_key, secret_key = get_minio_addr()
+    http_client = urllib3.PoolManager(
+        timeout=1,
+        maxsize=10,
+        cert_reqs='CERT_REQUIRED',
+        retries=urllib3.Retry(
+            total=2,
+            backoff_factor=0.2,
+            status_forcelist=[500, 502, 503, 504]
+        )
+    )
+    mc = minio.Minio(minio_addr, access_key=access_key, secret_key=secret_key, secure=False, http_client=http_client)
+    try:
+        bks = mc.list_buckets()
+    except MaxRetryError:
+        return False
+    return True
 
 
 def get_or_create_minio_bucket_for_artifacts(branch_id):
