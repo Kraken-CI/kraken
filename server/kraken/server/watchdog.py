@@ -47,7 +47,7 @@ def create_app():
     planner_url = os.environ.get('KRAKEN_PLANNER_URL', consts.DEFAULT_PLANNER_URL)
 
     srvcheck.check_postgresql(db_url)
-    srvcheck.check_url('planner', planner_url, 7997)
+    srvcheck.wait_for_service('planner', planner_url, 7997)
 
     logs.setup_logging('watchdog')
     log.info('Kraken Watchdog started, version %s', version.version)
@@ -431,7 +431,8 @@ def _check_for_errors_in_logs():
     errors_count = rows[0][0]
 
     redis_addr = os.environ.get('KRAKEN_REDIS_ADDR', consts.DEFAULT_REDIS_ADDR)
-    rds = redis.Redis(host=redis_addr, port=6379, db=consts.REDIS_KRAKEN_DB)
+    redis_host, redis_port = utils.split_host_port(redis_addr, 6379)
+    rds = redis.Redis(host=redis_host, port=redis_port, db=consts.REDIS_KRAKEN_DB)
 
     rds.set('error-logs-count', errors_count)
     #log.info('updated errors count to %s', errors_count)

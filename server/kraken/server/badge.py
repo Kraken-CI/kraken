@@ -19,12 +19,14 @@ import redis
 from flask import abort, redirect
 
 from . import consts
+from . import utils
 
 
 def get_branch_badge(branch_id, what=None):
     # get redis reference
     redis_addr = os.environ.get('KRAKEN_REDIS_ADDR', consts.DEFAULT_REDIS_ADDR)
-    rds = redis.Redis(host=redis_addr, port=6379, db=consts.REDIS_KRAKEN_DB)
+    redis_host, redis_port = utils.split_host_port(redis_addr, 6379)
+    rds = redis.Redis(host=redis_host, port=redis_port, db=consts.REDIS_KRAKEN_DB)
 
     try:
         int(branch_id)

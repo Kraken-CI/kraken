@@ -31,6 +31,7 @@ from . import agentblob
 from . import storage
 from . import job_log
 from . import badge
+from . import minioops
 from .. import version
 
 log = logging.getLogger('server')
@@ -68,11 +69,24 @@ def _set_log_ctx():
         pass
 
 
-def _clear_log_ctx(a):  # pylint: disable=unused-argument
+def _clear_request_ctx(a):  # pylint: disable=unused-argument
     try:
         log.set_ctx(tool=None)
     except Exception:
-        pass
+        log.exception('IGNORED')
+
+    try:
+        models.db.session.remove()
+    except Exception:
+        log.exception('IGNORED')
+
+
+def _unhandled_error_handler(err):
+    log.info('ERROR %s', err)
+    print('ERROR', err)
+    log.info('ORIG ERROR %s', err.original_exception)
+    print('ORIG ERROR', err.original_exception)
+    return '{}', 500
 
 
 def create_app():
@@ -84,9 +98,9 @@ def create_app():
     server_addr = os.environ.get('KRAKEN_SERVER_ADDR', consts.DEFAULT_SERVER_ADDR)
 
     srvcheck.check_postgresql(db_url)
-    srvcheck.check_tcp_service('redis', redis_addr, 6379)
-    srvcheck.check_url('clickhouse', clickhouse_url, 8123)
-    srvcheck.check_url('planner', planner_url, 7997)
+    srvcheck.wait_for_service('redis', redis_addr, 6379)
+    srvcheck.wait_for_service('clickhouse', clickhouse_url, 8123)
+    srvcheck.wait_for_service('planner', planner_url, 7997)
 
     logs.setup_logging('server')
     log.info('Kraken Server started, version %s', version.version)
@@ -107,10 +121,16 @@ def create_app():
     # initialize SqlAlchemy
     models.db.init_app(app)
 
-    # setup sentry
     with app.app_context():
+        # setup sentry
         sentry_url = models.get_setting('monitoring', 'sentry_dsn')
         logs.setup_sentry(sentry_url)
+
+        # check minio connection
+        minio_conn = minioops.check_connection()
+        if not minio_conn:
+            minio_addr, _, _ = minioops.get_minio_addr()
+            log.warning('No connection to minio at %s', minio_addr)
 
     # Read the swagger.yml file to configure the endpoints
     connex_app.add_api("swagger.yml", resolver=MyResolver())
@@ -137,7 +157,9 @@ def create_app():
     app.add_url_rule("/branch-badge/<branch_id>/<what>", view_func=badge.get_branch_badge, methods=['GET'])
 
     app.before_request(_set_log_ctx)
-    app.teardown_request(_clear_log_ctx)
+    app.teardown_request(_clear_request_ctx)
+
+    app.register_error_handler(500, _unhandled_error_handler)
 
     return connex_app
 

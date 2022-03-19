@@ -24,6 +24,7 @@ import redis
 from . import logs
 from . import consts
 from . import srvcheck
+from . import utils
 from .. import version
 from .bg import jobs as bg_jobs
 from . import kkrq
@@ -60,8 +61,9 @@ def _check_jobs(waiting_jobs, executing_jobs):
 
 def _main_loop():
     redis_addr = os.environ.get('KRAKEN_REDIS_ADDR', consts.DEFAULT_REDIS_ADDR)
-    srvcheck.check_tcp_service('redis', redis_addr, 6379)
-    rds = redis.Redis(host=redis_addr, port=6379, db=consts.REDIS_RQ_DB)
+    srvcheck.wait_for_service('redis', redis_addr, 6379)
+    redis_host, redis_port = utils.split_host_port(redis_addr, 6379)
+    rds = redis.Redis(host=redis_host, port=redis_port, db=consts.REDIS_RQ_DB)
 
     ps = rds.pubsub()
     ps.subscribe('qneck')

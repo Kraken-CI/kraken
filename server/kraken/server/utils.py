@@ -22,3 +22,15 @@ log = logging.getLogger(__name__)
 
 def utcnow():
     return datetime.datetime.now(pytz.utc)
+
+
+def split_host_port(addr, default_port):
+    parts = addr.split(':')
+    host = parts[0]
+    if len(parts) == 1:
+        if default_port is None:
+            raise Exception("format of address '%s' is incorrect" % addr)
+        port = default_port
+    else:
+        port = int(parts[1])
+    return host, port

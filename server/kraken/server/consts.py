@@ -124,7 +124,7 @@ NETWORK_TIMEOUT = 2  # minutes
 
 
 DEFAULT_DB_URL = 'postgresql://kraken:kk123@localhost:5433/kraken'
-DEFAULT_REDIS_ADDR = 'localhost'
+DEFAULT_REDIS_ADDR = 'localhost:6379'
 DEFAULT_CLICKHOUSE_PORT = '9001'
 DEFAULT_CLICKHOUSE_ADDR = 'localhost:%s' % DEFAULT_CLICKHOUSE_PORT
 DEFAULT_CLICKHOUSE_URL = 'http://localhost:8123'

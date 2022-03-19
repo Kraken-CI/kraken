@@ -5,8 +5,8 @@
         <p-card>
           <ng-template pTemplate="title">
             {{ s.value.name }}
-            <i *ngIf="s.value.open !== 'true'" class="pi pi-check-circle" style="font-size: 1em; color: green;"></i>
-            <i *ngIf="s.value.open === 'true'" class="pi pi-times-circle" style="font-size: 1em; color: red;"></i>
+            <i *ngIf="s.value.open" class="pi pi-check-circle" style="font-size: 1em; color: green;"></i>
+            <i *ngIf="!s.value.open" class="pi pi-times-circle" style="font-size: 1em; color: red;"></i>
           </ng-template>
           <ng-template pTemplate="subtitle">
             {{ s.value.address }}

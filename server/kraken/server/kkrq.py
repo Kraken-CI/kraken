@@ -25,6 +25,7 @@ from flask import Flask
 from . import srvcheck
 from . import consts
 from . import logs
+from . import utils
 from .. import version
 from .models import db, get_setting
 
@@ -33,7 +34,8 @@ log = logging.getLogger('rq')
 
 def enq(func, *args, **kwargs):
     redis_addr = os.environ.get('KRAKEN_REDIS_ADDR', consts.DEFAULT_REDIS_ADDR)
-    rds = redis.Redis(host=redis_addr, port=6379, db=consts.REDIS_RQ_DB)
+    redis_host, redis_port = utils.split_host_port(redis_addr, 6379)
+    rds = redis.Redis(host=redis_host, port=redis_port, db=consts.REDIS_RQ_DB)
     q = rq.Queue('kq', connection=rds)
     # job timeout is 20mins (1200s), interval between retries is 60s
     j = q.enqueue(func, args=args, kwargs=kwargs, retry=rq.Retry(max=2, interval=5), job_timeout=1200)
@@ -43,7 +45,8 @@ def enq(func, *args, **kwargs):
 
 def enq_neck(func, *args, ignore_args=None):
     redis_addr = os.environ.get('KRAKEN_REDIS_ADDR', consts.DEFAULT_REDIS_ADDR)
-    rds = redis.Redis(host=redis_addr, port=6379, db=consts.REDIS_RQ_DB)
+    redis_host, redis_port = utils.split_host_port(redis_addr, 6379)
+    rds = redis.Redis(host=redis_host, port=redis_port, db=consts.REDIS_RQ_DB)
     data = dict(func=func.__name__,
                 args=args,
                 ignore_args=ignore_args)
@@ -54,7 +57,8 @@ def enq_neck(func, *args, ignore_args=None):
 
 def get_jobs():
     redis_addr = os.environ.get('KRAKEN_REDIS_ADDR', consts.DEFAULT_REDIS_ADDR)
-    rds = redis.Redis(host=redis_addr, port=6379, db=consts.REDIS_RQ_DB)
+    redis_host, redis_port = utils.split_host_port(redis_addr, 6379)
+    rds = redis.Redis(host=redis_host, port=redis_port, db=consts.REDIS_RQ_DB)
     q = rq.Queue('kq', connection=rds)
 
     jobs_ids = q.scheduled_job_registry.get_job_ids()
@@ -87,11 +91,12 @@ def get_jobs():
 def main():
     # check deps
     planner_url = os.environ.get('KRAKEN_PLANNER_URL', consts.DEFAULT_PLANNER_URL)
-    srvcheck.check_url('planner', planner_url, 7997)
+    srvcheck.wait_for_service('planner', planner_url, 7997)
 
     redis_addr = os.environ.get('KRAKEN_REDIS_ADDR', consts.DEFAULT_REDIS_ADDR)
-    srvcheck.check_tcp_service('redis', redis_addr, 6379)
-    rds = redis.Redis(host=redis_addr, port=6379, db=consts.REDIS_RQ_DB)
+    srvcheck.wait_for_service('redis', redis_addr, 6379)
+    redis_host, redis_port = utils.split_host_port(redis_addr, 6379)
+    rds = redis.Redis(host=redis_host, port=redis_port, db=consts.REDIS_RQ_DB)
 
     db_url = os.environ.get('KRAKEN_DB_URL', consts.DEFAULT_DB_URL)
     srvcheck.check_postgresql(db_url)

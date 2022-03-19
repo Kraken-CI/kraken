@@ -133,7 +133,7 @@ def create_app():
     planner_url = os.environ.get('KRAKEN_PLANNER_URL', consts.DEFAULT_PLANNER_URL)
 
     srvcheck.check_postgresql(db_url)
-    srvcheck.check_url('planner', planner_url, 7997)
+    srvcheck.wait_for_service('planner', planner_url, 7997)
 
     logs.setup_logging('scheduler')
     log.info('Kraken Scheduler started, version %s', version.version)

@@ -38,6 +38,7 @@ from .schema import prepare_new_planner_triggers
 from .cloud import aws, azure, k8s
 from . import notify
 from . import utils
+from . import minioops
 
 
 log = logging.getLogger(__name__)
@@ -750,7 +751,7 @@ def get_diagnostics():
 
     # check postgresql
     pgsql_addr = os.environ.get('KRAKEN_DB_URL', consts.DEFAULT_DB_URL)
-    pgsql_open = srvcheck.is_addr_open(pgsql_addr)
+    pgsql_open = srvcheck.is_service_open(pgsql_addr)
     diags['postgresql'] = {
         'name': 'PostgreSQL',
         'address': pgsql_addr,
@@ -759,7 +760,7 @@ def get_diagnostics():
 
     # check clickhouse
     ch_url = os.environ.get('KRAKEN_CLICKHOUSE_URL', consts.DEFAULT_CLICKHOUSE_URL)
-    ch_open = srvcheck.is_addr_open(ch_url)
+    ch_open = srvcheck.is_service_open(ch_url)
     diags['clickhouse'] = {
         'name': 'ClickHouse',
         'address': ch_url,
@@ -768,16 +769,27 @@ def get_diagnostics():
 
     # check redis
     rds_addr = os.environ.get('KRAKEN_REDIS_ADDR', consts.DEFAULT_REDIS_ADDR)
-    rds_open = srvcheck.is_addr_open(rds_addr, 6379)
+    rds_open = srvcheck.is_service_open(rds_addr)
     diags['redis'] = {
         'name': 'Redis',
         'address': rds_addr,
         'open': rds_open
     }
 
+    # check minio
+    minio_addr, _, _ = minioops.get_minio_addr()
+    minio_open = srvcheck.is_service_open(minio_addr)
+    if minio_open:
+        minio_open = minioops.check_connection()
+    diags['minio'] = {
+        'name': 'MinIO',
+        'address': minio_addr,
+        'open': minio_open
+    }
+
     # check planner
     plnr_addr = os.environ.get('KRAKEN_PLANNER_URL', consts.DEFAULT_PLANNER_URL)
-    plnr_open = srvcheck.is_addr_open(plnr_addr)
+    plnr_open = srvcheck.is_service_open(plnr_addr)
     diags['planner'] = {
         'name': 'Kraken Planner',
         'address': plnr_addr,
@@ -892,7 +904,8 @@ def  get_services_logs(services, level=None):
 
 def get_errors_in_logs_count():
     redis_addr = os.environ.get('KRAKEN_REDIS_ADDR', consts.DEFAULT_REDIS_ADDR)
-    rds = redis.Redis(host=redis_addr, port=6379, db=consts.REDIS_KRAKEN_DB)
+    redis_host, redis_port = utils.split_host_port(redis_addr, 6379)
+    rds = redis.Redis(host=redis_host, port=redis_port, db=consts.REDIS_KRAKEN_DB)
 
     errors_count = rds.get('error-logs-count')
     if errors_count:
