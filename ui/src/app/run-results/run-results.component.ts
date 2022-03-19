@@ -198,14 +198,20 @@ export class RunResultsComponent implements OnInit, OnDestroy {
         })
     }
 
-    ngOnDestroy() {
+    cancelRefreshTimer() {
         if (this.refreshTimer) {
             clearTimeout(this.refreshTimer)
             this.refreshTimer = null
         }
     }
 
+    ngOnDestroy() {
+        this.cancelRefreshTimer()
+    }
+
     refreshPage() {
+        this.cancelRefreshTimer()
+
         switch (this.activeTabIdx) {
             case 0: // jobs
                 this.loadJobsLazy({ first: 0, rows: 30 })
