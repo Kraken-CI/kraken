@@ -65,7 +65,7 @@ def check_connection():
     )
     mc = minio.Minio(minio_addr, access_key=access_key, secret_key=secret_key, secure=False, http_client=http_client)
     try:
-        bks = mc.list_buckets()
+        mc.list_buckets()
     except MaxRetryError:
         return False
     return True
