@@ -18,7 +18,7 @@ def stage(ctx):
                 "cmd": "tar -zxf kraken.tar.gz",
             }, {
                 "tool": "shell",
-                "cmd": "rake pulumi_login",
+                "cmd": "rake pulumi_init",
                 "cwd": "kraken",
                 "timeout": 120
             }, {

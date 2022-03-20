@@ -576,9 +576,10 @@ file PULUMI do
   end
 end
 
-task :pulumi_login => PULUMI do
+task :pulumi_init => PULUMI do
   Dir.chdir('pulumi/ecs') do
     sh "#{PULUMI} login --local"
+    sh "#{PULUMI} stack init --secrets-provider passphrase"
   end
 end
 
