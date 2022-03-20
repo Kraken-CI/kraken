@@ -10,12 +10,20 @@ def stage(ctx):
             "name": "systest",
             "timeout": 2000,
             "steps": [{
+                "tool": "shell",
+                "cmd": "sudo apt update && sudo apt-get install -y python3-pip",
+                "timeout": 300
+            }, {
                 "tool": "artifacts",
                 "action": "download",
                 "source": "kraken.tar.gz"
             }, {
                 "tool": "shell",
                 "cmd": "tar -zxf kraken.tar.gz",
+            }, {
+                "tool": "shell",
+                "cmd": "sudo pip3 install -r tests/requirements.txt",
+                "cwd": "kraken",
             }, {
                 "tool": "shell",
                 "cmd": "rake pulumi_init",
