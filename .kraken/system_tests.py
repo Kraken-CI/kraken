@@ -8,7 +8,7 @@ def stage(ctx):
         "configs": [],
         "jobs": [{
             "name": "systest",
-            "timeout": 1200,
+            "timeout": 2000,
             "steps": [{
                 "tool": "artifacts",
                 "action": "download",
@@ -25,7 +25,7 @@ def stage(ctx):
                 "tool": "shell",
                 "cmd": "rake run_systests",
                 "cwd": "kraken",
-                "timeout": 800,
+                "timeout": 1600,
                 "env": {
                     "AWS_ACCESS_KEY_ID": "#{KK_SECRET_SIMPLE_aws_access_key_id}",
                     "AWS_SECRET_ACCESS_KEY": "#{KK_SECRET_SIMPLE_aws_secret_access_key}"
