@@ -38,6 +38,10 @@ def stage(ctx):
                     "AWS_ACCESS_KEY_ID": "#{KK_SECRET_SIMPLE_aws_access_key_id}",
                     "AWS_SECRET_ACCESS_KEY": "#{KK_SECRET_SIMPLE_aws_secret_access_key}"
                 },
+            }, {
+                "tool": "junit_collect",
+                "cwd": "kraken",
+                "file_glob": "tests/systests-results.xml"
             }],
             "environments": [{
                 "system": "krakenci/bld-kraken",
