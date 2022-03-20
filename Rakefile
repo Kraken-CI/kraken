@@ -579,7 +579,7 @@ end
 task :pulumi_init => PULUMI do
   Dir.chdir('pulumi/ecs') do
     sh "#{PULUMI} login --local"
-    sh "#{PULUMI} stack init --secrets-provider passphrase"
+    sh "#{PULUMI} stack init aws-ecs --secrets-provider passphrase"
   end
 end
 
