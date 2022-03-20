@@ -128,7 +128,9 @@ def create_app():
 
         # check minio connection
         minio_conn = minioops.check_connection()
-        if not minio_conn:
+        if minio_conn:
+            log.info('minio is up')
+        else:
             minio_addr, _, _ = minioops.get_minio_addr()
             log.warning('No connection to minio at %s', minio_addr)
 

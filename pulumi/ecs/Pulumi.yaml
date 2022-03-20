@@ -1,0 +1,6 @@
+name: kraken-ci-aws-ecs
+runtime:
+  name: python
+  options:
+    virtualenv: venv
+description: Kraken CI on AWS ECS

@@ -6,6 +6,7 @@ NODE_VER = 'v16.13.1'
 OPENAPI_GENERATOR_VER = '5.3.0'
 HELM_VER = 'v3.7.2'
 DOCKER_COMPOSE_VER = '2.2.2'
+PULUMI_VER = 'v3.26.1'
 
 # Check host OS
 UNAME=`uname -s`
@@ -29,6 +30,7 @@ NG = File.expand_path('ui/node_modules/.bin/ng')
 OPENAPI_GENERATOR = "#{TOOLS_DIR}/swagger-codegen-cli-#{OPENAPI_GENERATOR_VER}.jar"
 SWAGGER_FILE = File.expand_path("server/kraken/server/swagger.yml")
 HELM = "#{TOOLS_DIR}/helm"
+PULUMI = "#{TOOLS_DIR}/pulumi-#{PULUMI_VER}/pulumi"
 
 DOCKER_COMPOSE = "#{TOOLS_DIR}/docker-compose-#{DOCKER_COMPOSE_VER}"
 ENV['DOCKER_BUILDKIT']='1'
@@ -560,6 +562,45 @@ task :run_portainer do
   sh 'docker volume create portainer_data'
   sh 'docker run -d -p 8000:8000 -p 9000:9000 -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer'
 end
+
+
+# system tests
+
+file PULUMI do
+  sh "mkdir -p #{TOOLS_DIR}"
+  Dir.chdir(TOOLS_DIR) do
+    sh "wget -nv https://github.com/pulumi/pulumi/releases/download/#{PULUMI_VER}/pulumi-#{PULUMI_VER}-linux-x64.tar.gz"
+    sh "tar xzf pulumi-#{PULUMI_VER}-linux-x64.tar.gz"
+    sh "mv pulumi pulumi-#{PULUMI_VER}"
+    sh "rm -rf pulumi-#{PULUMI_VER}-linux-x64.tar.gz"
+  end
+end
+
+task :run_systests => PULUMI do
+  # setup Kraken in AWS ECS
+  kraken_addr = ''
+  Dir.chdir('pulumi/ecs') do
+    sh "PULUMI_CONFIG_PASSPHRASE= #{PULUMI} up -f -y"
+    kraken_addr = `PULUMI_CONFIG_PASSPHRASE= #{PULUMI} stack output 'Kraken Server Address'`
+  end
+  kraken_addr = kraken_addr.strip
+
+  # TODO: wait until Kraken is ready
+  sh 'sleep 120'
+
+  # run system tests
+  Dir.chdir('tests') do
+    sh "KRAKEN_ADDR=#{kraken_addr} ./venv/bin/pytest systests.py -s || true"
+  end
+
+  # teardown Kraken in AWS ECS
+  Dir.chdir('pulumi/ecs') do
+    sh "PULUMI_CONFIG_PASSPHRASE= #{PULUMI} destroy -f -y"
+  end
+end
+
+
+# Helm packaging
 
 file HELM do
   sh "mkdir -p #{TOOLS_DIR}"

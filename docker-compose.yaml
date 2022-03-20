@@ -89,7 +89,6 @@ services:
       - KRAKEN_CLICKHOUSE_ADDR
       - KRAKEN_SERVER_ADDR
       - KRAKEN_AGENT_BUILTIN=1
-      - KRAKEN_MINIO_ADDR
     networks:
       - lab_net
     depends_on:

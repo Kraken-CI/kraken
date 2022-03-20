@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import time
 import requests
 
-BASE_URL = 'http://localhost:8080/api'
+KRAKEN_ADDR = os.environ.get('KRAKEN_ADDR', 'localhost:8080')
+BASE_URL = 'http://%s/api' % KRAKEN_ADDR
 
 class Session:
     def __init__(self, base_url):
@@ -90,7 +92,7 @@ def test_basic_scenario():
     a_id = data['items'][0]['id']
 
     # authorize agent
-    agents = [{'id': a_id, 'authorized': True}]
+    agents = [{'id': a_id, 'authorized': True, 'disabled': False}]
     resp = s.patch('/agents', agents)
     data = resp.json()
 
