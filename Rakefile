@@ -598,7 +598,7 @@ task :run_systests => PULUMI do
 
   # run system tests
   Dir.chdir('tests') do
-    sh "KRAKEN_ADDR=#{kraken_addr} pytest systests.py -s || true"
+    sh "KRAKEN_ADDR=#{kraken_addr} pytest-3 systests.py -s || true"
   end
 
   # teardown Kraken in AWS ECS
