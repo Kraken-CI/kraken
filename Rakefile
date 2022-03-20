@@ -580,6 +580,7 @@ task :pulumi_init => PULUMI do
   Dir.chdir('pulumi/ecs') do
     sh "#{PULUMI} login --local"
     sh "PULUMI_CONFIG_PASSPHRASE= #{PULUMI} stack init aws-ecs --secrets-provider passphrase"
+    sh "PULUMI_CONFIG_PASSPHRASE= #{PULUMI} config set aws:region ca-central-1"
   end
 end
 
