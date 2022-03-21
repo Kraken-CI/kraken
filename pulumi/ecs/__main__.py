@@ -70,21 +70,21 @@ def kk_service(cluster, role, prv_dns_ns, vpc_subnets, secgrp, loggrp, name, ima
         load_balancers = None
         opts = None
 
-    ecs_svc = aws.ecs.Service('%s-svc' % name,
-                              cluster=cluster.arn,
-                              desired_count=cntr_count,
-                              launch_type='FARGATE',
-                              task_definition=td.arn,
-                              service_registries=aws.ecs.ServiceServiceRegistriesArgs(
-                                  registry_arn=sd_svc.arn
-                              ),
-                              network_configuration=aws.ecs.ServiceNetworkConfigurationArgs(
-                                  assign_public_ip=True,
-                                  subnets=vpc_subnets.ids,
-                                  security_groups=[secgrp.id],
-                              ),
-                              load_balancers=load_balancers,
-                              opts=opts)
+    aws.ecs.Service('%s-svc' % name,
+                    cluster=cluster.arn,
+                    desired_count=cntr_count,
+                    launch_type='FARGATE',
+                    task_definition=td.arn,
+                    service_registries=aws.ecs.ServiceServiceRegistriesArgs(
+                        registry_arn=sd_svc.arn
+                    ),
+                    network_configuration=aws.ecs.ServiceNetworkConfigurationArgs(
+                        assign_public_ip=True,
+                        subnets=vpc_subnets.ids,
+                        security_groups=[secgrp.id],
+                    ),
+                    load_balancers=load_balancers,
+                    opts=opts)
 
     return sd_svc
 
@@ -207,10 +207,10 @@ def main():
                         }),
                         )
 
-    rpa = aws.iam.RolePolicyAttachment('task-exec-policy',
-                                       role=role.name,
-                                       policy_arn='arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy',
-                                       )
+    aws.iam.RolePolicyAttachment('task-exec-policy',
+                                 role=role.name,
+                                 policy_arn='arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy',
+                                 )
 
     ####### service discovery stuff
 
@@ -386,17 +386,17 @@ def main():
         { "name": "MINIO_SECRET_KEY", "value": args['minio_secret_key']  },
     ])
 
-    kk_rq_sd = kk_service(cluster,
-                          role,
-                          prv_dns_ns,
-                          default_vpc_subnets,
-                          secgrp,
-                          lg,
-                          'kk-rq',
-                          kk_image('kkrq', kk_ver),
-                          1,
-                          1234,  # not used
-                          env=kk_rq_env)
+    kk_service(cluster,
+               role,
+               prv_dns_ns,
+               default_vpc_subnets,
+               secgrp,
+               lg,
+               'kk-rq',
+               kk_image('kkrq', kk_ver),
+               1,
+               1234,  # not used
+               env=kk_rq_env)
 
     ####### KK SERVER
 
@@ -452,17 +452,17 @@ def main():
         { "name": "KRAKEN_AGENT_BUILTIN", "value": "1"  },
     ])
 
-    kk_agent_sd = kk_service(cluster,
-                             role,
-                             prv_dns_ns,
-                             default_vpc_subnets,
-                             secgrp,
-                             lg,
-                             'kk-agent',
-                             kk_image('kkagent', kk_ver),
-                             1,
-                             1234,  # not used
-                             env=kk_agent_env)
+    kk_service(cluster,
+               role,
+               prv_dns_ns,
+               default_vpc_subnets,
+               secgrp,
+               lg,
+               'kk-agent',
+               kk_image('kkagent', kk_ver),
+               1,
+               1234,  # not used
+               env=kk_agent_env)
 
     ####### KK UI
 
@@ -473,19 +473,19 @@ def main():
         { "name": "KRAKEN_SERVER_ADDR", "value": "%s.%s:6363" % (args['server'], args['domain']) },
     ])
 
-    kk_ui_sd = kk_service(cluster,
-                          role,
-                          prv_dns_ns,
-                          default_vpc_subnets,
-                          secgrp,
-                          lg,
-                          'kk-ui',
-                          kk_image('kkui', kk_ver),
-                          1,
-                          80,
-                          env=kk_ui_env,
-                          web_listener=wl,
-                          target_group=atg)
+    kk_service(cluster,
+               role,
+               prv_dns_ns,
+               default_vpc_subnets,
+               secgrp,
+               lg,
+               'kk-ui',
+               kk_image('kkui', kk_ver),
+               1,
+               80,
+               env=kk_ui_env,
+               web_listener=wl,
+               target_group=atg)
 
     export('Kraken Server Address', alb.dns_name.apply(lambda dns_name: '%s' % dns_name))
     export('ClickHouse Proxy Address', pulumi.Output.all(domain=prv_dns_ns.name,
