@@ -162,8 +162,11 @@ class RequestHandler():
 
 
 async def _async_tcp_server(server):
-    async with server:
+    try:
         await server.serve_forever()
+    finally:
+        server.close()
+        await server.wait_closed()
 
 
 async def _send_keep_alive_to_server(proc_coord):
