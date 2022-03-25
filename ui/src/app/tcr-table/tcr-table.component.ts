@@ -1,5 +1,7 @@
-import { Component, Input, OnInit, ViewChild } from '@angular/core'
+import { Component, Input, OnInit, OnDestroy, ViewChild } from '@angular/core'
 import { ActivatedRoute } from '@angular/router'
+
+import { Subscription } from 'rxjs'
 
 import { MessageService } from 'primeng/api'
 import { Table } from 'primeng/table'
@@ -18,7 +20,7 @@ import { Run, System, Group } from '../backend/model/models'
     templateUrl: './tcr-table.component.html',
     styleUrls: ['./tcr-table.component.sass'],
 })
-export class TcrTableComponent implements OnInit {
+export class TcrTableComponent implements OnInit, OnDestroy {
     @Input()
     run: Run = { state: 'in-progress', tests_passed: 0 }
 
@@ -53,6 +55,8 @@ export class TcrTableComponent implements OnInit {
     previewHtml = ''
     tcr = { id: 0, comment: { data: [], state: 0 }, relevancy: 0 }
     commentStates = []
+
+    private subs: Subscription = new Subscription()
 
     constructor(
         private route: ActivatedRoute,
@@ -103,30 +107,36 @@ export class TcrTableComponent implements OnInit {
 
         const systems$ = this.managementService.getSystems()
         const groups$ = this.managementService.getGroups(0, 1000)
-        combineLatest(systems$, groups$, this.route.queryParams).subscribe(
-            ([systems, groups, params]) => {
-                this.systems = systems.items
-                this.groups = groups.items
+        this.subs.add(
+            combineLatest(systems$, groups$, this.route.queryParams).subscribe(
+                ([systems, groups, params]) => {
+                    this.systems = systems.items
+                    this.groups = groups.items
 
-                const sysId = parseInt(params.system, 10)
-                if (sysId) {
-                    const sys = this.systems.find((s) => s.id === sysId)
-                    if (sys) {
-                        this.filterResultSystems = [sys]
+                    const sysId = parseInt(params.system, 10)
+                    if (sysId) {
+                        const sys = this.systems.find((s) => s.id === sysId)
+                        if (sys) {
+                            this.filterResultSystems = [sys]
+                        }
                     }
-                }
 
-                const grpId = parseInt(params.group, 10)
-                if (grpId) {
-                    const grp = this.groups.find((g) => g.id === grpId)
-                    if (grp) {
-                        this.filterResultGroups = [grp]
+                    const grpId = parseInt(params.group, 10)
+                    if (grpId) {
+                        const grp = this.groups.find((g) => g.id === grpId)
+                        if (grp) {
+                            this.filterResultGroups = [grp]
+                        }
                     }
-                }
 
-                this.loadResultsLazy({ first: 0, rows: 30 })
-            }
+                    this.loadResultsLazy({ first: 0, rows: 30 })
+                }
+            )
         )
+    }
+
+    ngOnDestroy() {
+        this.subs.unsubscribe()
     }
 
     loadResultsLazy(event) {
@@ -148,29 +158,31 @@ export class TcrTableComponent implements OnInit {
         }
 
         this.loadingResults = true
-        this.resultsService
-            .getRunResults(
-                this.run.id,
-                event.first,
-                event.rows,
-                sortField,
-                sortDir,
-                statuses,
-                changes,
-                this.filterMinAge,
-                this.filterMaxAge,
-                this.filterInstabilityRange[0],
-                this.filterInstabilityRange[1],
-                this.filterTestCaseText,
-                this.filterResultJob,
-                this.filterResultSystems.map((x) => x.id),
-                this.filterResultGroups.map((x) => x.id)
-            )
-            .subscribe((data) => {
-                this.results = data.items
-                this.totalResults = data.total
-                this.loadingResults = false
-            })
+        this.subs.add(
+            this.resultsService
+                .getRunResults(
+                    this.run.id,
+                    event.first,
+                    event.rows,
+                    sortField,
+                    sortDir,
+                    statuses,
+                    changes,
+                    this.filterMinAge,
+                    this.filterMaxAge,
+                    this.filterInstabilityRange[0],
+                    this.filterInstabilityRange[1],
+                    this.filterTestCaseText,
+                    this.filterResultJob,
+                    this.filterResultSystems.map((x) => x.id),
+                    this.filterResultGroups.map((x) => x.id)
+                )
+                .subscribe((data) => {
+                    this.results = data.items
+                    this.totalResults = data.total
+                    this.loadingResults = false
+                })
+        )
     }
 
     refreshResults() {
@@ -317,35 +329,37 @@ export class TcrTableComponent implements OnInit {
     }
 
     addTcrComment() {
-        this.resultsService
-            .createOrUpdateTestCaseComment(this.tcr.id, {
-                author: this.commentAuthor,
-                state: parseInt(this.commentState, 10),
-                text: this.commentText,
-            })
-            .subscribe(
-                (data) => {
-                    this.msgSrv.add({
-                        severity: 'success',
-                        summary: 'Comment updated',
-                        detail: 'Comment has been updated.',
-                    })
-                    this.commentAuthor = ''
-                    this.commentState = 0
-                    this.commentText = ''
-                    this.tcrCommentDlgVisible = false
+        this.subs.add(
+            this.resultsService
+                .createOrUpdateTestCaseComment(this.tcr.id, {
+                    author: this.commentAuthor,
+                    state: parseInt(this.commentState, 10),
+                    text: this.commentText,
+                })
+                .subscribe(
+                    (data) => {
+                        this.msgSrv.add({
+                            severity: 'success',
+                            summary: 'Comment updated',
+                            detail: 'Comment has been updated.',
+                        })
+                        this.commentAuthor = ''
+                        this.commentState = 0
+                        this.commentText = ''
+                        this.tcrCommentDlgVisible = false
 
-                    this.refreshResults()
-                },
-                (err) => {
-                    this.msgSrv.add({
-                        severity: 'error',
-                        summary: 'Comment update erred',
-                        detail: 'Updating comment erred: ' + err.statusText,
-                        life: 10000,
-                    })
-                }
-            )
+                        this.refreshResults()
+                    },
+                    (err) => {
+                        this.msgSrv.add({
+                            severity: 'error',
+                            summary: 'Comment update erred',
+                            detail: 'Updating comment erred: ' + err.statusText,
+                            life: 10000,
+                        })
+                    }
+                )
+        )
     }
 
     previewComment() {

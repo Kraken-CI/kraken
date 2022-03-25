@@ -1,4 +1,6 @@
-import { Component, OnInit, ViewChild } from '@angular/core'
+import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core'
+
+import { Subscription } from 'rxjs'
 
 import { Menubar } from 'primeng/menubar'
 import { MenuItem } from 'primeng/api'
@@ -16,7 +18,7 @@ import { SettingsService } from './services/settings.service'
     templateUrl: './app.component.html',
     styleUrls: ['./app.component.sass'],
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, OnDestroy {
     title = 'Kraken'
     logoClass = 'logo1'
     krakenVersion = '0.4'
@@ -38,6 +40,8 @@ export class AppComponent implements OnInit {
 
     errorsInLogsCount = 0
 
+    private subs: Subscription = new Subscription()
+
     constructor(
         private auth: AuthService,
         private api: UsersService,
@@ -50,16 +54,20 @@ export class AppComponent implements OnInit {
     }
 
     ngOnInit() {
-        this.auth.currentSession.subscribe((session) => {
-            this.session = session
-        })
+        this.subs.add(
+            this.auth.currentSession.subscribe((session) => {
+                this.session = session
+            })
+        )
 
-        this.settingsService.settings.subscribe((settings) => {
-            if (settings === null) {
-                return
-            }
-            this.settings = settings
-        })
+        this.subs.add(
+            this.settingsService.settings.subscribe((settings) => {
+                if (settings === null) {
+                    return
+                }
+                this.settings = settings
+            })
+        )
 
         this.krakenVersion = environment.krakenVersion
 
@@ -127,6 +135,10 @@ export class AppComponent implements OnInit {
         this.checkForErrors()
     }
 
+    ngOnDestroy() {
+        this.subs.unsubscribe()
+    }
+
     randomLogoFont() {
         this.logoClass = 'logo' + (Math.floor(Math.random() * 3) + 1)
     }
@@ -150,13 +162,15 @@ export class AppComponent implements OnInit {
             })
             return
         }
-        this.auth
-            .login(this.username, this.password, 'returnUrl')
-            .subscribe((msg) => {
-                if (msg) {
-                    this.msgSrv.add(msg)
-                }
-            })
+        this.subs.add(
+            this.auth
+                .login(this.username, this.password, 'returnUrl')
+                .subscribe((msg) => {
+                    if (msg) {
+                        this.msgSrv.add(msg)
+                    }
+                })
+        )
     }
 
     passwdKeyUp(evKey) {
@@ -201,30 +215,34 @@ export class AppComponent implements OnInit {
             password_old: this.passwordOld,
             password_new: this.passwordNew1,
         }
-        this.api.changePassword(this.auth.session.user.id, passwds).subscribe(
-            (data) => {
-                this.msgSrv.add({
-                    severity: 'success',
-                    summary: 'Password changed',
-                    detail: 'Changing password succeeded.',
-                })
-                this.displayPasswdBox = false
-                this.passwordOld = ''
-                this.passwordNew1 = ''
-                this.passwordNew2 = ''
-            },
-            (err) => {
-                let msg = err.statusText
-                if (err.error && err.error.detail) {
-                    msg = err.error.detail
-                }
-                this.msgSrv.add({
-                    severity: 'error',
-                    summary: 'Changing password erred',
-                    detail: 'Changing password erred: ' + msg,
-                    life: 10000,
-                })
-            }
+        this.subs.add(
+            this.api
+                .changePassword(this.auth.session.user.id, passwds)
+                .subscribe(
+                    (data) => {
+                        this.msgSrv.add({
+                            severity: 'success',
+                            summary: 'Password changed',
+                            detail: 'Changing password succeeded.',
+                        })
+                        this.displayPasswdBox = false
+                        this.passwordOld = ''
+                        this.passwordNew1 = ''
+                        this.passwordNew2 = ''
+                    },
+                    (err) => {
+                        let msg = err.statusText
+                        if (err.error && err.error.detail) {
+                            msg = err.error.detail
+                        }
+                        this.msgSrv.add({
+                            severity: 'error',
+                            summary: 'Changing password erred',
+                            detail: 'Changing password erred: ' + msg,
+                            life: 10000,
+                        })
+                    }
+                )
         )
     }
 
@@ -267,28 +285,30 @@ export class AppComponent implements OnInit {
     }
 
     checkForErrors() {
-        this.managementService.getErrorsInLogsCount().subscribe((data) => {
-            // change menu with errors indicator if needed
-            if (this.errorsInLogsCount !== data.errors_count) {
-                this.errorsInLogsCount = data.errors_count
-                this.topMenuItems[2].label = '' + this.errorsInLogsCount
-                this.topMenuItems[2].title =
-                    '' + this.errorsInLogsCount + ' errors in the last hour'
-                if (this.errorsInLogsCount > 0) {
-                    this.topMenuItems[2].icon = 'pi pi-exclamation-triangle'
-                    this.topMenuItems[2].styleClass = 'error-indicator'
-                } else {
-                    this.topMenuItems[2].icon = 'fa fa-smile-o'
-                    this.topMenuItems[2].styleClass = ''
+        this.subs.add(
+            this.managementService.getErrorsInLogsCount().subscribe((data) => {
+                // change menu with errors indicator if needed
+                if (this.errorsInLogsCount !== data.errors_count) {
+                    this.errorsInLogsCount = data.errors_count
+                    this.topMenuItems[2].label = '' + this.errorsInLogsCount
+                    this.topMenuItems[2].title =
+                        '' + this.errorsInLogsCount + ' errors in the last hour'
+                    if (this.errorsInLogsCount > 0) {
+                        this.topMenuItems[2].icon = 'pi pi-exclamation-triangle'
+                        this.topMenuItems[2].styleClass = 'error-indicator'
+                    } else {
+                        this.topMenuItems[2].icon = 'fa fa-smile-o'
+                        this.topMenuItems[2].styleClass = ''
+                    }
+
+                    // force detection change in menu
+                    this.topmenubar.cd.markForCheck()
                 }
 
-                // force detection change in menu
-                this.topmenubar.cd.markForCheck()
-            }
-
-            setTimeout(() => {
-                this.checkForErrors()
-            }, 15000)
-        })
+                setTimeout(() => {
+                    this.checkForErrors()
+                }, 15000)
+            })
+        )
     }
 }

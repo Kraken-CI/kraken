@@ -1,5 +1,14 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core'
+import {
+    Component,
+    Input,
+    Output,
+    EventEmitter,
+    OnInit,
+    OnDestroy,
+} from '@angular/core'
 import { Router } from '@angular/router'
+
+import { Subscription } from 'rxjs'
 
 import { MenuItem } from 'primeng/api'
 import { MessageService } from 'primeng/api'
@@ -13,7 +22,7 @@ import { Run, Stage } from '../backend/model/models'
     templateUrl: './run-box.component.html',
     styleUrls: ['./run-box.component.sass'],
 })
-export class RunBoxComponent implements OnInit {
+export class RunBoxComponent implements OnInit, OnDestroy {
     @Input() run: Run
     @Input() stage: Stage
     @Input() flowId: number
@@ -25,6 +34,8 @@ export class RunBoxComponent implements OnInit {
     runBoxMenuItems: MenuItem[]
 
     bgColor = ''
+
+    private subs: Subscription = new Subscription()
 
     constructor(
         private router: Router,
@@ -107,30 +118,32 @@ export class RunBoxComponent implements OnInit {
                     icon: 'pi pi-caret-right',
                     command: () => {
                         if (this.stage.schema.parameters.length === 0) {
-                            this.executionService
-                                .createRun(this.flowId, {
-                                    stage_id: this.stage.id,
-                                })
-                                .subscribe(
-                                    (data) => {
-                                        this.msgSrv.add({
-                                            severity: 'success',
-                                            summary: 'Run succeeded',
-                                            detail: 'Run operation succeeded.',
-                                        })
-                                        this.stageRun.emit(data)
-                                    },
-                                    (err) => {
-                                        this.msgSrv.add({
-                                            severity: 'error',
-                                            summary: 'Run erred',
-                                            detail:
-                                                'Run operation erred: ' +
-                                                err.statusText,
-                                            life: 10000,
-                                        })
-                                    }
-                                )
+                            this.subs.add(
+                                this.executionService
+                                    .createRun(this.flowId, {
+                                        stage_id: this.stage.id,
+                                    })
+                                    .subscribe(
+                                        (data) => {
+                                            this.msgSrv.add({
+                                                severity: 'success',
+                                                summary: 'Run succeeded',
+                                                detail: 'Run operation succeeded.',
+                                            })
+                                            this.stageRun.emit(data)
+                                        },
+                                        (err) => {
+                                            this.msgSrv.add({
+                                                severity: 'error',
+                                                summary: 'Run erred',
+                                                detail:
+                                                    'Run operation erred: ' +
+                                                    err.statusText,
+                                                life: 10000,
+                                            })
+                                        }
+                                    )
+                            )
                         } else {
                             this.router.navigate([
                                 '/flows/' +
@@ -148,47 +161,55 @@ export class RunBoxComponent implements OnInit {
         }
     }
 
+    ngOnDestroy() {
+        this.subs.unsubscribe()
+    }
+
     showRunMenu($event, runMenu, run) {
         runMenu.toggle($event)
     }
 
     runRunJobs(opName) {
-        this.executionService.runRunJobs(this.run.id).subscribe(
-            (data) => {
-                this.msgSrv.add({
-                    severity: 'success',
-                    summary: opName + ' succeeded',
-                    detail: opName + ' operation succeeded.',
-                })
-            },
-            (err) => {
-                this.msgSrv.add({
-                    severity: 'error',
-                    summary: opName + ' erred',
-                    detail: opName + ' operation erred: ' + err.statusText,
-                    life: 10000,
-                })
-            }
+        this.subs.add(
+            this.executionService.runRunJobs(this.run.id).subscribe(
+                (data) => {
+                    this.msgSrv.add({
+                        severity: 'success',
+                        summary: opName + ' succeeded',
+                        detail: opName + ' operation succeeded.',
+                    })
+                },
+                (err) => {
+                    this.msgSrv.add({
+                        severity: 'error',
+                        summary: opName + ' erred',
+                        detail: opName + ' operation erred: ' + err.statusText,
+                        life: 10000,
+                    })
+                }
+            )
         )
     }
 
     cancelRun() {
-        this.executionService.cancelRun(this.run.id).subscribe(
-            (data) => {
-                this.msgSrv.add({
-                    severity: 'success',
-                    summary: ' succeeded',
-                    detail: 'Cancel operation succeeded.',
-                })
-            },
-            (err) => {
-                this.msgSrv.add({
-                    severity: 'error',
-                    summary: 'Cancel erred',
-                    detail: 'Cancel operation erred: ' + err.statusText,
-                    life: 10000,
-                })
-            }
+        this.subs.add(
+            this.executionService.cancelRun(this.run.id).subscribe(
+                (data) => {
+                    this.msgSrv.add({
+                        severity: 'success',
+                        summary: ' succeeded',
+                        detail: 'Cancel operation succeeded.',
+                    })
+                },
+                (err) => {
+                    this.msgSrv.add({
+                        severity: 'error',
+                        summary: 'Cancel erred',
+                        detail: 'Cancel operation erred: ' + err.statusText,
+                        life: 10000,
+                    })
+                }
+            )
         )
     }
 

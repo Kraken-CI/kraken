@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core'
+import { Component, OnInit, OnDestroy } from '@angular/core'
 import { ActivatedRoute, Router } from '@angular/router'
 import { BehaviorSubject } from 'rxjs'
+import { Subscription } from 'rxjs'
 
 import { MenuItem } from 'primeng/api'
 
@@ -14,7 +15,7 @@ import { datetimeToLocal } from '../utils'
     templateUrl: './breadcrumbs.component.html',
     styleUrls: ['./breadcrumbs.component.sass'],
 })
-export class BreadcrumbsComponent implements OnInit {
+export class BreadcrumbsComponent implements OnInit, OnDestroy {
     breadcrumbsIn: any
     breadcrumbs = new BehaviorSubject([
         {
@@ -42,6 +43,8 @@ export class BreadcrumbsComponent implements OnInit {
     nextFlowLabel = ''
 
     currRunId = 0
+
+    private subs: Subscription = new Subscription()
 
     constructor(
         private activatedRoute: ActivatedRoute,
@@ -78,129 +81,146 @@ export class BreadcrumbsComponent implements OnInit {
     ngOnInit() {
         this.breadcrumbsIn = this.breadcrumbService.getCrumbs()
 
-        this.breadcrumbsIn.subscribe((data) => {
-            if (data.length === 0) {
-                return
-            }
-
-            this.page = data[data.length - 1].label
-
-            let getBranches = false
-            let getFlows = false
-            let getRuns = false
-
-            const data2 = []
-            for (const it of data) {
-                const it2 = {
-                    label: it.label,
-                    url: '',
-                    id: '',
-                    menuItems: [],
+        this.subs.add(
+            this.breadcrumbsIn.subscribe((data) => {
+                if (data.length === 0) {
+                    return
                 }
-                switch (it.label) {
-                    case 'Projects':
-                        it2.url = '/projects/' + it.project_id
-                        it2.id = it.project_name
-                        this.currProjectId = it.project_id
-                        break
-                    case 'Branches':
-                        it2.url = '/branches/' + it.branch_id
-                        it2.id = it.branch_name
-                        this.currBranchId = it.branch_id
-                        getBranches = true
-                        break
-                    case 'Results':
-                        it2.url =
-                            '/branches/' + it.branch_id + '/' + it.flow_kind
-                        it2.id = it.flow_kind.toUpperCase()
-                        it2.menuItems = [
-                            {
-                                label: 'CI',
-                                routerLink: '/branches/' + it.branch_id + '/ci',
-                            },
-                            {
-                                label: 'DEV',
-                                routerLink:
-                                    '/branches/' + it.branch_id + '/dev',
-                            },
-                        ]
-                        this.currFlowKind = it.flow_kind
-                        break
-                    case 'Flows':
-                        it2.url = '/flows/' + it.flow_id
-                        it2.id = it.flow_label
-                        this.currFlowId = it.flow_id
-                        getFlows = true
-                        break
-                    case 'Stages':
-                        it2.url = '/runs/' + it.run_id
-                        it2.id = it.run_name
-                        getRuns = true
-                        break
-                    case 'Result':
-                        it2.url = '/test_case_result/' + it.tcr_id
-                        it2.id = it.tc_name
-                        break
+
+                this.page = data[data.length - 1].label
+
+                let getBranches = false
+                let getFlows = false
+                let getRuns = false
+
+                const data2 = []
+                for (const it of data) {
+                    const it2 = {
+                        label: it.label,
+                        url: '',
+                        id: '',
+                        menuItems: [],
+                    }
+                    switch (it.label) {
+                        case 'Projects':
+                            it2.url = '/projects/' + it.project_id
+                            it2.id = it.project_name
+                            this.currProjectId = it.project_id
+                            break
+                        case 'Branches':
+                            it2.url = '/branches/' + it.branch_id
+                            it2.id = it.branch_name
+                            this.currBranchId = it.branch_id
+                            getBranches = true
+                            break
+                        case 'Results':
+                            it2.url =
+                                '/branches/' + it.branch_id + '/' + it.flow_kind
+                            it2.id = it.flow_kind.toUpperCase()
+                            it2.menuItems = [
+                                {
+                                    label: 'CI',
+                                    routerLink:
+                                        '/branches/' + it.branch_id + '/ci',
+                                },
+                                {
+                                    label: 'DEV',
+                                    routerLink:
+                                        '/branches/' + it.branch_id + '/dev',
+                                },
+                            ]
+                            this.currFlowKind = it.flow_kind
+                            break
+                        case 'Flows':
+                            it2.url = '/flows/' + it.flow_id
+                            it2.id = it.flow_label
+                            this.currFlowId = it.flow_id
+                            getFlows = true
+                            break
+                        case 'Stages':
+                            it2.url = '/runs/' + it.run_id
+                            it2.id = it.run_name
+                            getRuns = true
+                            break
+                        case 'Result':
+                            it2.url = '/test_case_result/' + it.tcr_id
+                            it2.id = it.tc_name
+                            break
+                    }
+                    data2.push(it2)
                 }
-                data2.push(it2)
-            }
 
-            if (
-                getBranches &&
-                this.currProjectId &&
-                (this.branches[this.currProjectId] === undefined ||
-                    this.branches[this.currProjectId].length === 0)
-            ) {
-                const projId = this.currProjectId
-                this.managementService
-                    .getProject(projId, false)
-                    .subscribe((proj) => {
-                        this.branches[projId] = proj.branches
-                    })
-            }
-
-            if (getFlows) {
-                const flowsKey = this.getFlowsKey()
                 if (
-                    this.flows[flowsKey] === undefined ||
-                    this.flows[flowsKey].length === 0 ||
-                    this.nextFlowId === 0
+                    getBranches &&
+                    this.currProjectId &&
+                    (this.branches[this.currProjectId] === undefined ||
+                        this.branches[this.currProjectId].length === 0)
                 ) {
-                    this.executionService
-                        .getFlows(
-                            this.currBranchId,
-                            this.currFlowKind,
-                            null,
-                            10,
-                            this.currFlowId
-                        )
-                        .subscribe((flows) => {
-                            this.flows[flowsKey] = flows.items
-                            this.establishPrevNextFlows()
-                        })
-                } else {
-                    this.establishPrevNextFlows()
+                    const projId = this.currProjectId
+                    this.subs.add(
+                        this.managementService
+                            .getProject(projId, false)
+                            .subscribe((proj) => {
+                                this.branches[projId] = proj.branches
+                            })
+                    )
                 }
-            }
 
-            if (
-                getRuns &&
-                this.currFlowId &&
-                (this.runs[this.currFlowId] === undefined ||
-                    this.runs[this.currFlowId].length === 0)
-            ) {
-                const flowId = this.currFlowId
-                this.executionService.getFlow(flowId).subscribe((flow) => {
-                    this.runs[flowId] = flow.runs
-                })
-            }
+                if (getFlows) {
+                    const flowsKey = this.getFlowsKey()
+                    if (
+                        this.flows[flowsKey] === undefined ||
+                        this.flows[flowsKey].length === 0 ||
+                        this.nextFlowId === 0
+                    ) {
+                        this.subs.add(
+                            this.executionService
+                                .getFlows(
+                                    this.currBranchId,
+                                    this.currFlowKind,
+                                    null,
+                                    10,
+                                    this.currFlowId
+                                )
+                                .subscribe((flows) => {
+                                    this.flows[flowsKey] = flows.items
+                                    this.establishPrevNextFlows()
+                                })
+                        )
+                    } else {
+                        this.establishPrevNextFlows()
+                    }
+                }
 
-            this.breadcrumbs.next(data2)
-        })
+                if (
+                    getRuns &&
+                    this.currFlowId &&
+                    (this.runs[this.currFlowId] === undefined ||
+                        this.runs[this.currFlowId].length === 0)
+                ) {
+                    const flowId = this.currFlowId
+                    this.subs.add(
+                        this.executionService
+                            .getFlow(flowId)
+                            .subscribe((flow) => {
+                                this.runs[flowId] = flow.runs
+                            })
+                    )
+                }
 
-        this.managementService.getProjects().subscribe((data) => {
-            this.projects = data.items
-        })
+                this.breadcrumbs.next(data2)
+            })
+        )
+
+        this.subs.add(
+            this.managementService.getProjects().subscribe((data) => {
+                this.projects = data.items
+            })
+        )
+    }
+
+    ngOnDestroy() {
+        this.subs.unsubscribe()
     }
 
     showCrumbMenu(event, crumbMenu, breadcrumb) {

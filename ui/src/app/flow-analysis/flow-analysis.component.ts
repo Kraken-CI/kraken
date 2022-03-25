@@ -1,4 +1,6 @@
-import { Component, OnInit, Input } from '@angular/core'
+import { Component, OnInit, OnDestroy, Input } from '@angular/core'
+
+import { Subscription } from 'rxjs'
 
 import { ResultsService } from '../backend/api/results.service'
 
@@ -12,7 +14,7 @@ interface Dim {
     templateUrl: './flow-analysis.component.html',
     styleUrls: ['./flow-analysis.component.sass'],
 })
-export class FlowAnalysisComponent implements OnInit {
+export class FlowAnalysisComponent implements OnInit, OnDestroy {
     @Input() flow: any
 
     data: any = {}
@@ -26,6 +28,8 @@ export class FlowAnalysisComponent implements OnInit {
 
     stats: any = {}
     statsCols: any
+
+    private subs: Subscription = new Subscription()
 
     constructor(protected resultsService: ResultsService) {
         this.dims = [
@@ -43,12 +47,20 @@ export class FlowAnalysisComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        this.resultsService.getFlowAnalysis(this.flow.id).subscribe((data) => {
-            this.data = data.stats
-            this.recsMap = data.recs_map
-            this.totalTests = data.total_tests
-            this.calculateStats()
-        })
+        this.subs.add(
+            this.resultsService
+                .getFlowAnalysis(this.flow.id)
+                .subscribe((data) => {
+                    this.data = data.stats
+                    this.recsMap = data.recs_map
+                    this.totalTests = data.total_tests
+                    this.calculateStats()
+                })
+        )
+    }
+
+    ngOnDestroy() {
+        this.subs.unsubscribe()
     }
 
     calculateStats() {

@@ -2,6 +2,8 @@ import { Component, OnInit, ViewChild, OnDestroy } from '@angular/core'
 import { Router, ActivatedRoute } from '@angular/router'
 import { Title } from '@angular/platform-browser'
 
+import { Subscription } from 'rxjs'
+
 import { MenuItem } from 'primeng/api'
 import { MessageService } from 'primeng/api'
 
@@ -26,6 +28,7 @@ export class RunResultsComponent implements OnInit, OnDestroy {
     run: Run = { state: 'in-progress', tests_passed: 0 }
 
     refreshTimer: any = null
+    refreshing = false
 
     // jobs
     jobs: Job[]
@@ -57,6 +60,8 @@ export class RunResultsComponent implements OnInit, OnDestroy {
     totalArtifacts = 0
     loadingArtifacts = true
 
+    private subs: Subscription = new Subscription()
+
     constructor(
         private route: ActivatedRoute,
         private router: Router,
@@ -85,117 +90,126 @@ export class RunResultsComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit() {
-        this.route.paramMap.subscribe((params) => {
-            const runId = parseInt(params.get('id'), 10)
-            this.run.id = runId
+        this.subs.add(
+            this.route.paramMap.subscribe((params) => {
+                const runId = parseInt(params.get('id'), 10)
+                this.run.id = runId
 
-            const tab = params.get('tab')
-            if (!tab) {
-                this.router.navigate(['/runs/' + runId + '/jobs'], {
-                    replaceUrl: true,
-                })
-                return
-            }
-
-            // only when it is the first load or a run is changed
-            if (runId !== this.runId) {
-                this.runId = runId
-
-                this.tabs = [
-                    {
-                        label: 'Jobs',
-                        routerLink: '/runs/' + this.runId + '/jobs',
-                    },
-                    {
-                        label: 'Test Results',
-                        routerLink: '/runs/' + this.runId + '/results',
-                    },
-                    {
-                        label: 'Issues',
-                        routerLink: '/runs/' + this.runId + '/issues',
-                    },
-                    {
-                        label: 'Artifacts',
-                        routerLink: '/runs/' + this.runId + '/artifacts',
-                    },
-                    {
-                        label: 'Reports',
-                        routerLink: '/runs/' + this.runId + '/reports',
-                    },
-                    {
-                        label: 'Run Details',
-                        routerLink: '/runs/' + this.runId + '/details',
-                    },
-                ]
-
-                this.jobs = []
-                this.issues = []
-                this.resetIssuesFilter(null)
-                if (tab === 'jobs') {
-                    this.loadJobsLazy({ first: 0, rows: 30 })
-                } else if (tab === 'results') {
-                    // it loads on its one I think
-                } else if (tab === 'issues') {
-                    this.loadIssuesLazy({ first: 0, rows: 30 })
-                } else if (tab === 'artifacts') {
-                    this.loadArtifactsLazy({ first: 0, rows: 30 })
+                const tab = params.get('tab')
+                if (!tab) {
+                    this.router.navigate(['/runs/' + runId + '/jobs'], {
+                        replaceUrl: true,
+                    })
+                    return
                 }
 
-                this.executionService.getRun(this.runId).subscribe((run) => {
-                    this.titleService.setTitle(
-                        'Kraken - Run ' +
-                            (run.label || run.stage_name) +
-                            ' ' +
-                            this.runId
-                    )
-                    this.run = run
-                    this.recordsCount[0] = '' + run.jobs_total
-                    this.recordsCount[1] =
-                        '' + run.tests_passed + ' / ' + run.tests_total
-                    this.recordsCount[2] = '' + run.issues_total
-                    this.recordsCount[3] = '' + run.artifacts_total
+                // only when it is the first load or a run is changed
+                if (runId !== this.runId) {
+                    this.runId = runId
 
-                    const crumbs = [
+                    this.tabs = [
                         {
-                            label: 'Projects',
-                            project_id: run.project_id,
-                            project_name: run.project_name,
+                            label: 'Jobs',
+                            routerLink: '/runs/' + this.runId + '/jobs',
                         },
                         {
-                            label: 'Branches',
-                            branch_id: run.branch_id,
-                            branch_name: run.branch_name,
+                            label: 'Test Results',
+                            routerLink: '/runs/' + this.runId + '/results',
                         },
                         {
-                            label: 'Results',
-                            branch_id: run.branch_id,
-                            flow_kind: run.flow_kind,
+                            label: 'Issues',
+                            routerLink: '/runs/' + this.runId + '/issues',
                         },
                         {
-                            label: 'Flows',
-                            flow_id: run.flow_id,
-                            flow_label: run.flow_label,
+                            label: 'Artifacts',
+                            routerLink: '/runs/' + this.runId + '/artifacts',
                         },
                         {
-                            label: 'Stages',
-                            run_id: run.id,
-                            run_name: run.stage_name,
+                            label: 'Reports',
+                            routerLink: '/runs/' + this.runId + '/reports',
+                        },
+                        {
+                            label: 'Run Details',
+                            routerLink: '/runs/' + this.runId + '/details',
                         },
                     ]
-                    this.breadcrumbService.setCrumbs(crumbs)
 
-                    // refresh page data every 5 seconds
-                    if (this.refreshTimer === null) {
-                        this.refreshTimer = setTimeout(() => {
-                            this.refreshTimer = null
-                            this.refreshPage()
-                        }, 5000)
+                    this.jobs = []
+                    this.issues = []
+                    this.resetIssuesFilter(null)
+                    if (tab === 'jobs') {
+                        this.loadJobsLazy({ first: 0, rows: 30 })
+                    } else if (tab === 'results') {
+                        // it loads on its one I think
+                    } else if (tab === 'issues') {
+                        this.loadIssuesLazy({ first: 0, rows: 30 })
+                    } else if (tab === 'artifacts') {
+                        this.loadArtifactsLazy({ first: 0, rows: 30 })
                     }
-                })
-            }
 
-            this.switchToTab(tab)
-        })
+                    this.subs.add(
+                        this.executionService
+                            .getRun(this.runId)
+                            .subscribe((run) => {
+                                this.titleService.setTitle(
+                                    'Kraken - Run ' +
+                                        (run.label || run.stage_name) +
+                                        ' ' +
+                                        this.runId
+                                )
+                                this.run = run
+                                this.recordsCount[0] = '' + run.jobs_total
+                                this.recordsCount[1] =
+                                    '' +
+                                    run.tests_passed +
+                                    ' / ' +
+                                    run.tests_total
+                                this.recordsCount[2] = '' + run.issues_total
+                                this.recordsCount[3] = '' + run.artifacts_total
+
+                                const crumbs = [
+                                    {
+                                        label: 'Projects',
+                                        project_id: run.project_id,
+                                        project_name: run.project_name,
+                                    },
+                                    {
+                                        label: 'Branches',
+                                        branch_id: run.branch_id,
+                                        branch_name: run.branch_name,
+                                    },
+                                    {
+                                        label: 'Results',
+                                        branch_id: run.branch_id,
+                                        flow_kind: run.flow_kind,
+                                    },
+                                    {
+                                        label: 'Flows',
+                                        flow_id: run.flow_id,
+                                        flow_label: run.flow_label,
+                                    },
+                                    {
+                                        label: 'Stages',
+                                        run_id: run.id,
+                                        run_name: run.stage_name,
+                                    },
+                                ]
+                                this.breadcrumbService.setCrumbs(crumbs)
+
+                                // refresh page data every 5 seconds
+                                if (this.refreshTimer === null) {
+                                    this.refreshTimer = setTimeout(() => {
+                                        this.refreshTimer = null
+                                        this.refreshPage()
+                                    }, 5000)
+                                }
+                            })
+                    )
+                }
+
+                this.switchToTab(tab)
+            })
+        )
     }
 
     cancelRefreshTimer() {
@@ -206,11 +220,15 @@ export class RunResultsComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy() {
+        this.subs.unsubscribe()
         this.cancelRefreshTimer()
     }
 
     refreshPage() {
-        this.cancelRefreshTimer()
+        if (this.refreshing) {
+            return
+        }
+        this.refreshing = true
 
         switch (this.activeTabIdx) {
             case 0: // jobs
@@ -229,62 +247,69 @@ export class RunResultsComponent implements OnInit, OnDestroy {
                 break
         }
 
-        this.executionService.getRun(this.runId).subscribe((run) => {
-            this.run = run
-            this.recordsCount[0] = '' + run.jobs_total
-            this.recordsCount[1] =
-                '' + run.tests_passed + ' / ' + run.tests_total
-            this.recordsCount[2] = '' + run.issues_total
-            this.recordsCount[3] = '' + run.artifacts_total
+        this.subs.add(
+            this.executionService.getRun(this.runId).subscribe((run) => {
+                this.refreshing = false
+                this.refreshTimer = null
 
-            // refresh page data every 5 seconds
-            if (run.state !== 'processed') {
-                this.refreshTimer = setTimeout(() => {
-                    this.refreshTimer = null
-                    this.refreshPage()
-                }, 5000)
-            }
-        })
+                this.run = run
+                this.recordsCount[0] = '' + run.jobs_total
+                this.recordsCount[1] =
+                    '' + run.tests_passed + ' / ' + run.tests_total
+                this.recordsCount[2] = '' + run.issues_total
+                this.recordsCount[3] = '' + run.artifacts_total
+
+                // refresh page data every 5 seconds
+                if (run.state !== 'processed') {
+                    this.refreshTimer = setTimeout(() => {
+                        this.refreshTimer = null
+                        this.refreshPage()
+                    }, 5000)
+                }
+            })
+        )
     }
 
     loadJobsLazy(event) {
         this.loadingJobs = true
-        this.executionService
-            .getRunJobs(
-                this.runId,
-                event.first,
-                event.rows,
-                this.includeCovered
-            )
-            .subscribe((data) => {
-                this.jobs = data.items
-                this.totalJobs = data.total
+        this.subs.add(
+            this.executionService
+                .getRunJobs(
+                    this.runId,
+                    event.first,
+                    event.rows,
+                    this.includeCovered
+                )
+                .subscribe((data) => {
+                    this.jobs = data.items
+                    this.totalJobs = data.total
 
-                // if there are any jobs fetched from the server
-                if (this.jobs.length > 0) {
-                    // if job was already selected and assign selected job
-                    if (this.selectedJobId) {
-                        let foundJob = false
-                        for (const job of this.jobs) {
-                            if (job.id === this.selectedJobId) {
-                                this.job = job
-                                foundJob = true
+                    // if there are any jobs fetched from the server
+                    if (this.jobs.length > 0) {
+                        // if job was already selected and assign selected job
+                        if (this.selectedJobId) {
+                            let foundJob = false
+                            for (const job of this.jobs) {
+                                if (job.id === this.selectedJobId) {
+                                    this.job = job
+                                    foundJob = true
+                                }
                             }
-                        }
-                        // if selected job was not found in fetched jobs then select the first job
-                        if (!foundJob) {
+                            // if selected job was not found in fetched jobs then select the first job
+                            if (!foundJob) {
+                                this.job = this.jobs[0]
+                                this.selectedJobId = this.job.id
+                            }
+                        } else {
+                            // job was not selected yet so select the first job
                             this.job = this.jobs[0]
                             this.selectedJobId = this.job.id
                         }
-                    } else {
-                        // job was not selected yet so select the first job
-                        this.job = this.jobs[0]
-                        this.selectedJobId = this.job.id
                     }
-                }
 
-                this.loadingJobs = false
-            })
+                    this.loadingJobs = false
+                })
+        )
     }
 
     refreshJobs(jobsTable) {
@@ -292,29 +317,31 @@ export class RunResultsComponent implements OnInit, OnDestroy {
     }
 
     rerunAll() {
-        this.executionService.runRunJobs(this.run.id).subscribe(
-            (data) => {
-                this.msgSrv.add({
-                    severity: 'success',
-                    summary: 'Rerun submitted',
-                    detail: 'Rerun operation submitted.',
-                })
+        this.subs.add(
+            this.executionService.runRunJobs(this.run.id).subscribe(
+                (data) => {
+                    this.msgSrv.add({
+                        severity: 'success',
+                        summary: 'Rerun submitted',
+                        detail: 'Rerun operation submitted.',
+                    })
 
-                if (this.refreshTimer === null) {
-                    this.refreshTimer = setTimeout(() => {
-                        this.refreshTimer = null
-                        this.refreshPage()
-                    }, 5000)
+                    if (this.refreshTimer === null) {
+                        this.refreshTimer = setTimeout(() => {
+                            this.refreshTimer = null
+                            this.refreshPage()
+                        }, 5000)
+                    }
+                },
+                (err) => {
+                    this.msgSrv.add({
+                        severity: 'error',
+                        summary: 'Rerun erred',
+                        detail: 'Rerun operation erred: ' + err.statusText,
+                        life: 10000,
+                    })
                 }
-            },
-            (err) => {
-                this.msgSrv.add({
-                    severity: 'error',
-                    summary: 'Rerun erred',
-                    detail: 'Rerun operation erred: ' + err.statusText,
-                    life: 10000,
-                })
-            }
+            )
         )
     }
 
@@ -331,34 +358,38 @@ export class RunResultsComponent implements OnInit, OnDestroy {
         }
 
         this.loadingIssues = true
-        this.executionService
-            .getRunIssues(
-                this.runId,
-                event.first,
-                event.rows,
-                issueTypes,
-                this.filterIssueLocation,
-                this.filterIssueMessage,
-                this.filterIssueSymbol,
-                this.filterIssueMinAge,
-                this.filterIssueMaxAge,
-                this.filterIssueJob
-            )
-            .subscribe((data) => {
-                this.issues = data.items
-                this.totalIssues = data.total
-                this.loadingIssues = false
-            })
+        this.subs.add(
+            this.executionService
+                .getRunIssues(
+                    this.runId,
+                    event.first,
+                    event.rows,
+                    issueTypes,
+                    this.filterIssueLocation,
+                    this.filterIssueMessage,
+                    this.filterIssueSymbol,
+                    this.filterIssueMinAge,
+                    this.filterIssueMaxAge,
+                    this.filterIssueJob
+                )
+                .subscribe((data) => {
+                    this.issues = data.items
+                    this.totalIssues = data.total
+                    this.loadingIssues = false
+                })
+        )
     }
 
     loadArtifactsLazy(event) {
-        this.executionService
-            .getRunArtifacts(this.runId, event.first, event.rows)
-            .subscribe((data) => {
-                this.artifacts = data.items
-                this.totalArtifacts = data.total
-                this.loadingArtifacts = false
-            })
+        this.subs.add(
+            this.executionService
+                .getRunArtifacts(this.runId, event.first, event.rows)
+                .subscribe((data) => {
+                    this.artifacts = data.items
+                    this.totalArtifacts = data.total
+                    this.loadingArtifacts = false
+                })
+        )
     }
 
     refreshIssues(issuesTable) {
@@ -544,49 +575,53 @@ export class RunResultsComponent implements OnInit, OnDestroy {
         if (!this.job) {
             return
         }
-        this.executionService.deleteJob(this.job.id).subscribe(
-            (data) => {
-                this.msgSrv.add({
-                    severity: 'success',
-                    summary: 'Job cancelled',
-                    detail: 'Cancelling job succeeded.',
-                })
-            },
-            (err) => {
-                this.msgSrv.add({
-                    severity: 'error',
-                    summary: 'Cancel erred',
-                    detail: 'Cancelling job erred: ' + err.statusText,
-                    life: 10000,
-                })
-            }
+        this.subs.add(
+            this.executionService.deleteJob(this.job.id).subscribe(
+                (data) => {
+                    this.msgSrv.add({
+                        severity: 'success',
+                        summary: 'Job cancelled',
+                        detail: 'Cancelling job succeeded.',
+                    })
+                },
+                (err) => {
+                    this.msgSrv.add({
+                        severity: 'error',
+                        summary: 'Cancel erred',
+                        detail: 'Cancelling job erred: ' + err.statusText,
+                        life: 10000,
+                    })
+                }
+            )
         )
     }
 
     rerunJob() {
-        this.executionService.jobRerun(this.job.id).subscribe(
-            (data) => {
-                this.msgSrv.add({
-                    severity: 'success',
-                    summary: 'Job rerun submitted',
-                    detail: 'Job rerun operation submitted.',
-                })
+        this.subs.add(
+            this.executionService.jobRerun(this.job.id).subscribe(
+                (data) => {
+                    this.msgSrv.add({
+                        severity: 'success',
+                        summary: 'Job rerun submitted',
+                        detail: 'Job rerun operation submitted.',
+                    })
 
-                if (this.refreshTimer === null) {
-                    this.refreshTimer = setTimeout(() => {
-                        this.refreshTimer = null
-                        this.refreshPage()
-                    }, 5000)
+                    if (this.refreshTimer === null) {
+                        this.refreshTimer = setTimeout(() => {
+                            this.refreshTimer = null
+                            this.refreshPage()
+                        }, 5000)
+                    }
+                },
+                (err) => {
+                    this.msgSrv.add({
+                        severity: 'error',
+                        summary: 'Job rerun erred',
+                        detail: 'Job rerun operation erred: ' + err.statusText,
+                        life: 10000,
+                    })
                 }
-            },
-            (err) => {
-                this.msgSrv.add({
-                    severity: 'error',
-                    summary: 'Job rerun erred',
-                    detail: 'Job rerun operation erred: ' + err.statusText,
-                    life: 10000,
-                })
-            }
+            )
         )
     }
 

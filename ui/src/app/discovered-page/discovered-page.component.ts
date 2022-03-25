@@ -1,5 +1,7 @@
-import { Component, OnInit } from '@angular/core'
+import { Component, OnInit, OnDestroy } from '@angular/core'
 import { Title } from '@angular/platform-browser'
+
+import { Subscription } from 'rxjs'
 
 import { AuthService } from '../auth.service'
 import { ManagementService } from '../backend/api/management.service'
@@ -10,11 +12,13 @@ import { BreadcrumbsService } from '../breadcrumbs.service'
     templateUrl: './discovered-page.component.html',
     styleUrls: ['./discovered-page.component.sass'],
 })
-export class DiscoveredPageComponent implements OnInit {
+export class DiscoveredPageComponent implements OnInit, OnDestroy {
     agents: any[]
     totalAgents = 0
     loadingAgents = true
     selectedAgents: any[]
+
+    private subs: Subscription = new Subscription()
 
     constructor(
         public auth: AuthService,
@@ -36,6 +40,10 @@ export class DiscoveredPageComponent implements OnInit {
         this.breadcrumbService.setCrumbs(crumbs)
     }
 
+    ngOnDestroy() {
+        this.subs.unsubscribe()
+    }
+
     loadAgentsLazy(event) {
         this.loadingAgents = true
         console.info(event)
@@ -49,13 +57,15 @@ export class DiscoveredPageComponent implements OnInit {
             sortDir = 'desc'
         }
 
-        this.managementService
-            .getAgents(true, event.first, event.rows, sortField, sortDir)
-            .subscribe((data) => {
-                this.agents = data.items
-                this.totalAgents = data.total
-                this.loadingAgents = false
-            })
+        this.subs.add(
+            this.managementService
+                .getAgents(true, event.first, event.rows, sortField, sortDir)
+                .subscribe((data) => {
+                    this.agents = data.items
+                    this.totalAgents = data.total
+                    this.loadingAgents = false
+                })
+        )
     }
 
     refreshAgents(agentsTable) {
@@ -76,8 +86,10 @@ export class DiscoveredPageComponent implements OnInit {
         const execs = this.selectedAgents.map((e) => {
             return { id: e.id, authorized: true }
         })
-        this.managementService.updateAgents(execs).subscribe((data) => {
-            this.refreshAgents(agentsTable)
-        })
+        this.subs.add(
+            this.managementService.updateAgents(execs).subscribe((data) => {
+                this.refreshAgents(agentsTable)
+            })
+        )
     }
 }

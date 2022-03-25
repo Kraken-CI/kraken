@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core'
 import { Router, ActivatedRoute, ParamMap } from '@angular/router'
 import { Title } from '@angular/platform-browser'
 import { switchMap } from 'rxjs/operators'
+import { Subscription } from 'rxjs'
 
 import { MessageService } from 'primeng/api'
 
@@ -34,6 +35,8 @@ export class BranchResultsComponent implements OnInit, OnDestroy {
     selectedStage: any
     filterStageName = 'All'
 
+    private subs: Subscription = new Subscription()
+
     constructor(
         private route: ActivatedRoute,
         private router: Router,
@@ -52,22 +55,31 @@ export class BranchResultsComponent implements OnInit, OnDestroy {
         this.selectedStage = null
         this.stagesAvailable = [{ name: 'All' }]
 
-        this.managementService.getBranch(this.branchId).subscribe((branch) => {
-            this.titleService.setTitle(
-                'Kraken - Branch Results - ' + branch.name + ' ' + this.kind
-            )
-            this.branch = branch
-            this.updateBreadcrumb()
-        })
+        this.subs.add(
+            this.managementService
+                .getBranch(this.branchId)
+                .subscribe((branch) => {
+                    this.titleService.setTitle(
+                        'Kraken - Branch Results - ' +
+                            branch.name +
+                            ' ' +
+                            this.kind
+                    )
+                    this.branch = branch
+                    this.updateBreadcrumb()
+                })
+        )
 
-        this.route.paramMap.subscribe((params) => {
-            this.branchId = parseInt(params.get('id'), 10)
-            this.kind = params.get('kind')
-            this.updateBreadcrumb()
-            this.start = 0
-            this.limit = 10
-            this.refresh()
-        })
+        this.subs.add(
+            this.route.paramMap.subscribe((params) => {
+                this.branchId = parseInt(params.get('id'), 10)
+                this.kind = params.get('kind')
+                this.updateBreadcrumb()
+                this.start = 0
+                this.limit = 10
+                this.refresh()
+            })
+        )
     }
 
     cancelRefreshTimer() {
@@ -78,6 +90,7 @@ export class BranchResultsComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy() {
+        this.subs.unsubscribe()
         this.cancelRefreshTimer()
     }
 
@@ -112,43 +125,47 @@ export class BranchResultsComponent implements OnInit, OnDestroy {
     }
 
     refresh() {
-        this.cancelRefreshTimer()
-
+        if (this.refreshing) {
+            return
+        }
         this.refreshing = true
 
-        this.route.paramMap
-            .pipe(
-                switchMap((params: ParamMap) =>
-                    this.executionService.getFlows(
-                        parseInt(params.get('id'), 10),
-                        this.kind,
-                        this.start,
-                        this.limit
+        this.subs.add(
+            this.route.paramMap
+                .pipe(
+                    switchMap((params: ParamMap) =>
+                        this.executionService.getFlows(
+                            parseInt(params.get('id'), 10),
+                            this.kind,
+                            this.start,
+                            this.limit
+                        )
                     )
                 )
-            )
-            .subscribe((data) => {
-                this.refreshing = false
+                .subscribe((data) => {
+                    this.refreshing = false
+                    this.refreshTimer = null
 
-                let flows = []
-                const stages = new Set<string>()
-                this.totalFlows = data.total
-                flows = flows.concat(data.items)
-                for (const flow of flows) {
-                    this._processFlowData(flow, stages)
-                }
-                this.flows = flows
-                const newStages = [{ name: 'All' }]
-                for (const st of Array.from(stages).sort()) {
-                    newStages.push({ name: st })
-                }
-                this.stagesAvailable = newStages
+                    let flows = []
+                    const stages = new Set<string>()
+                    this.totalFlows = data.total
+                    flows = flows.concat(data.items)
+                    for (const flow of flows) {
+                        this._processFlowData(flow, stages)
+                    }
+                    this.flows = flows
+                    const newStages = [{ name: 'All' }]
+                    for (const st of Array.from(stages).sort()) {
+                        newStages.push({ name: st })
+                    }
+                    this.stagesAvailable = newStages
 
-                // refresh again in 10 seconds
-                this.refreshTimer = setTimeout(() => {
-                    this.refresh()
-                }, 10000)
-            })
+                    // refresh again in 10 seconds
+                    this.refreshTimer = setTimeout(() => {
+                        this.refresh()
+                    }, 10000)
+                })
+        )
     }
 
     paginateFlows(event) {

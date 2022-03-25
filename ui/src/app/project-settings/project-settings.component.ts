@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core'
+import { Component, OnInit, OnDestroy } from '@angular/core'
 import { Router, ActivatedRoute } from '@angular/router'
 import { FormGroup, FormControl } from '@angular/forms'
 import { Title } from '@angular/platform-browser'
+
+import { Subscription } from 'rxjs'
 
 import { MessageService } from 'primeng/api'
 import { ConfirmationService } from 'primeng/api'
@@ -15,7 +17,7 @@ import { ManagementService } from '../backend/api/management.service'
     templateUrl: './project-settings.component.html',
     styleUrls: ['./project-settings.component.sass'],
 })
-export class ProjectSettingsComponent implements OnInit {
+export class ProjectSettingsComponent implements OnInit, OnDestroy {
     projectId = 0
     project: any = {
         name: '',
@@ -74,6 +76,8 @@ export class ProjectSettingsComponent implements OnInit {
         },
     ]
 
+    private subs: Subscription = new Subscription()
+
     constructor(
         private route: ActivatedRoute,
         private router: Router,
@@ -86,45 +90,53 @@ export class ProjectSettingsComponent implements OnInit {
     ) {}
 
     ngOnInit() {
-        this.route.paramMap.subscribe((params) => {
-            this.projectId = parseInt(params.get('id'), 10)
-            this.refresh()
-        })
+        this.subs.add(
+            this.route.paramMap.subscribe((params) => {
+                this.projectId = parseInt(params.get('id'), 10)
+                this.refresh()
+            })
+        )
+    }
+
+    ngOnDestroy() {
+        this.subs.unsubscribe()
     }
 
     refresh() {
-        this.managementService
-            .getProject(this.projectId, true)
-            .subscribe((project) => {
-                this.project = project
-                this.titleService.setTitle(
-                    'Kraken - Project Settings ' + this.project.name
-                )
+        this.subs.add(
+            this.managementService
+                .getProject(this.projectId, true)
+                .subscribe((project) => {
+                    this.project = project
+                    this.titleService.setTitle(
+                        'Kraken - Project Settings ' + this.project.name
+                    )
 
-                this.breadcrumbService.setCrumbs([
-                    {
-                        label: 'Projects',
-                        project_id: this.projectId,
-                        project_name: this.project.name,
-                    },
-                ])
+                    this.breadcrumbService.setCrumbs([
+                        {
+                            label: 'Projects',
+                            project_id: this.projectId,
+                            project_name: this.project.name,
+                        },
+                    ])
 
-                if (this.project.secrets.length === 0) {
-                    this.secretMode = 1
-                } else {
-                    this.selectSecret(this.project.secrets[0])
-                }
-
-                // calculate results per flow from runs
-                for (const branch of this.project.branches) {
-                    for (const flow of branch.ci_flows) {
-                        this.calculateFlowStats(flow)
+                    if (this.project.secrets.length === 0) {
+                        this.secretMode = 1
+                    } else {
+                        this.selectSecret(this.project.secrets[0])
                     }
-                    for (const flow of branch.dev_flows) {
-                        this.calculateFlowStats(flow)
+
+                    // calculate results per flow from runs
+                    for (const branch of this.project.branches) {
+                        for (const flow of branch.ci_flows) {
+                            this.calculateFlowStats(flow)
+                        }
+                        for (const flow of branch.dev_flows) {
+                            this.calculateFlowStats(flow)
+                        }
                     }
-                }
-            })
+                })
+        )
     }
 
     calculateFlowStats(flow) {
@@ -170,35 +182,37 @@ export class ProjectSettingsComponent implements OnInit {
     }
 
     addNewBranch() {
-        this.managementService
-            .createBranch(this.project.id, {
-                name: this.branchDisplayName,
-                branch_name: this.branchRepoName,
-            })
-            .subscribe(
-                (branch) => {
-                    this.msgSrv.add({
-                        severity: 'success',
-                        summary: 'New branch succeeded',
-                        detail: 'New branch operation succeeded.',
-                    })
-                    this.newBranchDlgVisible = false
-                    this.router.navigate(['/branches/' + branch.id])
-                },
-                (err) => {
-                    let msg = err.statusText
-                    if (err.error && err.error.detail) {
-                        msg = err.error.detail
+        this.subs.add(
+            this.managementService
+                .createBranch(this.project.id, {
+                    name: this.branchDisplayName,
+                    branch_name: this.branchRepoName,
+                })
+                .subscribe(
+                    (branch) => {
+                        this.msgSrv.add({
+                            severity: 'success',
+                            summary: 'New branch succeeded',
+                            detail: 'New branch operation succeeded.',
+                        })
+                        this.newBranchDlgVisible = false
+                        this.router.navigate(['/branches/' + branch.id])
+                    },
+                    (err) => {
+                        let msg = err.statusText
+                        if (err.error && err.error.detail) {
+                            msg = err.error.detail
+                        }
+                        this.msgSrv.add({
+                            severity: 'error',
+                            summary: 'New branch erred',
+                            detail: 'New branch operation erred: ' + msg,
+                            life: 10000,
+                        })
+                        this.newBranchDlgVisible = false
                     }
-                    this.msgSrv.add({
-                        severity: 'error',
-                        summary: 'New branch erred',
-                        detail: 'New branch operation erred: ' + msg,
-                        life: 10000,
-                    })
-                    this.newBranchDlgVisible = false
-                }
-            )
+                )
+        )
     }
 
     newSecret() {
@@ -226,82 +240,54 @@ export class ProjectSettingsComponent implements OnInit {
 
     secretAdd() {
         const secretVal = this.prepareSecret(this.secretForm.value)
-        this.managementService
-            .createSecret(this.projectId, secretVal)
-            .subscribe(
-                (data) => {
-                    this.msgSrv.add({
-                        severity: 'success',
-                        summary: 'New secret succeeded',
-                        detail: 'New secret operation succeeded.',
-                    })
-                    this.project.secrets.push(data)
-                    this.selectSecret(data)
-                },
-                (err) => {
-                    console.info(err)
-                    let msg = err.statusText
-                    if (err.error && err.error.detail) {
-                        msg = err.error.detail
+        this.subs.add(
+            this.managementService
+                .createSecret(this.projectId, secretVal)
+                .subscribe(
+                    (data) => {
+                        this.msgSrv.add({
+                            severity: 'success',
+                            summary: 'New secret succeeded',
+                            detail: 'New secret operation succeeded.',
+                        })
+                        this.project.secrets.push(data)
+                        this.selectSecret(data)
+                    },
+                    (err) => {
+                        console.info(err)
+                        let msg = err.statusText
+                        if (err.error && err.error.detail) {
+                            msg = err.error.detail
+                        }
+                        this.msgSrv.add({
+                            severity: 'error',
+                            summary: 'New secret erred',
+                            detail: 'New secret operation erred: ' + msg,
+                            life: 10000,
+                        })
                     }
-                    this.msgSrv.add({
-                        severity: 'error',
-                        summary: 'New secret erred',
-                        detail: 'New secret operation erred: ' + msg,
-                        life: 10000,
-                    })
-                }
-            )
+                )
+        )
     }
 
     secretSave() {
         const secretVal = this.prepareSecret(this.secretForm.value)
-        this.managementService
-            .updateSecret(this.secretForm.value.id, secretVal)
-            .subscribe(
-                (secret) => {
-                    for (const idx in this.project.secrets) {
-                        if (this.project.secrets[idx].id === secret.id) {
-                            this.project.secrets[idx] = secret
-                            break
-                        }
-                    }
-                    this.selectSecret(secret)
-                    this.msgSrv.add({
-                        severity: 'success',
-                        summary: 'Secret update succeeded',
-                        detail: 'Secret update operation succeeded.',
-                    })
-                },
-                (err) => {
-                    console.info(err)
-                    let msg = err.statusText
-                    if (err.error && err.error.detail) {
-                        msg = err.error.detail
-                    }
-                    this.msgSrv.add({
-                        severity: 'error',
-                        summary: 'Secret update erred',
-                        detail: 'Secret update operation erred: ' + msg,
-                        life: 10000,
-                    })
-                }
-            )
-    }
-
-    secretDelete() {
-        const secretVal = this.secretForm.value
-        this.confirmationService.confirm({
-            message:
-                'Do you really want to delete secret "' + secretVal.name + '"?',
-            accept: () => {
-                this.managementService.deleteSecret(secretVal.id).subscribe(
+        this.subs.add(
+            this.managementService
+                .updateSecret(this.secretForm.value.id, secretVal)
+                .subscribe(
                     (secret) => {
-                        this.refresh()
+                        for (const idx in this.project.secrets) {
+                            if (this.project.secrets[idx].id === secret.id) {
+                                this.project.secrets[idx] = secret
+                                break
+                            }
+                        }
+                        this.selectSecret(secret)
                         this.msgSrv.add({
                             severity: 'success',
-                            summary: 'Secret deletion succeeded',
-                            detail: 'Secret deletion operation succeeded.',
+                            summary: 'Secret update succeeded',
+                            detail: 'Secret update operation succeeded.',
                         })
                     },
                     (err) => {
@@ -312,11 +298,46 @@ export class ProjectSettingsComponent implements OnInit {
                         }
                         this.msgSrv.add({
                             severity: 'error',
-                            summary: 'Secret deletion erred',
-                            detail: 'Secret deletion operation erred: ' + msg,
+                            summary: 'Secret update erred',
+                            detail: 'Secret update operation erred: ' + msg,
                             life: 10000,
                         })
                     }
+                )
+        )
+    }
+
+    secretDelete() {
+        const secretVal = this.secretForm.value
+        this.confirmationService.confirm({
+            message:
+                'Do you really want to delete secret "' + secretVal.name + '"?',
+            accept: () => {
+                this.subs.add(
+                    this.managementService.deleteSecret(secretVal.id).subscribe(
+                        (secret) => {
+                            this.refresh()
+                            this.msgSrv.add({
+                                severity: 'success',
+                                summary: 'Secret deletion succeeded',
+                                detail: 'Secret deletion operation succeeded.',
+                            })
+                        },
+                        (err) => {
+                            console.info(err)
+                            let msg = err.statusText
+                            if (err.error && err.error.detail) {
+                                msg = err.error.detail
+                            }
+                            this.msgSrv.add({
+                                severity: 'error',
+                                summary: 'Secret deletion erred',
+                                detail:
+                                    'Secret deletion operation erred: ' + msg,
+                                life: 10000,
+                            })
+                        }
+                    )
                 )
             },
         })
@@ -365,31 +386,33 @@ export class ProjectSettingsComponent implements OnInit {
 
     saveWebhooks() {
         const projectVal = { webhooks: this.project.webhooks }
-        this.managementService
-            .updateProject(this.projectId, projectVal)
-            .subscribe(
-                (project) => {
-                    this.project = project
-                    this.msgSrv.add({
-                        severity: 'success',
-                        summary: 'Project update succeeded',
-                        detail: 'Project update operation succeeded.',
-                    })
-                },
-                (err) => {
-                    console.info(err)
-                    let msg = err.statusText
-                    if (err.error && err.error.detail) {
-                        msg = err.error.detail
+        this.subs.add(
+            this.managementService
+                .updateProject(this.projectId, projectVal)
+                .subscribe(
+                    (project) => {
+                        this.project = project
+                        this.msgSrv.add({
+                            severity: 'success',
+                            summary: 'Project update succeeded',
+                            detail: 'Project update operation succeeded.',
+                        })
+                    },
+                    (err) => {
+                        console.info(err)
+                        let msg = err.statusText
+                        if (err.error && err.error.detail) {
+                            msg = err.error.detail
+                        }
+                        this.msgSrv.add({
+                            severity: 'error',
+                            summary: 'Project update erred',
+                            detail: 'Project update operation erred: ' + msg,
+                            life: 10000,
+                        })
                     }
-                    this.msgSrv.add({
-                        severity: 'error',
-                        summary: 'Project update erred',
-                        detail: 'Project update operation erred: ' + msg,
-                        life: 10000,
-                    })
-                }
-            )
+                )
+        )
     }
 
     getFlows(branch) {
@@ -400,27 +423,29 @@ export class ProjectSettingsComponent implements OnInit {
     }
 
     deleteProject() {
-        this.managementService.deleteProject(this.projectId).subscribe(
-            (data) => {
-                this.msgSrv.add({
-                    severity: 'success',
-                    summary: 'Project deletion succeeded',
-                    detail: 'Project delete operation succeeded.',
-                })
-                this.router.navigate(['/'])
-            },
-            (err) => {
-                let msg = err.statusText
-                if (err.error && err.error.detail) {
-                    msg = err.error.detail
+        this.subs.add(
+            this.managementService.deleteProject(this.projectId).subscribe(
+                (data) => {
+                    this.msgSrv.add({
+                        severity: 'success',
+                        summary: 'Project deletion succeeded',
+                        detail: 'Project delete operation succeeded.',
+                    })
+                    this.router.navigate(['/'])
+                },
+                (err) => {
+                    let msg = err.statusText
+                    if (err.error && err.error.detail) {
+                        msg = err.error.detail
+                    }
+                    this.msgSrv.add({
+                        severity: 'error',
+                        summary: 'Project deletion erred',
+                        detail: 'Project delete operation erred: ' + msg,
+                        life: 10000,
+                    })
                 }
-                this.msgSrv.add({
-                    severity: 'error',
-                    summary: 'Project deletion erred',
-                    detail: 'Project delete operation erred: ' + msg,
-                    life: 10000,
-                })
-            }
+            )
         )
     }
 }

@@ -9,6 +9,8 @@ import {
     QueryList,
 } from '@angular/core'
 
+import { Subscription } from 'rxjs'
+
 import { ExecutionService } from '../backend/api/execution.service'
 
 @Component({
@@ -49,6 +51,8 @@ export class LogBoxComponent implements OnDestroy, AfterViewInit {
     get jobId() {
         return this.prvJobId
     }
+
+    private subs: Subscription = new Subscription()
 
     constructor(protected executionService: ExecutionService) {}
 
@@ -233,20 +237,22 @@ export class LogBoxComponent implements OnDestroy, AfterViewInit {
                         // console.info('!!!! job switch - stop processing in timer2 ', jobId, this.timer2)
                         return
                     }
-                    this.executionService
-                        .getJobLogs(
-                            jobId,
-                            start,
-                            200,
-                            'asc',
-                            this.logInternals,
-                            null
-                        )
-                        .subscribe((data2) => {
-                            this.endPos += data2.items.length
-                            this.total = data2.total
-                            this._processNextLogs(jobId, data2, start)
-                        })
+                    this.subs.add(
+                        this.executionService
+                            .getJobLogs(
+                                jobId,
+                                start,
+                                200,
+                                'asc',
+                                this.logInternals,
+                                null
+                            )
+                            .subscribe((data2) => {
+                                this.endPos += data2.items.length
+                                this.total = data2.total
+                                this._processNextLogs(jobId, data2, start)
+                            })
+                    )
                 }, 3000)
             }
             return
@@ -258,13 +264,22 @@ export class LogBoxComponent implements OnDestroy, AfterViewInit {
             // loaded full 200 so probably there is more logs so load the rest immediatelly
             // console.info('load the rest immediatelly', jobId)
             start = start + 200
-            this.executionService
-                .getJobLogs(jobId, start, 200, 'asc', this.logInternals, null)
-                .subscribe((data2) => {
-                    this.endPos += data2.items.length
-                    this.total = data2.total
-                    this._processNextLogs(jobId, data2, start)
-                })
+            this.subs.add(
+                this.executionService
+                    .getJobLogs(
+                        jobId,
+                        start,
+                        200,
+                        'asc',
+                        this.logInternals,
+                        null
+                    )
+                    .subscribe((data2) => {
+                        this.endPos += data2.items.length
+                        this.total = data2.total
+                        this._processNextLogs(jobId, data2, start)
+                    })
+            )
         } else if (data.job.state !== 5 || this.lastAttempts < 4) {
             if (data.job.state === 5) {
                 this.lastAttempts += 1
@@ -280,20 +295,22 @@ export class LogBoxComponent implements OnDestroy, AfterViewInit {
                     return
                 }
                 start = start + data.items.length
-                this.executionService
-                    .getJobLogs(
-                        jobId,
-                        start,
-                        200,
-                        'asc',
-                        this.logInternals,
-                        null
-                    )
-                    .subscribe((data2) => {
-                        this.endPos += data2.items.length
-                        this.total = data2.total
-                        this._processNextLogs(jobId, data2, start)
-                    })
+                this.subs.add(
+                    this.executionService
+                        .getJobLogs(
+                            jobId,
+                            start,
+                            200,
+                            'asc',
+                            this.logInternals,
+                            null
+                        )
+                        .subscribe((data2) => {
+                            this.endPos += data2.items.length
+                            this.total = data2.total
+                            this._processNextLogs(jobId, data2, start)
+                        })
+                )
             }, 3000)
             return
         } else {
@@ -306,65 +323,75 @@ export class LogBoxComponent implements OnDestroy, AfterViewInit {
         // console.info('loading logs for ', jobId)
         this.resetLogging()
 
-        this.executionService
-            .getJobLogs(jobId, 0, 200, 'desc', this.logInternals, null)
-            .subscribe((data) => {
-                if (jobId !== this.prvJobId) {
-                    // console.info('!!!! job switch - stop processing getJobLogs', jobId)
-                    return
-                }
-                this.beginPos = data.total - 200
-                if (this.beginPos < 0) {
-                    this.beginPos = 0
-                }
-                this.endPos = data.total
-                this.total = data.total
-                // console.info('loaded first ' + data.items.length + ' of ' + data.total, jobId)
-
-                this._processNewLogs(data)
-
-                if (data.job.state !== 5 || this.lastAttempts < 4) {
-                    // completed
-                    if (data.job.state === 5) {
-                        this.lastAttempts += 1
+        this.subs.add(
+            this.executionService
+                .getJobLogs(jobId, 0, 200, 'desc', this.logInternals, null)
+                .subscribe((data) => {
+                    if (jobId !== this.prvJobId) {
+                        // console.info('!!!! job switch - stop processing getJobLogs', jobId)
+                        return
                     }
-                    // wait for next logs 3 seconds
-                    // console.info('waiting for next logs 3 seconds ', jobId)
-                    this.timer1 = setTimeout(() => {
-                        // console.info('timer1 fired ', jobId, this.timer1)
-                        this.timer1 = null
-                        if (jobId !== this.prvJobId) {
-                            // console.info('!!!! job switch - stop processing in timer1 ', jobId, this.timer1)
-                            return
+                    this.beginPos = data.total - 200
+                    if (this.beginPos < 0) {
+                        this.beginPos = 0
+                    }
+                    this.endPos = data.total
+                    this.total = data.total
+                    // console.info('loaded first ' + data.items.length + ' of ' + data.total, jobId)
+
+                    this._processNewLogs(data)
+
+                    if (data.job.state !== 5 || this.lastAttempts < 4) {
+                        // completed
+                        if (data.job.state === 5) {
+                            this.lastAttempts += 1
                         }
-                        this.executionService
-                            .getJobLogs(
-                                jobId,
-                                data.total,
-                                200,
-                                'asc',
-                                this.logInternals,
-                                null
+                        // wait for next logs 3 seconds
+                        // console.info('waiting for next logs 3 seconds ', jobId)
+                        this.timer1 = setTimeout(() => {
+                            // console.info('timer1 fired ', jobId, this.timer1)
+                            this.timer1 = null
+                            if (jobId !== this.prvJobId) {
+                                // console.info('!!!! job switch - stop processing in timer1 ', jobId, this.timer1)
+                                return
+                            }
+                            this.subs.add(
+                                this.executionService
+                                    .getJobLogs(
+                                        jobId,
+                                        data.total,
+                                        200,
+                                        'asc',
+                                        this.logInternals,
+                                        null
+                                    )
+                                    .subscribe((data2) => {
+                                        this.endPos += data2.items.length
+                                        this.total = data2.total
+                                        this._processNextLogs(
+                                            jobId,
+                                            data2,
+                                            data.total
+                                        )
+                                    })
                             )
-                            .subscribe((data2) => {
-                                this.endPos += data2.items.length
-                                this.total = data2.total
-                                this._processNextLogs(jobId, data2, data.total)
-                            })
-                    }, 3000)
-                } else {
-                    // console.info('completed loading at first shot', jobId)
-                    this._addStepStatusEntryToLogs(
-                        data.job,
-                        data.job.steps.length - 1
-                    )
-                }
-            })
+                        }, 3000)
+                    } else {
+                        // console.info('completed loading at first shot', jobId)
+                        this._addStepStatusEntryToLogs(
+                            data.job,
+                            data.job.steps.length - 1
+                        )
+                    }
+                })
+        )
     }
 
     ngAfterViewInit() {
         this.logBoxEl = this.logBox.nativeElement
-        this.logFrags.changes.subscribe((_) => this.onLogFragsChanged())
+        this.subs.add(
+            this.logFrags.changes.subscribe((_) => this.onLogFragsChanged())
+        )
     }
 
     resetLogging() {
@@ -393,6 +420,7 @@ export class LogBoxComponent implements OnDestroy, AfterViewInit {
     }
 
     ngOnDestroy() {
+        this.subs.unsubscribe()
         this.resetLogging()
     }
 
@@ -445,78 +473,98 @@ export class LogBoxComponent implements OnDestroy, AfterViewInit {
     loadFirstPage() {
         this.resetLogging()
 
-        this.executionService
-            .getJobLogs(this.prvJobId, 0, 200, 'asc', this.logInternals, null)
-            .subscribe((data) => {
-                this.beginPos = 0
-                this.endPos = data.items.length
-                this.total = data.total
+        this.subs.add(
+            this.executionService
+                .getJobLogs(
+                    this.prvJobId,
+                    0,
+                    200,
+                    'asc',
+                    this.logInternals,
+                    null
+                )
+                .subscribe((data) => {
+                    this.beginPos = 0
+                    this.endPos = data.items.length
+                    this.total = data.total
 
-                this._showLogs(data.items, data.job, 0, false)
+                    this._showLogs(data.items, data.job, 0, false)
 
-                if (this.endPos < this.total) {
-                    const moreCount = this.total - this.endPos
-                    this.logFragments.push({
-                        title: '',
-                        expanded: true,
-                        loading: true,
-                        logs: [
-                            {
-                                message:
-                                    '... ' + moreCount + ' more log lines ...',
-                                cls: 'log-blue',
-                            },
-                        ],
-                    })
-                }
+                    if (this.endPos < this.total) {
+                        const moreCount = this.total - this.endPos
+                        this.logFragments.push({
+                            title: '',
+                            expanded: true,
+                            loading: true,
+                            logs: [
+                                {
+                                    message:
+                                        '... ' +
+                                        moreCount +
+                                        ' more log lines ...',
+                                    cls: 'log-blue',
+                                },
+                            ],
+                        })
+                    }
 
-                setTimeout(() => {
-                    this.scrollToTop()
-                }, 500)
-            })
+                    setTimeout(() => {
+                        this.scrollToTop()
+                    }, 500)
+                })
+        )
     }
 
     loadEndPage() {
         this.resetLogging()
 
-        this.executionService
-            .getJobLogs(this.prvJobId, 0, 200, 'desc', this.logInternals, null)
-            .subscribe((data) => {
-                this.beginPos = data.total - 200
-                if (this.beginPos < 0) {
-                    this.beginPos = 0
-                }
-                this.endPos = data.total
-                this.total = data.total
-
-                this._showLogs(
-                    data.items.reverse(),
-                    data.job,
-                    this.beginPos,
-                    false
+        this.subs.add(
+            this.executionService
+                .getJobLogs(
+                    this.prvJobId,
+                    0,
+                    200,
+                    'desc',
+                    this.logInternals,
+                    null
                 )
+                .subscribe((data) => {
+                    this.beginPos = data.total - 200
+                    if (this.beginPos < 0) {
+                        this.beginPos = 0
+                    }
+                    this.endPos = data.total
+                    this.total = data.total
 
-                if (this.beginPos > 0) {
-                    this.logFragments.splice(0, 0, {
-                        title: '',
-                        expanded: true,
-                        loading: true,
-                        logs: [
-                            {
-                                message:
-                                    '... ' +
-                                    this.beginPos +
-                                    ' more log lines ...',
-                                cls: 'log-blue',
-                            },
-                        ],
-                    })
-                }
+                    this._showLogs(
+                        data.items.reverse(),
+                        data.job,
+                        this.beginPos,
+                        false
+                    )
 
-                setTimeout(() => {
-                    this.scrollToBottom()
-                }, 500)
-            })
+                    if (this.beginPos > 0) {
+                        this.logFragments.splice(0, 0, {
+                            title: '',
+                            expanded: true,
+                            loading: true,
+                            logs: [
+                                {
+                                    message:
+                                        '... ' +
+                                        this.beginPos +
+                                        ' more log lines ...',
+                                    cls: 'log-blue',
+                                },
+                            ],
+                        })
+                    }
+
+                    setTimeout(() => {
+                        this.scrollToBottom()
+                    }, 500)
+                })
+        )
     }
 
     loadPrevPage() {
@@ -527,80 +575,86 @@ export class LogBoxComponent implements OnDestroy, AfterViewInit {
         if (start < 0) {
             start = 0
         }
-        this.executionService
-            .getJobLogs(
-                this.prvJobId,
-                start,
-                200,
-                'asc',
-                this.logInternals,
-                null
-            )
-            .subscribe((data) => {
-                this.beginPos = start
-                this.total = data.total
+        this.subs.add(
+            this.executionService
+                .getJobLogs(
+                    this.prvJobId,
+                    start,
+                    200,
+                    'asc',
+                    this.logInternals,
+                    null
+                )
+                .subscribe((data) => {
+                    this.beginPos = start
+                    this.total = data.total
 
-                this._showLogs(data.items, data.job, this.beginPos, true)
+                    this._showLogs(data.items, data.job, this.beginPos, true)
 
-                if (this.beginPos > 0) {
-                    this.logFragments.splice(0, 0, {
-                        title: '',
-                        expanded: true,
-                        loading: true,
-                        logs: [
-                            {
-                                message:
-                                    '... ' +
-                                    this.beginPos +
-                                    ' more log lines ...',
-                                cls: 'log-blue',
-                            },
-                        ],
-                    })
-                }
+                    if (this.beginPos > 0) {
+                        this.logFragments.splice(0, 0, {
+                            title: '',
+                            expanded: true,
+                            loading: true,
+                            logs: [
+                                {
+                                    message:
+                                        '... ' +
+                                        this.beginPos +
+                                        ' more log lines ...',
+                                    cls: 'log-blue',
+                                },
+                            ],
+                        })
+                    }
 
-                setTimeout(() => {
-                    this.scrollToTop()
-                }, 500)
-            })
+                    setTimeout(() => {
+                        this.scrollToTop()
+                    }, 500)
+                })
+        )
     }
 
     loadNextPage() {
-        this.executionService
-            .getJobLogs(
-                this.prvJobId,
-                this.endPos,
-                200,
-                'asc',
-                this.logInternals,
-                null
-            )
-            .subscribe((data) => {
-                const startLineNo = this.endPos
-                this.endPos += data.items.length
-                this.total = data.total
+        this.subs.add(
+            this.executionService
+                .getJobLogs(
+                    this.prvJobId,
+                    this.endPos,
+                    200,
+                    'asc',
+                    this.logInternals,
+                    null
+                )
+                .subscribe((data) => {
+                    const startLineNo = this.endPos
+                    this.endPos += data.items.length
+                    this.total = data.total
 
-                this._showLogs(data.items, data.job, startLineNo, false)
+                    this._showLogs(data.items, data.job, startLineNo, false)
 
-                if (this.endPos < this.total) {
-                    const moreCount = this.total - this.endPos
-                    this.logFragments.push({
-                        title: '',
-                        expanded: true,
-                        loading: true,
-                        logs: [
-                            {
-                                message:
-                                    '... ' + moreCount + ' more log lines ...',
-                                cls: 'log-blue',
-                            },
-                        ],
-                    })
-                }
+                    if (this.endPos < this.total) {
+                        const moreCount = this.total - this.endPos
+                        this.logFragments.push({
+                            title: '',
+                            expanded: true,
+                            loading: true,
+                            logs: [
+                                {
+                                    message:
+                                        '... ' +
+                                        moreCount +
+                                        ' more log lines ...',
+                                    cls: 'log-blue',
+                                },
+                            ],
+                        })
+                    }
 
-                setTimeout(() => {
-                    this.scrollToBottom()
-                }, 500)
-            })
+                    setTimeout(() => {
+                        this.scrollToBottom()
+                    }, 500)
+                })
+        )
     }
 }

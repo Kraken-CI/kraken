@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core'
+import { Component, OnInit, OnDestroy } from '@angular/core'
 import { Router, ActivatedRoute } from '@angular/router'
 import { Title } from '@angular/platform-browser'
+
+import { Subscription } from 'rxjs'
 
 import { MessageService } from 'primeng/api'
 
@@ -15,7 +17,7 @@ import { AuthService } from '../auth.service'
     templateUrl: './main-page.component.html',
     styleUrls: ['./main-page.component.sass'],
 })
-export class MainPageComponent implements OnInit {
+export class MainPageComponent implements OnInit, OnDestroy {
     newProjectDlgVisible = false
     projectName = ''
 
@@ -24,6 +26,8 @@ export class MainPageComponent implements OnInit {
     selectedProject = { name: '', id: 0 }
     newBranchDlgVisible = false
     branchName = ''
+
+    private subs: Subscription = new Subscription()
 
     constructor(
         private route: ActivatedRoute,
@@ -47,10 +51,16 @@ export class MainPageComponent implements OnInit {
         this.refresh()
     }
 
+    ngOnDestroy() {
+        this.subs.unsubscribe()
+    }
+
     refresh() {
-        this.managementService.getProjects().subscribe((data) => {
-            this.projects = data.items
-        })
+        this.subs.add(
+            this.managementService.getProjects().subscribe((data) => {
+                this.projects = data.items
+            })
+        )
     }
 
     newProject() {
@@ -68,35 +78,37 @@ export class MainPageComponent implements OnInit {
     }
 
     addNewProject() {
-        this.managementService
-            .createProject({ name: this.projectName })
-            .subscribe(
-                (data) => {
-                    console.info(data)
-                    this.msgSrv.add({
-                        severity: 'success',
-                        summary: 'New project succeeded',
-                        detail: 'New project operation succeeded.',
-                    })
-                    this.newProjectDlgVisible = false
-                    this.selectedProject = data
-                    this.router.navigate(['/projects/' + data.id])
-                },
-                (err) => {
-                    console.info(err)
-                    let msg = err.statusText
-                    if (err.error && err.error.detail) {
-                        msg = err.error.detail
+        this.subs.add(
+            this.managementService
+                .createProject({ name: this.projectName })
+                .subscribe(
+                    (data) => {
+                        console.info(data)
+                        this.msgSrv.add({
+                            severity: 'success',
+                            summary: 'New project succeeded',
+                            detail: 'New project operation succeeded.',
+                        })
+                        this.newProjectDlgVisible = false
+                        this.selectedProject = data
+                        this.router.navigate(['/projects/' + data.id])
+                    },
+                    (err) => {
+                        console.info(err)
+                        let msg = err.statusText
+                        if (err.error && err.error.detail) {
+                            msg = err.error.detail
+                        }
+                        this.msgSrv.add({
+                            severity: 'error',
+                            summary: 'New project erred',
+                            detail: 'New project operation erred: ' + msg,
+                            life: 10000,
+                        })
+                        this.newProjectDlgVisible = false
                     }
-                    this.msgSrv.add({
-                        severity: 'error',
-                        summary: 'New project erred',
-                        detail: 'New project operation erred: ' + msg,
-                        life: 10000,
-                    })
-                    this.newProjectDlgVisible = false
-                }
-            )
+                )
+        )
     }
 
     newBranch(project) {
@@ -115,33 +127,37 @@ export class MainPageComponent implements OnInit {
     }
 
     addNewBranch() {
-        this.managementService
-            .createBranch(this.selectedProject.id, { name: this.branchName })
-            .subscribe(
-                (data) => {
-                    console.info(data)
-                    this.msgSrv.add({
-                        severity: 'success',
-                        summary: 'New branch succeeded',
-                        detail: 'New branch operation succeeded.',
-                    })
-                    this.newBranchDlgVisible = false
-                    this.router.navigate(['/branches/' + data.id])
-                },
-                (err) => {
-                    console.info(err)
-                    let msg = err.statusText
-                    if (err.error && err.error.detail) {
-                        msg = err.error.detail
+        this.subs.add(
+            this.managementService
+                .createBranch(this.selectedProject.id, {
+                    name: this.branchName,
+                })
+                .subscribe(
+                    (data) => {
+                        console.info(data)
+                        this.msgSrv.add({
+                            severity: 'success',
+                            summary: 'New branch succeeded',
+                            detail: 'New branch operation succeeded.',
+                        })
+                        this.newBranchDlgVisible = false
+                        this.router.navigate(['/branches/' + data.id])
+                    },
+                    (err) => {
+                        console.info(err)
+                        let msg = err.statusText
+                        if (err.error && err.error.detail) {
+                            msg = err.error.detail
+                        }
+                        this.msgSrv.add({
+                            severity: 'error',
+                            summary: 'New branch erred',
+                            detail: 'New branch operation erred: ' + msg,
+                            life: 10000,
+                        })
+                        this.newBranchDlgVisible = false
                     }
-                    this.msgSrv.add({
-                        severity: 'error',
-                        summary: 'New branch erred',
-                        detail: 'New branch operation erred: ' + msg,
-                        life: 10000,
-                    })
-                    this.newBranchDlgVisible = false
-                }
-            )
+                )
+        )
     }
 }

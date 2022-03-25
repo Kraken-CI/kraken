@@ -1,6 +1,7 @@
 import {
     Component,
     OnInit,
+    OnDestroy,
     Input,
     TemplateRef,
     QueryList,
@@ -10,6 +11,8 @@ import {
     Inject,
 } from '@angular/core'
 import { Router, ActivatedRoute } from '@angular/router'
+
+import { Subscription } from 'rxjs'
 
 import { PrimeTemplate } from 'primeng/api'
 import { MenuItem } from 'primeng/api'
@@ -50,7 +53,9 @@ export class TabbedPageTabComponent {
     templateUrl: './tabbed-page.component.html',
     styleUrls: ['./tabbed-page.component.sass'],
 })
-export class TabbedPageComponent implements OnInit, AfterContentInit {
+export class TabbedPageComponent
+    implements OnInit, OnDestroy, AfterContentInit
+{
     _baseLinkUrl: string = ''
 
     @ContentChildren(PrimeTemplate) templates: QueryList<any>
@@ -63,6 +68,8 @@ export class TabbedPageComponent implements OnInit, AfterContentInit {
     tabMenuItems: MenuItem[] = []
     activeTab: MenuItem
     activeTabIdx = 0
+
+    private subs: Subscription = new Subscription()
 
     constructor(private route: ActivatedRoute, private router: Router) {}
 
@@ -103,9 +110,11 @@ export class TabbedPageComponent implements OnInit, AfterContentInit {
 
         this.initTabs()
 
-        this.pageTabs.changes.subscribe((_) => {
-            this.initTabs()
-        })
+        this.subs.add(
+            this.pageTabs.changes.subscribe((_) => {
+                this.initTabs()
+            })
+        )
     }
 
     navigateToFirstTab() {
@@ -155,16 +164,22 @@ export class TabbedPageComponent implements OnInit, AfterContentInit {
     }
 
     ngOnInit(): void {
-        this.route.paramMap.subscribe((params) => {
-            let tab = params.get('tab')
+        this.subs.add(
+            this.route.paramMap.subscribe((params) => {
+                let tab = params.get('tab')
 
-            if (!tab) {
-                // if no tab indicated then navigate to the first tab
-                this.navigateToFirstTab()
-                return
-            }
+                if (!tab) {
+                    // if no tab indicated then navigate to the first tab
+                    this.navigateToFirstTab()
+                    return
+                }
 
-            this.switchToTab(tab)
-        })
+                this.switchToTab(tab)
+            })
+        )
+    }
+
+    ngOnDestroy() {
+        this.subs.unsubscribe()
     }
 }

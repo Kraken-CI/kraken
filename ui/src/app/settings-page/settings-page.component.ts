@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core'
+import { Component, OnInit, OnDestroy } from '@angular/core'
 import { Title } from '@angular/platform-browser'
 import { FormGroup, FormControl } from '@angular/forms'
+
+import { Subscription } from 'rxjs'
 
 import { AuthService } from '../auth.service'
 import { MessageService } from 'primeng/api'
@@ -13,7 +15,7 @@ import { SettingsService } from '../services/settings.service'
     templateUrl: './settings-page.component.html',
     styleUrls: ['./settings-page.component.sass'],
 })
-export class SettingsPageComponent implements OnInit {
+export class SettingsPageComponent implements OnInit, OnDestroy {
     settings: any
 
     tabIndex = 0
@@ -63,6 +65,8 @@ export class SettingsPageComponent implements OnInit {
         k8s_token: new FormControl(''),
     })
 
+    private subs: Subscription = new Subscription()
+
     constructor(
         public auth: AuthService,
         private msgSrv: MessageService,
@@ -83,15 +87,21 @@ export class SettingsPageComponent implements OnInit {
             },
         ])
 
-        this.settingsService.settings.subscribe((settings) => {
-            if (settings === null) {
-                return
-            }
-            this.generalForm.setValue(settings.general)
-            this.notificationForm.setValue(settings.notification)
-            this.monitoringForm.setValue(settings.monitoring)
-            this.cloudForm.setValue(settings.cloud)
-        })
+        this.subs.add(
+            this.settingsService.settings.subscribe((settings) => {
+                if (settings === null) {
+                    return
+                }
+                this.generalForm.setValue(settings.general)
+                this.notificationForm.setValue(settings.notification)
+                this.monitoringForm.setValue(settings.monitoring)
+                this.cloudForm.setValue(settings.cloud)
+            })
+        )
+    }
+
+    ngOnDestroy() {
+        this.subs.unsubscribe()
     }
 
     saveSettings() {
@@ -113,27 +123,29 @@ export class SettingsPageComponent implements OnInit {
                 break
         }
 
-        this.settingsService.updateSettings(settings).subscribe(
-            (settings2) => {
-                this.settings = settings2
-                this.msgSrv.add({
-                    severity: 'success',
-                    summary: 'Settings update succeeded',
-                    detail: 'Settings update operation succeeded.',
-                })
-            },
-            (err) => {
-                let msg = err.statusText
-                if (err.error && err.error.detail) {
-                    msg = err.error.detail
+        this.subs.add(
+            this.settingsService.updateSettings(settings).subscribe(
+                (settings2) => {
+                    this.settings = settings2
+                    this.msgSrv.add({
+                        severity: 'success',
+                        summary: 'Settings update succeeded',
+                        detail: 'Settings update operation succeeded.',
+                    })
+                },
+                (err) => {
+                    let msg = err.statusText
+                    if (err.error && err.error.detail) {
+                        msg = err.error.detail
+                    }
+                    this.msgSrv.add({
+                        severity: 'error',
+                        summary: 'Settings update erred',
+                        detail: 'Settings update operation erred: ' + msg,
+                        life: 10000,
+                    })
                 }
-                this.msgSrv.add({
-                    severity: 'error',
-                    summary: 'Settings update erred',
-                    detail: 'Settings update operation erred: ' + msg,
-                    life: 10000,
-                })
-            }
+            )
         )
     }
 
@@ -155,61 +167,63 @@ export class SettingsPageComponent implements OnInit {
                 this.kubernetesChecking = true
                 break
         }
-        this.settingsService.checkResourceWorkingState(resource).subscribe(
-            (data) => {
-                console.info(data)
-                switch (resource) {
-                    case 'email':
-                        this.emailState = data.state
-                        this.emailChecking = false
-                        break
-                    case 'slack':
-                        this.slackState = data.state
-                        this.slackChecking = false
-                        break
-                    case 'aws':
-                        this.awsState = data.state
-                        this.awsChecking = false
-                        break
-                    case 'azure':
-                        this.azureState = data.state
-                        this.azureChecking = false
-                        break
-                    case 'kubernetes':
-                        this.kubernetesState = data.state
-                        this.kubernetesChecking = false
-                        break
+        this.subs.add(
+            this.settingsService.checkResourceWorkingState(resource).subscribe(
+                (data) => {
+                    console.info(data)
+                    switch (resource) {
+                        case 'email':
+                            this.emailState = data.state
+                            this.emailChecking = false
+                            break
+                        case 'slack':
+                            this.slackState = data.state
+                            this.slackChecking = false
+                            break
+                        case 'aws':
+                            this.awsState = data.state
+                            this.awsChecking = false
+                            break
+                        case 'azure':
+                            this.azureState = data.state
+                            this.azureChecking = false
+                            break
+                        case 'kubernetes':
+                            this.kubernetesState = data.state
+                            this.kubernetesChecking = false
+                            break
+                    }
+                },
+                (err) => {
+                    switch (resource) {
+                        case 'email':
+                            this.emailChecking = false
+                            break
+                        case 'slack':
+                            this.slackChecking = false
+                            break
+                        case 'aws':
+                            this.awsChecking = false
+                            break
+                        case 'azure':
+                            this.azureChecking = false
+                            break
+                        case 'kubernetes':
+                            this.kubernetesChecking = false
+                            break
+                    }
+                    let msg = err.statusText
+                    if (err.error && err.error.detail) {
+                        msg = err.error.detail
+                    }
+                    this.msgSrv.add({
+                        severity: 'error',
+                        summary: 'Checking failed',
+                        detail: 'Checking erred: ' + msg,
+                        life: 10000,
+                    })
                 }
-            },
-            (err) => {
-                switch (resource) {
-                    case 'email':
-                        this.emailChecking = false
-                        break
-                    case 'slack':
-                        this.slackChecking = false
-                        break
-                    case 'aws':
-                        this.awsChecking = false
-                        break
-                    case 'azure':
-                        this.azureChecking = false
-                        break
-                    case 'kubernetes':
-                        this.kubernetesChecking = false
-                        break
-                }
-                let msg = err.statusText
-                if (err.error && err.error.detail) {
-                    msg = err.error.detail
-                }
-                this.msgSrv.add({
-                    severity: 'error',
-                    summary: 'Checking failed',
-                    detail: 'Checking erred: ' + msg,
-                    life: 10000,
-                })
-            }
+            )
         )
     }
 }

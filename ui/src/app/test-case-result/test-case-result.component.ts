@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core'
+import { Component, OnInit, OnDestroy } from '@angular/core'
 import { Router, ActivatedRoute, ParamMap } from '@angular/router'
 import { Title } from '@angular/platform-browser'
+
+import { Subscription } from 'rxjs'
 
 import { MenuItem } from 'primeng/api'
 
@@ -15,7 +17,7 @@ import { datetimeToLocal } from '../utils'
     templateUrl: './test-case-result.component.html',
     styleUrls: ['./test-case-result.component.sass'],
 })
-export class TestCaseResultComponent implements OnInit {
+export class TestCaseResultComponent implements OnInit, OnDestroy {
     tcrId = 0
     result = null
     results: any[]
@@ -31,6 +33,8 @@ export class TestCaseResultComponent implements OnInit {
     valueOptions = {}
     chartPlugins: any[]
     iterations = 1
+
+    private subs: Subscription = new Subscription()
 
     constructor(
         private route: ActivatedRoute,
@@ -53,55 +57,60 @@ export class TestCaseResultComponent implements OnInit {
             },
         ])
 
-        this.resultsService.getResult(this.tcrId).subscribe((result) => {
-            this.result = result
-            const crumbs = [
-                {
-                    label: 'Projects',
-                    project_id: this.result.project_id,
-                    project_name: this.result.project_name,
-                },
-                {
-                    label: 'Branches',
-                    branch_id: this.result.branch_id,
-                    branch_name: this.result.branch_name,
-                },
-                {
-                    label: 'Results',
-                    branch_id: this.result.branch_id,
-                    flow_kind: this.result.flow_kind,
-                },
-                {
-                    label: 'Flows',
-                    flow_id: this.result.flow_id,
-                    flow_label: '' + this.result.flow_id,
-                },
-                {
-                    label: 'Stages',
-                    run_id: this.result.run_id,
-                    run_name: this.result.stage_name,
-                },
-                {
-                    label: 'Result',
-                    tcr_id: this.result.id,
-                    tc_name: this.result.test_case_name,
-                },
-            ]
-            this.breadcrumbService.setCrumbs(crumbs)
+        this.subs.add(
+            this.resultsService.getResult(this.tcrId).subscribe((result) => {
+                this.result = result
+                const crumbs = [
+                    {
+                        label: 'Projects',
+                        project_id: this.result.project_id,
+                        project_name: this.result.project_name,
+                    },
+                    {
+                        label: 'Branches',
+                        branch_id: this.result.branch_id,
+                        branch_name: this.result.branch_name,
+                    },
+                    {
+                        label: 'Results',
+                        branch_id: this.result.branch_id,
+                        flow_kind: this.result.flow_kind,
+                    },
+                    {
+                        label: 'Flows',
+                        flow_id: this.result.flow_id,
+                        flow_label: '' + this.result.flow_id,
+                    },
+                    {
+                        label: 'Stages',
+                        run_id: this.result.run_id,
+                        run_name: this.result.stage_name,
+                    },
+                    {
+                        label: 'Result',
+                        tcr_id: this.result.id,
+                        tc_name: this.result.test_case_name,
+                    },
+                ]
+                this.breadcrumbService.setCrumbs(crumbs)
 
-            this.titleService.setTitle(
-                'Kraken - Test ' + this.result.test_case_name + ' ' + this.tcrId
-            )
+                this.titleService.setTitle(
+                    'Kraken - Test ' +
+                        this.result.test_case_name +
+                        ' ' +
+                        this.tcrId
+                )
 
-            const valueNames = []
-            if (result.values) {
-                for (const name of Object.keys(result.values)) {
-                    valueNames.push({ name })
+                const valueNames = []
+                if (result.values) {
+                    for (const name of Object.keys(result.values)) {
+                        valueNames.push({ name })
+                    }
                 }
-            }
-            this.valueNames = valueNames
-            this.selectedValue = valueNames[0]
-        })
+                this.valueNames = valueNames
+                this.selectedValue = valueNames[0]
+            })
+        )
 
         this.statusOptions = {
             elements: {
@@ -177,6 +186,10 @@ export class TestCaseResultComponent implements OnInit {
                 mode: 'index',
             },
         }
+    }
+
+    ngOnDestroy() {
+        this.subs.unsubscribe()
     }
 
     statusColors(ctx) {
@@ -328,34 +341,36 @@ export class TestCaseResultComponent implements OnInit {
     }
 
     loadResultsLazy(event) {
-        this.resultsService
-            .getResultHistory(this.tcrId, event.first, event.rows)
-            .subscribe((data) => {
-                this.results = data.items
-                this.totalRecords = data.total
+        this.subs.add(
+            this.resultsService
+                .getResultHistory(this.tcrId, event.first, event.rows)
+                .subscribe((data) => {
+                    this.results = data.items
+                    this.totalRecords = data.total
 
-                const flowLabels = []
-                const statuses = []
-                const origData = []
-                for (const res of this.results.slice().reverse()) {
-                    flowLabels.push(res.flow_label)
-                    statuses.push(this.resultToChartVal(res.result))
-                    origData.push(res)
-                }
+                    const flowLabels = []
+                    const statuses = []
+                    const origData = []
+                    for (const res of this.results.slice().reverse()) {
+                        flowLabels.push(res.flow_label)
+                        statuses.push(this.resultToChartVal(res.result))
+                        origData.push(res)
+                    }
 
-                this.statusData = {
-                    labels: flowLabels,
-                    datasets: [
-                        {
-                            label: 'Status',
-                            data: statuses,
-                            origData: origData,
-                        },
-                    ],
-                }
+                    this.statusData = {
+                        labels: flowLabels,
+                        datasets: [
+                            {
+                                label: 'Status',
+                                data: statuses,
+                                origData: origData,
+                            },
+                        ],
+                    }
 
-                this.prepareValueChartData()
-            })
+                    this.prepareValueChartData()
+                })
+        )
     }
 
     formatResult(result) {

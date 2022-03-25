@@ -2,6 +2,8 @@ import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core'
 import { Router, ActivatedRoute } from '@angular/router'
 import { Title } from '@angular/platform-browser'
 
+import { Subscription } from 'rxjs'
+
 import { TreeNode } from 'primeng/api'
 import { MenuItem } from 'primeng/api'
 import { MessageService } from 'primeng/api'
@@ -47,6 +49,8 @@ export class FlowPageComponent implements OnInit, OnDestroy {
     repoUrl = 'awe'
     diffUrl = 'dafsd'
 
+    private subs: Subscription = new Subscription()
+
     constructor(
         private route: ActivatedRoute,
         private router: Router,
@@ -60,27 +64,29 @@ export class FlowPageComponent implements OnInit, OnDestroy {
     ) {}
 
     ngOnInit(): void {
-        this.route.paramMap.subscribe((params) => {
-            const flowId = parseInt(params.get('id'), 10)
+        this.subs.add(
+            this.route.paramMap.subscribe((params) => {
+                const flowId = parseInt(params.get('id'), 10)
 
-            // only when it is the first load or a flow is changed
-            if (flowId !== this.flowId) {
-                this.flowId = flowId
-                this.titleService.setTitle('Kraken - Flow ' + this.flowId)
+                // only when it is the first load or a flow is changed
+                if (flowId !== this.flowId) {
+                    this.flowId = flowId
+                    this.titleService.setTitle('Kraken - Flow ' + this.flowId)
 
-                this.runsTree = [
-                    {
-                        label: `Flow [${this.flowId}]`,
-                        expanded: true,
-                        type: 'root',
-                        data: { created: '' },
-                        children: [],
-                    },
-                ]
+                    this.runsTree = [
+                        {
+                            label: `Flow [${this.flowId}]`,
+                            expanded: true,
+                            type: 'root',
+                            data: { created: '' },
+                            children: [],
+                        },
+                    ]
 
-                this.refresh()
-            }
-        })
+                    this.refresh()
+                }
+            })
+        )
     }
 
     cancelRefreshTimer() {
@@ -91,6 +97,7 @@ export class FlowPageComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy() {
+        this.subs.unsubscribe()
         this.cancelRefreshTimer()
     }
 
@@ -159,112 +166,121 @@ export class FlowPageComponent implements OnInit, OnDestroy {
     }
 
     refresh() {
-        this.cancelRefreshTimer()
+        if (this.refreshing) {
+            return
+        }
         this.refreshing = true
 
-        this.executionService.getFlow(this.flowId).subscribe((flow) => {
-            this.refreshing = false
+        this.subs.add(
+            this.executionService.getFlow(this.flowId).subscribe((flow) => {
+                this.refreshing = false
+                this.refreshTimer = null
 
-            this.flow = flow
-            const crumbs = [
-                {
-                    label: 'Projects',
-                    project_id: flow.project_id,
-                    project_name: flow.project_name,
-                },
-                {
-                    label: 'Branches',
-                    branch_id: flow.branch_id,
-                    branch_name: flow.base_branch_name,
-                },
-                {
-                    label: 'Results',
-                    branch_id: flow.branch_id,
-                    flow_kind: flow.kind,
-                },
-                {
-                    label: 'Flows',
-                    flow_id: flow.id,
-                    flow_label: flow.label,
-                },
-            ]
-            this.breadcrumbService.setCrumbs(crumbs)
+                this.flow = flow
+                const crumbs = [
+                    {
+                        label: 'Projects',
+                        project_id: flow.project_id,
+                        project_name: flow.project_name,
+                    },
+                    {
+                        label: 'Branches',
+                        branch_id: flow.branch_id,
+                        branch_name: flow.base_branch_name,
+                    },
+                    {
+                        label: 'Results',
+                        branch_id: flow.branch_id,
+                        flow_kind: flow.kind,
+                    },
+                    {
+                        label: 'Flows',
+                        flow_id: flow.id,
+                        flow_label: flow.label,
+                    },
+                ]
+                this.breadcrumbService.setCrumbs(crumbs)
 
-            // collect args from flow
-            const args = []
-            let sectionArgs = []
-            if (this.flow.kind === 'dev') {
-                sectionArgs.push({
-                    name: 'BRANCH',
-                    value: this.flow.branch_name,
-                })
-            }
-            args.push({
-                name: 'Common',
-                args: sectionArgs,
-            })
-            // collect args from runs
-            for (const run of this.flow.runs) {
-                sectionArgs = []
-                for (const a of Object.keys(run.args)) {
-                    const param = this._getParamFromStage(run.stage_name, a)
-                    let description = ''
-                    let defaultValue
-                    if (param) {
-                        description = param.description
-                        defaultValue = param.default
-                    }
-
+                // collect args from flow
+                const args = []
+                let sectionArgs = []
+                if (this.flow.kind === 'dev') {
                     sectionArgs.push({
-                        name: a,
-                        value: run.args[a],
-                        description,
-                        default: defaultValue,
+                        name: 'BRANCH',
+                        value: this.flow.branch_name,
                     })
                 }
-                if (sectionArgs.length > 0) {
-                    args.push({
-                        name: run.stage_name,
-                        args: sectionArgs,
-                    })
+                args.push({
+                    name: 'Common',
+                    args: sectionArgs,
+                })
+                // collect args from runs
+                for (const run of this.flow.runs) {
+                    sectionArgs = []
+                    for (const a of Object.keys(run.args)) {
+                        const param = this._getParamFromStage(run.stage_name, a)
+                        let description = ''
+                        let defaultValue
+                        if (param) {
+                            description = param.description
+                            defaultValue = param.default
+                        }
+
+                        sectionArgs.push({
+                            name: a,
+                            value: run.args[a],
+                            description,
+                            default: defaultValue,
+                        })
+                    }
+                    if (sectionArgs.length > 0) {
+                        args.push({
+                            name: run.stage_name,
+                            args: sectionArgs,
+                        })
+                    }
                 }
-            }
-            this.args = args
+                this.args = args
 
-            // build tree of runs
-            const allParents = {
-                root: [],
-            }
-            for (const stage of flow.stages) {
-                if (allParents[stage.schema.parent] === undefined) {
-                    allParents[stage.schema.parent] = []
+                // build tree of runs
+                const allParents = {
+                    root: [],
                 }
-                allParents[stage.schema.parent].push(stage)
-            }
+                for (const stage of flow.stages) {
+                    if (allParents[stage.schema.parent] === undefined) {
+                        allParents[stage.schema.parent] = []
+                    }
+                    allParents[stage.schema.parent].push(stage)
+                }
 
-            this.runsTree = [
-                {
-                    label: `Flow [${this.flowId}]`,
-                    expanded: true,
-                    type: 'root',
-                    data: flow,
-                },
-            ]
-            this._buildSubtree(this.runsTree[0], allParents, allParents.root)
+                this.runsTree = [
+                    {
+                        label: `Flow [${this.flowId}]`,
+                        expanded: true,
+                        type: 'root',
+                        data: flow,
+                    },
+                ]
+                this._buildSubtree(
+                    this.runsTree[0],
+                    allParents,
+                    allParents.root
+                )
 
-            this.flatTree = []
-            this._traverseTree(this.runsTree[0], 0)
+                this.flatTree = []
+                this._traverseTree(this.runsTree[0], 0)
 
-            // put back selection
-            if (this.selectedNode.stage.id) {
-                this.changeSelection(this.selectedNode.stage.id)
-            }
+                // put back selection
+                if (this.selectedNode.stage.id) {
+                    this.changeSelection(this.selectedNode.stage.id)
+                }
 
-            // refresh data every 10secs
-            this.refreshTimer = setTimeout(() => {
-                this.refresh()
-            }, 10000)
-        })
+                // refresh data every 10secs
+                this.refreshTimer = setTimeout(() => {
+                    this.refresh()
+                }, 10000)
+            })
+        )
     }
 
     showNodeMenu($event, nodeMenu, node) {
@@ -293,28 +309,30 @@ export class FlowPageComponent implements OnInit, OnDestroy {
                         const stage = node.data.stage
                         // console.info(stage.schema.parameters)
                         if (stage.schema.parameters.length === 0) {
-                            this.executionService
-                                .createRun(this.flowId, stage.id)
-                                .subscribe(
-                                    (data) => {
-                                        this.msgSrv.add({
-                                            severity: 'success',
-                                            summary: 'Run succeeded',
-                                            detail: 'Run operation succeeded.',
-                                        })
-                                        this.refresh()
-                                    },
-                                    (err) => {
-                                        this.msgSrv.add({
-                                            severity: 'error',
-                                            summary: 'Run erred',
-                                            detail:
-                                                'Run operation erred: ' +
-                                                err.statusText,
-                                            life: 10000,
-                                        })
-                                    }
-                                )
+                            this.subs.add(
+                                this.executionService
+                                    .createRun(this.flowId, stage.id)
+                                    .subscribe(
+                                        (data) => {
+                                            this.msgSrv.add({
+                                                severity: 'success',
+                                                summary: 'Run succeeded',
+                                                detail: 'Run operation succeeded.',
+                                            })
+                                            this.refresh()
+                                        },
+                                        (err) => {
+                                            this.msgSrv.add({
+                                                severity: 'error',
+                                                summary: 'Run erred',
+                                                detail:
+                                                    'Run operation erred: ' +
+                                                    err.statusText,
+                                                life: 10000,
+                                            })
+                                        }
+                                    )
+                            )
                         } else {
                             this.router.navigate([
                                 '/flows/' + this.flowId + '/runs/new',
@@ -346,15 +364,17 @@ export class FlowPageComponent implements OnInit, OnDestroy {
         this.loadingArtifacts = true
         this.cd.detectChanges()
 
-        this.executionService
-            .getFlowArtifacts(this.flowId, event.first, event.rows)
-            .subscribe((data) => {
-                this.artifacts = data.items
-                this.totalArtifacts = data.total
-                this.loadingArtifacts = false
+        this.subs.add(
+            this.executionService
+                .getFlowArtifacts(this.flowId, event.first, event.rows)
+                .subscribe((data) => {
+                    this.artifacts = data.items
+                    this.totalArtifacts = data.total
+                    this.loadingArtifacts = false
 
-                this.cd.detectChanges()
-            })
+                    this.cd.detectChanges()
+                })
+        )
     }
 
     changeSelection(stageId) {

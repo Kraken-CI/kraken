@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core'
+import { Component, OnInit, OnDestroy } from '@angular/core'
 import { ActivatedRoute, ParamMap, Router } from '@angular/router'
 import { Title } from '@angular/platform-browser'
+
+import { Subscription } from 'rxjs'
 
 import { MessageService, MenuItem } from 'primeng/api'
 
@@ -14,7 +16,7 @@ import { BreadcrumbsService } from '../breadcrumbs.service'
     templateUrl: './agents-page.component.html',
     styleUrls: ['./agents-page.component.sass'],
 })
-export class AgentsPageComponent implements OnInit {
+export class AgentsPageComponent implements OnInit, OnDestroy {
     // agents table
     agents: any[]
     totalAgents = 0
@@ -40,6 +42,8 @@ export class AgentsPageComponent implements OnInit {
     agentJobs: any[] = []
     totalAgentJobs = 0
     loadingAgentJobs = false
+
+    private subs: Subscription = new Subscription()
 
     constructor(
         private route: ActivatedRoute,
@@ -100,81 +104,93 @@ export class AgentsPageComponent implements OnInit {
 
         this.openedAgents = []
 
-        this.route.paramMap.subscribe((params: ParamMap) => {
-            const agentIdStr = params.get('id')
-            if (agentIdStr === 'all') {
-                this.switchToTab(0)
-            } else {
-                const agentId = parseInt(agentIdStr, 10)
+        this.subs.add(
+            this.route.paramMap.subscribe((params: ParamMap) => {
+                const agentIdStr = params.get('id')
+                if (agentIdStr === 'all') {
+                    this.switchToTab(0)
+                } else {
+                    const agentId = parseInt(agentIdStr, 10)
 
-                let found = false
-                // if tab for this agent is already opened then switch to it
-                for (let idx = 0; idx < this.openedAgents.length; idx++) {
-                    const g = this.openedAgents[idx].agent
-                    if (g.id === agentId) {
-                        this.switchToTab(idx + 1)
-                        found = true
-                    }
-                }
-
-                // if tab is not opened then search for list of agents if the one is present there,
-                // if so then open it in new tab and switch to it
-                if (!found) {
-                    for (const g of this.agents) {
+                    let found = false
+                    // if tab for this agent is already opened then switch to it
+                    for (let idx = 0; idx < this.openedAgents.length; idx++) {
+                        const g = this.openedAgents[idx].agent
                         if (g.id === agentId) {
-                            this.addAgentTab(g)
-                            this.switchToTab(this.tabs.length - 1)
+                            this.switchToTab(idx + 1)
                             found = true
-                            break
                         }
                     }
-                }
 
-                // if agent is not loaded in list fetch it individually
-                if (!found) {
-                    this.managementService.getAgent(agentId).subscribe(
-                        (data) => {
-                            this.addAgentTab(data)
-                            this.switchToTab(this.tabs.length - 1)
-                        },
-                        (err) => {
-                            let msg = err.statusText
-                            if (err.error && err.error.message) {
-                                msg = err.error.message
+                    // if tab is not opened then search for list of agents if the one is present there,
+                    // if so then open it in new tab and switch to it
+                    if (!found) {
+                        for (const g of this.agents) {
+                            if (g.id === agentId) {
+                                this.addAgentTab(g)
+                                this.switchToTab(this.tabs.length - 1)
+                                found = true
+                                break
                             }
-                            this.msgSrv.add({
-                                severity: 'error',
-                                summary: 'Cannot get agent',
-                                detail:
-                                    'Getting agent with ID ' +
-                                    agentId +
-                                    ' erred: ' +
-                                    msg,
-                                life: 10000,
-                            })
-                            this.router.navigate(['/agents/all'])
                         }
-                    )
-                }
-            }
-        })
+                    }
 
-        this.managementService.getGroups(0, 1000).subscribe((data) => {
-            this.agentGroups = data.items.map((g) => {
-                return { id: g.id, name: g.name }
+                    // if agent is not loaded in list fetch it individually
+                    if (!found) {
+                        this.subs.add(
+                            this.managementService.getAgent(agentId).subscribe(
+                                (data) => {
+                                    this.addAgentTab(data)
+                                    this.switchToTab(this.tabs.length - 1)
+                                },
+                                (err) => {
+                                    let msg = err.statusText
+                                    if (err.error && err.error.message) {
+                                        msg = err.error.message
+                                    }
+                                    this.msgSrv.add({
+                                        severity: 'error',
+                                        summary: 'Cannot get agent',
+                                        detail:
+                                            'Getting agent with ID ' +
+                                            agentId +
+                                            ' erred: ' +
+                                            msg,
+                                        life: 10000,
+                                    })
+                                    this.router.navigate(['/agents/all'])
+                                }
+                            )
+                        )
+                    }
+                }
             })
-        })
+        )
+
+        this.subs.add(
+            this.managementService.getGroups(0, 1000).subscribe((data) => {
+                this.agentGroups = data.items.map((g) => {
+                    return { id: g.id, name: g.name }
+                })
+            })
+        )
+    }
+
+    ngOnDestroy() {
+        this.subs.unsubscribe()
     }
 
     loadAgentsLazy(event) {
         this.loadingAgents = true
-        this.managementService
-            .getAgents(false, event.first, event.rows)
-            .subscribe((data) => {
-                this.agents = data.items
-                this.totalAgents = data.total
-                this.loadingAgents = false
-            })
+        this.subs.add(
+            this.managementService
+                .getAgents(false, event.first, event.rows)
+                .subscribe((data) => {
+                    this.agents = data.items
+                    this.totalAgents = data.total
+                    this.loadingAgents = false
+                })
+        )
     }
 
     refreshAgents(agentsTable) {
@@ -210,24 +226,32 @@ export class AgentsPageComponent implements OnInit {
 
         // connect method to delete agent
         this.agentMenuItems[0].command = () => {
-            this.managementService.deleteAgent(agent.id).subscribe((data) => {
-                // remove from list of machines
-                for (let idx = 0; idx < this.agents.length; idx++) {
-                    const e = this.agents[idx]
-                    if (e.id === agent.id) {
-                        this.agents.splice(idx, 1) // TODO: does not work
-                        break
-                    }
-                }
-                // remove from opened tabs if present
-                for (let idx = 0; idx < this.openedAgents.length; idx++) {
-                    const e = this.openedAgents[idx].agent
-                    if (e.id === agent.id) {
-                        this.closeTab(null, idx + 1)
-                        break
-                    }
-                }
-            })
+            this.subs.add(
+                this.managementService
+                    .deleteAgent(agent.id)
+                    .subscribe((data) => {
+                        // remove from list of machines
+                        for (let idx = 0; idx < this.agents.length; idx++) {
+                            const e = this.agents[idx]
+                            if (e.id === agent.id) {
+                                this.agents.splice(idx, 1) // TODO: does not work
+                                break
+                            }
+                        }
+                        // remove from opened tabs if present
+                        for (
+                            let idx = 0;
+                            idx < this.openedAgents.length;
+                            idx++
+                        ) {
+                            const e = this.openedAgents[idx].agent
+                            if (e.id === agent.id) {
+                                this.closeTab(null, idx + 1)
+                                break
+                            }
+                        }
+                    })
+            )
         }
     }
 
@@ -244,27 +268,29 @@ export class AgentsPageComponent implements OnInit {
     }
 
     updateAgent(agentId, agentData) {
-        this.managementService.updateAgent(agentId, agentData).subscribe(
-            (data) => {
-                // agentTab.agent.name = data.name
-                this.msgSrv.add({
-                    severity: 'success',
-                    summary: 'Agent updated',
-                    detail: 'Agent update succeeded.',
-                })
-            },
-            (err) => {
-                let msg = err.statusText
-                if (err.error && err.error.message) {
-                    msg = err.error.message
+        this.subs.add(
+            this.managementService.updateAgent(agentId, agentData).subscribe(
+                (data) => {
+                    // agentTab.agent.name = data.name
+                    this.msgSrv.add({
+                        severity: 'success',
+                        summary: 'Agent updated',
+                        detail: 'Agent update succeeded.',
+                    })
+                },
+                (err) => {
+                    let msg = err.statusText
+                    if (err.error && err.error.message) {
+                        msg = err.error.message
+                    }
+                    this.msgSrv.add({
+                        severity: 'error',
+                        summary: 'Agent update failed',
+                        detail: 'Updating agent erred: ' + msg,
+                        life: 10000,
+                    })
                 }
-                this.msgSrv.add({
-                    severity: 'error',
-                    summary: 'Agent update failed',
-                    detail: 'Updating agent erred: ' + msg,
-                    life: 10000,
-                })
-            }
+            )
         )
     }
 
@@ -299,12 +325,14 @@ export class AgentsPageComponent implements OnInit {
 
     loadAgentJobsLazy(event) {
         this.loadingAgentJobs = true
-        this.executionService
-            .getAgentJobs(this.agentTab.agent.id, event.first, event.rows)
-            .subscribe((data) => {
-                this.agentJobs = data.items
-                this.totalAgentJobs = data.total
-                this.loadingAgentJobs = false
-            })
+        this.subs.add(
+            this.executionService
+                .getAgentJobs(this.agentTab.agent.id, event.first, event.rows)
+                .subscribe((data) => {
+                    this.agentJobs = data.items
+                    this.totalAgentJobs = data.total
+                    this.loadingAgentJobs = false
+                })
+        )
     }
 }

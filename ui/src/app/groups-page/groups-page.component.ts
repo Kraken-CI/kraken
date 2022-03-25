@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core'
+import { Component, OnInit, OnDestroy } from '@angular/core'
 import { ActivatedRoute, ParamMap, Router } from '@angular/router'
 import { Title } from '@angular/platform-browser'
+
+import { Subscription } from 'rxjs'
 
 import { MessageService, MenuItem } from 'primeng/api'
 
@@ -13,7 +15,7 @@ import { BreadcrumbsService } from '../breadcrumbs.service'
     templateUrl: './groups-page.component.html',
     styleUrls: ['./groups-page.component.sass'],
 })
-export class GroupsPageComponent implements OnInit {
+export class GroupsPageComponent implements OnInit, OnDestroy {
     // groups table
     groups: any[]
     totalGroups: number
@@ -32,6 +34,8 @@ export class GroupsPageComponent implements OnInit {
     activeItem: MenuItem
     openedGroups: any
     groupTab: any
+
+    private subs: Subscription = new Subscription()
 
     constructor(
         private route: ActivatedRoute,
@@ -92,74 +96,84 @@ export class GroupsPageComponent implements OnInit {
 
         this.openedGroups = []
 
-        this.route.paramMap.subscribe((params: ParamMap) => {
-            const groupIdStr = params.get('id')
-            if (groupIdStr === 'all') {
-                this.switchToTab(0)
-            } else {
-                const groupId = parseInt(groupIdStr, 10)
+        this.subs.add(
+            this.route.paramMap.subscribe((params: ParamMap) => {
+                const groupIdStr = params.get('id')
+                if (groupIdStr === 'all') {
+                    this.switchToTab(0)
+                } else {
+                    const groupId = parseInt(groupIdStr, 10)
 
-                let found = false
-                // if tab for this group is already opened then switch to it
-                for (let idx = 0; idx < this.openedGroups.length; idx++) {
-                    const g = this.openedGroups[idx].group
-                    if (g.id === groupId) {
-                        this.switchToTab(idx + 1)
-                        found = true
-                    }
-                }
-
-                // if tab is not opened then search for list of groups if the one is present there,
-                // if so then open it in new tab and switch to it
-                if (!found) {
-                    for (const g of this.groups) {
+                    let found = false
+                    // if tab for this group is already opened then switch to it
+                    for (let idx = 0; idx < this.openedGroups.length; idx++) {
+                        const g = this.openedGroups[idx].group
                         if (g.id === groupId) {
-                            this.addGroupTab(g)
-                            this.switchToTab(this.tabs.length - 1)
+                            this.switchToTab(idx + 1)
                             found = true
-                            break
                         }
                     }
-                }
 
-                // if group is not loaded in list fetch it individually
-                if (!found) {
-                    this.managementService.getGroup(groupId).subscribe(
-                        (data) => {
-                            this.addGroupTab(data)
-                            this.switchToTab(this.tabs.length - 1)
-                        },
-                        (err) => {
-                            let msg = err.statusText
-                            if (err.error && err.error.message) {
-                                msg = err.error.message
+                    // if tab is not opened then search for list of groups if the one is present there,
+                    // if so then open it in new tab and switch to it
+                    if (!found) {
+                        for (const g of this.groups) {
+                            if (g.id === groupId) {
+                                this.addGroupTab(g)
+                                this.switchToTab(this.tabs.length - 1)
+                                found = true
+                                break
                             }
-                            this.msgSrv.add({
-                                severity: 'error',
-                                summary: 'Cannot get group',
-                                detail:
-                                    'Getting group with ID ' +
-                                    groupId +
-                                    ' erred: ' +
-                                    msg,
-                                life: 10000,
-                            })
-                            this.router.navigate(['/agents-groups/all'])
                         }
-                    )
+                    }
+
+                    // if group is not loaded in list fetch it individually
+                    if (!found) {
+                        this.subs.add(
+                            this.managementService.getGroup(groupId).subscribe(
+                                (data) => {
+                                    this.addGroupTab(data)
+                                    this.switchToTab(this.tabs.length - 1)
+                                },
+                                (err) => {
+                                    let msg = err.statusText
+                                    if (err.error && err.error.message) {
+                                        msg = err.error.message
+                                    }
+                                    this.msgSrv.add({
+                                        severity: 'error',
+                                        summary: 'Cannot get group',
+                                        detail:
+                                            'Getting group with ID ' +
+                                            groupId +
+                                            ' erred: ' +
+                                            msg,
+                                        life: 10000,
+                                    })
+                                    this.router.navigate(['/agents-groups/all'])
+                                }
+                            )
+                        )
+                    }
                 }
-            }
-        })
+            })
+        )
+    }
+
+    ngOnDestroy() {
+        this.subs.unsubscribe()
     }
 
     loadGroupsLazy(event) {
         console.info(event)
-        this.managementService
-            .getGroups(event.first, event.rows)
-            .subscribe((data) => {
-                this.groups = data.items
-                this.totalGroups = data.total
-            })
+        this.subs.add(
+            this.managementService
+                .getGroups(event.first, event.rows)
+                .subscribe((data) => {
+                    this.groups = data.items
+                    this.totalGroups = data.total
+                })
+        )
     }
 
     showNewGroupDlg() {
@@ -181,31 +195,33 @@ export class GroupsPageComponent implements OnInit {
 
         const g = { name: this.groupName }
 
-        this.managementService.createGroup(g).subscribe(
-            (data) => {
-                this.msgSrv.add({
-                    severity: 'success',
-                    summary: 'New group added',
-                    detail: 'Adding new group succeeded.',
-                })
-                this.newGroupDlgVisible = false
-                this.addGroupTab(data)
-                this.router.navigate(['/agents-groups/' + data.id])
-            },
-            (err) => {
-                console.info(err)
-                let msg = err.statusText
-                if (err.error && err.error.message) {
-                    msg = err.error.message
+        this.subs.add(
+            this.managementService.createGroup(g).subscribe(
+                (data) => {
+                    this.msgSrv.add({
+                        severity: 'success',
+                        summary: 'New group added',
+                        detail: 'Adding new group succeeded.',
+                    })
+                    this.newGroupDlgVisible = false
+                    this.addGroupTab(data)
+                    this.router.navigate(['/agents-groups/' + data.id])
+                },
+                (err) => {
+                    console.info(err)
+                    let msg = err.statusText
+                    if (err.error && err.error.message) {
+                        msg = err.error.message
+                    }
+                    this.msgSrv.add({
+                        severity: 'error',
+                        summary: 'Adding new group erred',
+                        detail: 'Adding new group operation erred: ' + msg,
+                        life: 10000,
+                    })
+                    this.newGroupDlgVisible = false
                 }
-                this.msgSrv.add({
-                    severity: 'error',
-                    summary: 'Adding new group erred',
-                    detail: 'Adding new group operation erred: ' + msg,
-                    life: 10000,
-                })
-                this.newGroupDlgVisible = false
-            }
+            )
         )
     }
 
@@ -254,24 +270,32 @@ export class GroupsPageComponent implements OnInit {
 
         // connect method to delete group
         this.groupMenuItems[0].command = () => {
-            this.managementService.deleteGroup(group.id).subscribe((data) => {
-                // remove from list of groups
-                for (let idx = 0; idx < this.groups.length; idx++) {
-                    const g = this.groups[idx]
-                    if (g.id === group.id) {
-                        this.groups.splice(idx, 1) // TODO: does not work
-                        break
-                    }
-                }
-                // remove from opened tabs if present
-                for (let idx = 0; idx < this.openedGroups.length; idx++) {
-                    const g = this.openedGroups[idx].group
-                    if (g.id === group.id) {
-                        this.closeTab(null, idx + 1)
-                        break
-                    }
-                }
-            })
+            this.subs.add(
+                this.managementService
+                    .deleteGroup(group.id)
+                    .subscribe((data) => {
+                        // remove from list of groups
+                        for (let idx = 0; idx < this.groups.length; idx++) {
+                            const g = this.groups[idx]
+                            if (g.id === group.id) {
+                                this.groups.splice(idx, 1) // TODO: does not work
+                                break
+                            }
+                        }
+                        // remove from opened tabs if present
+                        for (
+                            let idx = 0;
+                            idx < this.openedGroups.length;
+                            idx++
+                        ) {
+                            const g = this.openedGroups[idx].group
+                            if (g.id === group.id) {
+                                this.closeTab(null, idx + 1)
+                                break
+                            }
+                        }
+                    })
+            )
         }
     }
 
@@ -281,29 +305,33 @@ export class GroupsPageComponent implements OnInit {
             name: this.groupTab.name,
             deployment: this.groupTab.group.deployment,
         }
-        this.managementService.updateGroup(this.groupTab.group.id, g).subscribe(
-            (data) => {
-                console.info('updated', data)
-                this.groupTab.group = data
-                this.groupTab.name = data.name
-                this.msgSrv.add({
-                    severity: 'success',
-                    summary: 'Group updated',
-                    detail: 'Group update succeeded.',
-                })
-            },
-            (err) => {
-                let msg = err.statusText
-                if (err.error && err.error.message) {
-                    msg = err.error.message
-                }
-                this.msgSrv.add({
-                    severity: 'error',
-                    summary: 'Group update failed',
-                    detail: 'Updating group erred: ' + msg,
-                    life: 10000,
-                })
-            }
+        this.subs.add(
+            this.managementService
+                .updateGroup(this.groupTab.group.id, g)
+                .subscribe(
+                    (data) => {
+                        console.info('updated', data)
+                        this.groupTab.group = data
+                        this.groupTab.name = data.name
+                        this.msgSrv.add({
+                            severity: 'success',
+                            summary: 'Group updated',
+                            detail: 'Group update succeeded.',
+                        })
+                    },
+                    (err) => {
+                        let msg = err.statusText
+                        if (err.error && err.error.message) {
+                            msg = err.error.message
+                        }
+                        this.msgSrv.add({
+                            severity: 'error',
+                            summary: 'Group update failed',
+                            detail: 'Updating group erred: ' + msg,
+                            life: 10000,
+                        })
+                    }
+                )
         )
     }
 

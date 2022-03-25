@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core'
+import { Component, OnInit, OnDestroy } from '@angular/core'
 import { Title } from '@angular/platform-browser'
 import { ActivatedRoute } from '@angular/router'
+
+import { Subscription } from 'rxjs'
 
 import { AuthService } from '../auth.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
@@ -11,7 +13,7 @@ import { ManagementService } from '../backend/api/management.service'
     templateUrl: './diags-page.component.html',
     styleUrls: ['./diags-page.component.sass'],
 })
-export class DiagsPageComponent implements OnInit {
+export class DiagsPageComponent implements OnInit, OnDestroy {
     tabIndex = 0
     data: any = { rq: {} }
     logServices: any = []
@@ -28,6 +30,8 @@ export class DiagsPageComponent implements OnInit {
     rqCurrentJobs: any[]
     rqFinishedJobs: any[]
     rqFailedJobs: any[]
+
+    private subs: Subscription = new Subscription()
 
     constructor(
         private route: ActivatedRoute,
@@ -73,42 +77,52 @@ export class DiagsPageComponent implements OnInit {
             },
         ])
 
-        this.route.queryParamMap.subscribe(
-            (params) => {
-                if (params.get('tab') === 'logs') {
-                    this.tabIndex = 1
-                    this.loadLastRQJobsNames()
+        this.subs.add(
+            this.route.queryParamMap.subscribe(
+                (params) => {
+                    if (params.get('tab') === 'logs') {
+                        this.tabIndex = 1
+                        this.loadLastRQJobsNames()
 
-                    const level = params.get('level')
-                    if (
-                        ['info', 'warning', 'error'].includes(level) &&
-                        this.logLevel !== level
-                    ) {
-                        this.logLevel = level
-                        this.loadServicesLogs()
+                        const level = params.get('level')
+                        if (
+                            ['info', 'warning', 'error'].includes(level) &&
+                            this.logLevel !== level
+                        ) {
+                            this.logLevel = level
+                            this.loadServicesLogs()
+                        }
+                    } else {
+                        this.tabIndex = 0
+                        this.subs.add(
+                            this.managementService
+                                .getDiagnostics()
+                                .subscribe((data) => {
+                                    this.data = data
+                                })
+                        )
                     }
-                } else {
-                    this.tabIndex = 0
-                    this.managementService
-                        .getDiagnostics()
-                        .subscribe((data) => {
-                            this.data = data
-                        })
+                },
+                (error) => {
+                    console.log(error)
                 }
-            },
-            (error) => {
-                console.log(error)
-            }
+            )
         )
     }
 
+    ngOnDestroy() {
+        this.subs.unsubscribe()
+    }
+
     loadLastRQJobsNames() {
-        this.managementService.getLastRqJobsNames().subscribe((data) => {
-            this.rqJobs = [{ label: '-- all --', value: 'all' }]
-            for (const t of data.items) {
-                this.rqJobs.push({ label: t.name, value: t.name })
-            }
-        })
+        this.subs.add(
+            this.managementService.getLastRqJobsNames().subscribe((data) => {
+                this.rqJobs = [{ label: '-- all --', value: 'all' }]
+                for (const t of data.items) {
+                    this.rqJobs.push({ label: t.name, value: t.name })
+                }
+            })
+        )
     }
 
     loadServicesLogs() {
@@ -132,12 +146,14 @@ export class DiagsPageComponent implements OnInit {
             }
         }
 
-        this.managementService
-            .getServicesLogs(services, this.logLevel)
-            .subscribe((data) => {
-                this.servicesLogs = data.items
-                this.servicesLogsAreLoading = false
-            })
+        this.subs.add(
+            this.managementService
+                .getServicesLogs(services, this.logLevel)
+                .subscribe((data) => {
+                    this.servicesLogs = data.items
+                    this.servicesLogsAreLoading = false
+                })
+        )
     }
 
     handleTabChange(ev) {

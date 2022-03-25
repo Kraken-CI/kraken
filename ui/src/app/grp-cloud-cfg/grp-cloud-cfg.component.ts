@@ -1,4 +1,6 @@
-import { Component, OnInit, Input } from '@angular/core'
+import { Component, OnInit, OnDestroy, Input } from '@angular/core'
+
+import { Subscription } from 'rxjs'
 
 import { ManagementService } from '../backend/api/management.service'
 
@@ -12,7 +14,7 @@ interface DeploymentMethod {
     templateUrl: './grp-cloud-cfg.component.html',
     styleUrls: ['./grp-cloud-cfg.component.sass'],
 })
-export class GrpCloudCfgComponent implements OnInit {
+export class GrpCloudCfgComponent implements OnInit, OnDestroy {
     @Input() deployment: any
 
     deploymentMethods: DeploymentMethod[]
@@ -24,6 +26,8 @@ export class GrpCloudCfgComponent implements OnInit {
     // azure
     azureLocations: any[]
     azureVmSizes: any[]
+
+    private subs: Subscription = new Subscription()
 
     constructor(protected managementService: ManagementService) {
         this.deploymentMethods = [
@@ -51,15 +55,21 @@ export class GrpCloudCfgComponent implements OnInit {
         }
     }
 
+    ngOnDestroy() {
+        this.subs.unsubscribe()
+    }
+
     getAwsEc2Regions() {
         if (this.awsRegions.length === 0) {
-            this.managementService.getAwsEc2Regions().subscribe((data) => {
-                this.awsRegions = data.items
+            this.subs.add(
+                this.managementService.getAwsEc2Regions().subscribe((data) => {
+                    this.awsRegions = data.items
 
-                if (this.deployment.aws.region) {
-                    this.regionChange()
-                }
-            })
+                    if (this.deployment.aws.region) {
+                        this.regionChange()
+                    }
+                })
+            )
         }
     }
 
@@ -74,29 +84,37 @@ export class GrpCloudCfgComponent implements OnInit {
 
     regionChange() {
         const region = this.deployment.aws.region
-        this.managementService
-            .getAwsEc2InstanceTypes(region)
-            .subscribe((data) => {
-                this.awsInstanceTypes = data.items
-            })
+        this.subs.add(
+            this.managementService
+                .getAwsEc2InstanceTypes(region)
+                .subscribe((data) => {
+                    this.awsInstanceTypes = data.items
+                })
+        )
     }
 
     getAzureLocations() {
         if (this.azureLocations.length === 0) {
-            this.managementService.getAzureLocations().subscribe((data) => {
-                this.azureLocations = data.items
+            this.subs.add(
+                this.managementService.getAzureLocations().subscribe((data) => {
+                    this.azureLocations = data.items
 
-                if (this.deployment.azure_vm.location) {
-                    this.azureLocationChange()
-                }
-            })
+                    if (this.deployment.azure_vm.location) {
+                        this.azureLocationChange()
+                    }
+                })
+            )
         }
     }
 
     azureLocationChange() {
         const location = this.deployment.azure_vm.location
-        this.managementService.getAzureVmSizes(location).subscribe((data) => {
-            this.azureVmSizes = data.items
-        })
+        this.subs.add(
+            this.managementService
+                .getAzureVmSizes(location)
+                .subscribe((data) => {
+                    this.azureVmSizes = data.items
+                })
+        )
     }
 }
