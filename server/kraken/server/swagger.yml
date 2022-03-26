@@ -643,6 +643,40 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
+  /flows/{flow_id}/history:
+    get:
+      tags:
+      - Results
+      summary: Results history of till given flow
+      operationId: get_branch_history
+      parameters:
+      - name: flow_id
+        in: path
+        description: ID of pet to return
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: limit
+        in: query
+        description: number of flows to return
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        200:
+          description: An array of flows
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BranchHistory'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
   /stages/{stage_id}:
     get:
       tags:
@@ -2109,6 +2143,15 @@ components:
         recs_map:
           type: object
         total_tests:
+          type: integer
+    BranchHistory:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+        total:
           type: integer
     ReportEntry:
       type: object

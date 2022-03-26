@@ -102,9 +102,6 @@ def _prepare_flow_summary(flow):
     # update pointer to last, completed, CI flow in the branch
     # and if needed then reset pointer to incomplete flow
 
-    # flush to db, otherwise there will be circular dependency between entities
-    db.session.flush()
-
     # update completed
     last_flow = flow.branch.ci_last_completed_flow
     if last_flow is None or last_flow.created < flow.created:
@@ -114,6 +111,8 @@ def _prepare_flow_summary(flow):
     last_flow = flow.branch.ci_last_incomplete_flow
     if last_flow and last_flow.id == flow.id:
         flow.branch.ci_last_incomplete_flow = None
+
+    db.session.commit()
 
     # get flow summary and store it in redis to cache it;
     # it will be used e.g. to provide badge info
@@ -154,6 +153,10 @@ def _prepare_flow_summary(flow):
     key = 'branch-%d' % flow.branch_id
     rds.set(key, json.dumps(val))
     log.info('cached flow results: %s = %s', key, val)
+
+    # store in db as well, it will be used for charts in UI,
+    flow.summary = val
+    db.session.commit()
 
 
 def analyze_run(run_id):
@@ -208,12 +211,11 @@ def analyze_run(run_id):
 
         if is_completed:
             log.info('completed flow %s', flow)
+            _prepare_flow_summary(flow)
+
             now = utils.utcnow()
             flow.finished = now
             flow.state = consts.FLOW_STATE_COMPLETED
-
-            _prepare_flow_summary(flow)
-
             db.session.commit()
 
         kkrq.enq(analyze_results_history, run.id)

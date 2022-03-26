@@ -80,7 +80,8 @@ import {
     TabbedPageComponent,
     TabbedPageTabComponent,
 } from './tabbed-page/tabbed-page.component'
-import { FlowPageComponent } from './flow-page/flow-page.component'
+import { FlowPageComponent } from './flow-page/flow-page.component';
+import { FlowChartsComponent } from './flow-charts/flow-charts.component'
 
 export function cfgFactory() {
     const params: ConfigurationParameters = {
@@ -117,6 +118,7 @@ export function cfgFactory() {
         TabbedPageComponent,
         TabbedPageTabComponent,
         FlowPageComponent,
+        FlowChartsComponent,
     ],
     imports: [
         BrowserModule,

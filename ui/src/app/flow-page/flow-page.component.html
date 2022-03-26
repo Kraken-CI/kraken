@@ -120,15 +120,23 @@
         </div>
     </app-tabbed-page-tab>
 
-    <!-- 1. RESULT ANALYSIS TAB -->
-    <app-tabbed-page-tab label="Results Analysis">
+    <!-- 1. RESULT STATS TAB -->
+    <app-tabbed-page-tab label="Results Stats">
         <ng-container *ngIf="flow">
             <app-flow-analysis [flow]="flow">
             </app-flow-analysis>
         </ng-container>
     </app-tabbed-page-tab>
 
-    <!-- 2. ARGUMENTS TAB -->
+    <!-- 2. RESULT CHARTS TAB -->
+    <app-tabbed-page-tab label="Results Charts">
+        <ng-container *ngIf="flow">
+            <app-flow-charts [flow]="flow">
+            </app-flow-charts>
+        </ng-container>
+    </app-tabbed-page-tab>
+
+    <!-- 3. ARGUMENTS TAB -->
     <app-tabbed-page-tab label="Arguments">
         <div *ngFor="let section of args" style="margin-bottom: 10px;">
             <span style="font-size: 1.2rem; font-weight: bold;">{{section.name}}</span>
@@ -157,14 +165,14 @@
         </div>
     </app-tabbed-page-tab>
 
-    <!-- 3. REPO CHANGES TAB -->
+    <!-- 4. REPO CHANGES TAB -->
     <app-tabbed-page-tab label="Repo Changes" [visible]="hasFlowCommits()">
         <ng-container *ngIf="hasFlowCommits()">
             <app-repo-changes [changes]="flow.trigger"></app-repo-changes>
         </ng-container>
     </app-tabbed-page-tab>
 
-    <!-- 4. ARTIFACTS TAB -->
+    <!-- 5. ARTIFACTS TAB -->
     <app-tabbed-page-tab label="Artifacts" [visible]="hasFlowArtifacts()">
         <ng-container *ngIf="flow && flow.artifacts.public && flow.artifacts.public.count > 0">
             <h3>Public</h3>
@@ -216,7 +224,7 @@
         </ng-container>
     </app-tabbed-page-tab>
 
-    <!-- 5. REPORTS TAB -->
+    <!-- 6. REPORTS TAB -->
     <app-tabbed-page-tab label="Reports" [visible]="hasFlowReports()">
         <ng-container *ngIf="hasFlowReports()">
             <div *ngFor="let rep of flow.report_entries">
@@ -225,7 +233,7 @@
         </ng-container>
     </app-tabbed-page-tab>
 
-    <!-- 6. STAGES CHART TAB -->
+    <!-- 7. STAGES CHART TAB -->
     <app-tabbed-page-tab label="Stages Chart">
         <p-menu #nodeMenu [popup]="true" [model]="nodeMenuItems"></p-menu>
         <p-organizationChart [value]="runsTree">

@@ -316,6 +316,7 @@ class Flow(db.Model, DatesMixin):
     trigger_data = relationship('RepoChanges')
     artifacts_files = relationship('Artifact', back_populates="flow")
     comments = relationship("TestCaseComment", back_populates="last_flow")
+    summary = Column(JSONB, default={})
 
     Index('ix_flows_branch_id_kind', branch_id, kind)
 

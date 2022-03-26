@@ -257,3 +257,36 @@ def get_flow_analysis(flow_id):
 
 
     return analysis, 200
+
+
+def get_branch_history(flow_id, limit=30):
+    flow = Flow.query.filter_by(id=flow_id).one_or_none()
+    if flow is None:
+        abort(404, "Flow %s not found", flow_id)
+
+    if flow.kind != consts.FLOW_KIND_CI:
+        abort(400, "Branch history works only for CI, not DEV")
+
+    if limit > 100:
+        abort(400, "Cannot get history longer than 100 flows, requested %s", limit)
+
+    q = Flow.query.filter(Flow.created <= flow.created)
+    q = q.filter_by(branch_id=flow.branch_id)
+    q = q.filter_by(kind=consts.FLOW_KIND_CI)
+    q = q.order_by(desc(Flow.created))
+    q = q.limit(limit)
+
+    flows = []
+    for f in reversed(q.all()):
+        if f.summary:
+            s = f.summary
+        else:
+            s = dict(id=f.id, label=f.get_label())
+
+        s['created'] = f.created
+        s['finished'] = f.finished
+
+        flows.append(s)
+
+    resp = dict(items=flows, total=len(flows))
+    return resp, 200
