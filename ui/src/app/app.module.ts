@@ -41,6 +41,7 @@ import { FieldsetModule } from 'primeng/fieldset'
 import { RadioButtonModule } from 'primeng/radiobutton'
 import { CardModule } from 'primeng/card'
 import { SliderModule } from 'primeng/slider'
+import { ProgressSpinnerModule } from 'primeng/progressspinner'
 
 // REST API
 import {
@@ -80,7 +81,7 @@ import {
     TabbedPageComponent,
     TabbedPageTabComponent,
 } from './tabbed-page/tabbed-page.component'
-import { FlowPageComponent } from './flow-page/flow-page.component';
+import { FlowPageComponent } from './flow-page/flow-page.component'
 import { FlowChartsComponent } from './flow-charts/flow-charts.component'
 
 export function cfgFactory() {
@@ -166,6 +167,7 @@ export function cfgFactory() {
         RadioButtonModule,
         CardModule,
         SliderModule,
+        ProgressSpinnerModule,
     ],
     providers: [
         Title,

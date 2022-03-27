@@ -38,6 +38,8 @@ export class LogBoxComponent implements OnDestroy, AfterViewInit {
 
     logInternals = false
 
+    loadingLogs = false
+
     prvJobId: number
     @Input()
     set jobId(id) {
@@ -237,6 +239,7 @@ export class LogBoxComponent implements OnDestroy, AfterViewInit {
                         // console.info('!!!! job switch - stop processing in timer2 ', jobId, this.timer2)
                         return
                     }
+                    this.loadingLogs = true
                     this.subs.add(
                         this.executionService
                             .getJobLogs(
@@ -248,6 +251,7 @@ export class LogBoxComponent implements OnDestroy, AfterViewInit {
                                 null
                             )
                             .subscribe((data2) => {
+                                this.loadingLogs = false
                                 this.endPos += data2.items.length
                                 this.total = data2.total
                                 this._processNextLogs(jobId, data2, start)
@@ -264,6 +268,7 @@ export class LogBoxComponent implements OnDestroy, AfterViewInit {
             // loaded full 200 so probably there is more logs so load the rest immediatelly
             // console.info('load the rest immediatelly', jobId)
             start = start + 200
+            this.loadingLogs = true
             this.subs.add(
                 this.executionService
                     .getJobLogs(
@@ -275,6 +280,7 @@ export class LogBoxComponent implements OnDestroy, AfterViewInit {
                         null
                     )
                     .subscribe((data2) => {
+                        this.loadingLogs = false
                         this.endPos += data2.items.length
                         this.total = data2.total
                         this._processNextLogs(jobId, data2, start)
@@ -295,6 +301,7 @@ export class LogBoxComponent implements OnDestroy, AfterViewInit {
                     return
                 }
                 start = start + data.items.length
+                this.loadingLogs = true
                 this.subs.add(
                     this.executionService
                         .getJobLogs(
@@ -306,6 +313,7 @@ export class LogBoxComponent implements OnDestroy, AfterViewInit {
                             null
                         )
                         .subscribe((data2) => {
+                            this.loadingLogs = false
                             this.endPos += data2.items.length
                             this.total = data2.total
                             this._processNextLogs(jobId, data2, start)
@@ -323,10 +331,12 @@ export class LogBoxComponent implements OnDestroy, AfterViewInit {
         // console.info('loading logs for ', jobId)
         this.resetLogging()
 
+        this.loadingLogs = true
         this.subs.add(
             this.executionService
                 .getJobLogs(jobId, 0, 200, 'desc', this.logInternals, null)
                 .subscribe((data) => {
+                    this.loadingLogs = false
                     if (jobId !== this.prvJobId) {
                         // console.info('!!!! job switch - stop processing getJobLogs', jobId)
                         return
@@ -355,6 +365,7 @@ export class LogBoxComponent implements OnDestroy, AfterViewInit {
                                 // console.info('!!!! job switch - stop processing in timer1 ', jobId, this.timer1)
                                 return
                             }
+                            this.loadingLogs = true
                             this.subs.add(
                                 this.executionService
                                     .getJobLogs(
@@ -366,6 +377,7 @@ export class LogBoxComponent implements OnDestroy, AfterViewInit {
                                         null
                                     )
                                     .subscribe((data2) => {
+                                        this.loadingLogs = false
                                         this.endPos += data2.items.length
                                         this.total = data2.total
                                         this._processNextLogs(
@@ -473,6 +485,7 @@ export class LogBoxComponent implements OnDestroy, AfterViewInit {
     loadFirstPage() {
         this.resetLogging()
 
+        this.loadingLogs = true
         this.subs.add(
             this.executionService
                 .getJobLogs(
@@ -484,6 +497,7 @@ export class LogBoxComponent implements OnDestroy, AfterViewInit {
                     null
                 )
                 .subscribe((data) => {
+                    this.loadingLogs = false
                     this.beginPos = 0
                     this.endPos = data.items.length
                     this.total = data.total
@@ -518,6 +532,7 @@ export class LogBoxComponent implements OnDestroy, AfterViewInit {
     loadEndPage() {
         this.resetLogging()
 
+        this.loadingLogs = true
         this.subs.add(
             this.executionService
                 .getJobLogs(
@@ -529,6 +544,7 @@ export class LogBoxComponent implements OnDestroy, AfterViewInit {
                     null
                 )
                 .subscribe((data) => {
+                    this.loadingLogs = false
                     this.beginPos = data.total - 200
                     if (this.beginPos < 0) {
                         this.beginPos = 0
@@ -575,6 +591,7 @@ export class LogBoxComponent implements OnDestroy, AfterViewInit {
         if (start < 0) {
             start = 0
         }
+        this.loadingLogs = true
         this.subs.add(
             this.executionService
                 .getJobLogs(
@@ -586,6 +603,7 @@ export class LogBoxComponent implements OnDestroy, AfterViewInit {
                     null
                 )
                 .subscribe((data) => {
+                    this.loadingLogs = false
                     this.beginPos = start
                     this.total = data.total
 
@@ -616,6 +634,7 @@ export class LogBoxComponent implements OnDestroy, AfterViewInit {
     }
 
     loadNextPage() {
+        this.loadingLogs = true
         this.subs.add(
             this.executionService
                 .getJobLogs(
@@ -627,6 +646,7 @@ export class LogBoxComponent implements OnDestroy, AfterViewInit {
                     null
                 )
                 .subscribe((data) => {
+                    this.loadingLogs = false
                     const startLineNo = this.endPos
                     this.endPos += data.items.length
                     this.total = data.total
