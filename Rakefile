@@ -585,11 +585,14 @@ task :pulumi_init => PULUMI do
 end
 
 task :run_systests => PULUMI do
+  # set empty string as passphrase to pulumi to make it happy
+  ENV["PULUMI_CONFIG_PASSPHRASE"] = ""
+
   # setup Kraken in AWS ECS
   kraken_addr = ''
   Dir.chdir('pulumi/ecs') do
-    sh "PULUMI_CONFIG_PASSPHRASE= #{PULUMI} up -f -y"
-    kraken_addr = `PULUMI_CONFIG_PASSPHRASE= #{PULUMI} stack output 'Kraken Server Address'`
+    sh "#{PULUMI} up -f -y || (#{PULUMI} destroy -f -y && false)"
+    kraken_addr = `#{PULUMI} stack output 'Kraken Server Address'`
   end
   kraken_addr = kraken_addr.strip
 
@@ -603,7 +606,7 @@ task :run_systests => PULUMI do
 
   # teardown Kraken in AWS ECS
   Dir.chdir('pulumi/ecs') do
-    sh "PULUMI_CONFIG_PASSPHRASE= #{PULUMI} destroy -f -y"
+    sh "#{PULUMI} destroy -f -y"
   end
 end
 
