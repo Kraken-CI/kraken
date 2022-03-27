@@ -6,13 +6,11 @@ describe('DiagsPageComponent', () => {
     let component: DiagsPageComponent
     let fixture: ComponentFixture<DiagsPageComponent>
 
-    beforeEach(
-        waitForAsync(() => {
-            TestBed.configureTestingModule({
-                declarations: [DiagsPageComponent],
-            }).compileComponents()
-        })
-    )
+    beforeEach(waitForAsync(() => {
+        TestBed.configureTestingModule({
+            declarations: [DiagsPageComponent],
+        }).compileComponents()
+    }))
 
     beforeEach(() => {
         fixture = TestBed.createComponent(DiagsPageComponent)

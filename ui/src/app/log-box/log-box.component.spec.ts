@@ -6,13 +6,11 @@ describe('LogBoxComponent', () => {
     let component: LogBoxComponent
     let fixture: ComponentFixture<LogBoxComponent>
 
-    beforeEach(
-        waitForAsync(() => {
-            TestBed.configureTestingModule({
-                declarations: [LogBoxComponent],
-            }).compileComponents()
-        })
-    )
+    beforeEach(waitForAsync(() => {
+        TestBed.configureTestingModule({
+            declarations: [LogBoxComponent],
+        }).compileComponents()
+    }))
 
     beforeEach(() => {
         fixture = TestBed.createComponent(LogBoxComponent)

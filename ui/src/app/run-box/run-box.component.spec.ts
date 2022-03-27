@@ -6,13 +6,11 @@ describe('RunBoxComponent', () => {
     let component: RunBoxComponent
     let fixture: ComponentFixture<RunBoxComponent>
 
-    beforeEach(
-        waitForAsync(() => {
-            TestBed.configureTestingModule({
-                declarations: [RunBoxComponent],
-            }).compileComponents()
-        })
-    )
+    beforeEach(waitForAsync(() => {
+        TestBed.configureTestingModule({
+            declarations: [RunBoxComponent],
+        }).compileComponents()
+    }))
 
     beforeEach(() => {
         fixture = TestBed.createComponent(RunBoxComponent)

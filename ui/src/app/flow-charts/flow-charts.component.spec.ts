@@ -1,25 +1,24 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing'
 
-import { FlowChartsComponent } from './flow-charts.component';
+import { FlowChartsComponent } from './flow-charts.component'
 
 describe('FlowChartsComponent', () => {
-  let component: FlowChartsComponent;
-  let fixture: ComponentFixture<FlowChartsComponent>;
+    let component: FlowChartsComponent
+    let fixture: ComponentFixture<FlowChartsComponent>
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      declarations: [ FlowChartsComponent ]
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
+            declarations: [FlowChartsComponent],
+        }).compileComponents()
     })
-    .compileComponents();
-  });
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(FlowChartsComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+    beforeEach(() => {
+        fixture = TestBed.createComponent(FlowChartsComponent)
+        component = fixture.componentInstance
+        fixture.detectChanges()
+    })
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-});
+    it('should create', () => {
+        expect(component).toBeTruthy()
+    })
+})

@@ -6,13 +6,11 @@ describe('NewFlowComponent', () => {
     let component: NewFlowComponent
     let fixture: ComponentFixture<NewFlowComponent>
 
-    beforeEach(
-        waitForAsync(() => {
-            TestBed.configureTestingModule({
-                declarations: [NewFlowComponent],
-            }).compileComponents()
-        })
-    )
+    beforeEach(waitForAsync(() => {
+        TestBed.configureTestingModule({
+            declarations: [NewFlowComponent],
+        }).compileComponents()
+    }))
 
     beforeEach(() => {
         fixture = TestBed.createComponent(NewFlowComponent)

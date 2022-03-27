@@ -6,13 +6,11 @@ describe('MainPageComponent', () => {
     let component: MainPageComponent
     let fixture: ComponentFixture<MainPageComponent>
 
-    beforeEach(
-        waitForAsync(() => {
-            TestBed.configureTestingModule({
-                declarations: [MainPageComponent],
-            }).compileComponents()
-        })
-    )
+    beforeEach(waitForAsync(() => {
+        TestBed.configureTestingModule({
+            declarations: [MainPageComponent],
+        }).compileComponents()
+    }))
 
     beforeEach(() => {
         fixture = TestBed.createComponent(MainPageComponent)

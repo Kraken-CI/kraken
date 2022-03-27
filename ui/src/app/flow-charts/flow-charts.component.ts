@@ -1,13 +1,13 @@
-import { Component, OnInit, OnDestroy, Input } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input } from '@angular/core'
 
 import { Subscription } from 'rxjs'
 
 import { ResultsService } from '../backend/api/results.service'
 
 @Component({
-  selector: 'app-flow-charts',
-  templateUrl: './flow-charts.component.html',
-  styleUrls: ['./flow-charts.component.sass']
+    selector: 'app-flow-charts',
+    templateUrl: './flow-charts.component.html',
+    styleUrls: ['./flow-charts.component.sass'],
 })
 export class FlowChartsComponent implements OnInit, OnDestroy {
     @Input() flow: any
@@ -18,7 +18,7 @@ export class FlowChartsComponent implements OnInit, OnDestroy {
 
     private subs: Subscription = new Subscription()
 
-    constructor(protected resultsService: ResultsService) { }
+    constructor(protected resultsService: ResultsService) {}
 
     ngOnInit(): void {
         this.subs.add(
@@ -94,7 +94,7 @@ export class FlowChartsComponent implements OnInit, OnDestroy {
                         text: 'Passed & Total',
                     },
                     position: 'right',
-                }
+                },
             },
         }
 

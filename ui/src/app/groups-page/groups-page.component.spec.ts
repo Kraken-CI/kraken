@@ -6,13 +6,11 @@ describe('GroupsPageComponent', () => {
     let component: GroupsPageComponent
     let fixture: ComponentFixture<GroupsPageComponent>
 
-    beforeEach(
-        waitForAsync(() => {
-            TestBed.configureTestingModule({
-                declarations: [GroupsPageComponent],
-            }).compileComponents()
-        })
-    )
+    beforeEach(waitForAsync(() => {
+        TestBed.configureTestingModule({
+            declarations: [GroupsPageComponent],
+        }).compileComponents()
+    }))
 
     beforeEach(() => {
         fixture = TestBed.createComponent(GroupsPageComponent)

@@ -6,13 +6,11 @@ describe('BranchResultsComponent', () => {
     let component: BranchResultsComponent
     let fixture: ComponentFixture<BranchResultsComponent>
 
-    beforeEach(
-        waitForAsync(() => {
-            TestBed.configureTestingModule({
-                declarations: [BranchResultsComponent],
-            }).compileComponents()
-        })
-    )
+    beforeEach(waitForAsync(() => {
+        TestBed.configureTestingModule({
+            declarations: [BranchResultsComponent],
+        }).compileComponents()
+    }))
 
     beforeEach(() => {
         fixture = TestBed.createComponent(BranchResultsComponent)
