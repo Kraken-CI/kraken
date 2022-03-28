@@ -15,7 +15,9 @@
 # limitations under the License.
 
 import os
+import sys
 import logging
+import platform
 
 import click
 import pkg_resources
@@ -35,9 +37,17 @@ def _get_default_data_dir():
 
 
 def _intro():
+    ver = platform.python_version_tuple()
+    major = int(ver[0])
+    minor = int(ver[1])
+    if major == 2 or minor < 7:
+        print('Kraken Agent requires Python version 3.7 or newer, current is %s' % platform.python_version())
+        sys.exit(1)
+
     logs.setup_logging('agent')
     kraken_version = pkg_resources.get_distribution('kraken-agent').version
     log.info('Starting Kraken Agent, version %s', kraken_version)
+    log.info('using Python version %s', platform.python_version())
 
 
 def _load_cfg(**kwargs):
