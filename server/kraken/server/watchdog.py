@@ -160,10 +160,10 @@ def _check_runs_timeout():
 
 def _check_runs_missing_history_analysis():
     now = utils.utcnow()
-    one_day = now - datetime.timedelta(days=1)
+    three_months = now - datetime.timedelta(days=90)
     twenty_mins = now - datetime.timedelta(minutes=20)
 
-    q = Run.query.filter(Run.finished > one_day)
+    q = Run.query.filter(Run.finished > three_months)
     q = q.filter(Run.finished < twenty_mins)
     q = q.filter(Run.state != consts.RUN_STATE_PROCESSED)
     q = q.order_by(asc(Run.finished))
