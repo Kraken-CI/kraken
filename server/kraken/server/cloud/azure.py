@@ -482,10 +482,10 @@ def cleanup_dangling_vms(ag):  # pylint: disable=unused-argument
 
         # the instance is not terminated, not assigned, old enough
         # so delete it as it seems to be a lost instance
-        log.info('terminating lost azure vm instance %s', vm_name)
+        log.info('terminating lost azure vm instance %s', vm.name)
         orphaned_instances += 1
         try:
-            _destroy_azure_vm(rg, vm_name, instance_id, cc, nc)
+            _destroy_azure_vm(rg, vm.name, instance_id, cc, nc)
         except Exception:
             log.exception('IGNORED EXCEPTION')
 
