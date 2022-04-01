@@ -77,7 +77,7 @@
         <label for="rq-jobs" class="col-fixed" style="width: 9em;">Backgroud Tasks</label>
         <div class="col">
           <div class="p-inputgroup">
-            <p-dropdown id="rq-jobs"  [options]="rqJobs" [(ngModel)]="rqJob" (onChange)="loadServicesLogs()"></p-dropdown>
+            <p-dropdown id="rq-jobs"  [options]="rqJobs" [(ngModel)]="rqJob" (onChange)="loadServicesLogs()" [panelStyle]="{'min-width': '20em'}" scrollHeight='calc(100vh - 340px)'></p-dropdown>
             <button type="button" pButton pRipple icon="pi pi-refresh" styleClass="p-button-warn" (click)="loadLastRQJobsNames()"></button>
           </div>
         </div>
