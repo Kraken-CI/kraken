@@ -412,11 +412,15 @@ class Run(db.Model, DatesMixin):
         if self.state == consts.RUN_STATE_PROCESSED:
             jobs_total = self.jobs_total
             jobs_error = self.jobs_error
+            if self.started:
+                begin = self.started
+            else:
+                begin = self.created
             if self.finished is None:
                 log.error('PROBLEM WITH NONE TIMESTAMP in run %s', self)
-                duration = utils.utcnow() - self.started
+                duration = utils.utcnow() - begin
             else:
-                duration = self.finished - self.started
+                duration = self.finished - begin
         else:
             non_covered_jobs = Job.query.filter_by(run=self).filter_by(covered=False).all()
             jobs_total = len(non_covered_jobs)

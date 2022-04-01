@@ -7,6 +7,7 @@
     <div *ngIf="run" style="font-size: 0.7rem; margin-right: 10px; display: flex; flex-direction: column; align-items: end;">
       <div>{{(run.started || run.created) | localtime}}</div>
       <div *ngIf="run.state !== 'manual'">{{run.duration}}
+        <span *ngIf="!run.started">waiting to start </span>
         <span *ngIf="run.state === 'in-progress'">
           <i class="pi pi-spin pi-spinner" style="font-size: 16px; vertical-align: text-top;"></i>
         </span>
