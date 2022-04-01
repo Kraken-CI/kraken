@@ -458,7 +458,7 @@ def _analyze_results_history(run_id):
             log.info('this is the first run %s in the first flow %s of branch %s',
                      run, run.flow, run.flow.branch)
 
-        elif prev_run.state != consts.RUN_STATE_PROCESSED:
+        elif prev_run.state not in [consts.RUN_STATE_PROCESSED, consts.RUN_STATE_MANUAL]:
             # prev run is not processed yet
             log.info('postpone anlysis of run %s as prev run %s is not processed yet', run, prev_run)
             return
