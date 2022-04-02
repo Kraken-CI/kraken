@@ -66,7 +66,7 @@ import { BranchMgmtComponent } from './branch-mgmt/branch-mgmt.component'
 import { RunBoxComponent } from './run-box/run-box.component'
 import { NewFlowComponent } from './new-flow/new-flow.component'
 import { NewRunComponent } from './new-run/new-run.component'
-import { LogBoxComponent } from './log-box/log-box.component'
+import { LogBoxComponent, NoSanitizePipe } from './log-box/log-box.component'
 import { ProjectSettingsComponent } from './project-settings/project-settings.component'
 import { AgentsPageComponent } from './agents-page/agents-page.component'
 import { DiscoveredPageComponent } from './discovered-page/discovered-page.component'
@@ -106,6 +106,7 @@ export function cfgFactory() {
         NewFlowComponent,
         NewRunComponent,
         LogBoxComponent,
+        NoSanitizePipe,
         ProjectSettingsComponent,
         AgentsPageComponent,
         DiscoveredPageComponent,

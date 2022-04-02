@@ -21,6 +21,7 @@
         "@angular/platform-browser-dynamic": "^13.3.0",
         "@angular/router": "^13.3.0",
         "@ctrl/ngx-codemirror": "^5.1.1",
+        "ansicolor": "^1.1.100",
         "chart.js": "^3.7.0",
         "chartjs-chart-error-bars": "^3.6.0",
         "codemirror": "^5.65.0",

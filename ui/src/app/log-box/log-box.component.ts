@@ -9,7 +9,21 @@ import {
     QueryList,
 } from '@angular/core'
 
+import { Pipe, PipeTransform } from '@angular/core'
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser'
+
+@Pipe({ name: 'noSanitize' })
+export class NoSanitizePipe implements PipeTransform {
+    constructor(private domSanitizer: DomSanitizer) {}
+
+    transform(html: string): SafeHtml {
+        return this.domSanitizer.bypassSecurityTrustHtml(html)
+    }
+}
+
 import { Subscription } from 'rxjs'
+
+import { parse } from 'ansicolor'
 
 import { ExecutionService } from '../backend/api/execution.service'
 
@@ -123,6 +137,12 @@ export class LogBoxComponent implements OnDestroy, AfterViewInit {
                     fragment.logs.push(l2)
                 }
             } else {
+                const p = parse(l.message)
+                const spans = []
+                for (const el of p.spans) {
+                    spans.push(`<span style="${el.css}">${el.text}</span>`)
+                }
+                l.message = spans.join('')
                 fragment.logs.push(l)
             }
         }

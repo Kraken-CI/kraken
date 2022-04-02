@@ -25,7 +25,7 @@
       <div *ngFor="let log of frag.logs" style="display: flex;">
         <div style="width: 3em; color: #888; text-align: right; margin-right: 0.5em; flex: none;">{{ log.idx }}</div>
         <div *ngIf="logInternals" style="width: 4em; color: #888; text-align: right; margin-right: 0.5em; flex: none;">{{ log.service }}</div>
-        <div [ngClass]="['log-entry-base', log.cls]" [innerHTML]="log.message"></div>
+        <div [ngClass]="['log-entry-base', log.cls]" [innerHTML]="log.message | noSanitize"></div>
       </div>
     </div>
   </div>
