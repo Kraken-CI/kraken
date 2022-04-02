@@ -24,6 +24,7 @@ export class NoSanitizePipe implements PipeTransform {
 import { Subscription } from 'rxjs'
 
 import { parse } from 'ansicolor'
+import { DateTime } from 'luxon'
 
 import { ExecutionService } from '../backend/api/execution.service'
 
@@ -51,6 +52,7 @@ export class LogBoxComponent implements OnDestroy, AfterViewInit {
     total = -1
 
     logInternals = false
+    logTimestamps = false
 
     loadingLogs = false
 
@@ -90,6 +92,7 @@ export class LogBoxComponent implements OnDestroy, AfterViewInit {
             }
         }
         const newBatch = []
+        let prevTs = null
         for (const [idx, l] of logs.entries()) {
             l.idx = startLineNo + idx + 1
 
@@ -137,12 +140,34 @@ export class LogBoxComponent implements OnDestroy, AfterViewInit {
                     fragment.logs.push(l2)
                 }
             } else {
+                const currTs = l.message.slice(0, 23)
+                const currTsObj = DateTime.fromFormat(
+                    currTs,
+                    'yyyy-MM-dd HH:mm:ss,SSS'
+                )
+                if (this.logTimestamps) {
+                    // fix missing timestamps
+                    if (currTsObj.isValid) {
+                        prevTs = currTs
+                    } else if (prevTs) {
+                        l.message = prevTs + ' ' + l.message
+                    }
+                } else {
+                    // strip timestamps
+                    if (currTsObj.isValid) {
+                        l.message = l.message.slice(24)
+                    }
+                }
+
+                // turn ansi codes into spans with css colors
                 const p = parse(l.message)
                 const spans = []
                 for (const el of p.spans) {
                     spans.push(`<span style="${el.css}">${el.text}</span>`)
                 }
                 l.message = spans.join('')
+
+                // store log entry to fragment
                 fragment.logs.push(l)
             }
         }
@@ -696,5 +721,9 @@ export class LogBoxComponent implements OnDestroy, AfterViewInit {
                     }, 500)
                 })
         )
+    }
+
+    handleTsChange() {
+        this.loadEndPage()
     }
 }
