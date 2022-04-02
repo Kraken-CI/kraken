@@ -50,7 +50,10 @@
 
   <!-- top bar with logo and menu -->
   <div class="toolbar" role="banner">
-    <a style="font-size: 2rem; cursor: pointer; color: white;" class="logo1" href="/">Kraken<span style="font-size: 0.5em;"> {{ krakenVersion }}</span></a>
+      <span>
+      <a style="font-size: 2rem; cursor: pointer; color: white;" class="logo1" href="/">Kraken</a>&nbsp;
+      <a style="font-size: 1rem; cursor: pointer; color: white;" class="logo1" href="https://github.com/Kraken-CI/kraken/releases/tag/v{{ krakenVersion }}" target="blank">{{ krakenVersion }}</a>
+      </span>
     <!--    <span style="font-size: 2rem; cursor: pointer;" [class]="logoClass" (click)="randomLogoFont()">Kraken</span> -->
 
 
