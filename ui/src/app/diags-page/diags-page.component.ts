@@ -14,7 +14,6 @@ import { ManagementService } from '../backend/api/management.service'
     styleUrls: ['./diags-page.component.sass'],
 })
 export class DiagsPageComponent implements OnInit, OnDestroy {
-    tabIndex = 0
     data: any = { rq: {} }
     logServices: any = []
     logServicesSelected: string[] = []
@@ -80,8 +79,8 @@ export class DiagsPageComponent implements OnInit, OnDestroy {
         this.subs.add(
             this.route.queryParamMap.subscribe(
                 (params) => {
-                    if (params.get('tab') === 'logs') {
-                        this.tabIndex = 1
+                    const tab = this.route.snapshot.paramMap.get('tab')
+                    if (tab === 'logs') {
                         this.loadLastRQJobsNames()
 
                         const level = params.get('level')
@@ -92,15 +91,6 @@ export class DiagsPageComponent implements OnInit, OnDestroy {
                             this.logLevel = level
                             this.loadServicesLogs()
                         }
-                    } else {
-                        this.tabIndex = 0
-                        this.subs.add(
-                            this.managementService
-                                .getDiagnostics()
-                                .subscribe((data) => {
-                                    this.data = data
-                                })
-                        )
                     }
                 },
                 (error) => {
@@ -121,6 +111,14 @@ export class DiagsPageComponent implements OnInit, OnDestroy {
                 for (const t of data.items) {
                     this.rqJobs.push({ label: t.name, value: t.name })
                 }
+            })
+        )
+    }
+
+    loadDiagsData() {
+        this.subs.add(
+            this.managementService.getDiagnostics().subscribe((data) => {
+                this.data = data
             })
         )
     }
@@ -156,8 +154,10 @@ export class DiagsPageComponent implements OnInit, OnDestroy {
         )
     }
 
-    handleTabChange(ev) {
-        if (ev.index === 2) {
+    handleTabChange(tabName) {
+        if (tabName === 'overview') {
+            this.loadDiagsData()
+        } else if (tabName === 'logs') {
             this.loadServicesLogs()
         }
     }

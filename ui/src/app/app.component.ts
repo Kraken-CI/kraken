@@ -99,13 +99,13 @@ export class AppComponent implements OnInit, OnDestroy {
             {
                 label: 'Diagnostics',
                 icon: 'fa fa-thermometer-three-quarters',
-                routerLink: '/diagnostics',
+                routerLink: '/diagnostics/overview',
             },
             {
                 label: '0',
                 icon: 'fa fa-smile-o',
-                routerLink: '/diagnostics',
-                queryParams: { tab: 'logs', level: 'error' },
+                routerLink: '/diagnostics/logs',
+                queryParams: { level: 'error' },
                 // badge: '0' TODO: it does not work
                 title: '0 errors in the last hour',
                 styleClass: '',

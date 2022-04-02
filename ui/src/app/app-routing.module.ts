@@ -95,7 +95,7 @@ const routes: Routes = [
         component: SettingsPageComponent,
     },
     {
-        path: 'diagnostics',
+        path: 'diagnostics/:tab',
         component: DiagsPageComponent,
     },
 

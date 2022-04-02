@@ -1,5 +1,5 @@
-<p-tabView [(activeIndex)]="tabIndex" (onChange)="handleTabChange($event)">
-  <p-tabPanel header="Overview">
+<app-tabbed-page baseLinkUrl="/diagnostics" (tabChanged)="handleTabChange($event)">
+  <app-tabbed-page-tab label="Overview">
     <div style="display: flex;">
       <div *ngFor="let s of data | keyvalue" class="m-2">
         <p-card>
@@ -57,9 +57,9 @@
         </p-card>
       </div>
     </div>
-  </p-tabPanel>
+  </app-tabbed-page-tab>
 
-  <p-tabPanel header="Logs">
+  <app-tabbed-page-tab label="Logs">
     <div style="display: flex;">
       <p-selectButton [options]="logServices" [(ngModel)]="logServicesSelected" multiple="multiple" optionLabel="name" optionValue="value" (onChange)="loadServicesLogs()"></p-selectButton>
       <p-button label="Refresh" icon="pi pi-refresh" (onClick)="loadServicesLogs()" [style]="{'margin-left': '30px'}" [loading]="servicesLogsAreLoading"></p-button>
@@ -94,6 +94,6 @@
         <div style="white-space: pre-wrap; word-break: break-word;">{{ l.message }}</div>
       </div>
     </div>
-  </p-tabPanel>
+  </app-tabbed-page-tab>
 
-</p-tabView>
+</app-tabbed-page>

@@ -3,12 +3,14 @@ import {
     OnInit,
     OnDestroy,
     Input,
+    Output,
     TemplateRef,
     QueryList,
     ContentChildren,
     AfterContentInit,
     forwardRef,
     Inject,
+    EventEmitter,
 } from '@angular/core'
 import { Router, ActivatedRoute } from '@angular/router'
 
@@ -57,6 +59,8 @@ export class TabbedPageComponent
     implements OnInit, OnDestroy, AfterContentInit
 {
     _baseLinkUrl: string = ''
+
+    @Output() tabChanged: EventEmitter<any> = new EventEmitter()
 
     @ContentChildren(PrimeTemplate) templates: QueryList<any>
     headerTemplate: TemplateRef<any>
@@ -161,6 +165,7 @@ export class TabbedPageComponent
                 this.tabs[idx].active = false
             }
         }
+        this.tabChanged.emit(tabName)
     }
 
     ngOnInit(): void {
