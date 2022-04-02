@@ -993,7 +993,7 @@ schema = {
                                 "if": { "properties": { "tool": { "const": "pylint" } } },
                                 "then": {
                                     "additionalProperties": False,
-                                    "required": ["tool", "rcfile", "modules_or_packages"],
+                                    "required": ["tool", "modules_or_packages"],
                                     "properties": {
                                         "tool": {
                                             "description": "A tool that allows for static analysis of Python source code.",
