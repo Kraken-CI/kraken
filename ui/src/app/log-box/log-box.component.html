@@ -2,11 +2,11 @@
 
   <p-progressSpinner *ngIf="loadingLogs" [style]="{ width: '30px', height: '30px', 'margin': '3px 20px 0 0' }"></p-progressSpinner>
 
-  <p-toggleButton onIcon="pi pi-volume-up" offIcon="pi pi-volume-down" [style]="{'margin-right': '7px', 'height': '39px'}" [(ngModel)]="logInternals"></p-toggleButton>
-  <p-toggleButton onLabel="TS on" offLabel="TS off" [style]="{'margin-right': '7px', 'height': '39px'}" [(ngModel)]="logTimestamps" (onChange)="handleTsChange()"></p-toggleButton>
-  <a pButton icon="pi pi-download" [style]="{'margin-right': '7px', 'color': 'white'}" [href]="'/job_log/' + prvJobId"></a>
-  <p-button icon="pi pi-plus" [style]="{'margin-right': '7px'}" (click)="logZoomIn()"></p-button>
-  <p-button icon="pi pi-minus" [style]="{'margin-right': '7px'}" (click)="logZoomOut()"></p-button>
+  <p-toggleButton onIcon="pi pi-volume-up" offIcon="pi pi-volume-down" pTooltip="Switch on/off internal logs" [style]="{'margin-right': '7px', 'height': '39px'}" [(ngModel)]="logInternals"></p-toggleButton>
+  <p-toggleButton onIcon="pi pi-clock" offIcon="pi pi-clock" pTooltip="Switch on/off timestamps" [style]="{'margin-right': '7px', 'height': '39px'}" [(ngModel)]="logTimestamps" (onChange)="handleTsChange()"></p-toggleButton>
+  <a pButton icon="pi pi-download" [style]="{'margin-right': '7px', 'color': 'white'}" [href]="'/job_log/' + prvJobId" pTooltip="Download logs"></a>
+  <p-button icon="pi pi-plus" [style]="{'margin-right': '7px'}" (click)="logZoomIn()" pTooltip="Bigger fonts"></p-button>
+  <p-button icon="pi pi-minus" [style]="{'margin-right': '7px'}" (click)="logZoomOut()" pTooltip="Smaller fonts"></p-button>
   <p-button icon="pi pi-fast-backward" [style]="{'margin-right': '7px'}" (click)="loadFirstPage()" pTooltip="Load the first page"></p-button>
   <p-button icon="pi pi-backward" [style]="{'margin-right': '7px'}" (click)="loadPrevPage()" pTooltip="Load previous page"></p-button>
   <p-button icon="pi pi-arrow-up" [style]="{'margin-right': '7px'}" (click)="logScrollUp()" pTooltip="Scroll to the top"></p-button>
