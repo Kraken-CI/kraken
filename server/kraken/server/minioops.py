@@ -115,7 +115,7 @@ def get_or_create_minio_bucket_for_cache(job, step):
                 ),
             ],
         )
-        m.set_bucket_lifecycle('00000016-cache', cfg)
+        mc.set_bucket_lifecycle(bucket_name, cfg)
 
     return bucket_name, folders
 
