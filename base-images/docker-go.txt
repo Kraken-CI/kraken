@@ -1,4 +1,4 @@
-FROM golang:1.16.6-buster
+FROM golang:1.18.0-buster
 
 ENV DEBIAN_FRONTEND=noninteractive
 
