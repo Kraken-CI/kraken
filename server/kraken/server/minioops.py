@@ -16,6 +16,8 @@ import os
 import logging
 
 import minio
+from minio.lifecycleconfig import LifecycleConfig, Expiration, Rule
+from minio.commonconfig import ENABLED, Filter
 import urllib3
 from urllib3.exceptions import MaxRetryError
 
@@ -99,7 +101,21 @@ def get_or_create_minio_bucket_for_cache(job, step):
     mc = get_minio()
     found = mc.bucket_exists(bucket_name)
     if not found:
+        # create bucket
         mc.make_bucket(bucket_name)
+
+        # set retention policy - delete files after 10 days
+        cfg = LifecycleConfig(
+            [
+                Rule(
+                    ENABLED,
+                    rule_filter=Filter(prefix="."),
+                    rule_id="rule-10-days",
+                    expiration=Expiration(days=10),
+                ),
+            ],
+        )
+        m.set_bucket_lifecycle('00000016-cache', cfg)
 
     return bucket_name, folders
 
