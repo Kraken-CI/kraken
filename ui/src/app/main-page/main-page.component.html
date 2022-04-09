@@ -55,8 +55,8 @@
               <div *ngIf="branch.last_completed_flow">
                 <a routerLink="/flows/{{ branch.last_completed_flow.id }}" style="padding-right: 1em;">
                   {{ branch.last_completed_flow.label || branch.last_completed_flow.id }}
-                  <i *ngIf="!branch.last_completed_flow.errors" class="pi pi-thumbs-up" style="color: green;"></i>
-                  <i *ngIf="branch.last_completed_flow.errors" class="pi pi-times-circle" style="color: red;"></i>
+                  <i *ngIf="!branch.last_completed_flow.errors" class="pi pi-thumbs-up" style="color: var(--greenish2);"></i>
+                  <i *ngIf="branch.last_completed_flow.errors" class="pi pi-times-circle" style="color: var(--redish2);"></i>
                 </a>
                 <span style="color: #bbb;">
                   {{ branch.last_completed_flow.finished | localtime:'ago' }}
