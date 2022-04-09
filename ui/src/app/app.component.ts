@@ -20,8 +20,7 @@ import { SettingsService } from './services/settings.service'
 })
 export class AppComponent implements OnInit, OnDestroy {
     title = 'Kraken'
-    logoClass = 'logo1'
-    krakenVersion = '0.4'
+    krakenVersion = '0.0'
 
     @ViewChild('topmenubar') topmenubar: Menubar
     topMenuItems: MenuItem[]
@@ -51,28 +50,44 @@ export class AppComponent implements OnInit, OnDestroy {
         protected managementService: ManagementService,
         private msgSrv: MessageService
     ) {
-        this.logoClass = 'logo' + (Math.floor(Math.random() * 9) + 1)
         this.session = null
     }
 
     initDarkMode() {
-        const darkMode = localStorage.getItem('kk-dark-mode')
-        this.setDarkMode(darkMode == 'on')
+        let darkMode = localStorage.getItem('kk-dark-mode') == 'on'
+        let sysPref = false
+        if (!darkMode) {
+            darkMode = window.matchMedia('(prefers-color-scheme: dark)').matches
+            sysPref = true
+        }
+        this.setDarkMode(darkMode, sysPref)
+
+        window
+            .matchMedia('(prefers-color-scheme: dark)')
+            .addEventListener('change', this.darkModeListener.bind(this))
     }
 
-    setDarkMode(darkMode) {
+    darkModeListener(ev) {
+        this.setDarkMode(ev.matches, true)
+    }
+
+    setDarkMode(darkMode, sysPref) {
         this.darkMode = darkMode
         let cssFileName = ''
         if (darkMode) {
             document.documentElement.setAttribute('data-theme', 'dark')
-            localStorage.setItem('kk-dark-mode', 'on')
             this.logoutMenuItems[1].icon = 'pi pi-moon'
             cssFileName = 'vela-blue.css'
+            if (!sysPref) {
+                localStorage.setItem('kk-dark-mode', 'on')
+            }
         } else {
             document.documentElement.setAttribute('data-theme', 'light')
-            localStorage.setItem('kk-dark-mode', 'off')
             this.logoutMenuItems[1].icon = 'pi pi-sun'
             cssFileName = 'saga-blue.css'
+            if (!sysPref) {
+                localStorage.setItem('kk-dark-mode', 'off')
+            }
         }
 
         let themeLink = document.getElementById('app-theme') as HTMLLinkElement
@@ -161,7 +176,7 @@ export class AppComponent implements OnInit, OnDestroy {
                 label: 'Dark Mode',
                 icon: 'pi pi-sun',
                 command: () => {
-                    this.setDarkMode(!this.darkMode)
+                    this.setDarkMode(!this.darkMode, false)
                 },
             },
         ]
@@ -173,10 +188,6 @@ export class AppComponent implements OnInit, OnDestroy {
 
     ngOnDestroy() {
         this.subs.unsubscribe()
-    }
-
-    randomLogoFont() {
-        this.logoClass = 'logo' + (Math.floor(Math.random() * 3) + 1)
     }
 
     login() {
