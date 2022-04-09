@@ -227,11 +227,11 @@ export class FlowAnalysisComponent implements OnInit, OnDestroy {
             return '#fff'
         }
         if (stat.total === stat.passed) {
-            return '#beffbe'
+            return 'var(--greenish1)'
         } else if (stat.passed > 0.5 * stat.total) {
-            return '#fff089'
+            return 'var(--orangish1)'
         }
-        return '#ffc8c8'
+        return 'var(--redish1)'
     }
 
     getBgColor2(stat, key1, key2) {

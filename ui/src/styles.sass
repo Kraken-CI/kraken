@@ -20,3 +20,36 @@ a:hover
 
 .monospace
   font-family: monospace
+
+
+// light mode
+:root
+  --kk-bg-color: #fff
+  --kk-bg-color1: #eee
+  --kk-bg-color2: #efefef
+  --kk-color: #333
+  --redish: linear-gradient(90deg, rgba(255,230,230,1) 0%, rgba(227,193,193,1) 100%)
+  --redish1: rgba(255,230,230,1)
+  --orangish: linear-gradient(90deg, rgba(255,248,230,1) 0%, rgba(247,231,176,1) 100%)
+  --orangish1: rgba(255,248,230,1)
+  --greenish: linear-gradient(90deg, rgba(230,255,230,1) 0%, rgba(193,227,193,1) 100%)
+  --greenish1: rgba(230,255,230,1)
+  --blueish: linear-gradient(90deg, rgba(230,243,255,1) 0%, rgba(193,209,227,1) 100%)
+
+// dark mode
+[data-theme="dark"]
+  --kk-bg-color: #1f2d40
+  --kk-bg-color1: #1a212b
+  --kk-bg-color2: #223
+  --kk-color: rgba(255, 255, 255, 0.70)
+  --redish: linear-gradient(90deg, rgba(120,10,10,1) 0%, rgba(50,5,5,1) 100%)
+  --redish1: rgba(120,10,10,1)
+  --orangish: linear-gradient(90deg, rgba(125,47,0,1) 0%, rgba(70,27,0,1) 100%)
+  --orangish1: rgba(125,47,0,1)
+  --greenish: linear-gradient(90deg, rgba(0,90,0,1) 0%, rgba(5,50,5,1) 100%)
+  --greenish1: rgba(0,90,0,1)
+  --blueish: linear-gradient(90deg, rgb(0,37,125,1) 0%, rgba(0, 17, 70) 100%)
+
+body
+  background-color: var(--kk-bg-color)
+  color: var(--kk-color)

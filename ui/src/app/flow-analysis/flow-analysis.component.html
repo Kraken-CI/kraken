@@ -21,7 +21,7 @@
 
 <!-- TOTAL -->
 <div *ngIf="dim1.code === 'NN'" class="ml-2 mt-4">
-    <div style="background-color: {{ getBgColor(stats) }}; border: 1px solid black; width: 8em" class="p-2">
+    <div style="background: {{ getBgColor(stats) }}; border: 1px solid black; width: 8em" class="p-2">
         {{ stats.passed }} / {{ stats.total }}
         <br>
         {{ getPassRatio(stats.passed, stats.total) }}

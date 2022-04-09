@@ -40,6 +40,8 @@ export class AppComponent implements OnInit, OnDestroy {
 
     errorsInLogsCount = 0
 
+    darkMode = false
+
     private subs: Subscription = new Subscription()
 
     constructor(
@@ -51,6 +53,32 @@ export class AppComponent implements OnInit, OnDestroy {
     ) {
         this.logoClass = 'logo' + (Math.floor(Math.random() * 9) + 1)
         this.session = null
+    }
+
+    initDarkMode() {
+        const darkMode = localStorage.getItem('kk-dark-mode')
+        this.setDarkMode(darkMode == 'on')
+    }
+
+    setDarkMode(darkMode) {
+        this.darkMode = darkMode
+        let cssFileName = ''
+        if (darkMode) {
+            document.documentElement.setAttribute('data-theme', 'dark')
+            localStorage.setItem('kk-dark-mode', 'on')
+            this.logoutMenuItems[1].icon = 'pi pi-moon'
+            cssFileName = 'vela-blue.css'
+        } else {
+            document.documentElement.setAttribute('data-theme', 'light')
+            localStorage.setItem('kk-dark-mode', 'off')
+            this.logoutMenuItems[1].icon = 'pi pi-sun'
+            cssFileName = 'saga-blue.css'
+        }
+
+        let themeLink = document.getElementById('app-theme') as HTMLLinkElement
+        if (themeLink) {
+            themeLink.href = cssFileName
+        }
     }
 
     ngOnInit() {
@@ -125,14 +153,22 @@ export class AppComponent implements OnInit, OnDestroy {
                 icon: 'pi pi-key',
                 command: () => {
                     this.displayPasswdBox = true
-                    console.info('this.displayPasswdBox', this.displayPasswdBox)
                 },
                 disabled: !this.auth.hasPermission('manage'),
                 title: this.auth.permTip('manage'),
             },
+            {
+                label: 'Dark Mode',
+                icon: 'pi pi-sun',
+                command: () => {
+                    this.setDarkMode(!this.darkMode)
+                },
+            },
         ]
 
         this.checkForErrors()
+
+        this.initDarkMode()
     }
 
     ngOnDestroy() {
