@@ -26,7 +26,7 @@
       {{run.jobs_total}} jobs
       <span *ngIf="run.jobs_error">
         <br>
-        {{run.jobs_error}} errs <i class="pi pi-times-circle" style="color: red; vertical-align: sub;"></i>
+        {{run.jobs_error}} errs <i class="pi pi-times-circle" style="color: var(--redish2); vertical-align: sub;"></i>
       </span>
       <span *ngIf="run.jobs_rerun">
         <br>
@@ -51,8 +51,8 @@
       <div>
         <b>Tests</b><br>
         {{run.tests_passed * 100 / run.tests_total | number:'1.1-1'}}% passed
-        <i *ngIf="run.tests_passed !== run.tests_total" class="pi pi-exclamation-triangle" style="color: orange; font-size: 1.3em; vertical-align: bottom;"></i>
-        <i *ngIf="run.tests_passed === run.tests_total" class="pi pi-thumbs-up" style="color: green; font-size: 1.3em; vertical-align: bottom;"></i>
+        <i *ngIf="run.tests_passed !== run.tests_total" class="pi pi-exclamation-triangle" style="color: var(--orangish2); font-size: 1.3em; vertical-align: bottom;"></i>
+        <i *ngIf="run.tests_passed === run.tests_total" class="pi pi-thumbs-up" style="color: var(--greenish2); font-size: 1.3em; vertical-align: bottom;"></i>
         <br>
         {{run.tests_passed}}/{{run.tests_total}}
         <span *ngIf="run.tests_not_run">
@@ -61,15 +61,15 @@
       </div>
       <div style="margin-left: 15px;" *ngIf="run.regr_cnt > 0 || run.fix_cnt > 0">
         <br>
-        <span *ngIf="run.regr_cnt > 0">{{ run.regr_cnt }} regressions <i class="pi pi-exclamation-triangle" style="color: red; font-size: 1.3em; vertical-align: bottom;"></i><br></span>
-        <span *ngIf="run.fix_cnt > 0">{{ run.fix_cnt }} fixes <i class="pi pi-thumbs-up" style="color: green; font-size: 1.3em; vertical-align: bottom;"></i></span>
+        <span *ngIf="run.regr_cnt > 0">{{ run.regr_cnt }} regressions <i class="pi pi-exclamation-triangle" style="color: var(--redish2); font-size: 1.3em; vertical-align: bottom;"></i><br></span>
+        <span *ngIf="run.fix_cnt > 0">{{ run.fix_cnt }} fixes <i class="pi pi-thumbs-up" style="color: var(--greenish2); font-size: 1.3em; vertical-align: bottom;"></i></span>
       </div>
     </div>
 
     <div *ngIf="run.issues_total" routerLink="/runs/{{ run.id }}/issues" style="cursor: pointer;">
       <b>Issues</b><br>
-      {{run.issues_total}} total <i class="pi pi-exclamation-triangle" style="color: orange; font-size: 1.3em; vertical-align: bottom;"></i><br>
-      <span *ngIf="run.issues_new > 0">{{run.issues_new}} new <i class="pi pi-exclamation-triangle" style="color: red; font-size: 1.3em; vertical-align: bottom;"></i></span>
+      {{run.issues_total}} total <i class="pi pi-exclamation-triangle" style="color: var(--orangish2); font-size: 1.3em; vertical-align: bottom;"></i><br>
+      <span *ngIf="run.issues_new > 0">{{run.issues_new}} new <i class="pi pi-exclamation-triangle" style="color: var(--redish2); font-size: 1.3em; vertical-align: bottom;"></i></span>
     </div>
 
   </div>
