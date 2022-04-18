@@ -19,7 +19,6 @@ import pytest
 from hamcrest import assert_that, has_entries
 
 from kraken.agent import kraken_values_collect
-from kraken.agent import consts
 
 
 VALS_1 = """{

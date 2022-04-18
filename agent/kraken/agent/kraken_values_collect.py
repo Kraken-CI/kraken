@@ -50,7 +50,7 @@ def run_tests(step, report_result=None):
         with open(fpath) as fh:
             try:
                 data = json.load(fh)
-            except:
+            except Exception:
                 result['status'] = consts.TC_RESULT_ERROR
                 result['msg'] = 'cannot parse %s file' % fpath
                 report_result(result)
