@@ -62,6 +62,7 @@ def _parse_junit_file(fp, report_result):
 
     return passed, failed, disabled, error
 
+
 def run_tests(step, report_result=None):
     cwd = step.get('cwd', '.')
     file_glob = step.get('file_glob', '**/*.xml')

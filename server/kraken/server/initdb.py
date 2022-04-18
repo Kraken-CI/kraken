@@ -101,6 +101,7 @@ def prepare_initial_data():
         'cache': {},
         'gotest': {},
         'junit_collect': {},
+        'values_collect': {},
     }
     tools = {}
     for name, fields in tool_fields.items():

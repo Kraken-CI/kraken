@@ -67,6 +67,7 @@ end
 file './agent/venv/bin/python3' do
   sh 'python3 -m venv agent/venv'
   sh './agent/venv/bin/pip install -U pip'
+  sh './agent/venv/bin/pip install -r agent/reqs-ut.txt'
 end
 
 task :prepare_env => ['venv/bin/python3', './agent/venv/bin/python3'] do
@@ -364,7 +365,7 @@ end
 
 task :agent_ut do
   Dir.chdir('agent') do
-    sh "./venv/bin/pytest -s -v"
+    sh "./venv/bin/pytest -s -r A -vv #{ENV['test']}"
   end
 end
 

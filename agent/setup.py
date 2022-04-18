@@ -23,6 +23,7 @@ setup(
             'cache = kraken.agent.kraken_cache',
             'gotest = kraken.agent.kraken_gotest',
             'junit_collect = kraken.agent.kraken_junit_collect',
+            'values_collect = kraken.agent.kraken_values_collect',
         ]
     },
 )

@@ -1110,6 +1110,46 @@ schema = {
                                     }
                                 }
                             }, {
+                                "if": { "properties": { "tool": { "const": "values_collect" } } },
+                                "then": {
+                                    "additionalProperties": False,
+                                    "required": ["tool", "files"],
+                                    "properties": {
+                                        "tool": {
+                                            "description": "A tool that allows for collecting values (metrics, params, etc) from files.",
+                                            "const": "values_collect"
+                                        },
+                                        "files": {
+                                            "description": "A list of files.",
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "additionalProperties": False,
+                                                "properties": {
+                                                    "name": {
+                                                        "description": ".",
+                                                        "type": "string"
+                                                    },
+                                                    "namespace": {
+                                                        "description": ".",
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "cwd": {
+                                            "description": "A current working directory where the step is executed.",
+                                            "default": ".",
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "else": {
+                                    "additionalProperties": False,
+                                    "properties": {
+                                    }
+                                }
+                            }, {
                                 "if": { "properties": { "tool": { "const": "gotest" } } },
                                 "then": {
                                     "additionalProperties": False,
