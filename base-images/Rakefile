@@ -6,6 +6,7 @@ images = {
   'centos'     => ['centos:8'],
   'fedora'     => ['fedora:33'],
   'bld-kraken' => ['bld-kraken'],
+  'mlflow'     => ['mlflow'],
 }
 
 all_blds = []
