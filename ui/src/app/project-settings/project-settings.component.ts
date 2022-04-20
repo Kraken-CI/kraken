@@ -156,11 +156,11 @@ export class ProjectSettingsComponent implements OnInit, OnDestroy {
             flow.tests_pass_ratio = (100 * flow.tests_passed) / flow.tests_total
             flow.tests_pass_ratio = flow.tests_pass_ratio.toFixed(1)
             if (flow.tests_total === flow.tests_passed) {
-                flow.tests_color = '#beffbe'
+                flow.tests_color = 'var(--greenish1)'
             } else if (flow.tests_pass_ratio > 50) {
-                flow.tests_color = '#fff089'
+                flow.tests_color = 'var(--orangish1)'
             } else {
-                flow.tests_color = '#ffc8c8'
+                flow.tests_color = 'var(--redish1)'
             }
         } else {
             flow.tests_color = 'white'

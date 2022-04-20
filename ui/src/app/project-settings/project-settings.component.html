@@ -56,9 +56,10 @@
                   <td style="vertical-align: top;">
                     <span *ngIf="flow.tests_total > 0"
                           [ngStyle]="{'border-radius': '4px', 'background-color': flow.tests_color, 'padding': '1px 3px', 'margin-right': '2px'}">{{ flow.tests_pass_ratio }}%&nbsp;pass</span>
-                    <span *ngIf="flow.fix_cnt > 0" style="border-radius: 4px; background-color: #beffbe; padding: 1px 3px; margin-right: 2px;">{{ flow.fix_cnt }}&nbsp;fixes</span>
-                    <span *ngIf="flow.regr_cnt > 0" style="border-radius: 4px; background-color: #ffc8c8; padding: 1px 3px; margin-right: 2px;">{{ flow.regr_cnt }}&nbsp;regrs</span>
-                    <span *ngIf="flow.issues_new > 0" style="border-radius: 4px; background-color: #ffc8c8; padding: 1px 3px; margin-right: 2px;">{{ flow.issues_new }}&nbsp;new&nbsp;issues</span>
+                    <span *ngIf="flow.fix_cnt > 0" style="border-radius: 4px; background-color: var(--greenish1); padding: 1px 3px; margin-right: 2px;">{{ flow.fix_cnt }}&nbsp;fixes</span>
+                    <span *ngIf="flow.regr_cnt > 0" style="border-radius: 4px; background-color: var(--redish1); padding: 1px 3px; margin-right: 2px;">{{ flow.regr_cnt }}&nbsp;regrs</span>
+                    <span *ngIf="flow.issues_new > 0" style="border-radius: 4px; background-color: var(--redish1); padding: 1px 3px; margin-right: 2px;">{{ flow.issues_new }}&nbsp;new&nbsp;issues</span>
+                    <a routerLink="/flows/{{ flow. id }}/results-charts"><i *ngIf="flow.tests_total > 0" class="pi pi-chart-line" style="padding-left: 1em;" ></i></a>
                   </td>
                 </tr>
               </table>
