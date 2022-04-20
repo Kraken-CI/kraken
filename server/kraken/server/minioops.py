@@ -109,7 +109,7 @@ def get_or_create_minio_bucket_for_cache(job, step):
             [
                 Rule(
                     ENABLED,
-                    rule_filter=Filter(prefix="."),
+                    rule_filter=Filter(prefix=""),
                     rule_id="rule-10-days",
                     expiration=Expiration(days=10),
                 ),
