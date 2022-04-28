@@ -941,3 +941,22 @@ def get_systems():
     for s in q.all():
         systems.append(s.get_json())
     return {'items': systems, 'total': len(systems)}, 200
+
+
+def move_branch(branch_id, body):
+    branch = Branch.query.filter_by(id=branch_id).one_or_none()
+    if branch is None:
+        abort(404, "Branch not found")
+
+    proj_id = body.get('project_id', None)
+    if proj_id is None:
+        abort(400, "Missing project id")
+
+    proj = Project.query.filter_by(id=proj_id).one_or_none()
+    if proj is None:
+        abort(400, "Project with id %s does not exist" % proj_id)
+
+    branch.project_id = proj.id
+    db.session.commit()
+
+    return branch.get_json(with_cfg=True), 200

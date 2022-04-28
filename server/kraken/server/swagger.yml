@@ -510,6 +510,36 @@ paths:
         201:
           description: Successfully created run
           content: {}
+  /branches/{branch_id}/project_id:
+    put:
+      tags:
+      - Management
+      summary: Move a branch to another project
+      description: Move a branch to another project
+      operationId: move_branch
+      parameters:
+      - name: branch_id
+        in: path
+        description: ID of branch
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        description: project id
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                project_id:
+                  type: integer
+                  format: int64
+      responses:
+        201:
+          description: Successfully created run
+          content: {}
   /flows/{flow_id}:
     get:
       tags:

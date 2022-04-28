@@ -91,6 +91,20 @@
 </p-dialog>
 
 
+<!-- move branch dialog -->
+<p-dialog header="Move Branch to Another Project" [(visible)]="moveBranchDlgVisible" [modal]="true" [responsive]="true"
+          [style]="{minWidth: '400px'}">
+
+  <div class="mb-2">Select destination project:</div>
+  <p-listbox [options]="projects" optionLabel="name" [(ngModel)]="targetProject" [listStyle]="{'max-height': '280px'}"></p-listbox>
+
+  <p-footer>
+    <button type="button" (click)="cancelMoveBranch()" pButton icon="pi pi-times" label="Cancel" class="p-button-outlined p-button-secondary"></button>
+    <button type="button" (click)="moveBranch()" pButton icon="pi pi-check" label="Move"></button>
+  </p-footer>
+</p-dialog>
+
+
 <!-- page -->
 <div style="margin-bottom: 15px; display: flex; justify-content: space-between;">
   <div style="display: flex; align-items: baseline;">
@@ -130,6 +144,12 @@
   <div style="display: flex; align-items: baseline;">
     <!-- fork button -->
     <p-button label="Fork Branch" icon="fa fa-code-fork" styleClass="p-button-outlined" (onClick)="showForkBranchDialog()"
+              [disabled]="!auth.hasPermission('manage')"
+              [pTooltip]="auth.permTip('manage')"
+              [ngStyle]="{'margin-right': '10px'}"></p-button>
+
+    <!-- Move button -->
+    <p-button label="Move Branch" icon="pi pi-sign-in" styleClass="p-button-warning p-button-outlined" (onClick)="showMoveBranchDialog()"
               [disabled]="!auth.hasPermission('manage')"
               [pTooltip]="auth.permTip('manage')"
               [ngStyle]="{'margin-right': '10px'}"></p-button>

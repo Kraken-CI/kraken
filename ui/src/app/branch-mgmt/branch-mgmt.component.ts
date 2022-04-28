@@ -41,6 +41,10 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
     newStageName: string
     newStageDescr: string
 
+    moveBranchDlgVisible = false
+    projects = []
+    targetProject: any = null
+
     stage: any = { id: 0, name: '', description: '', schedules: [] }
     saveErrorMsg = ''
 
@@ -549,6 +553,58 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
                     })
                 }
             )
+        )
+    }
+
+    showMoveBranchDialog() {
+        this.moveBranchDlgVisible = true
+        this.subs.add(
+            this.managementService.getProjects().subscribe((data) => {
+                this.projects = data.items
+            })
+        )
+    }
+
+    cancelMoveBranch() {
+        this.moveBranchDlgVisible = false
+    }
+
+    moveBranch() {
+        if (!this.targetProject) {
+            this.msgSrv.add({
+                severity: 'error',
+                summary: 'Move branch',
+                detail: 'Destination project not selected',
+                life: 10000,
+            })
+        }
+        this.subs.add(
+            this.managementService
+                .moveBranch(this.branchId, {
+                    project_id: this.targetProject.id,
+                })
+                .subscribe(
+                    (data) => {
+                        this.msgSrv.add({
+                            severity: 'success',
+                            summary: 'Branch move succeeded',
+                            detail: 'Branch move operation succeeded.',
+                        })
+                        window.location.reload()
+                    },
+                    (err) => {
+                        let msg = err.statusText
+                        if (err.error && err.error.detail) {
+                            msg = err.error.detail
+                        }
+                        this.msgSrv.add({
+                            severity: 'error',
+                            summary: 'Branch move erred',
+                            detail: 'Branch move operation erred: ' + msg,
+                            life: 10000,
+                        })
+                    }
+                )
         )
     }
 

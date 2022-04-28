@@ -42,6 +42,7 @@ import { RadioButtonModule } from 'primeng/radiobutton'
 import { CardModule } from 'primeng/card'
 import { SliderModule } from 'primeng/slider'
 import { ProgressSpinnerModule } from 'primeng/progressspinner'
+import { ListboxModule } from 'primeng/listbox'
 
 // REST API
 import {
@@ -169,6 +170,7 @@ export function cfgFactory() {
         CardModule,
         SliderModule,
         ProgressSpinnerModule,
+        ListboxModule,
     ],
     providers: [
         Title,
