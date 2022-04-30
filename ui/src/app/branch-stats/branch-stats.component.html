@@ -1,0 +1,40 @@
+<div class="grid">
+
+    <!-- CI -->
+    <div class="col">
+        <h3>CI</h3>
+
+        <table *ngIf="stats">
+            <tr><td>Total flows</td><td>{{ stats.ci.flows_total }}</td></tr>
+            <tr><td>Flows in the last month</td><td>{{ stats.ci.flows_last_month }}</td></tr>
+            <tr><td>Flows in the last week</td><td>{{ stats.ci.flows_last_week }}</td></tr>
+            <tr><td>Average duration in the last month</td><td>{{ stats.ci.avg_duration_last_month }}</td></tr>
+            <tr><td>Average duration in the last week</td><td>{{ stats.ci.avg_duration_last_week }}</td></tr>
+        </table>
+
+        <div style="width: 90%">
+            <p-chart type="line" [data]="valueData.ci" [options]="valueOptions"></p-chart>
+        </div>
+
+    </div>
+
+
+    <!-- DEV -->
+    <div class="col">
+        <h3>DEV</h3>
+
+        <table *ngIf="stats">
+            <tr><td>Total flows</td><td>{{ stats.dev.flows_total }}</td></tr>
+            <tr><td>Flows in the last month</td><td>{{ stats.dev.flows_last_month }}</td></tr>
+            <tr><td>Flows in the last week</td><td>{{ stats.dev.flows_last_week }}</td></tr>
+            <tr><td>Average duration in the last month</td><td>{{ stats.dev.avg_duration_last_month }}</td></tr>
+            <tr><td>Average duration in the last week</td><td>{{ stats.dev.avg_duration_last_week }}</td></tr>
+        </table>
+
+        <div style="width: 90%">
+            <p-chart type="line" [data]="valueData.dev" [options]="valueOptions"></p-chart>
+        </div>
+
+    </div>
+
+</div>

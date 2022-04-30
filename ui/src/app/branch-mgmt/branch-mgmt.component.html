@@ -162,6 +162,8 @@
 </div>
 
 <p-tabView>
+
+  <!-- Stages TAB -->
   <p-tabPanel header="Stages">
     <div class="grid">
       <div class="col-3">
@@ -316,6 +318,8 @@
       </div>
     </div>
   </p-tabPanel>
+
+  <!-- Sequences TAB -->
   <p-tabPanel header="Sequences">
     <table class="seqs-table">
       <tr>
@@ -336,10 +340,13 @@
       </tr>
     </table>
   </p-tabPanel>
+
 <!--
   <p-tabPanel header="Configs">
   </p-tabPanel>
 -->
+
+  <!-- Status Badge TAB -->
   <p-tabPanel header="Status Badge">
     <div style="margin: 10px;">
       <div style="margin: 5px;">
@@ -361,4 +368,10 @@
       </div>
     </div>
   </p-tabPanel>
+
+  <!-- Stats & Charts TAB -->
+  <p-tabPanel header="Stats & Charts">
+      <app-branch-stats [branch_id]="branchId"></app-branch-stats>
+  </p-tabPanel>
+
 </p-tabView>

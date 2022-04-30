@@ -14,7 +14,6 @@ export class FlowChartsComponent implements OnInit, OnDestroy {
 
     valueData: any
     valueOptions = {}
-    chartPlugins: any[]
 
     private subs: Subscription = new Subscription()
 
@@ -129,6 +128,5 @@ export class FlowChartsComponent implements OnInit, OnDestroy {
                 },
             ],
         }
-        console.info(this.valueData)
     }
 }

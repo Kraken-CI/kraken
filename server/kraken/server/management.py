@@ -21,8 +21,9 @@ from urllib.parse import urlparse
 
 from flask import abort
 from sqlalchemy.orm.attributes import flag_modified
-from sqlalchemy.sql.expression import asc, desc
+from sqlalchemy.sql.expression import asc, desc, extract
 from sqlalchemy.orm import joinedload
+from sqlalchemy.sql import func
 import pytimeparse
 import clickhouse_driver
 import redis
@@ -32,7 +33,7 @@ from azure.mgmt.compute import ComputeManagementClient
 
 from . import consts, srvcheck, kkrq
 from .models import db, Branch, Stage, Agent, AgentsGroup, Secret, AgentAssignment, Setting
-from .models import Project, BranchSequence, System
+from .models import Project, BranchSequence, System, Flow, duration_to_txt
 from .schema import check_and_correct_stage_schema, SchemaError, execute_schema_code
 from .schema import prepare_new_planner_triggers
 from .cloud import aws, azure, k8s
@@ -960,3 +961,53 @@ def move_branch(branch_id, body):
     db.session.commit()
 
     return branch.get_json(with_cfg=True), 200
+
+
+def get_branch_stats(branch_id):
+    branch = Branch.query.filter_by(id=branch_id).one_or_none()
+    if branch is None:
+        abort(404, "Branch not found")
+
+    resp = {
+        'id': branch.id,
+        'ci': {},
+        'dev': {},
+    }
+
+    today = utils.utcnow()
+    week_ago = today - datetime.timedelta(days=7)
+    month_ago = today - datetime.timedelta(days=30)
+
+    for kind, rsp in [(consts.FLOW_KIND_CI, resp['ci']), (consts.FLOW_KIND_DEV, resp['dev'])]:
+        q = Flow.query.filter_by(branch=branch, kind=kind)
+
+        # total stats
+        rsp['flows_total'] = q.count()
+        rsp['flows_last_month'] = q.filter(Flow.created >= month_ago).count()
+        rsp['flows_last_week'] = q.filter(Flow.created >= week_ago).count()
+
+        # duration stats
+        rsp['avg_duration_last_month'] = None
+        rsp['avg_duration_last_week'] = None
+        rsp['durations'] = []
+        if rsp['flows_last_month'] > 0:
+            q2 = q.filter(Flow.finished.is_not(None))
+            q2 = q2.with_entities(func.avg(extract('epoch', Flow.finished) - extract('epoch', Flow.created)).label('average'))
+            secs = q2.filter(Flow.created >= month_ago).all()[0][0]
+            dur = datetime.timedelta(seconds=secs)
+            rsp['avg_duration_last_month'] = duration_to_txt(dur)
+            if rsp['flows_last_week'] > 0:
+                secs = q2.filter(Flow.created >= week_ago).all()[0][0]
+                dur = datetime.timedelta(seconds=secs)
+                rsp['avg_duration_last_week'] = duration_to_txt(dur)
+
+            # durations table
+            q2 = q.with_entities(Flow.id, Flow.label, extract('epoch', Flow.finished) - extract('epoch', Flow.created))
+            q2 = q2.order_by(asc(Flow.created))
+            durs = []
+            for f_id, f_label, f_dur in q2.all():
+                durs.append(dict(flow_label=f_label if f_label else ("%d." % f_id),
+                                 duration=None if f_dur is None else int(f_dur)))
+            rsp['durations'] = durs
+
+    return resp, 200
