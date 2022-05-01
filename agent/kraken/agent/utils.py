@@ -68,7 +68,7 @@ def _trace_log_text(log_text, output_handler, text, tracing, mask, out_prefix, t
 
 
 def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=subprocess.STDOUT, tracing=True, raise_on_error=False,
-            callback=None, cb_period=5, mask=None, out_prefix='output: ', ignore_output=False):
+            callback=None, cb_period=5, mask=None, out_prefix='output: ', ignore_output=False, executable=None):
     # pylint: disable=too-many-statements,too-many-branches,too-many-locals
     if cwd is None:
         cwd = os.getcwd()
@@ -85,6 +85,7 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
 
         p = subprocess.Popen(cmd,
                              shell=True,
+                             executable=executable,
                              universal_newlines=True,
                              # TODO: this requires doing os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
                              # like in local_run.py

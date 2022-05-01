@@ -758,7 +758,7 @@ schema = {
                                 "if": { "properties": { "tool": { "const": "shell" } } },
                                 "then": {
                                     "additionalProperties": False,
-                                    "required": ["tool", "cmd"],
+                                    "required": ["tool"],
                                     "properties": {
                                         "tool": {
                                             "description": "A tool that executes provided command in a shell.",
@@ -766,6 +766,10 @@ schema = {
                                         },
                                         "cmd": {
                                             "description": "A command to execute.",
+                                            "type": "string"
+                                        },
+                                        "script": {
+                                            "description": "A script code to execute.",
                                             "type": "string"
                                         },
                                         "cwd": {
@@ -805,6 +809,10 @@ schema = {
                                             "description": "Indicates if step should be started and pushed to background. The step process is closed at the end of a job.",
                                             "default": False,
                                             "type": "boolean"
+                                        },
+                                        "shell_exe": {
+                                            "description": "An alternative path or command to shell executable (e.g.: zsh or /usr/bin/fish).",
+                                            "type": "string"
                                         }
                                     }
                                 },

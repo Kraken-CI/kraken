@@ -1,4 +1,4 @@
-# Copyright 2020 The Kraken Authors
+# Copyright 2020-2022 The Kraken Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,13 +13,30 @@
 # limitations under the License.
 
 import os
+import tempfile
 
 from . import utils
 
 
 def run(step, **kwargs):  # pylint: disable=unused-argument
-    cmd = step['cmd']
-    cwd = step.get('cwd', None)
+    cmd = None
+    script = step.get('script', None)
+    if script is None:
+        cmd = step['cmd']
+
+    # prepare script if needed
+    if script:
+        fh = tempfile.NamedTemporaryFile(mode='w', prefix='kk-shell-', suffix='.sh', delete=False)
+        fh.write('set -e\n')
+        fh.write(script)
+        fname = fh.name
+        fh.close()
+
+        shell_exe = step.get('shell_exe', '/bin/bash')
+        cmd = '%s %s' % (shell_exe, fname)
+        shell_exe = None
+    else:
+        shell_exe = step.get('shell_exe', '/bin/sh')
 
     # prepare env if needed
     extra_env = step.get('env', None)
@@ -30,8 +47,35 @@ def run(step, **kwargs):  # pylint: disable=unused-argument
     else:
         env = None
 
+    cwd = step.get('cwd', None)
     timeout = int(step.get('timeout', 60))
-    ret = utils.execute(cmd, cwd=cwd, env=env, timeout=timeout, out_prefix='', ignore_output=True)
+
+    # testing
+    ignore_output = True
+    if 'testing' in kwargs and kwargs['testing']:
+        ignore_output = False
+
+    # execute
+    try:
+        resp = utils.execute(cmd, cwd=cwd, env=env, timeout=timeout, out_prefix='', ignore_output=ignore_output,
+                             executable=shell_exe)
+    except Exception as ex:
+        return 1, str(ex)
+    finally:
+        if script:
+            os.unlink(fname)
+
+    if 'testing' in kwargs and kwargs['testing']:
+        ret, out = resp
+    else:
+        ret = resp
+
     if ret != 0:
-        return ret, 'cmd exited with non-zero retcode: %s' % ret
-    return 0, ''
+        result = [ret, 'cmd exited with non-zero retcode: %s' % ret]
+    else:
+        result = [0, '']
+
+    if 'testing' in kwargs and kwargs['testing']:
+        result.append(out)
+
+    return result
