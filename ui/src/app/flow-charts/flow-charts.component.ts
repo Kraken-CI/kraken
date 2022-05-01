@@ -12,8 +12,11 @@ import { ResultsService } from '../backend/api/results.service'
 export class FlowChartsComponent implements OnInit, OnDestroy {
     @Input() flow: any
 
-    valueData: any
-    valueOptions = {}
+    passRatioData: any
+    passRatioOptions = {}
+
+    passedTotalData: any
+    passedTotalOptions = {}
 
     private subs: Subscription = new Subscription()
 
@@ -51,7 +54,7 @@ export class FlowChartsComponent implements OnInit, OnDestroy {
             totalValues.push(f.tests_total)
         }
 
-        this.valueOptions = {
+        this.passRatioOptions = {
             // plugins: {
             //     tooltip: {
             //         callbacks: {
@@ -86,18 +89,43 @@ export class FlowChartsComponent implements OnInit, OnDestroy {
                         suggestedMax: 100,
                     },
                 },
-                y1: {
+            },
+        }
+        this.passedTotalOptions = {
+            // plugins: {
+            //     tooltip: {
+            //         callbacks: {
+            //             title: (tooltipItems) => {
+            //                 const idx = tooltipItems[0].dataIndex
+            //                 const data = tooltipItems[0].dataset.origData[idx]
+            //                 return (
+            //                     data.flow_label +
+            //                     ' @ ' +''
+            //                     //datetimeToLocal(data.flow_created_at, null)
+            //                 )
+            //             },
+            //         },
+            //     },
+            // },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Flows',
+                    },
+                },
+                y: {
                     type: 'linear',
                     title: {
                         display: true,
                         text: 'Passed & Total',
                     },
-                    position: 'right',
+                    position: 'left',
                 },
             },
         }
 
-        this.valueData = {
+        this.passRatioData = {
             labels: flowLabels,
             datasets: [
                 {
@@ -109,16 +137,22 @@ export class FlowChartsComponent implements OnInit, OnDestroy {
                     backgroundColor: '#0f0',
                     borderWidth: 5,
                 },
+            ],
+        }
+
+        this.passedTotalData = {
+            labels: flowLabels,
+            datasets: [
                 {
                     label: 'Passed',
-                    yAxisID: 'y1',
+                    yAxisID: 'y',
                     data: passedValues,
                     borderColor: '#0a0',
                     backgroundColor: '#0a0',
                 },
                 {
                     label: 'Total',
-                    yAxisID: 'y1',
+                    yAxisID: 'y',
                     data: totalValues,
                     borderColor: '#00f',
                     backgroundColor: '#00f',

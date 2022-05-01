@@ -1,3 +1,7 @@
-<div *ngIf="valueData && valueData.datasets" style="width: 70%">
-    <p-chart type="line" [data]="valueData" [options]="valueOptions"></p-chart>
+<div *ngIf="passRatioData && passRatioData.datasets" style="width: 70%">
+    <p-chart type="line" [data]="passRatioData" [options]="passRatioOptions"></p-chart>
+</div>
+
+<div *ngIf="passedTotalData && passedTotalData.datasets" style="width: 70%">
+    <p-chart type="line" [data]="passedTotalData" [options]="passedTotalOptions"></p-chart>
 </div>
