@@ -134,4 +134,5 @@ def test_get_workflow_schema():
 
     with app.app_context():
         schema, code = management.get_workflow_schema()
+        assert schema
         assert code == 200
