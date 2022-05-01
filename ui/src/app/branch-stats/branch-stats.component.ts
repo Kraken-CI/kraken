@@ -31,7 +31,6 @@ export class BranchStatsComponent implements OnInit, OnDestroy {
             this.managementService
                 .getBranchStats(this.branch_id)
                 .subscribe((data) => {
-                    console.info('STATS', data)
                     this.stats = data
 
                     for (const kind of ['ci', 'dev']) {

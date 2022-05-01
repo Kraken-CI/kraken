@@ -43,6 +43,8 @@ import { CardModule } from 'primeng/card'
 import { SliderModule } from 'primeng/slider'
 import { ProgressSpinnerModule } from 'primeng/progressspinner'
 import { ListboxModule } from 'primeng/listbox'
+import { DividerModule } from 'primeng/divider'
+import { KeyFilterModule } from 'primeng/keyfilter'
 
 // REST API
 import {
@@ -173,6 +175,8 @@ export function cfgFactory() {
         SliderModule,
         ProgressSpinnerModule,
         ListboxModule,
+        DividerModule,
+        KeyFilterModule,
     ],
     providers: [
         Title,

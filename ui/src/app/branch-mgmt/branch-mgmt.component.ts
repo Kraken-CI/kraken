@@ -1,4 +1,10 @@
-import { Component, OnInit, OnDestroy } from '@angular/core'
+import {
+    Component,
+    OnInit,
+    OnDestroy,
+    ViewChild,
+    ChangeDetectorRef,
+} from '@angular/core'
 import { Router, ActivatedRoute } from '@angular/router'
 import { FormGroup, FormControl } from '@angular/forms'
 import { Title } from '@angular/platform-browser'
@@ -63,6 +69,15 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
         mode: 'application/json',
     }
 
+    @ViewChild('cmEditor') cmEditor
+
+    prepareStepDlgVisible = false
+    wfSchema: any
+    stepTools: any[] = []
+    stepTool: any
+    stepFields: any[] = []
+    generatedStep = ''
+
     schemaCheckDisplay = false
     schemaCheckContent: any
 
@@ -87,7 +102,8 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
         protected breadcrumbService: BreadcrumbsService,
         private msgSrv: MessageService,
         private confirmationService: ConfirmationService,
-        private titleService: Title
+        private titleService: Title,
+        private changeDetectorRef: ChangeDetectorRef
     ) {}
 
     ngOnInit() {
@@ -96,6 +112,28 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
             this.route.paramMap.subscribe((params) => {
                 this.branchId = parseInt(params.get('id'), 10)
                 this.refresh()
+            })
+        )
+
+        this.subs.add(
+            this.managementService.getWorkflowSchema().subscribe((wfSchema) => {
+                this.wfSchema = wfSchema
+                // console.info('wfSchema', wfSchema)
+                // console.info('wfSchema', wfSchema['properties']['jobs']['items']['properties']['steps']['items']['oneOf'])
+                for (const t of wfSchema['properties']['jobs']['items'][
+                    'properties'
+                ]['steps']['items']['oneOf']) {
+                    const tt = t['then']['properties']['tool']
+                    this.stepTools.push({
+                        name: tt['const'],
+                        descr: tt['description'],
+                        schema: t['then']['properties'],
+                    })
+                }
+                this.stepTool = this.stepTools[0]
+                this.stepTools.sort((a, b) => a.name.localeCompare(b.name))
+
+                this.generateStep()
             })
         )
     }
@@ -634,5 +672,99 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
         badgeUrlEl.select()
         document.execCommand('copy')
         badgeUrlEl.setSelectionRange(0, 0)
+    }
+
+    showPrepareStepDialog() {
+        this.prepareStepDlgVisible = true
+    }
+
+    generateStep() {
+        this.stepFields = []
+        for (const [fn, fv] of Object.entries(this.stepTool.schema)) {
+            // prepare step help table
+            const fld = {
+                name: fn,
+                type: fv['type'],
+                descr: fv['description'],
+                default: fv['default'],
+                value: fv['default'] !== undefined ? fv['default'] : '',
+            }
+            if (fv['type'] === 'array') {
+                if (fv['items']['type'] === 'object') {
+                    fld['type'] += ' of objects'
+                } else {
+                    fld['type'] += ' of ' + fv['items']['type'] + 's'
+                }
+            }
+            if (fn === 'tool') {
+                fld['type'] = 'string'
+                fld['value'] = fv['const']
+            }
+            this.stepFields.push(fld)
+        }
+        this.generateStep2()
+    }
+
+    generateStep2() {
+        // prepare generated step example
+        const json = {}
+        for (const fv of this.stepFields) {
+            const fn = fv.name
+            if (fv['type'] === 'string') {
+                if (fv['default'] !== undefined && fv['default'] === fv.value) {
+                    // nothing
+                } else if (fv['enum']) {
+                    json[fn] = fv['enum'][0]
+                } else {
+                    json[fn] = fv.value
+                }
+            } else if (fv['type'] === 'integer') {
+                if (fv['default'] !== undefined && fv['default'] === fv.value) {
+                    // nothing
+                } else if (fv['minimum']) {
+                    json[fn] = fv['minimum']
+                } else {
+                    json[fn] = fv.value
+                }
+            } else if (fv['type'] === 'boolean') {
+                if (fv['default'] !== undefined && fv['default'] === fv.value) {
+                    // nothing
+                } else {
+                    json[fn] = false
+                }
+            } else if (fv['type'].startsWith('array')) {
+                json[fn] = []
+            } else if (fv['type'] === 'object') {
+                json[fn] = {}
+            }
+
+            if (fn === 'tool') {
+                json['tool'] = fv['value']
+                continue
+            }
+        }
+        this.generatedStep = JSON.stringify(json, null, 4)
+    }
+
+    copyGeneratedStep() {
+        //this.changeDetectorRef.detectChanges();
+        //const doc = this.cmEditor.getDoc()
+        //const cursor = doc.getCursor()
+        //console.info('cursor', cursor)
+        //doc.replaceRange(text, cursor);
+
+        const selBox = document.createElement('textarea')
+        selBox.style.position = 'fixed'
+        selBox.style.left = '0'
+        selBox.style.top = '0'
+        selBox.style.opacity = '0'
+        selBox.value = this.generatedStep
+        document.body.appendChild(selBox)
+        selBox.focus()
+        selBox.select()
+        document.execCommand('copy')
+        document.body.removeChild(selBox)
+
+        this.prepareStepDlgVisible = false
     }
 }

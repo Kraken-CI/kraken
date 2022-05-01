@@ -301,6 +301,25 @@ paths:
         201:
           description: Successfully created run
           content: {}
+  /workflow-schema:
+    get:
+      tags:
+      - Management
+      summary: Get workflow schema
+      operationId: get_workflow_schema
+      responses:
+        200:
+          description: Workflow schema
+          content:
+            application/json:
+              schema:
+                type: object
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
   /branches/{branch_id}:
     put:
       tags:

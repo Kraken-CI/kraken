@@ -788,7 +788,8 @@ schema = {
                                         "timeout": {
                                             "description": "A timeout in seconds that limits time of step execution. It is guareded by an agent. If it is exceeded then the step is arbitrarly terminated.",
                                             "type": "integer",
-                                            "minimum": 30
+                                            "minimum": 30,
+                                            "default": 60
                                         },
                                         "attempts": {
                                             "description": "A number of times the step is retried if if it returns error.",
@@ -860,8 +861,9 @@ schema = {
                                         },
                                         "git_cfg": {
                                             "description": "Git config keys and values passed to -c of the clone command.",
-                                            "additionalProperties": True,
-                                            "properties": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "string"
                                             }
                                         }
                                     }

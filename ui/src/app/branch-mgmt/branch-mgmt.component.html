@@ -70,14 +70,15 @@
 <p-dialog header="Schema Validation" [(visible)]="schemaCheckDisplay" [modal]="true" [responsive]="true"
           [style]="{minWidth: '400px'}" [minY]="70" [maximizable]="true">
   <pre *ngIf="schemaCheckContent.error">{{ schemaCheckContent.error }}</pre>
-  <div style="height: calc(100vh - 200px);">
+  <div>
     <ngx-codemirror *ngIf="schemaCheckContent.schema"
                     id="ngx-cm-json"
+                    #cmEditor
                     [(ngModel)]="schemaCheckContent.schema"
                     [options]="codeMirrorJsonOpts"></ngx-codemirror>
   </div>
 
-  <p-footer style="display: flex; justify-content: space-between; align-items: center;">
+  <p-footer style="display: flex; justify-content: space-between; align-items: center; margin-top: 1em;">
     <div *ngIf="schemaCheckContent.schema" style="color: green;font-weight: bold;font-size: 1.4em;">
       <i class="pi pi-check" style="vertical-align: text-bottom;"></i>
       All ok
@@ -87,6 +88,68 @@
       Error in schema code
     </div>
     <button type="button" pButton icon="pi pi-close" (click)="schemaCheckDisplay=false" label="Close"></button>
+  </p-footer>
+</p-dialog>
+
+
+<!-- prepare step dialog -->
+<p-dialog header="Prepare Step" [(visible)]="prepareStepDlgVisible" [maximizable]="true"
+          [style]="{width: '80vw'}">
+
+    <div style="height: 70vh;" *ngIf="stepTool">
+        <div class="flex justify-content-between">
+            <div class="flex align-items-center">
+                <p-dropdown [options]="stepTools"
+                            [(ngModel)]="stepTool"
+                            optionLabel="name"
+                            [style]="{width: '10em'}"
+                            [panelStyle]="{'min-width': '30em'}"
+                            scrollHeight='50vh'
+                            (onChange)="generateStep()">
+                    <ng-template let-tool pTemplate="item">
+                        <div class="flex">
+                            <div class="col-2 font-semibold">{{tool.name}}</div>
+                            <div class="col-10">{{tool.descr}}</div>
+                        </div>
+                    </ng-template>
+                </p-dropdown>
+                <div class="ml-3">
+                    {{ stepTool.descr }}
+                </div>
+            </div>
+
+            <div>
+                <a pButton label="Schema Help" href="https://kraken.ci/docs/schema" class="p-button-text" target="blank" icon="pi pi-question-circle" style="padding: 0 16px 4px 16px;"></a>
+                <a pButton label="Schema Reference" href="https://kraken.ci/docs/schema-ref" class="p-button-text" target="blank" icon="pi pi-question-circle" style="padding: 0 16px 4px 16px;"></a>
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <table class="step-help-table">
+                <ng-container *ngFor="let f of stepFields">
+                    <tr *ngIf="f.name !== 'tool'">
+                        <td class="step-help-name">{{ f.name }}</td>
+                        <td class="step-help-type">{{ f.type }}</td>
+                        <td class="step-help-value">
+                            <input type="text" [(ngModel)]="f.value" pInputText (keyup)="generateStep2()" class="p-inputtext-sm" *ngIf="f.type === 'string'" />
+                            <input type="text" [(ngModel)]="f.value" pInputText (keyup)="generateStep2()" class="p-inputtext-sm" *ngIf="f.type === 'integer'" pKeyFilter="pint" />
+                            <input type="text" [(ngModel)]="f.value" pInputText (keyup)="generateStep2()" class="p-inputtext-sm" *ngIf="f.type === 'boolean'" />
+                        </td>
+                        <td>{{ f.descr }}</td>
+                    </tr>
+                </ng-container>
+            </table>
+        </div>
+
+        <h3>Generated Step Code</h3>
+        <div>
+            <pre>{{ generatedStep }}</pre>
+        </div>
+<!--        <input type="text" pInputText [(ngModel)]="stageName" (keydown)="newStageKeyDown($event)" autofocus/> -->
+    </div>
+  <p-footer>
+    <button type="button" (click)="prepareStepDlgVisible = false" pButton icon="pi pi-times" label="Cancel" class="p-button-outlined p-button-secondary"></button>
+    <button type="button" (click)="copyGeneratedStep()" pButton icon="pi pi-copy" label="Copy to Clipboard"></button>
   </p-footer>
 </p-dialog>
 
@@ -236,7 +299,14 @@
                   [(ngModel)]="stage.schema_code"
                   [options]="codeMirrorOpts"></ngx-codemirror>
               </div>
-              <button type="button" (click)="checkStageSchema()" pButton icon="pi pi-eye" label="Check Schema"></button>
+              <div class="flex" style="gap: 1em">
+                  <!--
+                  <button type="button" (click)="checkStageSchema()" pButton icon="pi pi-plus" label="Prepare Stage"></button>
+                  <button type="button" (click)="checkStageSchema()" pButton icon="pi pi-plus" label="Prepare Job"></button>
+                  -->
+                  <button type="button" (click)="showPrepareStepDialog()" pButton icon="pi pi-plus" label="Prepare Step"></button>
+                  <button type="button" (click)="checkStageSchema()" pButton icon="pi pi-eye" label="Check Schema"></button>
+              </div>
             </p-tabPanel>
 
             <p-tabPanel header="Schema from Repository">

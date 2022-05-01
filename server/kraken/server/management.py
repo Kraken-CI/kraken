@@ -40,6 +40,7 @@ from .cloud import aws, azure, k8s
 from . import notify
 from . import utils
 from . import minioops
+from . import schemaval
 
 
 log = logging.getLogger(__name__)
@@ -1011,3 +1012,7 @@ def get_branch_stats(branch_id):
             rsp['durations'] = durs
 
     return resp, 200
+
+
+def get_workflow_schema():
+    return schemaval.schema, 200

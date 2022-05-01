@@ -127,3 +127,11 @@ def test_get_branch_stats():
                               {'flow_label': '9.', 'duration': 90}]
             },
         }))
+
+
+def test_get_workflow_schema():
+    app = create_app()
+
+    with app.app_context():
+        schema, code = management.get_workflow_schema()
+        assert code == 200
