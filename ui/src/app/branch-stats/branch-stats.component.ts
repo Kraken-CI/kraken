@@ -93,7 +93,7 @@ export class BranchStatsComponent implements OnInit, OnDestroy {
                                     },
                                 },
                             })
-                            return hm(value, { largest: 2 })
+                            return hm(value * 1000, { largest: 2 })
                         },
                     },
                 },
