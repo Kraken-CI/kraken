@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, Input } from '@angular/core'
 
 import { Subscription } from 'rxjs'
+import { humanizer } from 'humanize-duration'
 
 import { MessageService } from 'primeng/api'
 
@@ -72,9 +73,29 @@ export class BranchStatsComponent implements OnInit, OnDestroy {
                     type: 'linear',
                     title: {
                         display: true,
-                        text: 'Duration [s]',
+                        text: 'Duration',
                     },
                     position: 'left',
+                    ticks: {
+                        callback: function (value, index, ticks) {
+                            let hm = humanizer({
+                                language: 'shortEn',
+                                languages: {
+                                    shortEn: {
+                                        y: () => 'y',
+                                        mo: () => 'mo',
+                                        w: () => 'w',
+                                        d: () => 'd',
+                                        h: () => 'h',
+                                        m: () => 'm',
+                                        s: () => 's',
+                                        ms: () => 'ms',
+                                    },
+                                },
+                            })
+                            return hm(value, { largest: 2 })
+                        },
+                    },
                 },
             },
         }
