@@ -999,8 +999,9 @@ def get_branch_stats(branch_id):
             rsp['avg_duration_last_month'] = duration_to_txt(dur)
             if rsp['flows_last_week'] > 0:
                 secs = q2.filter(Flow.created >= week_ago).all()[0][0]
-                dur = datetime.timedelta(seconds=secs)
-                rsp['avg_duration_last_week'] = duration_to_txt(dur)
+                if secs:
+                    dur = datetime.timedelta(seconds=secs)
+                    rsp['avg_duration_last_week'] = duration_to_txt(dur)
 
             # durations table
             q2 = q.with_entities(Flow.id, Flow.label, extract('epoch', Flow.finished) - extract('epoch', Flow.created))

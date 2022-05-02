@@ -15,7 +15,7 @@
 import datetime
 
 import pytest
-from hamcrest import assert_that, has_entries
+from hamcrest import assert_that, has_entries, matches_regexp, contains_exactly, instance_of
 
 import werkzeug.exceptions
 
@@ -101,32 +101,39 @@ def test_get_branch_stats():
         resp, code = management.get_branch_stats(br.id)
         assert code == 200
         # assert resp is None
+        lbl_re = matches_regexp(r'\d+\.')
         assert_that(resp, has_entries({
             'id': br.id,
-            'ci': {
+            'ci': has_entries({
                 'flows_total': 5,
-                'flows_last_week': 1,
                 'flows_last_month': 3,
-                'avg_duration_last_month': 150.0,
-                'avg_duration_last_week': None,
-                'durations': [{'flow_label': '1.', 'duration': 60},
-                              {'flow_label': '2.', 'duration': None},
-                              {'flow_label': '3.', 'duration': 180},
-                              {'flow_label': '4.', 'duration': 120},
-                              {'flow_label': '5.', 'duration': None}]
-            },
-            'dev': {
-                'flows_total': 4,
                 'flows_last_week': 1,
+                'avg_duration_last_month': '2m 30s',
+                'avg_duration_last_week': None,
+                'durations': instance_of(list),
+            }),
+            'dev': has_entries({
+                'flows_total': 4,
                 'flows_last_month': 2,
-                'avg_duration_last_month': 60.0,
-                'avg_duration_last_week': 90.0,
-                'durations': [{'flow_label': '6.', 'duration': 30},
-                              {'flow_label': '7.', 'duration': 60},
-                              {'flow_label': '8.', 'duration': 30},
-                              {'flow_label': '9.', 'duration': 90}]
-            },
+                'flows_last_week': 1,
+                'avg_duration_last_month': '0s',
+                'avg_duration_last_week': '1m 30s',
+                'durations': instance_of(list),
+            }),
         }))
+
+        assert_that(resp['ci']['durations'],
+                    contains_exactly(has_entries({'flow_label': lbl_re, 'duration': 60}),
+                                     has_entries({'flow_label': lbl_re, 'duration': None}),
+                                     has_entries({'flow_label': lbl_re, 'duration': 180}),
+                                     has_entries({'flow_label': lbl_re, 'duration': 120}),
+                                     has_entries({'flow_label': lbl_re, 'duration': None})))
+
+        assert_that(resp['dev']['durations'],
+                    contains_exactly(has_entries({'flow_label': lbl_re, 'duration': 30}),
+                                     has_entries({'flow_label': lbl_re, 'duration': 60}),
+                                     has_entries({'flow_label': lbl_re, 'duration': 30}),
+                                     has_entries({'flow_label': lbl_re, 'duration': 90})))
 
 
 def test_get_workflow_schema():
