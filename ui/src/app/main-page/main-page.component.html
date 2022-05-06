@@ -1,6 +1,6 @@
 <!-- New Project dialog -->
 <p-dialog header="New Project" [(visible)]="newProjectDlgVisible">
-  <input type="text" pInputText [(ngModel)]="projectName" (keydown)="newProjectKeyDown($event)"/>
+  <input type="text" pInputText [(ngModel)]="projectName" (keydown)="newProjectKeyDown($event)" autofocus/>
   <p-footer>
     <button type="button" (click)="cancelNewProject()" pButton icon="pi pi-times" label="Cancel" class="p-button-outlined p-button-secondary"></button>
     <button type="button" (click)="addNewProject()" pButton icon="pi pi-check" label="Add"></button>

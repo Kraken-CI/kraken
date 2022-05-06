@@ -1,12 +1,34 @@
 images = {
-  'python'     => ['python:3.8.5', 'python:3.8', 'python:3', 'python:latest'],
-  'go'         => ['golang:1.18.0', 'golang:1.18', 'golang:latest'],
-  'openjdk'    => ['openjdk:11.0', 'openjdk:11', 'openjdk:latest'],
-  'ubuntu'     => ['ubuntu:20.04'],
-  'centos'     => ['centos:8'],
-  'fedora'     => ['fedora:33'],
-  'bld-kraken' => ['bld-kraken'],
-  'mlflow'     => ['mlflow'],
+  'bld-kraken'    => ['bld-kraken'],
+
+  'centos'        => ['centos:8'],
+  'fedora'        => ['fedora:33'],
+  'ubuntu'        => ['ubuntu:20.04'],
+  'ubuntu-22.04'  => ['ubuntu:22.04'],
+
+  'clojure'       => ['clojure:1.11'],
+  'crystal'       => ['crystal:1.4'],
+  'dart'          => ['dart:2.16'],
+  'elixir'        => ['elixir:1.13'],
+  'erlang'        => ['erlang:23.3'],
+  'gcc'           => ['gcc:11.3'],
+  'go'            => ['golang:1.18.0', 'golang:1.18', 'golang:latest'],
+  'groovy'        => ['groovy:3.0'],
+  'haskell'       => ['haskell:9.2'],
+  'haxe'          => ['haxe:4.2'],
+  'julia'         => ['julia:1.7'],
+  'mono'          => ['mono:6.12'],
+  'node'          => ['node:18.0'],
+  'openjdk'       => ['openjdk:11.0', 'openjdk:11', 'openjdk:latest'],
+  'perl'          => ['perl:5.34'],
+  'php'           => ['php:8.0'],
+  'python'        => ['python:3.8.5', 'python:3.8', 'python:3', 'python:latest'],
+  'ruby'          => ['ruby:3.1'],
+  'rakudo'        => ['rakudo:2021.04'],
+  'rust'          => ['rust:1.60'],
+  'swift'         => ['swift:5.6'],
+
+  'mlflow'        => ['mlflow'],
 }
 
 all_blds = []
