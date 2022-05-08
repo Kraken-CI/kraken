@@ -202,14 +202,16 @@ task :run_agent_in_lxd_all do
 #  Rake::Task["build_agent"].invoke
   Dir.chdir('agent') do
     systems = [
-      ['images:ubuntu/focal/amd64', 'u20'],
-      ['images:fedora/34/amd64', 'f34'],
-#      ['images:centos/7/amd64', 'c7'], TODO: problem with locales
-#      ['images:centos/8/amd64', 'c8'], TODO: problem with sudo which hangs
-      ['images:debian/buster/amd64', 'd10'],
-      ['images:debian/bullseye/amd64', 'd11'],
-#      ['images:opensuse/15.3/amd64', 's15'], TODO: problem with network (wicked)
-#      ['images:rockylinux/8/amd64', 'rl8'], # TODO: problem with sudo which hangs
+#      ['images:centos/8-Stream/amd64', 'c8s'],
+#      ['images:centos/9-Stream/amd64', 'c9s'],
+#      ['images:debian/10/amd64', 'd10'],
+#      ['images:debian/11/amd64', 'd11'],
+#      ['images:opensuse/15.3/amd64', 's153'],
+#      ['images:ubuntu/focal/amd64', 'u20'],
+#      ['images:ubuntu/jammy/amd64', 'u22'],
+#      ['images:fedora/34/amd64', 'f34'],
+#      ['images:fedora/35/amd64', 'f35'],
+      ['images:rockylinux/8/amd64', 'rl8'],
     ]
 
 #    sh 'lxc network delete kk-net || true'
@@ -226,7 +228,7 @@ task :run_agent_in_lxd_all do
         sh "lxc exec #{cntr_name} -- dhclient"
       end
       if sys.include?('centos') or sys.include?('rocky')
-        sh "lxc exec #{cntr_name} -- yum install -y python3 sudo wget which"
+        sh "lxc exec #{cntr_name} -- yum install -y python39 sudo wget which"
       end
       if sys.include?('fedora')
         sh "lxc exec #{cntr_name} -- dnf install -y wget"
@@ -236,7 +238,8 @@ task :run_agent_in_lxd_all do
         sh "lxc exec #{cntr_name} -- apt-get install -y curl python3 sudo wget"
       end
       if sys.include?('opensuse/15')
-        sh "lxc exec #{cntr_name} -- zypper install -y curl python3 sudo system-group-wheel"
+        sh "lxc exec #{cntr_name} -- zypper install -y curl wget python39 sudo system-group-wheel"
+        sh "lxc exec #{cntr_name} -- ln -sf /usr/bin/python3.9 /usr/bin/python3"
       end
       if sys.include?('ubuntu')
         sh "lxc exec #{cntr_name} -- apt install -y wget"

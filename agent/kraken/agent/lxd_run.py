@@ -110,14 +110,22 @@ class LxdExecContext:
         logs = self._async_run('cat /etc/os-release', deadline)
         m = re.search('^ID="?(.*?)"?$', logs, re.M)
         distro = m.group(1).lower()
+        m = re.search('^VERSION="?(.*?)"?$', logs, re.M)
+        distro_ver = m.group(1).lower()
         if distro in ['debian', 'ubuntu']:
             self._async_run('apt-get update', deadline)
             self._async_run('apt-get install -y python3', deadline)
-        elif distro in ['centos', 'fedora', 'rocky']:
+        elif distro == 'centos':
+            time.sleep(3)  # wait for network
+            if distro_ver == '8':
+                self._async_run('dnf install -y python39', deadline)
+        elif distro in ['fedora', 'rocky']:
+            time.sleep(3)  # wait for network
             self._async_run('yum install -y python3', deadline)
         elif 'suse' in distro:
             time.sleep(3)  # wait for network
-            self._async_run('zypper install -y curl python3 sudo system-group-wheel', deadline)
+            self._async_run('zypper install -y curl python39 sudo system-group-wheel', deadline)
+            self._async_run('ln -sf /usr/bin/python3.9 /usr/bin/python3', deadline)
 
     def start(self, timeout):
         try:
