@@ -96,6 +96,10 @@ export function cfgFactory() {
     return new Configuration(params)
 }
 
+import { Chart } from 'chart.js'
+import zoomPlugin from 'chartjs-plugin-zoom'
+Chart.register(zoomPlugin)
+
 @NgModule({
     declarations: [
         AppComponent,

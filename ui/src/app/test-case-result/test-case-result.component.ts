@@ -318,6 +318,32 @@ export class TestCaseResultComponent implements OnInit, OnDestroy {
                         },
                     },
                 },
+                zoom: {
+                    zoom: {
+                        wheel: {
+                            enabled: true,
+                        },
+                        pinch: {
+                            enabled: true,
+                        },
+                        drag: {
+                            enabled: true,
+                            borderColor: 'rgb(54, 162, 235)',
+                            borderWidth: 1,
+                            backgroundColor: 'rgba(54, 162, 235, 0.3)',
+                        },
+                        mode: 'xy',
+                    },
+                    pan: {
+                        enabled: true,
+                        mode: 'xy',
+                        modifierKey: 'shift',
+                    },
+                    limits: {
+                        x: { min: 0, max: 'original', minRange: 5 },
+                        y: { min: 'original', max: 'original' },
+                    },
+                },
             },
             scales: {
                 x: {

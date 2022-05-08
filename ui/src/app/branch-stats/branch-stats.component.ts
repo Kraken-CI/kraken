@@ -93,8 +93,36 @@ export class BranchStatsComponent implements OnInit, OnDestroy {
                                     },
                                 },
                             })
-                            return hm(value * 1000, { largest: 2 })
+                            return hm(value * 1000, { largest: 2, round: true })
                         },
+                    },
+                },
+            },
+            plugins: {
+                zoom: {
+                    zoom: {
+                        wheel: {
+                            enabled: true,
+                        },
+                        pinch: {
+                            enabled: true,
+                        },
+                        drag: {
+                            enabled: true,
+                            borderColor: 'rgb(54, 162, 235)',
+                            borderWidth: 1,
+                            backgroundColor: 'rgba(54, 162, 235, 0.3)',
+                        },
+                        mode: 'xy',
+                    },
+                    pan: {
+                        enabled: true,
+                        mode: 'xy',
+                        modifierKey: 'shift',
+                    },
+                    limits: {
+                        x: { min: 0, max: 'original', minRange: 5 },
+                        y: { min: 0, max: 'original', minRange: 60 },
                     },
                 },
             },

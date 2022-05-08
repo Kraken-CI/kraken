@@ -90,6 +90,34 @@ export class FlowChartsComponent implements OnInit, OnDestroy {
                     },
                 },
             },
+            plugins: {
+                zoom: {
+                    zoom: {
+                        wheel: {
+                            enabled: true,
+                        },
+                        pinch: {
+                            enabled: true,
+                        },
+                        drag: {
+                            enabled: true,
+                            borderColor: 'rgb(54, 162, 235)',
+                            borderWidth: 1,
+                            backgroundColor: 'rgba(54, 162, 235, 0.3)',
+                        },
+                        mode: 'xy',
+                    },
+                    pan: {
+                        enabled: true,
+                        mode: 'xy',
+                        modifierKey: 'shift',
+                    },
+                    limits: {
+                        x: { min: 0, max: 'original', minRange: 5 },
+                        y: { min: 0, max: 100, minRange: 5 },
+                    },
+                },
+            },
         }
         this.passedTotalOptions = {
             // plugins: {
@@ -121,6 +149,34 @@ export class FlowChartsComponent implements OnInit, OnDestroy {
                         text: 'Passed & Total',
                     },
                     position: 'left',
+                },
+            },
+            plugins: {
+                zoom: {
+                    zoom: {
+                        wheel: {
+                            enabled: true,
+                        },
+                        pinch: {
+                            enabled: true,
+                        },
+                        drag: {
+                            enabled: true,
+                            borderColor: 'rgb(54, 162, 235)',
+                            borderWidth: 1,
+                            backgroundColor: 'rgba(54, 162, 235, 0.3)',
+                        },
+                        mode: 'xy',
+                    },
+                    pan: {
+                        enabled: true,
+                        mode: 'xy',
+                        modifierKey: 'shift',
+                    },
+                    limits: {
+                        x: { min: 0, max: 'original', minRange: 5 },
+                        y: { min: 0, max: 'original', minRange: 5 },
+                    },
                 },
             },
         }
