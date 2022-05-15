@@ -28,7 +28,6 @@ from . import config
 from . import local_run
 from . import docker_run
 from . import lxd_run
-from . import consts
 from . import utils
 
 log = logging.getLogger(__name__)

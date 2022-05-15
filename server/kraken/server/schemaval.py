@@ -842,7 +842,6 @@ def get_schema():
     q = q.filter_by(deleted=None)
 
     tools_schema = []
-    tools = []
     for tool in q.all():
         fields = {
             "tool": {

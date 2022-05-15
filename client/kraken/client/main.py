@@ -13,6 +13,8 @@
 # limitations under the License.
 
 import json
+import getpass
+import urllib.parse
 
 import click
 import requests
@@ -21,8 +23,22 @@ from tabulate import tabulate
 
 class Session:
     def __init__(self, base_url):
-        self.base_url = base_url + '/api'
+        u = urllib.parse.urlparse(base_url)
+        port = u.port
+        if not port:
+            port = ''
+        else:
+            port = ':%d' % port
+        self.base_url = '%s://%s%s/api' % (u.scheme, u.hostname, port)
+
         self.auth_token = None
+        self.user = 'admin'
+        if u.username:
+            self.user = u.username
+        if u.password:
+            self.password = u.password
+        else:
+            self.password = getpass.getpass('Enter password for %s user: ' % self.user)
 
     def _initial_headers(self):
         h = {}
@@ -64,8 +80,8 @@ class Session:
             assert resp.status_code == exp_status
         return resp
 
-    def login(self, user='admin', password='admin'):
-        payload = {"user": user, "password": password}
+    def login(self):
+        payload = {"user": self.user, "password": self.password}
         resp = self.post('/sessions', payload)
         data = resp.json()
         self.auth_token = data['token']
@@ -88,9 +104,9 @@ def _make_session(server):
     # TODO check resp
     return s
 
-@tools.command()
+@tools.command('list')
 @click.option('-s', '--server', envvar='KRAKEN_SERVER_ADDR', required=True, help='Kraken Server URL')
-def list(server):
+def list_(server):
     'List registered Kraken Tools'
     s = _make_session(server)
 
@@ -112,7 +128,7 @@ def register(server, tool_file):
         data = json.load(fp)
 
     s = _make_session(server)
-    resp = s.post('/tools', data)
+    s.post('/tools', data)
 
 
 @main.command()
