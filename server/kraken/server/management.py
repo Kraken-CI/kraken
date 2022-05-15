@@ -34,6 +34,7 @@ from azure.mgmt.compute import ComputeManagementClient
 from . import consts, srvcheck, kkrq
 from .models import db, Branch, Stage, Agent, AgentsGroup, Secret, AgentAssignment, Setting
 from .models import Project, BranchSequence, System, Flow, duration_to_txt
+from .models import Tool
 from .schema import check_and_correct_stage_schema, SchemaError, execute_schema_code
 from .schema import prepare_new_planner_triggers
 from .cloud import aws, azure, k8s
@@ -1016,4 +1017,37 @@ def get_branch_stats(branch_id):
 
 
 def get_workflow_schema():
-    return schemaval.schema, 200
+    return schemaval.get_schema(), 200
+
+
+def get_tools():
+    q = Tool.query
+    q = q.filter_by(deleted=None)
+
+    tools = []
+    for t in q.all():
+        tools.append(t.get_json())
+    return {'items': tools, 'total': len(tools)}, 200
+
+
+def create_tool(body):
+    tool = Tool.query.filter_by(name=body['name']).one_or_none()
+    #if tool is not None:
+    #    abort(400, "Tool with name %s already exists" % body['name'])
+
+    name = body['name']
+    description = body['description']
+    location = body['location']
+    entry = body['entry']
+    fields = body['parameters']
+
+    if tool:
+        tool.description = description
+        tool.location=location
+        tool.entry = entry
+        tool.fields = fields
+    else:
+        tool = Tool(name=name, description=description, location=location, entry=entry, fields=fields)
+    db.session.commit()
+
+    return tool.get_json(), 201

@@ -89,28 +89,418 @@ def _prepare_initial_preferences():
 def prepare_initial_data():
     print("Preparing initial DB data")
 
-    tool_fields = {
-        'git': {'checkout': 'text', 'branch': 'text', 'destination': 'text'},
-        'shell': {'cmd': 'text', 'env': 'dict'},
-        'pytest': {'params': 'text', 'directory': 'text'},
-        'rndtest': {'count': 'text', 'override_result': 'text'},
-        'artifacts': {'type': 'choice:file', 'upload': 'text'},
-        'pylint': {'rcfile': 'text', 'modules_or_packages': 'text'},
-        'cloc': {'not-match-f': 'text', 'exclude-dir': 'text'},
-        'nglint': {},
-        'cache': {},
-        'gotest': {},
-        'junit_collect': {},
-        'values_collect': {},
-    }
-    tools = {}
-    for name, fields in tool_fields.items():
-        tool = Tool.query.filter_by(name=name).one_or_none()
+    tool_defs = [{
+        "name": "local_tool",
+        "description": "A tool that allows for running arbitrary python script as a tool that is indicated by `tool_location` and `tool_entry` fields. It is possible to add arbitrary fields to step definition that will be consumed by this tool.",
+        "location": "",
+        "entry": "",
+        "parameters": {
+            "additionalProperties": True,
+            "required": ["tool_location", "tool_entry"],
+            "properties": {
+                "tool_location": {
+                    "description": "A folder where a Python script is located.",
+                    "type": "string"
+                },
+                "tool_entry": {
+                    "description": "A Python script module name i.e. file name without `.py` suffix.",
+                    "type": "string"
+                },
+            }
+        }
+    }, {
+        "name": "git",
+        "description": "A tool for cloning Git repository.",
+        "location": "",
+        "entry": "",
+        "parameters": {
+            "additionalProperties": False,
+            "required": ["checkout"],
+            "properties": {
+                "checkout": {
+                    "description": "An URL to the repository.",
+                    "type": "string"
+                },
+                "branch": {
+                    "description": "A branch to checkout.",
+                    "default": "master",
+                    "type": "string"
+                },
+                "destination": {
+                    "description": "A destination folder for the repository. Default is empty ie. the name of the repository.",
+                    "type": "string"
+                },
+                "ssh-key": {
+                    "description": "A name of a secret that holds SSH username and key.",
+                    "type": "string"
+                },
+                "access-token": {
+                    "description": "A name of secret that contains an access token for GitLab or GitHub.",
+                    "type": "string"
+                },
+                "timeout": {
+                    "description": "A timeout in seconds that limits time of step execution. It is guareded by an agent. If it is exceeded then the step is arbitrarly terminated.",
+                    "type": "integer",
+                    "minimum": 30
+                },
+                "git_cfg": {
+                    "description": "Git config keys and values passed to -c of the clone command.",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    }, {
+        "name": "shell",
+        "description": "A tool that executes provided command in a shell.",
+        "location": "",
+        "entry": "",
+        "parameters": {
+            "properties": {
+                "cmd": {
+                    "description": "A command to execute.",
+                    "type": "string"
+                },
+                "script": {
+                    "description": "A script code to execute.",
+                    "type": "string"
+                },
+                "cwd": {
+                    "description": "A current working directory where the step is executed.",
+                    "default": ".",
+                    "type": "string"
+                },
+                "user": {
+                    "description": "A user that is used to execute a command.",
+                    "default": "kraken",
+                    "type": "string"
+                },
+                "env": {
+                    "description": "A dictionary with environment variables and their values.",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "timeout": {
+                    "description": "A timeout in seconds that limits time of step execution. It is guareded by an agent. If it is exceeded then the step is arbitrarly terminated.",
+                    "type": "integer",
+                    "minimum": 30,
+                    "default": 60
+                },
+                "background": {
+                    "description": "Indicates if step should be started and pushed to background. The step process is closed at the end of a job.",
+                    "default": False,
+                    "type": "boolean"
+                },
+                "shell_exe": {
+                    "description": "An alternative path or command to shell executable (e.g.: zsh or /usr/bin/fish).",
+                    "type": "string"
+                }
+            }
+        }
+    }, {
+        "name": "pytest",
+        "description": "A tool that allows for running Python tests.",
+        "location": "",
+        "entry": "",
+        "parameters": {
+            "properties": {
+                "pytest_exe": {
+                    "description": "An alternative path or command to pytest.",
+                    "default": "pytest-3",
+                    "type": "string"
+                },
+                "params": {
+                    "description": "Parameters passed directly to pytest executable.",
+                    "type": "string"
+                },
+                "pythonpath": {
+                    "description": "Extra paths that are used by Python to look for modules/packages that it wants to load.",
+                    "type": "string"
+                },
+                "cwd": {
+                    "description": "A current working directory where the step is executed.",
+                    "default": ".",
+                    "type": "string"
+                }
+            }
+        }
+    }, {
+        "name": "rndtest",
+        "description": "A tool that allows for generating random test case results.",
+        "location": "",
+        "entry": "",
+        "parameters": {
+            "properties": {
+                "count": {
+                    "description": "A number of expected test cases.",
+                    "oneOf": [{
+                        "type": "integer",
+                        "minimum": 1
+                    }, {
+                        "type": "string"
+                    }]
+                },
+                "override_result": {
+                    "description": "A result.",
+                    "oneOf": [{
+                        "type": "integer",
+                        "minimum": 1
+                    }, {
+                        "type": "string"
+                    }]
+                },
+            }
+        }
+    }, {
+        "name": "artifacts",
+        "description": "A tool for storing and retrieving artifacts in Kraken global storage.",
+        "location": "",
+        "entry": "",
+        "parameters": {
+            "required": ["source"],
+            "properties": {
+                "action": {
+                    "description": "An action that artifacts tool should execute. Default is `upload`.",
+                    "type": "string",
+                    "enum": ["download", "upload"]
+                },
+                "source": {
+                    "description": "A path or list of paths that should be archived or retreived. A path can indicate a folder or a file. A path, in case of upload action, can contain globbing signs `*` or `**`. A path can be relative or absolute.",
+                    "oneOf": [{
+                        "description": "A single path.",
+                        "type": "string"
+                    }, {
+                        "description": "A list of paths.",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }]
+                },
+                "destination": {
+                    "description": "A path were the artifact(s) should be stored. In case of download action, if the destination folder does not exist then it is created.",
+                    "default": ".",
+                    "type": "string"
+                },
+                "cwd": {
+                    "description": "A current working directory where the step is executed.",
+                    "default": ".",
+                    "type": "string"
+                },
+                "public": {
+                    "description": "Determines if artifacts should be public and available to users in web UI (`True`) or if they should be only accessible internally to other stages but only in the same flow (`False`). If report_entry is set then public is True.",
+                    "default": False,
+                    "type": "boolean"
+                },
+                "report_entry": {
+                    "description": "A path to HTML file that is an entry to the uploaded report. If present then it sets public to True.",
+                    "type": "string"
+                },
+            }
+        }
+    }, {
+        "name": "pylint",
+        "description": "A tool that allows for static analysis of Python source code.",
+        "location": "",
+        "entry": "",
+        "parameters": {
+            "required": ["modules_or_packages"],
+            "properties": {
+                "pylint_exe": {
+                    "description": "An alternative path or command to pylint.",
+                    "default": "pylint",
+                    "type": "string"
+                },
+                "rcfile": {
+                    "description": "A path to pylint rcfile.",
+                    "type": "string"
+                },
+                "modules_or_packages": {
+                    "description": "A path or paths to Python modules or packages that should be checked.",
+                    "type": "string"
+                },
+                "cwd": {
+                    "description": "A current working directory where the step is executed.",
+                    "default": ".",
+                    "type": "string"
+                },
+                "timeout": {
+                    "description": "A timeout in seconds that limits time of step execution. It is guareded by an agent. If it is exceeded then the step is arbitrarly terminated.",
+                    "type": "integer",
+                    "minimum": 30
+                }
+            }
+        }
+    }, {
+        "name": "cloc",
+        "description": "A tool that allows for running counting lines of code.",
+        "location": "",
+        "entry": "",
+        "parameters": {
+            "properties": {
+                "not-match-f": {
+                    "description": "Filter out files that match to provided regex.",
+                    "type": "string"
+                },
+                "exclude-dir": {
+                    "description": "Excluded provided list of directories.",
+                    "type": "string"
+                },
+                "cwd": {
+                    "description": "A current working directory where the step is executed.",
+                    "default": ".",
+                    "type": "string"
+                },
+            }
+        }
+    }, {
+        "name": "nglint",
+        "description": "A tool that allows for running Angular `ng lint`, that is performing static analysis of TypeScript in Angular projects.",
+        "location": "",
+        "entry": "",
+        "parameters": {
+            "properties": {
+                "cwd": {
+                    "description": "A current working directory where the step is executed.",
+                    "default": ".",
+                    "type": "string"
+                },
+            }
+        }
+    }, {
+        "name": "cache",
+        "description": "A tool for storing and restoring files from cache.",
+        "location": "",
+        "entry": "",
+        "parameters": {
+            "required": ["action"],
+            "properties": {
+                "action": {
+                    "description": "An action that the tool should perform.",
+                    "type": "string",
+                    "enum": ["save", "restore"]
+                },
+                "key": {
+                    "description": "A key under which files are stored in or restored from cache.",
+                    "type": "string"
+                },
+                "keys": {
+                    "description": "A list of key under which files are restored from cache.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "paths": {
+                    "description": "Source paths used in `store` action.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "expiry": {
+                    "description": "Not implemented yet.",
+                    "type": "string"
+                },
+            }
+        }
+    }, {
+        "name": "gotest",
+        "description": "A tool that allows for running Go language tests.",
+        "location": "",
+        "entry": "",
+        "parameters": {
+            "properties": {
+                "go_exe": {
+                    "description": "An alternative path or command to `go`.",
+                    "type": "string"
+                },
+                "params": {
+                    "description": "Parameters passed directly to `go test`.",
+                    "type": "string"
+                },
+                "cwd": {
+                    "description": "A current working directory where the step is executed.",
+                    "default": ".",
+                    "type": "string"
+                },
+                "timeout": {
+                    "description": "A timeout in seconds that limits time of step execution. It is guareded by an agent. If it is exceeded then the step is arbitrarly terminated.",
+                    "type": "integer",
+                    "minimum": 30
+                },
+            }
+        }
+    }, {
+        "name": "junit_collect",
+        "description": "A tool that allows for collecting test results stored in JUnit files.",
+        "location": "",
+        "entry": "",
+        "parameters": {
+            "required": ["file_glob"],
+            "properties": {
+                "file_glob": {
+                    "description": "A glob pattern for searching test result files.",
+                    "type": "string"
+                },
+                "cwd": {
+                    "description": "A current working directory where the step is executed.",
+                    "default": ".",
+                    "type": "string"
+                }
+            }
+        }
+    }, {
+        "name": "values_collect",
+        "description": "A tool that allows for collecting values (metrics, params, etc) from files.",
+        "location": "",
+        "entry": "",
+        "parameters": {
+            "required": ["files"],
+            "properties": {
+                "files": {
+                    "description": "A list of files.",
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": False,
+                        "properties": {
+                            "name": {
+                                "description": ".",
+                                "type": "string"
+                            },
+                            "namespace": {
+                                "description": ".",
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "cwd": {
+                    "description": "A current working directory where the step is executed.",
+                    "default": ".",
+                    "type": "string"
+                }
+            }
+        }
+    }]
+    for td in tool_defs:
+        tool = Tool.query.filter_by(name=td['name']).one_or_none()
         if tool is None:
-            tool = Tool(name=name, description="This is a %s tool." % name, fields=fields)
-            db.session.commit()
-            print("   created Tool record", name)
-        tools[name] = tool
+            tool = Tool(name=td['name'], description=td['description'], location=td['location'], entry=td['entry'], fields=td['parameters'])
+            print("   created Tool record", td['name'])
+        else:
+            tool.name = td['name']
+            tool.description = td['description']
+            tool.location = td['location']
+            tool.entry = td['entry']
+            tool.fields = td['parameters']
+            print("   updated Tool record", td['name'])
+        db.session.commit()
 
     agents_group = AgentsGroup.query.filter_by(name="all").one_or_none()
     if agents_group is None:

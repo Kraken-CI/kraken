@@ -20,6 +20,7 @@ import asyncio
 import logging
 import datetime
 
+from . import consts
 from . import sysutils
 
 log = logging.getLogger(__name__)
@@ -51,7 +52,10 @@ class LocalExecContext:
         return '0.0.0.0'
 
     async def async_run(self, proc_coord, tool_path, return_addr, step_file_path, command, cwd, timeout, user):   # pylint: disable=unused-argument
-        cmd = "%s -r %s -s %s %s" % (tool_path, return_addr, step_file_path, command)
+        pypath, mod = tool_path
+        cmd = "%s/kktool -m %s -r %s -s %s %s" % (consts.AGENT_DIR, mod, return_addr, step_file_path, command)
+        if pypath:
+            cmd = 'PYTHONPATH=%s %s' % (pypath, cmd)
         log.info("exec: '%s' in '%s', timeout %ss", cmd, cwd, timeout)
 
         # setup log context

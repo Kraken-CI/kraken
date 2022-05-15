@@ -245,7 +245,7 @@ class DockerExecContext:
         if log_ctx:
             log.set_ctx(**log_ctx)
 
-        exe = self.cntr.client.api.exec_create(self.cntr.id, cmd, workdir=cwd, user=user)
+        exe = self.cntr.client.api.exec_create(self.cntr.id, cmd, workdir=cwd, user=user, environment={'PYTHONPATH': '/'})
         sock = self.cntr.client.api.exec_start(exe['Id'], socket=True)
 
         logs = ''
@@ -332,10 +332,18 @@ class DockerExecContext:
 
     async def async_run(self, proc_coord, tool_path, return_addr, step_file_path, command, cwd, timeout, user):  # pylint: disable=unused-argument
         docker_cwd = '/opt/kraken'
+
+        # upload step file to container
         archive = _create_archive(step_file_path, os.path.basename(step_file_path))
         self.cntr.put_archive('/', archive)
 
-        mod = tool_path.split()[-1]
+        # upload step tool if it is not built-in tool
+        pypath, mod = tool_path
+        if pypath:
+            pth = '%s/%s.py' % (pypath, mod)
+            archive = _create_archive(pth, mod + '.py')
+            self.cntr.put_archive('/', archive)
+
         step_file_path2 = os.path.join('/', os.path.basename(step_file_path))
         cmd = "/kktool -m %s -r %s -s %s %s" % (mod, return_addr, step_file_path2, command)
         log.info("exec: '%s' in '%s', timeout %ss", cmd, docker_cwd, timeout)

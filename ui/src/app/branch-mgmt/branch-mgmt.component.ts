@@ -126,6 +126,7 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
                     const tt = t['then']['properties']['tool']
                     this.stepTools.push({
                         name: tt['const'],
+                        shortDescr: tt['description'].split('.')[0] + '.',
                         descr: tt['description'],
                         schema: t['then']['properties'],
                     })

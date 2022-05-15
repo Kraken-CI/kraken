@@ -192,13 +192,23 @@ class LxdExecContext:
     async def async_run(self, proc_coord, tool_path, return_addr, step_file_path, command, cwd, timeout, user):  # pylint: disable=unused-argument
         lxd_cwd = '/root'
 
-        # upload steop file
+        # upload step file
         dest_step_file_path = os.path.join(lxd_cwd, os.path.basename(step_file_path))
         with open(step_file_path, 'rb') as f:
             filedata = f.read()
         self.cntr.files.put(dest_step_file_path, filedata)
 
-        mod = tool_path.split()[-1]
+        # upload step tool if it is not built-in tool
+        pypath, mod = tool_path
+        env = None
+        if pypath:
+            pth = '%s/%s.py' % (pypath, mod)
+            dest_file_path = os.path.join(lxd_cwd, mod + '.py')
+            with open(pth, 'rb') as f:
+                filedata = f.read()
+            self.cntr.files.put(dest_file_path, filedata)
+            env = {'PYTHONPATH': lxd_cwd}
+
         cmd = "%s/kktool -m %s -r %s -s %s %s" % (lxd_cwd, mod, return_addr, dest_step_file_path, command)
         log.info("exec: '%s' in '%s', timeout %ss", cmd, lxd_cwd, timeout)
 
@@ -210,7 +220,7 @@ class LxdExecContext:
 
         deadline = time.time() + timeout
         try:
-            await self._lxd_run(cmd, lxd_cwd, deadline)
+            await self._lxd_run(cmd, lxd_cwd, deadline, env=env)
         except Timeout:
             # TODO: it should be better handled but needs testing
             if proc_coord.result == {}:

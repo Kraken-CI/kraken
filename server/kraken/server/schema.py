@@ -69,6 +69,7 @@ def execute_schema_code(branch, schema_code, context=None):
     exec('schema = stage(ctx)', my_globals, my_locals2)  # pylint: disable=exec-used
     schema = my_locals2['schema']
 
+    # validate generated schema
     error = schemaval.validate(schema)
     if error:
         raise Exception(error)

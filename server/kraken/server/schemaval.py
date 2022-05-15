@@ -17,6 +17,9 @@ import json
 
 import jsonschema
 
+from .models import Tool
+
+
 # pylint: disable=line-too-long
 
 data1 = {
@@ -618,7 +621,7 @@ data8 = {
     }
 }
 
-schema = {
+SCHEMA = {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "Schema of Kraken Workflow Schema",
     "description": "This is a schema that defines format of Kraken Workflow Schema.",
@@ -754,571 +757,7 @@ schema = {
                         "type": "array",
                         "items": {
                             "type": "object",
-                            "oneOf": [{
-                                "if": { "properties": { "tool": { "const": "shell" } } },
-                                "then": {
-                                    "additionalProperties": False,
-                                    "required": ["tool"],
-                                    "properties": {
-                                        "tool": {
-                                            "description": "A tool that executes provided command in a shell.",
-                                            "const": "shell"
-                                        },
-                                        "cmd": {
-                                            "description": "A command to execute.",
-                                            "type": "string"
-                                        },
-                                        "script": {
-                                            "description": "A script code to execute.",
-                                            "type": "string"
-                                        },
-                                        "cwd": {
-                                            "description": "A current working directory where the step is executed.",
-                                            "default": ".",
-                                            "type": "string"
-                                        },
-                                        "user": {
-                                            "description": "A user that is used to execute a command.",
-                                            "default": "kraken",
-                                            "type": "string"
-                                        },
-                                        "env": {
-                                            "description": "A dictionary with environment variables and their values.",
-                                            "type": "object",
-                                            "additionalProperties": {
-                                                "type": "string"
-                                            }
-                                        },
-                                        "timeout": {
-                                            "description": "A timeout in seconds that limits time of step execution. It is guareded by an agent. If it is exceeded then the step is arbitrarly terminated.",
-                                            "type": "integer",
-                                            "minimum": 30,
-                                            "default": 60
-                                        },
-                                        "attempts": {
-                                            "description": "A number of times the step is retried if if it returns error.",
-                                            "default": 1,
-                                            "type": "integer"
-                                        },
-                                        "sleep_time_after_attempt": {
-                                            "description": "A sleep time between subsequent execution attempts.",
-                                            "default": 0,
-                                            "type": "integer"
-                                        },
-                                        "background": {
-                                            "description": "Indicates if step should be started and pushed to background. The step process is closed at the end of a job.",
-                                            "default": False,
-                                            "type": "boolean"
-                                        },
-                                        "shell_exe": {
-                                            "description": "An alternative path or command to shell executable (e.g.: zsh or /usr/bin/fish).",
-                                            "type": "string"
-                                        }
-                                    }
-                                },
-                                "else": {
-                                    "additionalProperties": False,
-                                    "properties": {
-                                    }
-                                }
-                            }, {
-                                "if": { "properties": { "tool": { "const": "git" } } },
-                                "then": {
-                                    "additionalProperties": False,
-                                    "required": ["tool", "checkout"],
-                                    "properties": {
-                                        "tool": {
-                                            "description": "A tool for cloning Git repository.",
-                                            "const": "git"
-                                        },
-                                        "checkout": {
-                                            "description": "An URL to the repository.",
-                                            "type": "string"
-                                        },
-                                        "branch": {
-                                            "description": "A branch to checkout.",
-                                            "default": "master",
-                                            "type": "string"
-                                        },
-                                        "destination": {
-                                            "description": "A destination folder for the repository. Default is empty ie. the name of the repository.",
-                                            "type": "string"
-                                        },
-                                        "ssh-key": {
-                                            "description": "A name of a secret that holds SSH username and key.",
-                                            "type": "string"
-                                        },
-                                        "access-token": {
-                                            "description": "A name of secret that contains an access token for GitLab or GitHub.",
-                                            "type": "string"
-                                        },
-                                        "timeout": {
-                                            "description": "A timeout in seconds that limits time of step execution. It is guareded by an agent. If it is exceeded then the step is arbitrarly terminated.",
-                                            "type": "integer",
-                                            "minimum": 30
-                                        },
-                                        "attempts": {
-                                            "description": "A number of times the step is retried if if it returns error.",
-                                            "default": 1,
-                                            "type": "integer"
-                                        },
-                                        "sleep_time_after_attempt": {
-                                            "description": "A sleep time between subsequent execution attempts.",
-                                            "default": 0,
-                                            "type": "integer"
-                                        },
-                                        "git_cfg": {
-                                            "description": "Git config keys and values passed to -c of the clone command.",
-                                            "type": "object",
-                                            "additionalProperties": {
-                                                "type": "string"
-                                            }
-                                        }
-                                    }
-                                },
-                                "else": {
-                                    "additionalProperties": False,
-                                    "properties": {
-                                    }
-                                }
-                            }, {
-                                "if": { "properties": { "tool": { "const": "artifacts" } } },
-                                "then": {
-                                    "additionalProperties": False,
-                                    "required": ["tool", "source"],
-                                    "properties": {
-                                        "tool": {
-                                            "description": "A tool for storing and retrieving artifacts in Kraken global storage.",
-                                            "const": "artifacts"
-                                        },
-                                        "action": {
-                                            "description": "An action that artifacts tool should execute. Default is `upload`.",
-                                            "type": "string",
-                                            "enum": ["download", "upload"]
-                                        },
-                                        "source": {
-                                            "description": "A path or list of paths that should be archived or retreived. A path can indicate a folder or a file. A path, in case of upload action, can contain globbing signs `*` or `**`. A path can be relative or absolute.",
-                                            "oneOf": [{
-                                                "description": "A single path.",
-                                                "type": "string"
-                                            }, {
-                                                "description": "A list of paths.",
-                                                "type": "array",
-                                                "items": {
-                                                    "type": "string"
-                                                }
-                                            }]
-                                        },
-                                        "destination": {
-                                            "description": "A path were the artifact(s) should be stored. In case of download action, if the destination folder does not exist then it is created.",
-                                            "default": ".",
-                                            "type": "string"
-                                        },
-                                        "cwd": {
-                                            "description": "A current working directory where the step is executed.",
-                                            "default": ".",
-                                            "type": "string"
-                                        },
-                                        "public": {
-                                            "description": "Determines if artifacts should be public and available to users in web UI (`True`) or if they should be only accessible internally to other stages but only in the same flow (`False`). If report_entry is set then public is True.",
-                                            "default": False,
-                                            "type": "boolean"
-                                        },
-                                        "report_entry": {
-                                            "description": "A path to HTML file that is an entry to the uploaded report. If present then it sets public to True.",
-                                            "type": "string"
-                                        },
-                                        "attempts": {
-                                            "description": "A number of times the step is retried if if it returns error.",
-                                            "default": 1,
-                                            "type": "integer"
-                                        },
-                                        "sleep_time_after_attempt": {
-                                            "description": "A sleep time between subsequent execution attempts.",
-                                            "default": 0,
-                                            "type": "integer"
-                                        }
-                                    }
-                                },
-                                "else": {
-                                    "additionalProperties": False,
-                                    "properties": {
-                                    }
-                                }
-                            }, {
-                                "if": { "properties": { "tool": { "const": "cache" } } },
-                                "then": {
-                                    "additionalProperties": False,
-                                    "required": ["tool", "action"],
-                                    "properties": {
-                                        "tool": {
-                                            "description": "A tool for storing and restoring files from cache.",
-                                            "const": "cache"
-                                        },
-                                        "action": {
-                                            "description": "An action that the tool should perform.",
-                                            "type": "string",
-                                            "enum": ["save", "restore"]
-                                        },
-                                        "key": {
-                                            "description": "A key under which files are stored in or restored from cache.",
-                                            "type": "string"
-                                        },
-                                        "keys": {
-                                            "description": "A list of key under which files are restored from cache.",
-                                            "type": "array",
-                                            "items": {
-                                                "type": "string"
-                                            }
-                                        },
-                                        "paths": {
-                                            "description": "Source paths used in `store` action.",
-                                            "type": "array",
-                                            "items": {
-                                                "type": "string"
-                                            }
-                                        },
-                                        "expiry": {
-                                            "description": "Not implemented yet.",
-                                            "type": "string"
-                                        },
-                                        "attempts": {
-                                            "description": "A number of times the step is retried if if it returns error.",
-                                            "default": 1,
-                                            "type": "integer"
-                                        },
-                                        "sleep_time_after_attempt": {
-                                            "description": "A sleep time between subsequent execution attempts.",
-                                            "default": 0,
-                                            "type": "integer"
-                                        }
-                                    }
-                                },
-                                "else": {
-                                    "additionalProperties": False,
-                                    "properties": {
-                                    }
-                                }
-                            }, {
-                                "if": { "properties": { "tool": { "const": "pylint" } } },
-                                "then": {
-                                    "additionalProperties": False,
-                                    "required": ["tool", "modules_or_packages"],
-                                    "properties": {
-                                        "tool": {
-                                            "description": "A tool that allows for static analysis of Python source code.",
-                                            "const": "pylint"
-                                        },
-                                        "pylint_exe": {
-                                            "description": "An alternative path or command to pylint.",
-                                            "default": "pylint",
-                                            "type": "string"
-                                        },
-                                        "rcfile": {
-                                            "description": "A path to pylint rcfile.",
-                                            "type": "string"
-                                        },
-                                        "modules_or_packages": {
-                                            "description": "A path or paths to Python modules or packages that should be checked.",
-                                            "type": "string"
-                                        },
-                                        "cwd": {
-                                            "description": "A current working directory where the step is executed.",
-                                            "default": ".",
-                                            "type": "string"
-                                        },
-                                        "attempts": {
-                                            "description": "A number of times the step is retried if if it returns error.",
-                                            "default": 1,
-                                            "type": "integer"
-                                        },
-                                        "sleep_time_after_attempt": {
-                                            "description": "A sleep time between subsequent execution attempts.",
-                                            "default": 0,
-                                            "type": "integer"
-                                        },
-                                        "timeout": {
-                                            "description": "A timeout in seconds that limits time of step execution. It is guareded by an agent. If it is exceeded then the step is arbitrarly terminated.",
-                                            "type": "integer",
-                                            "minimum": 30
-                                        }
-                                    }
-                                },
-                                "else": {
-                                    "additionalProperties": False,
-                                    "properties": {
-                                    }
-                                }
-                            }, {
-                                "if": { "properties": { "tool": { "const": "pytest" } } },
-                                "then": {
-                                    "additionalProperties": False,
-                                    "properties": {
-                                        "tool": {
-                                            "description": "A tool that allows for running Python tests.",
-                                            "const": "pytest"
-                                        },
-                                        "pytest_exe": {
-                                            "description": "An alternative path or command to pytest.",
-                                            "default": "pytest-3",
-                                            "type": "string"
-                                        },
-                                        "params": {
-                                            "description": "Parameters passed directly to pytest executable.",
-                                            "type": "string"
-                                        },
-                                        "pythonpath": {
-                                            "description": "Extra paths that are used by Python to look for modules/packages that it wants to load.",
-                                            "type": "string"
-                                        },
-                                        "cwd": {
-                                            "description": "A current working directory where the step is executed.",
-                                            "default": ".",
-                                            "type": "string"
-                                        },
-                                        "attempts": {
-                                            "description": "A number of times the step is retried if if it returns error.",
-                                            "default": 1,
-                                            "type": "integer"
-                                        },
-                                        "sleep_time_after_attempt": {
-                                            "description": "A sleep time between subsequent execution attempts.",
-                                            "default": 0,
-                                            "type": "integer"
-                                        }
-                                    }
-                                },
-                                "else": {
-                                    "additionalProperties": False,
-                                    "properties": {
-                                    }
-                                }
-                            }, {
-                                "if": { "properties": { "tool": { "const": "junit_collect" } } },
-                                "then": {
-                                    "additionalProperties": False,
-                                    "required": ["tool", "file_glob"],
-                                    "properties": {
-                                        "tool": {
-                                            "description": "A tool that allows for collecting test results stored in JUnit files.",
-                                            "const": "junit_collect"
-                                        },
-                                        "file_glob": {
-                                            "description": "A glob pattern for searching test result files.",
-                                            "type": "string"
-                                        },
-                                        "cwd": {
-                                            "description": "A current working directory where the step is executed.",
-                                            "default": ".",
-                                            "type": "string"
-                                        }
-                                    }
-                                },
-                                "else": {
-                                    "additionalProperties": False,
-                                    "properties": {
-                                    }
-                                }
-                            }, {
-                                "if": { "properties": { "tool": { "const": "values_collect" } } },
-                                "then": {
-                                    "additionalProperties": False,
-                                    "required": ["tool", "files"],
-                                    "properties": {
-                                        "tool": {
-                                            "description": "A tool that allows for collecting values (metrics, params, etc) from files.",
-                                            "const": "values_collect"
-                                        },
-                                        "files": {
-                                            "description": "A list of files.",
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "additionalProperties": False,
-                                                "properties": {
-                                                    "name": {
-                                                        "description": ".",
-                                                        "type": "string"
-                                                    },
-                                                    "namespace": {
-                                                        "description": ".",
-                                                        "type": "string"
-                                                    }
-                                                }
-                                            }
-                                        },
-                                        "cwd": {
-                                            "description": "A current working directory where the step is executed.",
-                                            "default": ".",
-                                            "type": "string"
-                                        }
-                                    }
-                                },
-                                "else": {
-                                    "additionalProperties": False,
-                                    "properties": {
-                                    }
-                                }
-                            }, {
-                                "if": { "properties": { "tool": { "const": "gotest" } } },
-                                "then": {
-                                    "additionalProperties": False,
-                                    "properties": {
-                                        "tool": {
-                                            "description": "A tool that allows for running Go language tests.",
-                                            "const": "gotest"
-                                        },
-                                        "go_exe": {
-                                            "description": "An alternative path or command to `go`.",
-                                            "type": "string"
-                                        },
-                                        "params": {
-                                            "description": "Parameters passed directly to `go test`.",
-                                            "type": "string"
-                                        },
-                                        "cwd": {
-                                            "description": "A current working directory where the step is executed.",
-                                            "default": ".",
-                                            "type": "string"
-                                        },
-                                        "timeout": {
-                                            "description": "A timeout in seconds that limits time of step execution. It is guareded by an agent. If it is exceeded then the step is arbitrarly terminated.",
-                                            "type": "integer",
-                                            "minimum": 30
-                                        },
-                                        "attempts": {
-                                            "description": "A number of times the step is retried if if it returns error.",
-                                            "default": 1,
-                                            "type": "integer"
-                                        },
-                                        "sleep_time_after_attempt": {
-                                            "description": "A sleep time between subsequent execution attempts.",
-                                            "default": 0,
-                                            "type": "integer"
-                                        }
-                                    }
-                                },
-                                "else": {
-                                    "additionalProperties": False,
-                                    "properties": {
-                                    }
-                                }
-                            }, {
-                                "if": { "properties": { "tool": { "const": "nglint" } } },
-                                "then": {
-                                    "additionalProperties": False,
-                                    "properties": {
-                                        "tool": {
-                                            "description": "A tool that allows for running Angular `ng lint`, that is performing static analysis of TypeScript in Angular projects.",
-                                            "const": "nglint"
-                                        },
-                                        "cwd": {
-                                            "description": "A current working directory where the step is executed.",
-                                            "default": ".",
-                                            "type": "string"
-                                        },
-                                        "attempts": {
-                                            "description": "A number of times the step is retried if if it returns error.",
-                                            "default": 1,
-                                            "type": "integer"
-                                        },
-                                        "sleep_time_after_attempt": {
-                                            "description": "A sleep time between subsequent execution attempts.",
-                                            "default": 0,
-                                            "type": "integer"
-                                        }
-                                    }
-                                },
-                                "else": {
-                                    "additionalProperties": False,
-                                    "properties": {
-                                    }
-                                }
-                            }, {
-                                "if": { "properties": { "tool": { "const": "cloc" } } },
-                                "then": {
-                                    "additionalProperties": False,
-                                    "properties": {
-                                        "tool": {
-                                            "description": "A tool that allows for running counting lines of code.",
-                                            "const": "cloc"
-                                        },
-                                        "not-match-f": {
-                                            "description": "Filter out files that match to provided regex.",
-                                            "type": "string"
-                                        },
-                                        "exclude-dir": {
-                                            "description": "Excluded provided list of directories.",
-                                            "type": "string"
-                                        },
-                                        "cwd": {
-                                            "description": "A current working directory where the step is executed.",
-                                            "default": ".",
-                                            "type": "string"
-                                        },
-                                        "attempts": {
-                                            "description": "A number of times the step is retried if if it returns error.",
-                                            "default": 1,
-                                            "type": "integer"
-                                        },
-                                        "sleep_time_after_attempt": {
-                                            "description": "A sleep time between subsequent execution attempts.",
-                                            "default": 0,
-                                            "type": "integer"
-                                        }
-                                    }
-                                },
-                                "else": {
-                                    "additionalProperties": False,
-                                    "properties": {
-                                    }
-                                }
-                            }, {
-                                "if": { "properties": { "tool": { "const": "rndtest" } } },
-                                "then": {
-                                    "additionalProperties": False,
-                                    "properties": {
-                                        "tool": {
-                                            "description": "A tool that allows for generating random test case results.",
-                                            "const": "rndtest"
-                                        },
-                                        "count": {
-                                            "description": "A number of expected test cases.",
-                                            "oneOf": [{
-                                                "type": "integer",
-                                                "minimum": 1
-                                            }, {
-                                                "type": "string"
-                                            }]
-                                        },
-                                        "override_result": {
-                                            "description": "A result.",
-                                            "oneOf": [{
-                                                "type": "integer",
-                                                "minimum": 1
-                                            }, {
-                                                "type": "string"
-                                            }]
-                                        },
-                                        "attempts": {
-                                            "description": "A number of times the step is retried if if it returns error.",
-                                            "default": 1,
-                                            "type": "integer"
-                                        },
-                                        "sleep_time_after_attempt": {
-                                            "description": "A sleep time between subsequent execution attempts.",
-                                            "default": 0,
-                                            "type": "integer"
-                                        }
-                                    }
-                                },
-                                "else": {
-                                    "additionalProperties": False,
-                                    "properties": {
-                                    }
-                                }
-
-                            }]
+                            "oneOf": []
                         }
                     },
                     "environments": {
@@ -1397,9 +836,58 @@ schema = {
     "required": ["parent", "triggers"]
 }
 
+
+def get_schema():
+    q = Tool.query
+    q = q.filter_by(deleted=None)
+
+    tools_schema = []
+    tools = []
+    for tool in q.all():
+        fields = {
+            "tool": {
+                "description": tool.description,
+                "const": tool.name
+            },
+            "attempts": {
+                "description": "A number of times the step is retried if if it returns error.",
+                "default": 1,
+                "type": "integer"
+            },
+            "sleep_time_after_attempt": {
+                "description": "A sleep time between subsequent execution attempts.",
+                "default": 0,
+                "type": "integer"
+            }
+        }
+
+        for fname, fdef in tool.fields["properties"].items():
+            fields[fname] = fdef
+
+        td = {
+            "if": { "properties": { "tool": { "const": tool.name } } },
+            "then": {
+                "additionalProperties": tool.fields.get("additionalProperties", False),
+                "required": ["tool"] + tool.fields.get("required", []),
+                "properties": fields
+            },
+            "else": {
+                "additionalProperties": False,
+                "properties": {
+                }
+            }
+        }
+
+        tools_schema.append(td)
+
+    SCHEMA["properties"]["jobs"]["items"]["properties"]["steps"]["items"]["oneOf"] = tools_schema
+
+    return SCHEMA
+
+
 def validate(instance):
     try:
-        jsonschema.validate(instance=instance, schema=schema)
+        jsonschema.validate(instance=instance, schema=get_schema())
     except jsonschema.exceptions.ValidationError as ex:
         return str(ex)
     return None
@@ -1408,14 +896,14 @@ def validate(instance):
 def test():
     for data in [data1, data2, data3, data4, data5, data6, data7, data8]:
         try:
-            jsonschema.validate(instance=data, schema=schema)
+            jsonschema.validate(instance=data, schema=SCHEMA)
         except jsonschema.exceptions.ValidationError as ex:
             print('problems: %s' % str(ex))
 
 
 def dump_to_json():
     with open('kraken.schema.json', 'w') as fp:
-        json.dump(schema, fp)
+        json.dump(SCHEMA, fp)
 
 
 if __name__ == '__main__':

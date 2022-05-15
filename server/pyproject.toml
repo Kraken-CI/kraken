@@ -7,6 +7,7 @@ authors = ["Michal Nowikowski <godfryd@gmail.com>"]
 [tool.poetry.dependencies]
 python = "^3.7"
 connexion = "^2.9.0"
+MarkupSafe = "2.0.1"  # 2.1 is broken that is used by Jinja2 by connextion
 Flask = "^1.1.4" # 2.0.1
 Flask-SQLAlchemy = "^2.5.1"
 psycopg2-binary = "^2.9.1"
@@ -27,7 +28,7 @@ minio = "^7.1.0"
 passlib = "^1.7.4"
 sentry-sdk = {extras = ["flask"], version = "^1.5.0"}
 boto3 = "^1.18.52"
-jsonschema = "^3.2.0" # 4.0.1
+jsonschema = "^4.5.0"
 rq = "^1.10.0"
 azure-identity = "^1.6.1"
 azure-mgmt-compute = "^23.0.0"

@@ -9,15 +9,16 @@ venv
 /agent/kraken/agent/consts.py
 /agent/kraken/agent/logs.py
 /agent/kraken_agent.egg-info
-/server/kraken_server.egg-info
 /agent/dist-agent/
 /agent/dist-tool/
 /agent/kkagent
 /agent/kktool
+/server/kraken_server.egg-info
 /server/dist/
 /server/kraken/version.py
 /server/kkagent
 /server/kktool
+/client/dist/
 
 /ui/src/environments/environment.prod.ts
 /ui/dist/kraken/main-es5*

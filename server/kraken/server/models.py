@@ -532,6 +532,8 @@ class Step(db.Model, DatesMixin):
                     index=self.index,
                     tool=self.tool.name,
                     tool_id=self.tool_id,
+                    tool_location=self.tool.location,
+                    tool_entry=self.tool.entry,
                     job_id=self.job_id,
                     status=self.status,
                     result=self.result)
@@ -817,6 +819,13 @@ class Tool(db.Model, DatesMixin):
     fields = Column(JSONB, nullable=False)
     # TODO should it have optional reference to project so that there are local and global tools?
     test_cases = relationship("TestCase", back_populates="tool")
+    location = Column(UnicodeText)
+    entry = Column(UnicodeText)
+    version = Column(Integer)
+
+    def get_json(self):
+        return dict(id=self.id,
+                    name=self.name)
 
 
 class AgentAssignment(db.Model):

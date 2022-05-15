@@ -1,4 +1,4 @@
-# Copyright 2020-2021 The Kraken Authors
+# Copyright 2020-2022 The Kraken Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ def _load_tools_list():
     for entry_point in pkg_resources.iter_entry_points('kraken.tools'):
         entry_point.load()
         # log.info("TOOL %s: %s", entry_point.name, entry_point.module_name)
-        tools[entry_point.name] = '%s/kktool -m %s' % (consts.AGENT_DIR, entry_point.module_name)
+        tools[entry_point.name] = (None, entry_point.module_name)
 
     return tools
 
@@ -222,6 +222,11 @@ async def _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeou
     # wait for any task to complete
     done, _ = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
 
+    for t in done:
+        if t.exception():
+            if not proc_coord.result:
+                proc_coord.result = {'status': 'error', 'reason': 'exception', 'msg': str(t.exception())}
+
     # stop internal http server if not stopped yet
     if tcp_server_task not in done:
         tcp_server_task.cancel()
@@ -239,8 +244,9 @@ async def _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeou
 
 
 def _exec_tool_inner(kk_srv, exec_ctx, tool_path, command, cwd, timeout, user, step_file_path, job_id, idx, cancel_event=None):
-    if tool_path.endswith('.py'):
-        tool_path = "%s %s" % (sys.executable, tool_path)
+    # TODO is it still needed
+    # if tool_path.endswith('.py'):
+    #     tool_path = "%s %s" % (sys.executable, tool_path)
 
     proc_coord = ProcCoord(kk_srv, command, job_id, idx)
     f = _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeout, user, step_file_path, cancel_event)
@@ -274,14 +280,21 @@ def _write_step_file(job_dir, step, idx):
     return step_file_path
 
 
+def _get_tool(tools, name, step):
+    if name in tools:
+        return tools[name]
+
+    return (step['tool_location'], step['tool_entry'])
+
+    #raise Exception('Cannot find Kraken tool: %s' % name)
+
+
 def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
     tool_name = step['tool']
     t0, t1, timeout = utils.get_times(deadline)
     step_str = '<id:%d tool:%s>' % (step['id'], step['tool'])
     log.info('step %d. %s, now %s, deadline %s, time: %ds', idx, step_str, t0, t1, timeout)
-    if tool_name not in tools:
-        raise Exception('No such Kraken tool: %s' % tool_name)
-    tool_path = tools[tool_name]
+    tool_path = _get_tool(tools, tool_name, step)
 
     user = step.get('user', '')
 

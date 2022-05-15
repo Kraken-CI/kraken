@@ -1964,6 +1964,38 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Diagnostics'
+  /tools:
+    get:
+      tags:
+      - Management
+      summary: List tools
+      description: List tools
+      operationId: get_tools
+      responses:
+        200:
+          description: Successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tools'
+    post:
+      tags:
+      - Management
+      summary: Create a tool
+      description: Create a new tool
+      operationId: create_tool
+      requestBody:
+        description: group
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Tool'
+        required: false
+      responses:
+        201:
+          description: Successfully created group
+          content: {}
+
 
 components:
   securitySchemes:
@@ -2746,6 +2778,24 @@ components:
           type: string
     Diagnostics:
       type: object
+    Tools:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tool'
+        total:
+          type: integer
+          format: int64
+    Tool:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
     ApiError:
       required:
       - code

@@ -103,13 +103,13 @@
                             [(ngModel)]="stepTool"
                             optionLabel="name"
                             [style]="{width: '10em'}"
-                            [panelStyle]="{'min-width': '30em'}"
+                            [panelStyle]="{'min-width': '40em'}"
                             scrollHeight='50vh'
                             (onChange)="generateStep()">
                     <ng-template let-tool pTemplate="item">
                         <div class="flex">
                             <div class="col-2 font-semibold">{{tool.name}}</div>
-                            <div class="col-10">{{tool.descr}}</div>
+                            <div class="col-10">{{tool.shortDescr}}</div>
                         </div>
                     </ng-template>
                 </p-dropdown>
