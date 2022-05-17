@@ -70,8 +70,8 @@ file './agent/venv/bin/python3' do
   sh './agent/venv/bin/pip install -r agent/reqs-ut.txt'
 end
 
-task :prepare_env => ['venv/bin/python3', './agent/venv/bin/python3'] do
-  sh 'sudo DEBIAN_FRONTEND=noninteractive apt-get install -y default-jre python3-venv npm libpq-dev libpython3-dev'
+task :prepare_env => ['./venv/bin/python3', './agent/venv/bin/python3'] do
+  sh 'sudo DEBIAN_FRONTEND=noninteractive apt-get install -y default-jre python3-venv libpq-dev libpython3-dev'
   sh 'cd server && ../venv/bin/poetry install'
 end
 
