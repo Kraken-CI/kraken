@@ -34,7 +34,7 @@ def test_run_artifacts_upload():
             destination='/'
         )
 
-        with patch('minio.Minio.bucket_exists', return_value=True) as be, patch('minio.Minio.fput_object') as fput:
+        with patch('minio.Minio.list_buckets', return_value=True) as be, patch('minio.Minio.fput_object') as fput:
             res, _ = kraken_artifacts.run_artifacts(step, report_artifact=report_artifact)
             assert res == 0
 
@@ -68,7 +68,7 @@ def test_run_artifacts_download():
             destination='.'
         )
 
-        with patch('minio.Minio.bucket_exists', return_value=True) as be, \
+        with patch('minio.Minio.list_buckets', return_value=[]) as be, \
              patch('minio.Minio.fget_object') as fget, \
              patch('minio.Minio.list_objects') as mlist:
             o = Obj()

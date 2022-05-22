@@ -40,8 +40,8 @@ azure-mgmt-subscription = "^1.0.0"
 kubernetes = "^20.13.0"
 
 [tool.poetry.dev-dependencies]
-pytest = "^5.2"
-pylint = "^2.6.0"
+pytest = "^7.1.2"
+pylint = "^2.13.9"
 pudb = "^2021.1"
 PyHamcrest = "^2.0.3"
 
