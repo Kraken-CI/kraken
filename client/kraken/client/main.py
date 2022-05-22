@@ -12,8 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import json
 import getpass
+import zipfile
+import tempfile
 import urllib.parse
 
 import click
@@ -58,10 +61,13 @@ class Session:
             assert resp.status_code == exp_status
         return resp
 
-    def post(self, url, payload=None, exp_status=None):
+    def post(self, url, payload=None, exp_status=None, binary=False):
         url = self.base_url + url
         headers = self._initial_headers()
-        resp = requests.request("POST", url, json=payload, headers=headers)
+        if binary:
+            resp = requests.request("POST", url, data=payload, headers=headers)
+        else:
+            resp = requests.request("POST", url, json=payload, headers=headers)
         print('POST:', resp.json())
         if exp_status is None:
             assert resp.status_code in [200, 201]
@@ -121,7 +127,7 @@ def list_(server):
 @click.option('-s', '--server', envvar='KRAKEN_SERVER_ADDR', required=True, help='Kraken Server URL')
 @click.argument('tool-file')
 def register(server, tool_file):
-    'Register a new tool describe in indicated TOOL_FILE.'
+    'Register a new tool described in indicated TOOL_FILE.'
 
     # load file and parse as JSON
     with open(tool_file) as fp:
@@ -129,6 +135,40 @@ def register(server, tool_file):
 
     s = _make_session(server)
     s.post('/tools', data)
+
+
+@tools.command()
+@click.option('-s', '--server', envvar='KRAKEN_SERVER_ADDR', required=True, help='Kraken Server URL')
+@click.argument('tool-file')
+def upload(server, tool_file):
+    "Upload tool's code from DIRECTORY to Kraken Server."
+
+    s = _make_session(server)
+
+    # load file and parse as JSON
+    with open(tool_file) as fp:
+        data = json.load(fp)
+
+    tool_name = data['name']
+
+    directory = os.path.abspath(os.path.dirname(tool_file))
+
+    with tempfile.NamedTemporaryFile(prefix='kkci-pkg-', suffix='.zip') as tf:
+        with zipfile.ZipFile(tf, "w") as pz:
+            for root, dirs, files in os.walk(directory):
+                for name in files:
+                    if name.endswith(('.pyc', '~')):
+                        continue
+                    p = os.path.join(root, name)
+                    n = os.path.relpath(p, directory)
+                    pz.write(p, arcname=n)
+
+        print('Packed %d files to %s' % (len(pz.namelist()), tf.name))
+
+        with open(tf.name, "rb") as f:
+            tool_data = f.read()
+
+        s.post('/tools/%s/zip' % tool_name, tool_data, binary=True)
 
 
 @main.command()

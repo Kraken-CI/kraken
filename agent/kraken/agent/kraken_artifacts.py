@@ -18,6 +18,8 @@ import logging
 
 import minio
 
+from . import miniobase
+
 log = logging.getLogger(__name__)
 
 
@@ -160,8 +162,6 @@ def run_artifacts(step, report_artifact=None):
 
     minio_addr = step['minio_addr']
     minio_bucket = step['minio_bucket']
-    minio_access_key = step['minio_access_key']
-    minio_secret_key = step['minio_secret_key']
     action = step.get('action', 'upload')
     cwd = step.get('cwd', None)
     flow_id = step['flow_id']
@@ -180,11 +180,8 @@ def run_artifacts(step, report_artifact=None):
     if not isinstance(source, list):
         source = [source]
 
-    mc = minio.Minio(minio_addr, access_key=minio_access_key, secret_key=minio_secret_key, secure=False)
-
-    # check connection
     try:
-        mc.bucket_exists(minio_bucket)
+        mc = miniobase.get_minio(step)
     except Exception as e:
         log.exception('problem with connecting to minio %s', minio_addr)
         msg = 'problem with connecting to minio %s: %s' % (minio_addr, str(e))

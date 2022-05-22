@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import io
 import os
 import json
 import logging
@@ -1048,6 +1049,23 @@ def create_tool(body):
         tool.fields = fields
     else:
         tool = Tool(name=name, description=description, location=location, entry=entry, fields=fields)
+    db.session.commit()
+
+    return tool.get_json(), 201
+
+
+def upload_tool(name, body):
+    tool = Tool.query.filter_by(name=name).one_or_none()
+
+    bucket, mc = minioops.get_or_create_minio_bucket_for_tool(tool.id)
+    version = '1'
+    dest = '%s/tool.zip' % version
+
+    # TODO: change to stream reading from body
+    # data = connexion.request.input_stream.read()  # but this does not work
+    mc.put_object(bucket, dest, io.BytesIO(body), len(body), content_type="application/zip")
+
+    tool.location = 'minio:%s/%s' % (bucket, dest)
     db.session.commit()
 
     return tool.get_json(), 201

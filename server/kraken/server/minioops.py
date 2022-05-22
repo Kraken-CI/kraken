@@ -131,3 +131,14 @@ def get_or_create_minio_bucket_for_git(branch_id, repo_url):
         mc.make_bucket(bucket_name)
 
     return bucket_name, folder
+
+
+def get_or_create_minio_bucket_for_tool(tool_id):
+    bucket_name = 'tool-%d' % tool_id
+
+    mc = get_minio()
+    found = mc.bucket_exists(bucket_name)
+    if not found:
+        mc.make_bucket(bucket_name)
+
+    return bucket_name, mc

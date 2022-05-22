@@ -111,6 +111,8 @@ def _handle_get_job(agent):
     # prepare steps
     project = agent.job.run.flow.branch.project
     for step in job['steps']:
+        add_minio = False
+
         # insert secret from ssh-key
         if 'ssh-key' in step:
             value = step['ssh-key']
@@ -140,33 +142,36 @@ def _handle_get_job(agent):
                 log.info('invalid git url %s', step['checkout'])
 
             # add minio info for storing git repo bundle
-            step['minio_addr'] = minio_addr
-            step['minio_access_key'] = minio_access_key
-            step['minio_secret_key'] = minio_secret_key
+            add_minio = True
             bucket, folder = minioops.get_or_create_minio_bucket_for_git(agent.job.run.flow.branch_id, step['checkout'])
             step['minio_bucket'] = bucket
             step['minio_folder'] = folder
 
         # custom fields for ARTIFACTS
         if step['tool'] == 'artifacts':
-            step['minio_addr'] = minio_addr
+            add_minio = True
             step['minio_bucket'] = minio_bucket
-            step['minio_access_key'] = minio_access_key
-            step['minio_secret_key'] = minio_secret_key
             if 'destination' not in step:
                 step['destination'] = '.'
 
         # custom fields for CACHE
         if step['tool'] == 'cache':
-            step['minio_addr'] = minio_addr
-            step['minio_access_key'] = minio_access_key
-            step['minio_secret_key'] = minio_secret_key
+            add_minio = True
             bucket, folders = minioops.get_or_create_minio_bucket_for_cache(agent.job, step)
             step['minio_bucket'] = bucket
             if step['action'] == 'save':
                 step['minio_folder'] = folders
             else:
                 step['minio_folders'] = folders
+
+        if step['tool_location'].startswith('minio:'):
+            add_minio = True
+
+        # add minio details
+        if add_minio:
+            step['minio_addr'] = minio_addr
+            step['minio_access_key'] = minio_access_key
+            step['minio_secret_key'] = minio_secret_key
 
     if not agent.job.started:
         agent.job.started = utils.utcnow()

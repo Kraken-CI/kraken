@@ -1,4 +1,4 @@
-# Copyright 2020 The Kraken Authors
+# Copyright 2020-2022 The Kraken Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,9 +19,12 @@ import signal
 import asyncio
 import logging
 import datetime
+import zipfile
 
 from . import consts
+from . import config
 from . import sysutils
+from . import miniobase
 
 log = logging.getLogger(__name__)
 
@@ -51,10 +54,22 @@ class LocalExecContext:
             return ip_addr
         return '0.0.0.0'
 
-    async def async_run(self, proc_coord, tool_path, return_addr, step_file_path, command, cwd, timeout, user):   # pylint: disable=unused-argument
+    async def async_run(self, proc_coord, tool_path, return_addr, step, step_file_path, command, cwd, timeout, user):   # pylint: disable=unused-argument
         pypath, mod = tool_path
         cmd = "%s/kktool -m %s -r %s -s %s %s" % (consts.AGENT_DIR, mod, return_addr, step_file_path, command)
+
+        if pypath and pypath.startswith('minio:'):
+            m_bucket, m_path, _ = pypath[6:].split('/')
+            data_dir = config.get('data_dir')
+            tool_dir = os.path.join(data_dir, 'tools', m_bucket, m_path)
+            tool_zip = miniobase.download_tool(step, pypath)
+            with zipfile.ZipFile(tool_zip) as zf:
+                zf.extractall(tool_dir)
+            pypath = tool_dir
+            os.unlink(tool_zip)
+
         if pypath:
+            pypath += ':%s/vendor' % pypath
             cmd = 'PYTHONPATH=%s %s' % (pypath, cmd)
         log.info("exec: '%s' in '%s', timeout %ss", cmd, cwd, timeout)
 

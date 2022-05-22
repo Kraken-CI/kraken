@@ -1990,7 +1990,30 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Tool'
-        required: false
+      responses:
+        201:
+          description: Successfully created group
+          content: {}
+  /tools/{name}/zip:
+    post:
+      tags:
+      - Management
+      summary: Upload tool
+      description: Upload code of a tool
+      operationId: upload_tool
+      parameters:
+      - name: name
+        in: path
+        description: Name of tool
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/zip:
+            schema:
+              type: string
+              format: binary
       responses:
         201:
           description: Successfully created group
