@@ -361,10 +361,12 @@ class DockerExecContext:
                             n = os.path.relpath(p, pypath)
                             pz.write(p, arcname=n)
                 tool_dest = os.path.join('/', step['tool'])
+
             cmd = 'mkdir -p %s' % tool_dest
             await self._dkr_run(proc_coord, cmd, '/', 10, 'root')
             cmd = 'chmod a+w %s' % tool_dest
             await self._dkr_run(proc_coord, cmd, '/', 10, 'root')
+
             archive = _create_archive(tool_zip, 'tool.zip')
             self.cntr.put_archive(tool_dest, archive)
             mod = '%s/tool.zip:%s' % (tool_dest, mod)

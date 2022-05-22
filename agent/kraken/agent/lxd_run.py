@@ -17,6 +17,7 @@ import re
 import json
 import time
 import shlex
+import zipfile
 import asyncio
 import logging
 import traceback
@@ -27,6 +28,7 @@ except ImportError:
 
 from . import consts
 from . import utils
+from . import miniobase
 
 
 log = logging.getLogger(__name__)
@@ -189,7 +191,7 @@ class LxdExecContext:
         log.info('EXIT: %s', result.exit_code)
         return ''.join(self.logs), result.exit_code
 
-    async def async_run(self, proc_coord, tool_path, return_addr, step_file_path, command, cwd, timeout, user):  # pylint: disable=unused-argument
+    async def _async_run_exc(self, proc_coord, tool_path, return_addr, step, step_file_path, command, cwd, timeout, user):  # pylint: disable=unused-argument
         lxd_cwd = '/root'
 
         # upload step file
@@ -200,14 +202,37 @@ class LxdExecContext:
 
         # upload step tool if it is not built-in tool
         pypath, mod = tool_path
-        env = None
         if pypath:
-            pth = '%s/%s.py' % (pypath, mod)
-            dest_file_path = os.path.join(lxd_cwd, mod + '.py')
-            with open(pth, 'rb') as f:
-                filedata = f.read()
-            self.cntr.files.put(dest_file_path, filedata)
-            env = {'PYTHONPATH': lxd_cwd}
+            if pypath.startswith('minio:'):
+                # copy tool from minio to lxd container
+                tool_zip, tool_bucket, tool_ver = miniobase.download_tool(step, pypath)
+                tool_dest = os.path.join('/', tool_bucket, tool_ver)
+            else:
+                # copy local tool to lxd container
+                tool_zip = os.path.join(pypath, 'tool.zip')
+                with zipfile.ZipFile(tool_zip, "w") as pz:
+                    for root, _, files in os.walk(pypath):
+                        for name in files:
+                            if name.endswith(('.pyc', '~')):
+                                continue
+                            if name == 'tool.zip':
+                                continue
+                            p = os.path.join(root, name)
+                            n = os.path.relpath(p, pypath)
+                            pz.write(p, arcname=n)
+                tool_dest = os.path.join('/', step['tool'])
+
+            cmd = 'mkdir -p %s' % tool_dest
+            await self._lxd_run(cmd, '/', 10)
+            cmd = 'chmod a+w %s' % tool_dest
+            await self._lxd_run(cmd, '/', 10)
+
+            tool_dest_file = os.path.join(tool_dest, 'tool.zip')
+            with open(tool_zip, "rb") as tf:
+                filedata = tf.read()
+                self.cntr.files.put(tool_dest_file, filedata)
+
+            mod = '%s/tool.zip:%s' % (tool_dest, mod)
 
         cmd = "%s/kktool -m %s -r %s -s %s %s" % (lxd_cwd, mod, return_addr, dest_step_file_path, command)
         log.info("exec: '%s' in '%s', timeout %ss", cmd, lxd_cwd, timeout)
@@ -220,10 +245,18 @@ class LxdExecContext:
 
         deadline = time.time() + timeout
         try:
-            await self._lxd_run(cmd, lxd_cwd, deadline, env=env)
+            await self._lxd_run(cmd, lxd_cwd, deadline)
         except Timeout:
             # TODO: it should be better handled but needs testing
             if proc_coord.result == {}:
                 proc_coord.result = {'status': 'error', 'reason': 'job-timeout'}
 
         self.log_ctx = None
+
+
+    async def async_run(self, proc_coord, tool_path, return_addr, step, step_file_path, command, cwd, timeout, user):  # pylint: disable=unused-argument
+        try:
+            await self._async_run_exc(proc_coord, tool_path, return_addr, step, step_file_path, command, cwd, timeout, user)
+        except Exception:
+            log.exception('passing up')
+            raise
