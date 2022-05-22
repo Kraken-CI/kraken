@@ -159,6 +159,8 @@ def upload(server, tool_file):
                 for name in files:
                     if name.endswith(('.pyc', '~')):
                         continue
+                    if name == 'tool.zip':
+                        continue
                     p = os.path.join(root, name)
                     n = os.path.relpath(p, directory)
                     pz.write(p, arcname=n)

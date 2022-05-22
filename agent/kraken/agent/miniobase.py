@@ -12,13 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import tempfile
+import os
 
 import minio
 from minio.lifecycleconfig import LifecycleConfig, Expiration, Rule
 from minio.commonconfig import ENABLED, Filter
 import urllib3
 from urllib3.exceptions import MaxRetryError
+
+
+from . import config
 
 
 def get_minio(step):
@@ -46,7 +49,10 @@ def get_minio(step):
 
 def download_tool(step, minio_path):
     m_bucket, m_path = minio_path[6:].split('/', 1)
+    data_dir = config.get('data_dir')
+    tools_dir = os.path.join(data_dir, 'tools')
+    tool_zip = os.path.join(tools_dir, m_bucket, m_path, 'tool.zip')
     mc = get_minio(step)
-    tf = tempfile.NamedTemporaryFile(prefix='kkci-pkg-', suffix='.zip', delete=False)
-    mc.fget_object(m_bucket, m_path, tf.name)
-    return tf.name
+    mc.fget_object(m_bucket, m_path, tool_zip)
+    ver = m_path.split('/')[0]
+    return tool_zip, m_bucket, ver

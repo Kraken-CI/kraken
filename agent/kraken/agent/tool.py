@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import sys
 import json
 import time
 import socket
+import zipfile
 import inspect
 import logging
 import datetime
@@ -102,7 +104,14 @@ def execute(sock, module, command, step_file_path):
 
         tool_name = step['tool']
 
-        #tool = sys.modules['__main__']
+        if '/tool.zip:' in module:
+            tool_zip, module = module.split(':')
+            tool_dir = os.path.dirname(tool_zip)
+            with zipfile.ZipFile(tool_zip) as zf:
+                zf.extractall(tool_dir)
+            sys.path.insert(0, tool_dir)
+            sys.path.insert(1, os.path.join(tool_dir, 'vendor'))
+
         tool = importlib.import_module(module)
 
         log.info('run step tool %s, cmd %s', tool_name, command)

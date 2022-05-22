@@ -22,7 +22,6 @@ import datetime
 import zipfile
 
 from . import consts
-from . import config
 from . import sysutils
 from . import miniobase
 
@@ -54,19 +53,16 @@ class LocalExecContext:
             return ip_addr
         return '0.0.0.0'
 
-    async def async_run(self, proc_coord, tool_path, return_addr, step, step_file_path, command, cwd, timeout, user):   # pylint: disable=unused-argument
+    async def _async_run_exc(self, proc_coord, tool_path, return_addr, step, step_file_path, command, cwd, timeout, user):  # pylint: disable=unused-argument
         pypath, mod = tool_path
         cmd = "%s/kktool -m %s -r %s -s %s %s" % (consts.AGENT_DIR, mod, return_addr, step_file_path, command)
 
         if pypath and pypath.startswith('minio:'):
-            m_bucket, m_path, _ = pypath[6:].split('/')
-            data_dir = config.get('data_dir')
-            tool_dir = os.path.join(data_dir, 'tools', m_bucket, m_path)
-            tool_zip = miniobase.download_tool(step, pypath)
+            tool_zip, _, _ = miniobase.download_tool(step, pypath)
+            tool_dir = os.path.dirname(tool_zip)
             with zipfile.ZipFile(tool_zip) as zf:
                 zf.extractall(tool_dir)
             pypath = tool_dir
-            os.unlink(tool_zip)
 
         if pypath:
             pypath += ':%s/vendor' % pypath
@@ -112,6 +108,13 @@ class LocalExecContext:
         #log.info('done %s', done)
         #log.info('pending %s', pending)
         #proc_coord.proc_retcode = proc.returncode
+
+    async def async_run(self, proc_coord, tool_path, return_addr, step, step_file_path, command, cwd, timeout, user):  # pylint: disable=unused-argument
+        try:
+            await self._async_run_exc(proc_coord, tool_path, return_addr, step, step_file_path, command, cwd, timeout, user)
+        except Exception:
+            log.exception('passing up')
+            raise
 
     async def _async_pump_output(self, stream, log_ctx):
         while True:

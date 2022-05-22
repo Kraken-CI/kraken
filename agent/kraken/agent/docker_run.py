@@ -17,13 +17,16 @@ import io
 import re
 import time
 import json
+import shutil
 import struct
+import zipfile
 import asyncio
 import tarfile
 import logging
 import traceback
 
 from . import consts, utils
+from . import miniobase
 
 try:
     import docker
@@ -245,7 +248,7 @@ class DockerExecContext:
         if log_ctx:
             log.set_ctx(**log_ctx)
 
-        exe = self.cntr.client.api.exec_create(self.cntr.id, cmd, workdir=cwd, user=user, environment={'PYTHONPATH': '/'})
+        exe = self.cntr.client.api.exec_create(self.cntr.id, cmd, workdir=cwd, user=user, environment=None)
         sock = self.cntr.client.api.exec_start(exe['Id'], socket=True)
 
         logs = ''
@@ -330,7 +333,7 @@ class DockerExecContext:
             log.info('EXIT: %s', exit_code)
         return logs, exit_code
 
-    async def async_run(self, proc_coord, tool_path, return_addr, step_file_path, command, cwd, timeout, user):  # pylint: disable=unused-argument
+    async def _async_run_exc(self, proc_coord, tool_path, return_addr, step, step_file_path, command, cwd, timeout, user):  # pylint: disable=unused-argument
         docker_cwd = '/opt/kraken'
 
         # upload step file to container
@@ -340,9 +343,31 @@ class DockerExecContext:
         # upload step tool if it is not built-in tool
         pypath, mod = tool_path
         if pypath:
-            pth = '%s/%s.py' % (pypath, mod)
-            archive = _create_archive(pth, mod + '.py')
-            self.cntr.put_archive('/', archive)
+            if pypath.startswith('minio:'):
+                # copy tool from minio to docker container
+                tool_zip, tool_bucket, tool_ver = miniobase.download_tool(step, pypath)
+                tool_dest = os.path.join('/', tool_bucket, tool_ver)
+            else:
+                # copy local tool to docker container
+                tool_zip = os.path.join(pypath, 'tool.zip')
+                with zipfile.ZipFile(tool_zip, "w") as pz:
+                    for root, dirs, files in os.walk(pypath):
+                        for name in files:
+                            if name.endswith(('.pyc', '~')):
+                                continue
+                            if name == 'tool.zip':
+                                continue
+                            p = os.path.join(root, name)
+                            n = os.path.relpath(p, pypath)
+                            pz.write(p, arcname=n)
+                tool_dest = os.path.join('/', step['tool'])
+            cmd = 'mkdir -p %s' % tool_dest
+            await self._dkr_run(proc_coord, cmd, '/', 10, 'root')
+            cmd = 'chmod a+w %s' % tool_dest
+            await self._dkr_run(proc_coord, cmd, '/', 10, 'root')
+            archive = _create_archive(tool_zip, 'tool.zip')
+            self.cntr.put_archive(tool_dest, archive)
+            mod = '%s/tool.zip:%s' % (tool_dest, mod)
 
         step_file_path2 = os.path.join('/', os.path.basename(step_file_path))
         cmd = "/kktool -m %s -r %s -s %s %s" % (mod, return_addr, step_file_path2, command)
@@ -368,3 +393,11 @@ class DockerExecContext:
                 proc_coord.result = {'status': 'error', 'reason': 'job-timeout'}
 
         log.reset_ctx()
+
+
+    async def async_run(self, proc_coord, tool_path, return_addr, step, step_file_path, command, cwd, timeout, user):  # pylint: disable=unused-argument
+        try:
+            await self._async_run_exc(proc_coord, tool_path, return_addr, step, step_file_path, command, cwd, timeout, user)
+        except Exception:
+            log.exception('passing up')
+            raise
