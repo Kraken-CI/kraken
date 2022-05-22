@@ -155,7 +155,7 @@ def upload(server, tool_file):
 
     with tempfile.NamedTemporaryFile(prefix='kkci-pkg-', suffix='.zip') as tf:
         with zipfile.ZipFile(tf, "w") as pz:
-            for root, dirs, files in os.walk(directory):
+            for root, _, files in os.walk(directory):
                 for name in files:
                     if name.endswith(('.pyc', '~')):
                         continue

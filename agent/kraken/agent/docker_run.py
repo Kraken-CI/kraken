@@ -351,7 +351,7 @@ class DockerExecContext:
                 # copy local tool to docker container
                 tool_zip = os.path.join(pypath, 'tool.zip')
                 with zipfile.ZipFile(tool_zip, "w") as pz:
-                    for root, dirs, files in os.walk(pypath):
+                    for root, _, files in os.walk(pypath):
                         for name in files:
                             if name.endswith(('.pyc', '~')):
                                 continue

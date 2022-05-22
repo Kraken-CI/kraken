@@ -15,10 +15,7 @@
 import os
 
 import minio
-from minio.lifecycleconfig import LifecycleConfig, Expiration, Rule
-from minio.commonconfig import ENABLED, Filter
 import urllib3
-from urllib3.exceptions import MaxRetryError
 
 
 from . import config
