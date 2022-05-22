@@ -16,8 +16,6 @@ import os
 import glob
 import logging
 
-import minio
-
 from . import miniobase
 
 log = logging.getLogger(__name__)

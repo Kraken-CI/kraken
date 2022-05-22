@@ -17,7 +17,6 @@ import io
 import re
 import time
 import json
-import shutil
 import struct
 import zipfile
 import asyncio
@@ -369,6 +368,7 @@ class DockerExecContext:
 
             archive = _create_archive(tool_zip, 'tool.zip')
             self.cntr.put_archive(tool_dest, archive)
+
             mod = '%s/tool.zip:%s' % (tool_dest, mod)
 
         step_file_path2 = os.path.join('/', os.path.basename(step_file_path))
