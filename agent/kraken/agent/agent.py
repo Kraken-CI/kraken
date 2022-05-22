@@ -101,8 +101,9 @@ def _enable_masking_secrets_in_logs(job):
 
 
 def _disable_masking_secrets_in_logs():
+    if logs.g_masking_handler:
+        logs.g_masking_handler.flush_log_entries()
     log.set_secrets([])
-    log.info('')
 
 
 def run():

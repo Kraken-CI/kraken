@@ -106,7 +106,7 @@ class MaskingLogRecord(logging.LogRecord):
                 msg2 = '******' + msg[len(s):]
             elif where == 'end':
                 msg2 = msg[:-len(s)] + '******'
-            else:
+            else:  # middle
                 msg2 = msg.replace(s, '******')
             msg = msg2
 
@@ -195,14 +195,18 @@ class MaskingHandler(logging.Handler):
                     for idx, line in enumerate(s):
                         rec = self._buffer[w + idx]
                         msg = rec.getMessage()
-                        if idx == 0 and not msg.endswith(line):
-                            continue
-                        if idx == len(s) - 1 and not msg.startswith(line):
-                            continue
-                        if msg != line:
-                            continue
-                        # matched, so perform masking
-                        matched = True
+
+                        if idx == 0:
+                            if not msg.endswith(line):
+                                break
+                        elif idx == len(s) - 1:
+                            if not msg.startswith(line):
+                                break
+                            # matched whole secret, so perform masking
+                            matched = True
+                        elif msg != line:
+                            #continue
+                            break
 
                     if matched:
                         break
@@ -215,9 +219,11 @@ class MaskingHandler(logging.Handler):
                 for _ in range(0, w):
                     rec = self._buffer[0]
                     del self._buffer[0]
+                    for ss in StructLogger.secrets_single:
+                        rec.add_mask_secret(ss, 'middle')
                     self.true_emit(rec)
 
-                # replace secret in afected lines
+                # replace secret in affected lines
                 for idx, line in enumerate(s):
                     rec = self._buffer[0]
                     del self._buffer[0]
@@ -228,7 +234,6 @@ class MaskingHandler(logging.Handler):
                         rec.add_mask_secret(line, 'start')
 
                     # drop lines between first and last lines
-
                     if idx in [0, len(s) - 1]:
                         for ss in StructLogger.secrets_single:
                             rec.add_mask_secret(ss, 'middle')
@@ -248,6 +253,14 @@ class MaskingHandler(logging.Handler):
             for ss in StructLogger.secrets_single:
                 record.add_mask_secret(ss, 'middle')
             self.true_emit(record)
+
+    def flush_log_entries(self):
+        for rec in self._buffer:
+            for ss in StructLogger.secrets_single:
+                rec.add_mask_secret(ss, 'middle')
+            self.true_emit(rec)
+
+        self._buffer = []
 
 
 class ClickhouseFormatter(logging.Formatter):
