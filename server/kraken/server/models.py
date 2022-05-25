@@ -823,9 +823,16 @@ class Tool(db.Model, DatesMixin):
     entry = Column(UnicodeText)
     version = Column(Integer)
 
-    def get_json(self):
-        return dict(id=self.id,
+    def get_json(self, with_details=False):
+        data = dict(id=self.id,
                     name=self.name)
+        if with_details:
+            data['location'] = self.location
+            data['entry'] = self.entry
+            data['version'] = self.version
+            data['description'] = self.description
+            data['fields'] = self.fields
+        return data
 
 
 class AgentAssignment(db.Model):

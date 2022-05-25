@@ -98,6 +98,7 @@ export function cfgFactory() {
 
 import { Chart } from 'chart.js'
 import zoomPlugin from 'chartjs-plugin-zoom'
+import { ToolsPageComponent } from './tools-page/tools-page.component'
 Chart.register(zoomPlugin)
 
 @NgModule({
@@ -130,6 +131,7 @@ Chart.register(zoomPlugin)
         FlowPageComponent,
         FlowChartsComponent,
         BranchStatsComponent,
+        ToolsPageComponent,
     ],
     imports: [
         BrowserModule,

@@ -154,11 +154,24 @@ export class AppComponent implements OnInit, OnDestroy {
                 styleClass: '',
             },
             {
-                label: 'Settings',
-                icon: 'fa fa-wrench',
-                routerLink: '/settings',
-                disabled: !this.auth.hasPermission('manage'),
-                title: this.auth.permTip('manage'),
+                label: 'Configuration',
+                icon: 'fa fa-cog',
+                items: [
+                    {
+                        label: 'Settings',
+                        icon: 'fa fa-cogs',
+                        routerLink: '/settings',
+                        disabled: !this.auth.hasPermission('manage'),
+                        title: this.auth.permTip('manage'),
+                    },
+                    {
+                        label: 'Tools',
+                        icon: 'fa fa-wrench',
+                        routerLink: '/tools',
+                        disabled: !this.auth.hasPermission('manage'),
+                        title: this.auth.permTip('manage'),
+                    },
+                ],
             },
         ]
 

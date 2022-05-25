@@ -1021,13 +1021,26 @@ def get_workflow_schema():
     return schemaval.get_schema(), 200
 
 
-def get_tools():
+def get_tools(start=0, limit=30, sort_field="name", sort_dir="asc"):
     q = Tool.query
     q = q.filter_by(deleted=None)
 
+    total = q.count()
+
+    sort_func = asc
+    if sort_dir == "desc":
+        sort_func = desc
+
+    if sort_field in ['location', 'entry', 'name', 'version', 'id']:
+        q = q.order_by(sort_func(sort_field))
+    else:
+        q = q.order_by(Tool.name)
+
+    q = q.offset(start).limit(limit)
+
     tools = []
     for t in q.all():
-        tools.append(t.get_json())
+        tools.append(t.get_json(with_details=True))
     return {'items': tools, 'total': len(tools)}, 200
 
 

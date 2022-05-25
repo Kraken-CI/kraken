@@ -1971,6 +1971,27 @@ paths:
       summary: List tools
       description: List tools
       operationId: get_tools
+      parameters:
+      - name: start
+        in: query
+        description: How many items to return at one time (max 100)
+        schema:
+          type: integer
+          format: int32
+      - name: limit
+        in: query
+        description: How many items to return at one time (max 100)
+        schema:
+          type: integer
+          format: int32
+      - name: sort_field
+        in: query
+        schema:
+          type: string
+      - name: sort_dir
+        in: query
+        schema:
+          type: string
       responses:
         200:
           description: Successfully
