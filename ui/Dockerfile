@@ -1,4 +1,4 @@
-FROM nginx:1
+FROM nginx:stable
 
 RUN apt-get update && apt-get install -y "wait-for-it" && rm -rf /var/lib/apt/lists/*
 
