@@ -14,6 +14,7 @@
 
 import io
 import os
+import re
 import json
 import logging
 import datetime
@@ -39,6 +40,7 @@ from .models import Tool
 from .schema import check_and_correct_stage_schema, SchemaError, execute_schema_code
 from .schema import prepare_new_planner_triggers
 from .cloud import aws, azure, k8s
+from ..version import version as server_version
 from . import notify
 from . import utils
 from . import minioops
@@ -1036,49 +1038,96 @@ def get_tools(start=0, limit=30, sort_field="name", sort_dir="asc"):
     else:
         q = q.order_by(Tool.name)
 
+    q = q.order_by(asc(Tool.created))
+
     q = q.offset(start).limit(limit)
 
     tools = []
     for t in q.all():
         tools.append(t.get_json(with_details=True))
-    return {'items': tools, 'total': len(tools)}, 200
+    return {'items': tools, 'total': total}, 200
 
 
-def create_tool(body):
-    tool = Tool.query.filter_by(name=body['name']).one_or_none()
-    #if tool is not None:
-    #    abort(400, "Tool with name %s already exists" % body['name'])
+def _create_or_update_tool(meta):
+    name = meta['name']
+    description = meta['description']
+    location = meta['location']
+    entry = meta['entry']
+    fields = meta['parameters']
+    version = meta.get('version', None)
 
-    name = body['name']
-    description = body['description']
-    location = body['location']
-    entry = body['entry']
-    fields = body['parameters']
+    tool = None
+    if version:
+        # find tool to overwrite
+        q = Tool.query
+        q = q.filter_by(name=name)
+        q = q.filter_by(version=version)
+        q = q.filter_by(deleted=None)
+        tool = q.one_or_none()
+    else:
+        # fint the latest tool to estimate next version
+        q = Tool.query
+        q = q.filter_by(name=name)
+        q = q.filter_by(deleted=None)
+        q = q.order_by(desc(Tool.created))
+        tools = q.all()
+        prev_tool = None
+        for t in tools:
+            if t.version[-1].isdigit():
+                prev_tool = t
+                break
+
+    if not version:
+        if not prev_tool:
+            version = '1'
+        else:
+            m = re.match('^(.*)(\d+)$', prev_tool.version)
+            if not m:
+                version = '1'
+            else:
+                ver_base = m.group(1)
+                ver_num = int(m.group(2))
+                ver_num += 1
+                version = '%s%d' % (ver_base, ver_num)
 
     if tool:
         tool.description = description
+        tool.version = version
         tool.location=location
         tool.entry = entry
         tool.fields = fields
     else:
-        tool = Tool(name=name, description=description, location=location, entry=entry, fields=fields)
+        tool = Tool(name=name, description=description, version=version, location=location, entry=entry, fields=fields)
+
+    return tool
+
+
+def create_or_update_tool(body):
+    _create_or_update_tool(body)
     db.session.commit()
 
     return tool.get_json(), 201
 
 
-def upload_tool(name, body):
-    tool = Tool.query.filter_by(name=name).one_or_none()
+def upload_new_or_overwrite_tool(name, body, file=None):
+    meta = body['meta']
+    if name != meta['name']:
+        msg = 'Name in description (%s) does not match name in url (%s)' % (meta['name'], name)
+        abort(400, msg)
+
+    tool = _create_or_update_tool(meta)
+    db.session.flush()
 
     bucket, mc = minioops.get_or_create_minio_bucket_for_tool(tool.id)
-    version = '1'
-    dest = '%s/tool.zip' % version
+    dest = '%s/tool.zip' % tool.version
 
-    # TODO: change to stream reading from body
-    # data = connexion.request.input_stream.read()  # but this does not work
-    mc.put_object(bucket, dest, io.BytesIO(body), len(body), content_type="application/zip")
+    mc.put_object(bucket, dest, file.stream, -1, part_size=10*1024*1024, content_type="application/zip")
 
     tool.location = 'minio:%s/%s' % (bucket, dest)
     db.session.commit()
 
     return tool.get_json(), 201
+
+
+def get_server_version():
+    return {'version': server_version}, 200

@@ -1,0 +1,37 @@
+[tool.poetry]
+name = "krakenci-client"
+version = "x.y"
+description = "A client tool for Kraken CI server."
+authors = ["Michal Nowikowski <godfryd@gmail.com>"]
+readme = "README.md"
+homepage = "https://kraken.ci/"
+repository = "https://github.com/kraken-ci/kraken"
+documentation = "https://kraken.ci/docs"
+
+keywords = ["building", "testing", "continuous-integration", "ci", "cd", "cicd"]
+
+classifiers = [
+    "Topic :: Software Development",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Software Development :: Testing",
+    "License :: OSI Approved :: Apache Software License"
+]
+
+
+packages = [
+  { include = "kraken" },
+]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+requests = "^2.26.0"
+click = "^7.1.2"
+tabulate = "^0.8.9"
+
+[tool.poetry.scripts]
+kkci = 'kraken.client.main:main'
+
+[build-system]
+requires = ["poetry>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

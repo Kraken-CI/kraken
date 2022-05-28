@@ -2002,9 +2002,9 @@ paths:
     post:
       tags:
       - Management
-      summary: Create a tool
-      description: Create a new tool
-      operationId: create_tool
+      summary: Create or update a tool
+      description: Create a new tool or update existing version
+      operationId: create_or_update_tool
       requestBody:
         description: group
         content:
@@ -2019,9 +2019,9 @@ paths:
     post:
       tags:
       - Management
-      summary: Upload tool
-      description: Upload code of a tool
-      operationId: upload_tool
+      summary: Upload new tool or existing one
+      description: Upload code of a tool and create new one or overwrite existing version
+      operationId: upload_new_or_overwrite_tool
       parameters:
       - name: name
         in: path
@@ -2031,14 +2031,38 @@ paths:
           type: string
       requestBody:
         content:
-          application/zip:
+          multipart/form-data:
             schema:
-              type: string
-              format: binary
+              type: object
+              properties:
+                meta:
+                  $ref: '#/components/schemas/Tool'
+                file:
+                  type: string
+                  format: binary
+            encoding:
+              meta:
+                contentType: application/json
+              file:
+                contentType: application/zip
       responses:
         201:
           description: Successfully created group
           content: {}
+  /version:
+    get:
+      tags:
+      - Management
+      summary: Get server version
+      description: Get server version
+      operationId: get_server_version
+      responses:
+        200:
+          description: Successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerVersion'
 
 
 components:
@@ -2839,6 +2863,11 @@ components:
           type: integer
           format: int64
         name:
+          type: string
+    ServerVersion:
+      type: object
+      properties:
+        version:
           type: string
     ApiError:
       required:

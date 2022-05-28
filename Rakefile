@@ -162,6 +162,14 @@ file 'server/kraken/version.py' => KRAKEN_VERSION_FILE do
   sh "echo \"version = '#{kk_ver}'\" > server/kraken/version.py"
 end
 
+file 'client/kraken/client/version.py' => KRAKEN_VERSION_FILE do
+  sh "echo \"version = '#{kk_ver}'\" > client/kraken/client/version.py"
+end
+
+file 'client/pyproject.toml' => ['client/pyproject.toml.in', KRAKEN_VERSION_FILE] do
+  sh "sed s/x.y/#{kk_ver}/g client/pyproject.toml.in > client/pyproject.toml"
+end
+
 task :run_server => 'server/kraken/version.py' do
   sh 'cp dot.env .env'
   Dir.chdir('server') do
@@ -344,7 +352,20 @@ task :build_agent => './venv/bin/shiv' do
   sh "cp agent/kkagent agent/kktool server/"
 end
 
-task :build_py => [:build_agent, 'server/kraken/version.py']
+task :build_client => ['client/kraken/client/version.py', 'client/pyproject.toml']  do
+  Dir.chdir('client') do
+    sh 'rm -rf dist'
+    sh '../venv/bin/poetry build -f sdist'
+  end
+end
+
+task :publish_client => :build_client do
+  Dir.chdir('client') do
+    sh "../venv/bin/poetry publish -u godfryd -p #{ENV['PYPI_PASSWORD']}"
+  end
+end
+
+task :build_py => [:build_agent, :build_client, 'server/kraken/version.py']
 
 task :clean_backend do
   sh 'rm -rf venv'

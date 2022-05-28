@@ -821,7 +821,8 @@ class Tool(db.Model, DatesMixin):
     test_cases = relationship("TestCase", back_populates="tool")
     location = Column(UnicodeText)
     entry = Column(UnicodeText)
-    version = Column(Integer)
+    version = Column(UnicodeText)
+    UniqueConstraint(name, version, name='uq_tool_name_version')
 
     def get_json(self, with_details=False):
         data = dict(id=self.id,

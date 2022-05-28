@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import sys
 import json
 import getpass
 import zipfile
@@ -22,6 +23,9 @@ import urllib.parse
 import click
 import requests
 from tabulate import tabulate
+
+
+from . import version
 
 
 class Session:
@@ -61,13 +65,17 @@ class Session:
             assert resp.status_code == exp_status
         return resp
 
-    def post(self, url, payload=None, exp_status=None, binary=False):
+    def post(self, url, payload=None, payload_type=False, exp_status=None):
         url = self.base_url + url
         headers = self._initial_headers()
-        if binary:
+
+        if payload_type == 'binary':
             resp = requests.request("POST", url, data=payload, headers=headers)
+        elif payload_type == 'files':
+            resp = requests.request("POST", url, files=payload, headers=headers)
         else:
             resp = requests.request("POST", url, json=payload, headers=headers)
+
         print('POST:', resp.json())
         if exp_status is None:
             assert resp.status_code in [200, 201]
@@ -94,21 +102,46 @@ class Session:
         return resp
 
 
+def _make_session(server):
+    s = Session(server)
+    resp = s.login()
+    # TODO check resp
+
+    resp = s.get('/version')
+    data = resp.json()
+    if data['version'] != version.version:
+        print('Version mismatch, Kraken Server: %s, kkci client: %s' % (data['version'], version.version))
+        print('Please, install proper version of kkci to match Kraken Server version')
+        sys.exit(1)
+    return s
+
+
 @click.group()
 def main():
     'Kraken Client'
+
+
+@main.command('version')
+def version_():
+    'Show kkci, Kraken client, version.'
+    print(version.version)
+
+
+@main.command()
+@click.option('-s', '--server', envvar='KRAKEN_SERVER_ADDR', required=True, help='Kraken Server URL')
+def server_version(server):
+    'Show Kraken server version.'
+    s = _make_session(server)
+
+    resp = s.get('/version')
+    data = resp.json()
+    print(data['version'])
 
 
 @main.group()
 def tools():
     'Manage Kraken Tools'
 
-
-def _make_session(server):
-    s = Session(server)
-    resp = s.login()
-    # TODO check resp
-    return s
 
 @tools.command('list')
 @click.option('-s', '--server', envvar='KRAKEN_SERVER_ADDR', required=True, help='Kraken Server URL')
@@ -119,19 +152,33 @@ def list_(server):
     resp = s.get('/tools')
     data = resp.json()
 
-    tools = data['items']
-    print(tabulate(tools, headers={'id': 'Id', 'name': 'Name'}))
+    tools = []
+    for t in data['items']:
+        tools.append(dict(id=t['id'],
+                          name=t['name'],
+                          location=t['location'],
+                          entry=t['entry'],
+                          version=t['version']))
+    print(tabulate(tools, headers={'id': 'Id',
+                                   'name': 'Name',
+                                   'location': 'Location',
+                                   'entry': 'Entry',
+                                   'version': 'Version'}))
 
 
 @tools.command()
 @click.option('-s', '--server', envvar='KRAKEN_SERVER_ADDR', required=True, help='Kraken Server URL')
+@click.option('-r', '--version', default=False, is_flag=False, help='Overwrite existing tool version. "latest" version overwrites the latest tool version. If not provided then new version is created.')
 @click.argument('tool-file')
-def register(server, tool_file):
-    'Register a new tool described in indicated TOOL_FILE.'
+def register(server, version, tool_file):
+    'Register a new or overwrite existing tool described in indicated TOOL_FILE.'
 
     # load file and parse as JSON
     with open(tool_file) as fp:
         data = json.load(fp)
+
+    if version:
+        data['version'] = version
 
     s = _make_session(server)
     s.post('/tools', data)
@@ -139,17 +186,21 @@ def register(server, tool_file):
 
 @tools.command()
 @click.option('-s', '--server', envvar='KRAKEN_SERVER_ADDR', required=True, help='Kraken Server URL')
+@click.option('-r', '--version', default=False, is_flag=False, help='Overwrite existing tool version. "latest" version overwrites the latest tool version. If not provided then new version is created.')
 @click.argument('tool-file')
-def upload(server, tool_file):
-    "Upload tool's code from DIRECTORY to Kraken Server."
+def upload(server, version, tool_file):
+    """Upload tool's code from DIRECTORY to Kraken Server.
+
+    By default new tool version is created (the last version is incremented by 1).
+    """
 
     s = _make_session(server)
 
     # load file and parse as JSON
     with open(tool_file) as fp:
-        data = json.load(fp)
+        tool_meta_data = json.load(fp)
 
-    tool_name = data['name']
+    tool_name = tool_meta_data['name']
 
     directory = os.path.abspath(os.path.dirname(tool_file))
 
@@ -167,10 +218,23 @@ def upload(server, tool_file):
 
         print('Packed %d files to %s' % (len(pz.namelist()), tf.name))
 
-        with open(tf.name, "rb") as f:
-            tool_data = f.read()
+        with open(tool_file, "rb") as tmf:
+            meta = json.load(tmf)
 
-        s.post('/tools/%s/zip' % tool_name, tool_data, binary=True)
+        if version:
+            meta['version'] = version
+
+        meta = json.dumps(meta)
+
+        with open(tf.name, "rb") as tbf:
+
+            send_data = {
+                'meta': (None, meta, "application/json; charset=UTF-8"),
+                'file': ('tool.zip', tbf, "application/zip"),
+            }
+
+            url = '/tools/%s/zip' % tool_name
+            s.post(url, send_data, payload_type='files')
 
 
 @main.command()
