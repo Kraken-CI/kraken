@@ -58,6 +58,14 @@ def stage(ctx):
                 "timeout": 120
             }, {
                 "tool": "shell",
+                "cmd": "rake kk_ver=0.#{KK_FLOW_SEQ} publish_client",
+                "cwd": "kraken",
+                "timeout": 120,
+                "env": {
+                    "PYPI_PASSWORD": "#{KK_SECRET_SIMPLE_pypi_password}"
+                }
+            }, {
+                "tool": "shell",
                 "cmd": "rake kk_ver=0.#{KK_FLOW_SEQ} github_release",
                 "cwd": "kraken",
                 "env": {
