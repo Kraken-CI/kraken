@@ -1,4 +1,4 @@
-# Copyright 2020 The Kraken Authors
+# Copyright 2020-2022 The Kraken Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import io
 import os
 import re
 import json
@@ -1081,7 +1080,7 @@ def _create_or_update_tool(meta):
         if not prev_tool:
             version = '1'
         else:
-            m = re.match('^(.*)(\d+)$', prev_tool.version)
+            m = re.match(r'^(.*)(\d+)$', prev_tool.version)
             if not m:
                 version = '1'
             else:
@@ -1103,7 +1102,7 @@ def _create_or_update_tool(meta):
 
 
 def create_or_update_tool(body):
-    _create_or_update_tool(body)
+    tool = _create_or_update_tool(body)
     db.session.commit()
 
     return tool.get_json(), 201
