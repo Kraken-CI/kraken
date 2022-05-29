@@ -1,4 +1,4 @@
-# Copyright 2020 The Kraken Authors
+# Copyright 2020-2022 The Kraken Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,8 +14,10 @@
 
 import sys
 import json
+import copy
 
 import jsonschema
+from sqlalchemy.sql.expression import asc
 
 from .models import Tool
 
@@ -757,7 +759,6 @@ SCHEMA = {
                         "type": "array",
                         "items": {
                             "type": "object",
-                            "oneOf": []
                         }
                     },
                     "environments": {
@@ -840,13 +841,27 @@ SCHEMA = {
 def get_schema():
     q = Tool.query
     q = q.filter_by(deleted=None)
+    q = q.order_by(asc(Tool.created))
 
-    tools_schema = []
+    tools = []
+    prev_tool_name = None
     for tool in q.all():
+        if tool.name != prev_tool_name:
+            prev_tool_name = tool.name
+            tools.append((tool, tool.name))
+
+            name = '%s@%s' % (tool.name, tool.version)
+            tools.append((tool, name))
+        else:
+            name = '%s@%s' % (tool.name, tool.version)
+            tools.append((tool, name))
+
+    tools_schemas = {}
+    for tool, name_ver in tools:
         fields = {
             "tool": {
                 "description": tool.description,
-                "const": tool.name
+                "const": name_ver
             },
             "attempts": {
                 "description": "A number of times the step is retried if if it returns error.",
@@ -860,14 +875,22 @@ def get_schema():
             }
         }
 
+        if "properties" not in tool.fields:
+            raise Exception("Schema of '%s' tool does not have 'properties' field." % name_ver)
+
         for fname, fdef in tool.fields["properties"].items():
             fields[fname] = fdef
 
+        required_fields = tool.fields.get("required", [])
+        if not isinstance(required_fields, list):
+            raise Exception("'required' field in '%s' tool fields definitions should have list value, not %s." % (
+                name_ver, type(required_fields)))
+
         td = {
-            "if": { "properties": { "tool": { "const": tool.name } } },
+            "if": { "properties": { "tool": { "const": name_ver } } },
             "then": {
                 "additionalProperties": tool.fields.get("additionalProperties", False),
-                "required": ["tool"] + tool.fields.get("required", []),
+                "required": ["tool"] + required_fields,
                 "properties": fields
             },
             "else": {
@@ -877,18 +900,41 @@ def get_schema():
             }
         }
 
-        tools_schema.append(td)
+        tools_schemas[name_ver] = td
 
-    SCHEMA["properties"]["jobs"]["items"]["properties"]["steps"]["items"]["oneOf"] = tools_schema
+    return copy.deepcopy(SCHEMA), tools_schemas
 
-    return SCHEMA
+
+def _ordinal(n):
+    return "%d%s" % (n, "tsnrhtdd"[( n // 10 % 10 != 1) * (n % 10 < 4) * n % 10::4])
 
 
 def validate(instance):
+    schema, tools_schemas = get_schema()
+
+    # check main parts
     try:
-        jsonschema.validate(instance=instance, schema=get_schema())
+        jsonschema.validate(instance=instance, schema=schema)
     except jsonschema.exceptions.ValidationError as ex:
         return str(ex)
+
+    # check steps
+    for j_idx, j in enumerate(instance['jobs']):
+        for s_idx, s in enumerate(j['steps']):
+            where = 'in the %s job %s, in the %s step' % (_ordinal(j_idx + 1), j['name'], _ordinal(s_idx + 1))
+
+            if 'tool' not in s:
+                return "Missing 'tool' field %s" % where
+
+            if s['tool'] not in tools_schemas:
+                return "Unknown tool '%s' %s" % (s['tool'], where)
+
+            tool_schema = tools_schemas[s['tool']]
+            try:
+                jsonschema.validate(instance=s, schema=tool_schema)
+            except jsonschema.exceptions.ValidationError as ex:
+                return str(ex)
+
     return None
 
 

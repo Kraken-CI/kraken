@@ -72,7 +72,7 @@ def execute_schema_code(branch, schema_code, context=None):
     # validate generated schema
     error = schemaval.validate(schema)
     if error:
-        raise Exception(error)
+        raise SchemaError(error)
 
     return schema
 
@@ -105,8 +105,11 @@ def check_and_correct_stage_schema(branch, stage_name, schema_code, context=None
     # execute schema code
     try:
         schema = execute_schema_code(branch, schema_code, context)
-    except Exception as e:
-        raise SchemaError("Problem with executing stage schema code: %s" % str(e)) from e
+    except SchemaError:
+        raise
+    except Exception:
+        log.exception('unkown error in schema execution')
+        raise
 
     # fill missing parts in schema
     if 'jobs' not in schema:

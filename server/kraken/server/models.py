@@ -534,6 +534,7 @@ class Step(db.Model, DatesMixin):
                     tool_id=self.tool_id,
                     tool_location=self.tool.location,
                     tool_entry=self.tool.entry,
+                    tool_version=self.tool.version,
                     job_id=self.job_id,
                     status=self.status,
                     result=self.result)

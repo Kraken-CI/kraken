@@ -29,7 +29,8 @@ from . import version
 
 
 class Session:
-    def __init__(self, base_url):
+    def __init__(self, base_url, verbose):
+        self.verbose = verbose
         u = urllib.parse.urlparse(base_url)
         port = u.port
         if not port:
@@ -58,7 +59,8 @@ class Session:
         url = self.base_url + url
         headers = self._initial_headers()
         resp = requests.request("GET", url, params=kwargs, headers=headers)
-        print('GET:', resp.json())
+        if self.verbose >= 2:
+            print('GET:', resp.json())
         if exp_status is None:
             assert resp.status_code == 200
         else:
@@ -76,7 +78,8 @@ class Session:
         else:
             resp = requests.request("POST", url, json=payload, headers=headers)
 
-        print('POST:', resp.json())
+        if self.verbose >= 2:
+            print('POST:', resp.json())
         if exp_status is None:
             assert resp.status_code in [200, 201]
         else:
@@ -87,7 +90,8 @@ class Session:
         url = self.base_url + url
         headers = self._initial_headers()
         resp = requests.request("PATCH", url, json=payload, headers=headers)
-        print('PATCH:', resp.json())
+        if self.verbose >= 2:
+            print('PATCH:', resp.json())
         if exp_status is None:
             assert resp.status_code in [200, 201]
         else:
@@ -102,8 +106,11 @@ class Session:
         return resp
 
 
-def _make_session(server):
-    s = Session(server)
+def _make_session(server, verbose):
+    if not server:
+        print("Bad server URL: '%s'" % server)
+        sys.exit(1)
+    s = Session(server, verbose)
     resp = s.login()
     # TODO check resp
 
@@ -117,8 +124,14 @@ def _make_session(server):
 
 
 @click.group()
-def main():
+@click.option('-v', '--verbose', count=True, help='Increase verbosity.')
+@click.option('-s', '--server', default='', envvar='KRAKEN_SERVER_ADDR', help='Kraken Server URL')
+@click.pass_context
+def main(ctx, verbose, server):
     'Kraken Client'
+    ctx.ensure_object(dict)
+    ctx.obj['verbose'] = verbose
+    ctx.obj['server'] = server
 
 
 @main.command('version')
@@ -128,10 +141,10 @@ def version_():
 
 
 @main.command()
-@click.option('-s', '--server', envvar='KRAKEN_SERVER_ADDR', required=True, help='Kraken Server URL')
-def server_version(server):
+@click.pass_context
+def server_version(ctx):
     'Show Kraken server version.'
-    s = _make_session(server)
+    s = _make_session(ctx.obj['server'], ctx.obj['verbose'])
 
     resp = s.get('/version')
     data = resp.json()
@@ -139,15 +152,16 @@ def server_version(server):
 
 
 @main.group()
-def tools():
+@click.pass_context
+def tools(ctx):
     'Manage Kraken Tools'
 
 
 @tools.command('list')
-@click.option('-s', '--server', envvar='KRAKEN_SERVER_ADDR', required=True, help='Kraken Server URL')
-def list_(server):
+@click.pass_context
+def list_(ctx):
     'List registered Kraken Tools'
-    s = _make_session(server)
+    s = _make_session(ctx.obj['server'], ctx.obj['verbose'])
 
     resp = s.get('/tools')
     data = resp.json()
@@ -167,10 +181,10 @@ def list_(server):
 
 
 @tools.command()
-@click.option('-s', '--server', envvar='KRAKEN_SERVER_ADDR', required=True, help='Kraken Server URL')
 @click.option('-r', '--version', default=False, is_flag=False, help='Overwrite existing tool version. "latest" version overwrites the latest tool version. If not provided then new version is created.')
 @click.argument('tool-file')
-def register(server, version, tool_file):
+@click.pass_context
+def register(ctx, version, tool_file):
     'Register a new or overwrite existing tool described in indicated TOOL_FILE.'
 
     # load file and parse as JSON
@@ -180,21 +194,23 @@ def register(server, version, tool_file):
     if version:
         data['version'] = version
 
-    s = _make_session(server)
-    s.post('/tools', data)
+    s = _make_session(ctx.obj['server'], ctx.obj['verbose'])
+    resp = s.post('/tools', data)
+    data = resp.json()
+    print("Stored tool %s@%s" % (data['name'], data['version']))
 
 
 @tools.command()
-@click.option('-s', '--server', envvar='KRAKEN_SERVER_ADDR', required=True, help='Kraken Server URL')
 @click.option('-r', '--version', default=False, is_flag=False, help='Overwrite existing tool version. "latest" version overwrites the latest tool version. If not provided then new version is created.')
 @click.argument('tool-file')
-def upload(server, version, tool_file):
+@click.pass_context
+def upload(ctx, version, tool_file):
     """Upload tool's code from DIRECTORY to Kraken Server.
 
     By default new tool version is created (the last version is incremented by 1).
     """
 
-    s = _make_session(server)
+    s = _make_session(ctx.obj['server'], ctx.obj['verbose'])
 
     # load file and parse as JSON
     with open(tool_file) as fp:
@@ -216,7 +232,8 @@ def upload(server, version, tool_file):
                     n = os.path.relpath(p, directory)
                     pz.write(p, arcname=n)
 
-        print('Packed %d files to %s' % (len(pz.namelist()), tf.name))
+        if self.verbose >= 1:
+            print('Packed %d files to %s' % (len(pz.namelist()), tf.name))
 
         with open(tool_file, "rb") as tmf:
             meta = json.load(tmf)
@@ -238,10 +255,10 @@ def upload(server, version, tool_file):
 
 
 @main.command()
-@click.option('-s', '--server', envvar='KRAKEN_SERVER_ADDR', required=True, help='Kraken Server URL')
 @click.argument('out-file')
-def dump_workflow_schema(server, out_file):
-    s = _make_session(server)
+@click.pass_context
+def dump_workflow_schema(ctx, out_file):
+    s = _make_session(ctx.obj['server'], ctx.obj['verbose'])
     resp = s.get('/workflow-schema')
     with open(out_file, "w") as fp:
         json.dump(resp.json(), fp)

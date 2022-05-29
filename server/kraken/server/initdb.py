@@ -86,14 +86,13 @@ def _prepare_initial_preferences():
     db.session.commit()
 
 
-def prepare_initial_data():
-    print("Preparing initial DB data")
-
+def _prepare_builtin_tools():
     tool_defs = [{
         "name": "local_tool",
         "description": "A tool that allows for running arbitrary python script as a tool that is indicated by `tool_location` and `tool_entry` fields. It is possible to add arbitrary fields to step definition that will be consumed by this tool.",
         "location": "",
         "entry": "",
+        "version": "1",
         "parameters": {
             "additionalProperties": True,
             "required": ["tool_location", "tool_entry"],
@@ -113,6 +112,7 @@ def prepare_initial_data():
         "description": "A tool for cloning Git repository.",
         "location": "",
         "entry": "",
+        "version": "1",
         "parameters": {
             "additionalProperties": False,
             "required": ["checkout"],
@@ -157,6 +157,7 @@ def prepare_initial_data():
         "description": "A tool that executes provided command in a shell.",
         "location": "",
         "entry": "",
+        "version": "1",
         "parameters": {
             "properties": {
                 "cmd": {
@@ -206,6 +207,7 @@ def prepare_initial_data():
         "description": "A tool that allows for running Python tests.",
         "location": "",
         "entry": "",
+        "version": "1",
         "parameters": {
             "properties": {
                 "pytest_exe": {
@@ -233,6 +235,7 @@ def prepare_initial_data():
         "description": "A tool that allows for generating random test case results.",
         "location": "",
         "entry": "",
+        "version": "1",
         "parameters": {
             "properties": {
                 "count": {
@@ -260,6 +263,7 @@ def prepare_initial_data():
         "description": "A tool for storing and retrieving artifacts in Kraken global storage.",
         "location": "",
         "entry": "",
+        "version": "1",
         "parameters": {
             "required": ["source"],
             "properties": {
@@ -307,6 +311,7 @@ def prepare_initial_data():
         "description": "A tool that allows for static analysis of Python source code.",
         "location": "",
         "entry": "",
+        "version": "1",
         "parameters": {
             "required": ["modules_or_packages"],
             "properties": {
@@ -340,6 +345,7 @@ def prepare_initial_data():
         "description": "A tool that allows for running counting lines of code.",
         "location": "",
         "entry": "",
+        "version": "1",
         "parameters": {
             "properties": {
                 "not-match-f": {
@@ -362,6 +368,7 @@ def prepare_initial_data():
         "description": "A tool that allows for running Angular `ng lint`, that is performing static analysis of TypeScript in Angular projects.",
         "location": "",
         "entry": "",
+        "version": "1",
         "parameters": {
             "properties": {
                 "cwd": {
@@ -376,6 +383,7 @@ def prepare_initial_data():
         "description": "A tool for storing and restoring files from cache.",
         "location": "",
         "entry": "",
+        "version": "1",
         "parameters": {
             "required": ["action"],
             "properties": {
@@ -413,6 +421,7 @@ def prepare_initial_data():
         "description": "A tool that allows for running Go language tests.",
         "location": "",
         "entry": "",
+        "version": "1",
         "parameters": {
             "properties": {
                 "go_exe": {
@@ -440,6 +449,7 @@ def prepare_initial_data():
         "description": "A tool that allows for collecting test results stored in JUnit files.",
         "location": "",
         "entry": "",
+        "version": "1",
         "parameters": {
             "required": ["file_glob"],
             "properties": {
@@ -459,6 +469,7 @@ def prepare_initial_data():
         "description": "A tool that allows for collecting values (metrics, params, etc) from files.",
         "location": "",
         "entry": "",
+        "version": "1",
         "parameters": {
             "required": ["files"],
             "properties": {
@@ -489,18 +500,30 @@ def prepare_initial_data():
         }
     }]
     for td in tool_defs:
-        tool = Tool.query.filter_by(name=td['name']).one_or_none()
+        tool = Tool.query.filter_by(name=td['name'], version=td['version']).one_or_none()
         if tool is None:
-            tool = Tool(name=td['name'], description=td['description'], location=td['location'], entry=td['entry'], fields=td['parameters'])
+            tool = Tool(name=td['name'],
+                        description=td['description'],
+                        location=td['location'],
+                        entry=td['entry'],
+                        version=td['version'],
+                        fields=td['parameters'])
             print("   created Tool record", td['name'])
         else:
             tool.name = td['name']
             tool.description = td['description']
             tool.location = td['location']
             tool.entry = td['entry']
+            tool.version = td['version']
             tool.fields = td['parameters']
             print("   updated Tool record", td['name'])
         db.session.commit()
+
+
+def prepare_initial_data():
+    print("Preparing initial DB data")
+
+    _prepare_builtin_tools()
 
     agents_group = AgentsGroup.query.filter_by(name="all").one_or_none()
     if agents_group is None:

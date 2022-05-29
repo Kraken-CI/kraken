@@ -95,7 +95,7 @@
           </p-tabPanel>
           <p-tabPanel header="Steps">
             <div *ngFor="let step of job.steps" style="margin-bottom: 10px;">
-              <div style="font-size: 1.5em; font-weight: bold">{{ step.index + 1 }}. {{ step.tool }}</div>
+              <div style="font-size: 1.5em; font-weight: bold">{{ step.index + 1 }}. {{ step.tool }}@{{ step.tool_version }}</div>
               <div>
                 {{ getStepInfo(step) }}
               </div>

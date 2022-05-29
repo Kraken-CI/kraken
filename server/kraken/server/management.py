@@ -31,6 +31,7 @@ import redis
 import boto3
 from azure.mgmt.subscription import SubscriptionClient
 from azure.mgmt.compute import ComputeManagementClient
+import jsonschema
 
 from . import consts, srvcheck, kkrq
 from .models import db, Branch, Stage, Agent, AgentsGroup, Secret, AgentAssignment, Setting
@@ -1019,7 +1020,9 @@ def get_branch_stats(branch_id):
 
 
 def get_workflow_schema():
-    return schemaval.get_schema(), 200
+    schema, tools_schemas = schemaval.get_schema()
+    schema["properties"]["jobs"]["items"]["properties"]["steps"]["items"]["oneOf"] = list(tools_schemas.values())
+    return schema, 200
 
 
 def get_tools(start=0, limit=30, sort_field="name", sort_dir="asc"):
@@ -1054,6 +1057,21 @@ def _create_or_update_tool(meta):
     entry = meta['entry']
     fields = meta['parameters']
     version = meta.get('version', None)
+
+    # check tool schema if it is ok
+    try:
+        jsonschema.validate(instance={}, schema=fields)
+    except jsonschema.exceptions.SchemaError:
+        raise
+    except Exception:
+        pass
+
+    if "properties" not in fields:
+        raise Exception("Parameters of tool does not have 'properties' field.")
+
+    required_fields = fields.get("required", [])
+    if not isinstance(required_fields, list):
+        raise Exception("'required' field in tool fields definitions should have list value, not %s." % type(required_fields))
 
     tool = None
     if version:
@@ -1105,7 +1123,7 @@ def create_or_update_tool(body):
     tool = _create_or_update_tool(body)
     db.session.commit()
 
-    return tool.get_json(), 201
+    return tool.get_json(with_details=True), 201
 
 
 def upload_new_or_overwrite_tool(name, body, file=None):
@@ -1125,7 +1143,7 @@ def upload_new_or_overwrite_tool(name, body, file=None):
     tool.location = 'minio:%s/%s' % (bucket, dest)
     db.session.commit()
 
-    return tool.get_json(), 201
+    return tool.get_json(with_details=True), 201
 
 
 def get_server_version():

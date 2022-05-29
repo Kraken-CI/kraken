@@ -75,6 +75,9 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
     wfSchema: any
     stepTools: any[] = []
     stepTool: any
+    stepAllToolVersions = {}
+    stepToolVersions: any[] = []
+    stepToolVersion: any
     stepFields: any[] = []
     generatedStep = ''
 
@@ -120,21 +123,54 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
                 this.wfSchema = wfSchema
                 // console.info('wfSchema', wfSchema)
                 // console.info('wfSchema', wfSchema['properties']['jobs']['items']['properties']['steps']['items']['oneOf'])
-                for (const t of wfSchema['properties']['jobs']['items'][
-                    'properties'
-                ]['steps']['items']['oneOf']) {
+                const allTools =
+                    wfSchema['properties']['jobs']['items']['properties'][
+                        'steps'
+                    ]['items']['oneOf']
+                this.stepTools = []
+                this.stepToolVersions = []
+                const tools = {}
+                for (const t of allTools) {
                     const tt = t['then']['properties']['tool']
-                    this.stepTools.push({
-                        name: tt['const'],
-                        shortDescr: tt['description'].split('.')[0] + '.',
-                        descr: tt['description'],
-                        schema: t['then']['properties'],
-                    })
+                    if (tt['const'].includes('@')) {
+                        const [name, ver] = tt['const'].split('@')
+                        if (!tools[name]) {
+                            tools[name] = []
+                        }
+
+                        tools[name].push({
+                            name: name,
+                            version: ver,
+                            shortDescr: tt['description'].split('.')[0] + '.',
+                            descr: tt['description'],
+                            schema: t['then']['properties'],
+                        })
+                    } else {
+                        const name = tt['const']
+                        this.stepTools.push({
+                            name: name,
+                            shortDescr: tt['description'].split('.')[0] + '.',
+                            descr: tt['description'],
+                        })
+                        if (!tools[name]) {
+                            tools[name] = []
+                        }
+                        tools[name].push({
+                            name: name,
+                            version: 'LATEST',
+                            shortDescr: tt['description'].split('.')[0] + '.',
+                            descr: tt['description'],
+                            schema: t['then']['properties'],
+                        })
+                    }
                 }
+
                 this.stepTool = this.stepTools[0]
                 this.stepTools.sort((a, b) => a.name.localeCompare(b.name))
 
-                this.generateStep()
+                this.stepAllToolVersions = tools
+
+                this.changeTool()
             })
         )
     }
@@ -679,9 +715,20 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
         this.prepareStepDlgVisible = true
     }
 
+    changeTool() {
+        this.stepToolVersions = this.stepAllToolVersions[this.stepTool.name]
+        for (const t of this.stepToolVersions) {
+            if (t.version === 'LATEST') {
+                this.stepToolVersion = t
+                break
+            }
+        }
+        this.generateStep()
+    }
+
     generateStep() {
         this.stepFields = []
-        for (const [fn, fv] of Object.entries(this.stepTool.schema)) {
+        for (const [fn, fv] of Object.entries(this.stepToolVersion.schema)) {
             // prepare step help table
             const fld = {
                 name: fn,

@@ -15,6 +15,7 @@
 import logging
 
 from sqlalchemy.orm.attributes import flag_modified
+from sqlalchemy.sql.expression import desc
 
 from . import consts
 from .models import db, BranchSequence, Flow, Run, Job, Step, AgentsGroup, Tool, Agent, AgentAssignment, System
@@ -313,7 +314,11 @@ def trigger_jobs(run, replay=False):
         tools = []
         tool_not_found = None
         for idx, s in enumerate(j['steps']):
-            tool = Tool.query.filter_by(name=s['tool']).one_or_none()
+            if '@' in s['tool']:
+                name, ver = s['tool'].split('@')
+                tool = Tool.query.filter_by(name=name, version=ver).one_or_none()
+            else:
+                tool = Tool.query.filter_by(name=s['tool']).order_by(desc(Tool.created)).first()
             if tool is None:
                 tool_not_found = s['tool']
                 break

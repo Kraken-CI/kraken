@@ -19,7 +19,7 @@ venv
 /server/kkagent
 /server/kktool
 /client/dist/
-/client/kraken/version.py
+client/kraken/client/version.py
 
 /ui/src/environments/environment.prod.ts
 /ui/dist/kraken/main-es5*
