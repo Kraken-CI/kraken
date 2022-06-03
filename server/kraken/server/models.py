@@ -823,6 +823,9 @@ class Tool(db.Model, DatesMixin):
     location = Column(UnicodeText)
     entry = Column(UnicodeText)
     version = Column(UnicodeText)
+    url = Column(UnicodeText)
+    tag = Column(UnicodeText)
+    tool_file = Column(UnicodeText)
     UniqueConstraint(name, version, name='uq_tool_name_version')
 
     def get_json(self, with_details=False):
@@ -834,6 +837,9 @@ class Tool(db.Model, DatesMixin):
             data['version'] = self.version
             data['description'] = self.description
             data['fields'] = self.fields
+            data['url'] = self.url
+            data['tag'] = self.tag
+            data['tool_file'] = self.tool_file
         return data
 
 

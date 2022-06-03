@@ -143,7 +143,7 @@ def _handle_get_job(agent):
 
             # add minio info for storing git repo bundle
             add_minio = True
-            bucket, folder = minioops.get_or_create_minio_bucket_for_git(agent.job.run.flow.branch_id, step['checkout'])
+            bucket, folder = minioops.get_or_create_minio_bucket_for_git(step['checkout'], branch_id=agent.job.run.flow.branch_id)
             step['minio_bucket'] = bucket
             step['minio_folder'] = folder
 

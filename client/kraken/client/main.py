@@ -12,25 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import sys
 import json
+import logging
 import getpass
-import zipfile
-import tempfile
 import urllib.parse
 
 import click
 import requests
 from tabulate import tabulate
 
+from . import version as client_version
+from . import toolops
 
-from . import version
+log = logging.getLogger(__name__)
 
 
 class Session:
-    def __init__(self, base_url, verbose):
-        self.verbose = verbose
+    def __init__(self, base_url):
         u = urllib.parse.urlparse(base_url)
         port = u.port
         if not port:
@@ -59,8 +58,7 @@ class Session:
         url = self.base_url + url
         headers = self._initial_headers()
         resp = requests.request("GET", url, params=kwargs, headers=headers)
-        if self.verbose >= 2:
-            print('GET:', resp.json())
+        log.debug('GET: %s', resp.json())
         if exp_status is None:
             assert resp.status_code == 200
         else:
@@ -78,8 +76,7 @@ class Session:
         else:
             resp = requests.request("POST", url, json=payload, headers=headers)
 
-        if self.verbose >= 2:
-            print('POST:', resp.json())
+        log.debug('POST: %s', resp.json())
         if exp_status is None:
             assert resp.status_code in [200, 201]
         else:
@@ -90,8 +87,7 @@ class Session:
         url = self.base_url + url
         headers = self._initial_headers()
         resp = requests.request("PATCH", url, json=payload, headers=headers)
-        if self.verbose >= 2:
-            print('PATCH:', resp.json())
+        log.debug('PATCH: %s', resp.json())
         if exp_status is None:
             assert resp.status_code in [200, 201]
         else:
@@ -106,19 +102,19 @@ class Session:
         return resp
 
 
-def _make_session(server, verbose):
+def _make_session(server):
     if not server:
-        print("Bad server URL: '%s'" % server)
+        log.info("Bad server URL: '%s'", server)
         sys.exit(1)
-    s = Session(server, verbose)
+    s = Session(server)
     resp = s.login()
     # TODO check resp
 
     resp = s.get('/version')
     data = resp.json()
-    if data['version'] != version.version:
-        print('Version mismatch, Kraken Server: %s, kkci client: %s' % (data['version'], version.version))
-        print('Please, install proper version of kkci to match Kraken Server version')
+    if data['version'] != client_version.version:
+        log.info('Version mismatch, Kraken Server: %s, kkci client: %s', data['version'], client_version.version)
+        log.info('Please, install proper version of kkci to match Kraken Server version')
         sys.exit(1)
     return s
 
@@ -129,39 +125,43 @@ def _make_session(server, verbose):
 @click.pass_context
 def main(ctx, verbose, server):
     'Kraken Client'
+    level = logging.INFO
+    if verbose > 0:
+        level = logging.DEBUG
+    logging.basicConfig(format='%(message)s', level=level)
+
     ctx.ensure_object(dict)
-    ctx.obj['verbose'] = verbose
     ctx.obj['server'] = server
 
 
 @main.command('version')
 def version_():
     'Show kkci, Kraken client, version.'
-    print(version.version)
+    log.info(client_version.version)
 
 
 @main.command()
 @click.pass_context
 def server_version(ctx):
     'Show Kraken server version.'
-    s = _make_session(ctx.obj['server'], ctx.obj['verbose'])
+    s = _make_session(ctx.obj['server'])
 
     resp = s.get('/version')
     data = resp.json()
-    print(data['version'])
+    log.info(data['version'])
 
 
-@main.group()
+@main.group('tools')
 @click.pass_context
-def tools(ctx):
+def tools_cmd(ctx):
     'Manage Kraken Tools'
 
 
-@tools.command('list')
+@tools_cmd.command('list')
 @click.pass_context
 def list_(ctx):
     'List registered Kraken Tools'
-    s = _make_session(ctx.obj['server'], ctx.obj['verbose'])
+    s = _make_session(ctx.obj['server'])
 
     resp = s.get('/tools')
     data = resp.json()
@@ -173,15 +173,16 @@ def list_(ctx):
                           location=t['location'],
                           entry=t['entry'],
                           version=t['version']))
-    print(tabulate(tools, headers={'id': 'Id',
-                                   'name': 'Name',
-                                   'location': 'Location',
-                                   'entry': 'Entry',
-                                   'version': 'Version'}))
+    log.info(tabulate(tools, headers={'id': 'Id',
+                                      'name': 'Name',
+                                      'location': 'Location',
+                                      'entry': 'Entry',
+                                      'version': 'Version'}))
 
 
-@tools.command()
-@click.option('-r', '--version', default=False, is_flag=False, help='Overwrite existing tool version. "latest" version overwrites the latest tool version. If not provided then new version is created.')
+@tools_cmd.command()
+@click.option('-r', '--version', default=False, is_flag=False,
+              help='Overwrite existing tool version. "latest" version overwrites the latest tool version. If not provided then new version is created.')
 @click.argument('tool-file')
 @click.pass_context
 def register(ctx, version, tool_file):
@@ -194,14 +195,34 @@ def register(ctx, version, tool_file):
     if version:
         data['version'] = version
 
-    s = _make_session(ctx.obj['server'], ctx.obj['verbose'])
+    s = _make_session(ctx.obj['server'])
     resp = s.post('/tools', data)
     data = resp.json()
-    print("Stored tool %s@%s" % (data['name'], data['version']))
+    log.info("Stored tool %s@%s", data['name'], data['version'])
 
 
-@tools.command()
-@click.option('-r', '--version', default=False, is_flag=False, help='Overwrite existing tool version. "latest" version overwrites the latest tool version. If not provided then new version is created.')
+@tools_cmd.command()
+@click.option('-t', '--tag', default='main', help='Tag or branch to pull Git repo.')
+@click.option('-f', '--tool-file', default='tool.json', help='Path to JSON file with tool metadata within Git repo.')
+@click.argument('url')
+@click.pass_context
+def register_remote(ctx, url, tag, tool_file):
+    'Register a tool located in remote repository indicated by URL.'
+
+    data = dict(url=url, tag=tag, tool_file=tool_file)
+
+    s = _make_session(ctx.obj['server'])
+    resp = s.post('/tools', data)
+    data = resp.json()
+    if 'name' in data:
+        log.info("Stored tool %s@%s", data['name'], data['version'])
+    else:
+        log.info("Stored tool under id %d", data['id'])
+
+
+@tools_cmd.command()
+@click.option('-r', '--version', default=False, is_flag=False,
+              help='Overwrite existing tool version. "latest" version overwrites the latest tool version. If not provided then new version is created.')
 @click.argument('tool-file')
 @click.pass_context
 def upload(ctx, version, tool_file):
@@ -210,55 +231,37 @@ def upload(ctx, version, tool_file):
     By default new tool version is created (the last version is incremented by 1).
     """
 
-    s = _make_session(ctx.obj['server'], ctx.obj['verbose'])
+    s = _make_session(ctx.obj['server'])
 
-    # load file and parse as JSON
-    with open(tool_file) as fp:
-        tool_meta_data = json.load(fp)
+    meta, tf, files_num = toolops.package_tool(tool_file)
 
-    tool_name = tool_meta_data['name']
-
-    directory = os.path.abspath(os.path.dirname(tool_file))
-
-    with tempfile.NamedTemporaryFile(prefix='kkci-pkg-', suffix='.zip') as tf:
-        with zipfile.ZipFile(tf, "w") as pz:
-            for root, _, files in os.walk(directory):
-                for name in files:
-                    if name.endswith(('.pyc', '~')):
-                        continue
-                    if name == 'tool.zip':
-                        continue
-                    p = os.path.join(root, name)
-                    n = os.path.relpath(p, directory)
-                    pz.write(p, arcname=n)
-
-        if self.verbose >= 1:
-            print('Packed %d files to %s' % (len(pz.namelist()), tf.name))
-
-        with open(tool_file, "rb") as tmf:
-            meta = json.load(tmf)
+    try:
+        log.debug('Packed %d files to %s', files_num, tf.name)
 
         if version:
             meta['version'] = version
 
-        meta = json.dumps(meta)
+        meta_str = json.dumps(meta)
 
         with open(tf.name, "rb") as tbf:
 
             send_data = {
-                'meta': (None, meta, "application/json; charset=UTF-8"),
+                'meta': (None, meta_str, "application/json; charset=UTF-8"),
                 'file': ('tool.zip', tbf, "application/zip"),
             }
 
-            url = '/tools/%s/zip' % tool_name
+            url = '/tools/%s/zip' % meta['name']
             s.post(url, send_data, payload_type='files')
+
+    finally:
+        tf.close()
 
 
 @main.command()
 @click.argument('out-file')
 @click.pass_context
 def dump_workflow_schema(ctx, out_file):
-    s = _make_session(ctx.obj['server'], ctx.obj['verbose'])
+    s = _make_session(ctx.obj['server'])
     resp = s.get('/workflow-schema')
     with open(out_file, "w") as fp:
         json.dump(resp.json(), fp)
@@ -266,4 +269,4 @@ def dump_workflow_schema(ctx, out_file):
 
 
 if __name__ == '__main__':
-    main()
+    main()  # pylint: disable=no-value-for-parameter

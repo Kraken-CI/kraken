@@ -132,7 +132,13 @@ end
 
 task :lint_py do
   Dir.chdir('server') do
-    sh '../venv/bin/poetry run pylint --rcfile ../pylint.rc kraken'
+    sh '../venv/bin/poetry run pylint --rcfile ../pylint.rc kraken || true'
+  end
+  Dir.chdir('client') do
+    sh '../venv/bin/poetry run pylint --rcfile ../pylint.rc kraken || true'
+  end
+  Dir.chdir('agent') do
+    sh './venv/bin/pylint --rcfile ../pylint.rc kraken || true'
   end
 end
 
@@ -353,7 +359,11 @@ task :build_agent => './venv/bin/shiv' do
   sh "cp agent/kkagent agent/kktool server/"
 end
 
-task :build_client => ['client/kraken/client/version.py', 'client/pyproject.toml']  do
+file 'client/kraken/client/toolops.py' => 'server/kraken/server/toolops.py' do
+  sh 'cp server/kraken/server/toolops.py client/kraken/client/'
+end
+
+task :build_client => ['client/kraken/client/version.py', 'client/pyproject.toml', 'client/kraken/client/toolops.py']  do
   Dir.chdir('client') do
     sh 'rm -rf dist'
     sh '../venv/bin/poetry build -f sdist'

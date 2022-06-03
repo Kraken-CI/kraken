@@ -47,7 +47,7 @@ def stage(ctx):
             }],
             "environments": envs
         }, {
-            "name": "pylint server",
+            "name": "pylint server + client",
             "steps": [{
                 "tool": "shell",
                 "cmd": "sudo apt update && sudo apt-get install -y --no-install-recommends python3-setuptools python3-wheel python3-pip gcc python3-dev libpq-dev python3-venv || ps axf",
@@ -72,15 +72,26 @@ def stage(ctx):
                 "cwd": "kraken/server",
                 "timeout": 300
             }, {
-                "tool": "shell",
-                "cmd": "pwd && ls -al",
-                "cwd": "kraken/server",
-            }, {
                 "tool": "pylint",
                 "pylint_exe": "poetry run pylint",
                 "rcfile": "../pylint.rc",
                 "modules_or_packages": "kraken/server",
                 "cwd": "kraken/server",
+                "timeout": 300
+            }, {
+                "tool": "shell",
+                "script": """
+                    poetry install -n --no-root
+                    rake build_client
+                """,
+                "cwd": "kraken/client",
+                "timeout": 300
+            }, {
+                "tool": "pylint",
+                "pylint_exe": "poetry run pylint",
+                "rcfile": "../pylint.rc",
+                "modules_or_packages": "kraken/client",
+                "cwd": "kraken/client",
                 "timeout": 300
             }],
             "environments": [{

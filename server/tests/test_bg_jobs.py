@@ -1,4 +1,4 @@
-# Copyright 2020-2021 The Kraken Authors
+# Copyright 2020-2022 The Kraken Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import logging
 from unittest.mock import patch
 
@@ -642,3 +643,22 @@ def test_analyze_results_history(flow_kind):
         assert run.regr_cnt == 0
         assert run.fix_cnt == 4
         assert run.state == consts.RUN_STATE_PROCESSED
+
+
+@pytest.mark.db
+def test_load_remote_tool():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+
+        url = 'https://github.com/Kraken-CI/kraken-tools.git'
+        tag = 'main'
+        tool_file = 'pkg_install/tool.json'
+        tool = Tool(name=url, version=tag, url=url, tag=tag, tool_file=tool_file, fields={})
+        db.session.commit()
+
+        os.environ['MINIO_ACCESS_KEY'] = 'UFSEHRCFU4ACUEWHCHWU'
+        os.environ['MINIO_SECRET_KEY'] = 'HICSHuhIIUhiuhMIUHIUhGFfUHugy6fGJuyyfiGY'
+
+        jobs.load_remote_tool(tool.id)

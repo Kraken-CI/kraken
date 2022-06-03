@@ -1,0 +1,20 @@
+{
+    "name": "example_tool",
+    "description": "Example.",
+    "location": ".",
+    "entry": "main",
+    "parameters": {
+        "additionalProperties": false,
+        "required": ["abc"],
+        "properties": {
+            "abc": {
+                "description": "Abc.",
+                "type": "string"
+            },
+            "def": {
+                "description": "Def",
+                "enum": ["a", "b", "c", "d"]
+            }
+        }
+    }
+}

@@ -120,8 +120,13 @@ def get_or_create_minio_bucket_for_cache(job, step):
     return bucket_name, folders
 
 
-def get_or_create_minio_bucket_for_git(branch_id, repo_url):
-    bucket_name = '%08d-git' % branch_id
+def get_or_create_minio_bucket_for_git(repo_url, branch_id=None, tool_id=None):
+    if branch_id:
+        bucket_name = '%08d-git' % branch_id
+    elif tool_id:
+        bucket_name = 'tool-%08d-git' % tool_id
+    else:
+        raise Exception('Branch or Tool id should not be None')
 
     folder = repo_url.replace('/', '_').replace(':', '_').replace('.', '_')
 

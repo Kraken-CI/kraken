@@ -28,7 +28,7 @@ import pytimeparse
 import redis
 
 from ..models import db, Run, Job, TestCaseResult, Branch, Flow, Stage, Project, get_setting
-from ..models import AgentsGroup, Agent, System, TestCaseComment
+from ..models import AgentsGroup, Agent, System, TestCaseComment, Tool
 from ..models import RepoChanges
 from ..schema import prepare_new_planner_triggers
 from ..schema import check_and_correct_stage_schema
@@ -41,6 +41,9 @@ from .. import gitops
 from .. import kkrq
 from .. import utils
 from .. import dbutils
+from .. import toolops
+from .. import toolutils
+
 
 log = logging.getLogger(__name__)
 
@@ -1092,3 +1095,66 @@ def destroy_machine(agent_id):
         dbutils.delete_agent(agent)
 
         cloud.destroy_machine(ag, agent)
+
+
+def load_remote_tool(tool_id):
+    app = _create_app('load_remote_tool_%s' % tool_id)
+
+    with app.app_context():
+        tool_id = int(tool_id)
+        tool = Tool.query.filter_by(id=tool_id).one_or_none()
+        if tool is None:
+            log.error('cannot find tool id:%d', tool_id)
+            return
+
+        # clone tool from remote repo
+        try:
+            tmpdir, repo_dir, version = gitops.clone_tool_repo(tool.url, tool.tag, tool_id)
+        except Exception:
+            log.exception('problem with cloning repo')
+            return
+
+        tf = None
+        try:
+            # package tool
+            tool_file_path = os.path.join(repo_dir, tool.tool_file)
+            if not os.path.exists(tool_file_path):
+                log.warning('Tool meta file %s does not exist in repo %s', tool.tool_file, tool.url)
+                return
+
+            meta, tf, files_num = toolops.package_tool(tool_file_path)
+
+            name = meta['name']
+            description = meta['description']
+            location = meta['location']
+            entry = meta['entry']
+            fields = meta['parameters']
+
+            # check if tool schema is ok
+            toolutils.check_tool_schema(fields)
+
+            if tool.version == tool.tag:
+                # initial tool so set the fields from meta
+                tool.name = name
+                tool.description = description
+                tool.version = version
+                tool.location = location
+                tool.entry = entry
+                tool.fields = fields
+            elif tool.version != version:
+                # new version of tool so create new tool record in db
+                tool = Tool(name=name, description=description, version=version, location=location, entry=entry, fields=fields)
+                db.session.flush()
+            elif tool.version == version:
+                log.info('Tool id:%d name:%s from remote repo %s @ %s does not need to updated, the same version', tool.id, tool.name, tool.url, tool.tag, version)
+
+            # store tool
+            toolutils.store_tool_in_minio(tf, tool)
+            db.session.commit()
+
+            log.info('Stored tool id:%d name:%s from remote repo %s @ %s', tool.id, tool.name, tool.url, tool.tag)
+
+        finally:
+            if tf:
+                tf.close()
+            tmpdir.cleanup()

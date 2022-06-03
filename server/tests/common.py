@@ -13,6 +13,8 @@
 # limitations under the License.
 
 
+import os
+
 from flask import Flask
 
 from kraken.server.models import db
@@ -35,5 +37,8 @@ def create_app():
     # initialize SqlAlchemy
     db.init_app(app)
     db.create_all(app=app)
+
+    # set KRAKEN_DB_URL that is needed e.g. in jobs.py
+    os.environ['KRAKEN_DB_URL'] = db_url
 
     return app

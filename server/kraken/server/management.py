@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import os
-import re
 import json
 import logging
 import datetime
@@ -31,7 +30,6 @@ import redis
 import boto3
 from azure.mgmt.subscription import SubscriptionClient
 from azure.mgmt.compute import ComputeManagementClient
-import jsonschema
 
 from . import consts, srvcheck, kkrq
 from .models import db, Branch, Stage, Agent, AgentsGroup, Secret, AgentAssignment, Setting
@@ -41,6 +39,7 @@ from .schema import check_and_correct_stage_schema, SchemaError, execute_schema_
 from .schema import prepare_new_planner_triggers
 from .cloud import aws, azure, k8s
 from ..version import version as server_version
+from . import toolutils
 from . import notify
 from . import utils
 from . import minioops
@@ -1050,78 +1049,38 @@ def get_tools(start=0, limit=30, sort_field="name", sort_dir="asc"):
     return {'items': tools, 'total': total}, 200
 
 
-def _create_or_update_tool(meta):
-    name = meta['name']
-    description = meta['description']
-    location = meta['location']
-    entry = meta['entry']
-    fields = meta['parameters']
-    version = meta.get('version', None)
+def _create_remote_tool(body):
+    url = body['url']
+    tag = body['tag']
+    tool_file = body['tool_file']
 
-    # check tool schema if it is ok
-    try:
-        jsonschema.validate(instance={}, schema=fields)
-    except jsonschema.exceptions.SchemaError:
-        raise
-    except Exception:
-        pass
-
-    if "properties" not in fields:
-        raise Exception("Parameters of tool does not have 'properties' field.")
-
-    required_fields = fields.get("required", [])
-    if not isinstance(required_fields, list):
-        raise Exception("'required' field in tool fields definitions should have list value, not %s." % type(required_fields))
-
-    tool = None
-    if version:
-        # find tool to overwrite
-        q = Tool.query
-        q = q.filter_by(name=name)
-        q = q.filter_by(version=version)
-        q = q.filter_by(deleted=None)
-        tool = q.one_or_none()
-    else:
-        # fint the latest tool to estimate next version
-        q = Tool.query
-        q = q.filter_by(name=name)
-        q = q.filter_by(deleted=None)
-        q = q.order_by(desc(Tool.created))
-        tools = q.all()
-        prev_tool = None
-        for t in tools:
-            if t.version[-1].isdigit():
-                prev_tool = t
-                break
-
-    if not version:
-        if not prev_tool:
-            version = '1'
-        else:
-            m = re.match(r'^(.*)(\d+)$', prev_tool.version)
-            if not m:
-                version = '1'
-            else:
-                ver_base = m.group(1)
-                ver_num = int(m.group(2))
-                ver_num += 1
-                version = '%s%d' % (ver_base, ver_num)
+    # fint the latest tool to estimate next version
+    q = Tool.query
+    q = q.filter_by(url=url)
+    q = q.filter_by(tag=tag)
+    q = q.filter_by(tool_file=tool_file)
+    q = q.filter_by(deleted=None)
+    tool = q.one_or_none()
 
     if tool:
-        tool.description = description
-        tool.version = version
-        tool.location=location
-        tool.entry = entry
-        tool.fields = fields
-    else:
-        tool = Tool(name=name, description=description, version=version, location=location, entry=entry, fields=fields)
+        return tool
+
+    tool = Tool(name=url, version=tag, url=url, tag=tag, tool_file=tool_file, fields={})
+    db.session.commit()
 
     return tool
 
 
 def create_or_update_tool(body):
-    tool = _create_or_update_tool(body)
-    db.session.commit()
+    if 'name' in body:
+        tool = toolutils.create_or_update_tool(body)
+        db.session.commit()
+
+    elif 'url' in body:
+        tool = _create_remote_tool(body)
+
+        from .bg import jobs as bg_jobs  # pylint: disable=import-outside-toplevel
+        kkrq.enq_neck(bg_jobs.load_remote_tool, tool.id)
 
     return tool.get_json(with_details=True), 201
 
@@ -1132,15 +1091,10 @@ def upload_new_or_overwrite_tool(name, body, file=None):
         msg = 'Name in description (%s) does not match name in url (%s)' % (meta['name'], name)
         abort(400, msg)
 
-    tool = _create_or_update_tool(meta)
+    tool = create_or_update_tool(meta)
     db.session.flush()
 
-    bucket, mc = minioops.get_or_create_minio_bucket_for_tool(tool.id)
-    dest = '%s/tool.zip' % tool.version
-
-    mc.put_object(bucket, dest, file.stream, -1, part_size=10*1024*1024, content_type="application/zip")
-
-    tool.location = 'minio:%s/%s' % (bucket, dest)
+    toolutils.store_tool_in_minio(file.stream, tool)
     db.session.commit()
 
     return tool.get_json(with_details=True), 201

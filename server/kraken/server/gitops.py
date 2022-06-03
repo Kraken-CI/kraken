@@ -139,7 +139,7 @@ def get_repo_commits_since(branch_id, prev_run, repo_url, repo_branch, git_cfg):
 
     with tempfile.TemporaryDirectory(prefix='kraken-git-') as tmpdir:
         # prepare minio
-        minio_bucket, minio_folder = minioops.get_or_create_minio_bucket_for_git(branch_id, repo_url)
+        minio_bucket, minio_folder = minioops.get_or_create_minio_bucket_for_git(repo_url, branch_id=branch_id)
         mc = minioops.get_minio()
         minio_repo_bundle_path = '%s/repo.bundle' % minio_folder
 
@@ -208,3 +208,40 @@ def get_schema_from_repo(repo_url, repo_branch, repo_access_token, schema_file, 
             schema_code = f.read()
 
     return schema_code, version
+
+
+def clone_tool_repo(repo_url, repo_tag, tool_id):
+    log.info('clone repo %s %s', repo_url, repo_tag)
+
+    tmpdir = tempfile.TemporaryDirectory(prefix='kraken-git-')
+
+    try:
+        # prepare minio
+        minio_bucket, minio_folder = minioops.get_or_create_minio_bucket_for_git(repo_url, tool_id=tool_id)
+        mc = minioops.get_minio()
+        minio_repo_bundle_path = '%s/repo.bundle' % minio_folder
+
+        # retrieve repo from minio in bundle form or from remote git repository
+        repo_dir = _retrieve_git_repo(tmpdir.name, repo_url, {}, mc, minio_bucket, minio_repo_bundle_path)
+
+        # get last commit SHA
+        cmd = 'git rev-parse --verify --short HEAD'
+        p = _run(cmd, check=True, cwd=repo_dir, capture_output=True, text=True)
+        version = p.stdout.strip()
+
+        # bundle repo and cache it
+        repo_bundle_path = os.path.join(tmpdir.name, 'repo.bundle')
+        p = _run('git bundle create %s --all' % repo_bundle_path, check=False, cwd=repo_dir)
+        if p.returncode != 0:
+            log.warning('repo bundle failed, skipping it')
+        else:
+            log.info('store repo bundle %s -> %s / %s', repo_bundle_path, minio_bucket, minio_repo_bundle_path)
+            try:
+                mc.fput_object(minio_bucket, minio_repo_bundle_path, repo_bundle_path)
+            except Exception:
+                log.exception('problem with storing repo bundle, skipping it')
+    except:
+        tmpdir.cleanup()
+        raise
+
+    return tmpdir, os.path.join(tmpdir.name, 'repo'), version
