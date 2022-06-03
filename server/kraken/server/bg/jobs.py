@@ -1122,7 +1122,7 @@ def load_remote_tool(tool_id):
                 log.warning('Tool meta file %s does not exist in repo %s', tool.tool_file, tool.url)
                 return
 
-            meta, tf, files_num = toolops.package_tool(tool_file_path)
+            meta, tf, _ = toolops.package_tool(tool_file_path)
 
             name = meta['name']
             description = meta['description']
@@ -1146,7 +1146,8 @@ def load_remote_tool(tool_id):
                 tool = Tool(name=name, description=description, version=version, location=location, entry=entry, fields=fields)
                 db.session.flush()
             elif tool.version == version:
-                log.info('Tool id:%d name:%s from remote repo %s @ %s does not need to updated, the same version', tool.id, tool.name, tool.url, tool.tag, version)
+                log.info('Tool id:%d name:%s from remote repo %s @ %s does not need to updated, the same version %s',
+                         tool.id, tool.name, tool.url, tool.tag, version)
 
             # store tool
             toolutils.store_tool_in_minio(tf, tool)

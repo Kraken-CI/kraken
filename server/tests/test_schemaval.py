@@ -12,15 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import datetime
-
 import pytest
-from hamcrest import assert_that, has_entries, matches_regexp, contains_exactly, instance_of
+from hamcrest import has_entries, matches_regexp, contains_exactly, instance_of
 
-import werkzeug.exceptions
-
-from kraken.server import consts, initdb, utils
-from kraken.server.models import db, Project, Branch, Flow
+from kraken.server import initdb, utils
+from kraken.server.models import Project, Branch, Flow
 
 from common import create_app
 
@@ -34,11 +30,6 @@ def test_validate():
     with app.app_context():
         initdb._prepare_initial_preferences()
         initdb._prepare_builtin_tools()
-
-        #proj1 = Project(name='proj-1')
-        #proj2 = Project(name='proj-2')
-        #br = Branch(name='br', project=proj1)
-        #db.session.commit()
 
         # all ok
         instance = {

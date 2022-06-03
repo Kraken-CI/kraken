@@ -17,7 +17,7 @@ import re
 from sqlalchemy.sql.expression import desc
 import jsonschema
 
-from .models import db, Tool
+from .models import Tool
 from . import minioops
 
 

@@ -18,7 +18,7 @@ from unittest.mock import patch
 
 import jsonschema
 
-from kraken.server import consts, initdb
+from kraken.server import initdb
 from kraken.server.models import db
 
 from common import create_app
