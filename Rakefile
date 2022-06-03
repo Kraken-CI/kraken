@@ -130,7 +130,7 @@ task :fix_ui => [NG, :gen_client] do
   end
 end
 
-task :lint_py do
+task :lint_py => 'client/pyproject.toml' do
   Dir.chdir('server') do
     sh '../venv/bin/poetry run pylint --rcfile ../pylint.rc kraken || true'
   end
