@@ -13,10 +13,8 @@
 # limitations under the License.
 
 import pytest
-from hamcrest import has_entries, matches_regexp, contains_exactly, instance_of
 
-from kraken.server import initdb, utils
-from kraken.server.models import Project, Branch, Flow
+from kraken.server import initdb
 
 from common import create_app
 
