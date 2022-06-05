@@ -1,3 +1,7 @@
+
+<div class="grid">
+
+<div class="col">
 <p-table #toolsTable
          id="tools"
          [value]="tools"
@@ -12,22 +16,21 @@
          [sortField]="'name'"
          [sortOrder]="1"
          styleClass="p-datatable-sm"
+         selectionMode="single"
+         [(selection)]="selectedTool"
+         (onRowSelect)="loadToolVersions($event.data)"
          dataKey="name">
   <ng-template pTemplate="header">
     <tr>
-      <th style="width: 60px;"></th>
       <th style="width: 80px;" pSortableColumn="id">ID <p-sortIcon field="id"></p-sortIcon></th>
       <th style="width: 200px;" pSortableColumn="name">Name <p-sortIcon field="name"></p-sortIcon></th>
       <th style="width: 200px;" pSortableColumn="location">Location <p-sortIcon field="location"></p-sortIcon></th>
       <th style="width: 200px;" pSortableColumn="entry">Entry <p-sortIcon field="entry"></p-sortIcon></th>
-      <th style="width: 200px;" pSortableColumn="version">Version <p-sortIcon field="version"></p-sortIcon></th>
+      <th style="width: 200px;" pSortableColumn="version">Latest Version <p-sortIcon field="version"></p-sortIcon></th>
     </tr>
   </ng-template>
-  <ng-template pTemplate="body" let-tool let-expanded="expanded">
-    <tr>
-        <td>
-            <button type="button" pButton pRipple [pRowToggler]="tool" class="p-button-text p-button-rounded p-button-plain" [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></button>
-        </td>
+  <ng-template pTemplate="body" let-tool>
+    <tr [pSelectableRow]="tool">
         <td>{{ tool.id }}</td>
         <td><a routerLink="/tools/{{ tool.id }}">{{ tool.name }}</a></td>
         <td>{{ tool.location }}</td>
@@ -35,39 +38,74 @@
         <td>{{ tool.version }}</td>
     </tr>
   </ng-template>
-  <ng-template pTemplate="rowexpansion" let-tool>
-      <tr style="background-color: #eee;">
-          <td colspan="6">
-              <div>
-                  {{ tool.description }}
-              </div>
-              <table>
-                  <tr>
-                      <th>Parameter</th>
-                      <th>Type</th>
-                      <th>Default Value</th>
-                      <th>Enum</th>
-                      <th>Description</th>
-                  </tr>
-                  <tr *ngFor="let f of tool.fields.properties | keyvalue">
-                      <td>{{ f.key }}</td>
-                      <td>
-                          {{ f.value["type"] }}
-                      </td>
-                      <td>
-                          {{ f.value.default }}
-                      </td>
-                      <td>
-                          {{ f.value.enum }}
-                      </td>
-                      <td>
-                          {{ f.value.description }}
-                      </td>
-                  </tr>
-              </table>
-              <button pButton type="button" label="Show Raw Schema" (onClick)="showRawSchema()" class="p-button-sm p-button-outlined p-button-secondary"></button>
-              <!--<pre>{{ tool.fieldsJson }}</pre>-->
-          </td>
-      </tr>
-  </ng-template>
 </p-table>
+</div>
+
+<div class="col" *ngIf="selectedTool && selectedVersion">
+    <h2 class="bg-bluegray-100 p-2 mt-0">
+        {{ selectedTool.name }}
+    </h2>
+
+    <div class="flex justify-content-between">
+        <div class="grid">
+            <div class="col-fixed text-base my-auto">Version:</div>
+            <div class="col-fixed">
+                <p-dropdown [options]="toolVersions" optionLabel="version" [(ngModel)]="selectedVersion" (onChange)="versionSelect($event)" [style]="{width: '10em'}"></p-dropdown>
+            </div>
+            <div class="col-fixed text-base my-auto">ID:</div>
+            <div class="col my-auto">
+                {{ selectedVersion.id }}
+            </div>
+        </div>
+        <div>
+            <p-button label="Archive Version" icon="pi pi-trash" styleClass="p-button-danger p-button-outlined p-button-sm" (onClick)="deleteToolVersion()"></p-button>
+        </div>
+    </div>
+
+    <div class="text-lg mb-2">
+        {{ selectedVersion.description }}
+    </div>
+
+    <div class="grid bg-gray-50 m-0 mb-2">
+        <div class="col-fixed text-base">Location:</div>
+        <div class="col-5">
+            {{ selectedVersion.location || '&lt; empty &gt;' }}
+        </div>
+        <div class="col-fixed text-base">Entry:</div>
+        <div class="col-3">
+            {{ selectedVersion.entry || '&lt; empty &gt;' }}
+        </div>
+    </div>
+
+    <table class="tool-fields-table">
+        <tr>
+            <th>Parameter</th>
+            <th>Type</th>
+            <th>Default Value</th>
+            <th>Enum</th>
+            <th>Description</th>
+        </tr>
+        <tr *ngFor="let f of selectedVersion.fields.properties | keyvalue">
+            <td>{{ f.key }}</td>
+            <td>
+                {{ f.value["type"] }}
+            </td>
+            <td>
+                {{ f.value.default }}
+            </td>
+            <td>
+                {{ f.value.enum }}
+            </td>
+            <td>
+                {{ f.value.description }}
+            </td>
+        </tr>
+    </table>
+
+    <div class="mt-4 text-600">
+        Raw Schema:
+        <pre style="white-space: pre-wrap;">{{ selectedVersion.fieldsJson }}</pre>
+    </div>
+</div>
+
+</div>

@@ -22,8 +22,8 @@ from urllib.parse import urlparse
 from flask import abort
 from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy.sql.expression import asc, desc, extract
-from sqlalchemy.orm import joinedload
-from sqlalchemy.sql import func
+from sqlalchemy.orm import joinedload, aliased
+from sqlalchemy.sql import func, select
 import pytimeparse
 import clickhouse_driver
 import redis
@@ -47,6 +47,10 @@ from . import schemaval
 
 
 log = logging.getLogger(__name__)
+
+
+def get_server_version():
+    return {'version': server_version}, 200
 
 
 def create_project(body):
@@ -1026,6 +1030,37 @@ def get_workflow_schema():
 
 def get_tools(start=0, limit=30, sort_field="name", sort_dir="asc"):
     q = Tool.query
+    q = q.distinct(Tool.name)
+    q = q.filter_by(deleted=None)
+    q = q.order_by(Tool.name)
+
+    total = q.count()
+
+    # distinct does not allow for arbitrary sorting so wrap it in subquery
+    sq = q.subquery()
+    aliased_tool = aliased(Tool, sq)
+
+    q = select(aliased_tool)
+
+    sort_func = asc
+    if sort_dir == "desc":
+        sort_func = desc
+
+    if sort_field in ['location', 'entry', 'name', 'version', 'id']:
+        q = q.order_by(sort_func(sort_field))
+
+    q = q.offset(start).limit(limit)
+
+    tools = []
+    for t in db.session.execute(q):
+        t = t[0]
+        tools.append(t.get_json(with_details=True))
+    return {'items': tools, 'total': total}, 200
+
+
+def get_tool_versions(name, start=0, limit=30, sort_field="name", sort_dir="asc"):
+    q = Tool.query
+    q = q.filter_by(name=name)
     q = q.filter_by(deleted=None)
 
     total = q.count()
@@ -1036,10 +1071,9 @@ def get_tools(start=0, limit=30, sort_field="name", sort_dir="asc"):
 
     if sort_field in ['location', 'entry', 'name', 'version', 'id']:
         q = q.order_by(sort_func(sort_field))
+        q = q.order_by(desc(Tool.created))
     else:
-        q = q.order_by(Tool.name)
-
-    q = q.order_by(asc(Tool.created))
+        q = q.order_by(sort_func(Tool.created))
 
     q = q.offset(start).limit(limit)
 
@@ -1100,5 +1134,16 @@ def upload_new_or_overwrite_tool(name, body, file=None):
     return tool.get_json(with_details=True), 201
 
 
-def get_server_version():
-    return {'version': server_version}, 200
+def delete_tool(tool_id):
+    tool = Tool.query.filter_by(id=tool_id).one_or_none()
+
+    if tool is None:
+        abort(404, "Tool with id %s not found" % tool_id)
+
+    if not tool.location and not tool.entry:
+        abort(400, "Cannot archive built-in tool")
+
+    tool.deleted = utils.utcnow()
+    db.session.commit()
+
+    return {}, 200

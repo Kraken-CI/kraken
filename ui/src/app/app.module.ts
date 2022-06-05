@@ -14,6 +14,7 @@ import { MultiSelectModule } from 'primeng/multiselect'
 import { TableModule } from 'primeng/table'
 import { PanelModule } from 'primeng/panel'
 import { TreeModule } from 'primeng/tree'
+import { TreeTableModule } from 'primeng/treetable'
 import { ToastModule } from 'primeng/toast'
 import { MessageService } from 'primeng/api'
 import { TabViewModule } from 'primeng/tabview'
@@ -154,6 +155,7 @@ Chart.register(zoomPlugin)
         TableModule,
         PanelModule,
         TreeModule,
+        TreeTableModule,
         ToastModule,
         TabViewModule,
         OrganizationChartModule,

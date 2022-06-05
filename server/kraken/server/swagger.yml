@@ -11,6 +11,20 @@ security:
   - bearerAuth: []  # by default all functions require this security
 
 paths:
+  /version:
+    get:
+      tags:
+      - Management
+      summary: Get server version
+      description: Get server version
+      operationId: get_server_version
+      responses:
+        200:
+          description: Successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerVersion'
   /sessions:
     post:
       tags:
@@ -2015,6 +2029,69 @@ paths:
         201:
           description: Successfully created group
           content: {}
+  /tools/{tool_id}:
+    delete:
+      tags:
+      - Management
+      summary: Delete tool
+      description: List tools
+      operationId: delete_tool
+      parameters:
+      - name: tool_id
+        in: path
+        description: ID of tool
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        200:
+          description: Successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tools'
+  /tools/{name}:
+    get:
+      tags:
+      - Management
+      summary: List tools
+      description: List tools
+      operationId: get_tool_versions
+      parameters:
+      - name: name
+        in: path
+        description: Name of tool
+        required: true
+        schema:
+          type: string
+      - name: start
+        in: query
+        description: How many items to return at one time (max 100)
+        schema:
+          type: integer
+          format: int32
+      - name: limit
+        in: query
+        description: How many items to return at one time (max 100)
+        schema:
+          type: integer
+          format: int32
+      - name: sort_field
+        in: query
+        schema:
+          type: string
+      - name: sort_dir
+        in: query
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tools'
   /tools/{name}/zip:
     post:
       tags:
@@ -2049,20 +2126,6 @@ paths:
         201:
           description: Successfully created group
           content: {}
-  /version:
-    get:
-      tags:
-      - Management
-      summary: Get server version
-      description: Get server version
-      operationId: get_server_version
-      responses:
-        200:
-          description: Successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServerVersion'
 
 
 components:

@@ -1,6 +1,8 @@
 import { Component, OnInit, OnDestroy } from '@angular/core'
 import { Title } from '@angular/platform-browser'
 
+import { MessageService } from 'primeng/api'
+
 import { Subscription } from 'rxjs'
 
 import { ManagementService } from '../backend/api/management.service'
@@ -14,13 +16,18 @@ import { BreadcrumbsService } from '../breadcrumbs.service'
 export class ToolsPageComponent implements OnInit, OnDestroy {
     private subs: Subscription = new Subscription()
 
-    tools: any[]
+    tools: any[] = []
     totalTools = 0
     loadingTools = false
+    selectedTool: any
+
+    toolVersions: any[]
+    selectedVersion: any
 
     constructor(
         protected managementService: ManagementService,
         protected breadcrumbService: BreadcrumbsService,
+        private msgSrv: MessageService,
         private titleService: Title
     ) {}
 
@@ -43,7 +50,6 @@ export class ToolsPageComponent implements OnInit, OnDestroy {
 
     loadToolsLazy(event) {
         this.loadingTools = true
-        console.info(event)
 
         let sortField = 'name'
         if (event.sortField) {
@@ -62,16 +68,65 @@ export class ToolsPageComponent implements OnInit, OnDestroy {
                     this.totalTools = data.total
                     this.loadingTools = false
 
-                    for (const t of this.tools) {
-                        t.fieldsJson = JSON.stringify(
-                            t.fields.properties,
-                            null,
-                            4
-                        )
+                    if (!this.selectedTool) {
+                        this.selectedTool = this.tools[0]
+                        this.loadToolVersions(this.selectedTool)
                     }
                 })
         )
     }
 
-    showRawSchema() {}
+    loadToolVersions(tool) {
+        this.subs.add(
+            this.managementService
+                .getToolVersions(tool.name, 0, 1000)
+                .subscribe((data) => {
+                    this.toolVersions = data.items
+                    this.selectedVersion = this.toolVersions[0]
+                    this.genRawSchema()
+                })
+        )
+    }
+
+    versionSelect(ev) {
+        this.genRawSchema()
+    }
+
+    genRawSchema() {
+        this.selectedVersion.fieldsJson = JSON.stringify(
+            this.selectedVersion.fields.properties,
+            null,
+            4
+        )
+    }
+
+    deleteToolVersion() {
+        this.subs.add(
+            this.managementService
+                .deleteTool(this.selectedVersion.id)
+                .subscribe(
+                    (data) => {
+                        this.msgSrv.add({
+                            severity: 'success',
+                            summary: 'Tool version deletion succeeded',
+                            detail: 'Tool version deletion operation succeeded.',
+                        })
+                        this.loadToolVersions(this.selectedTool)
+                    },
+                    (err) => {
+                        let msg = err.statusText
+                        if (err.error && err.error.detail) {
+                            msg = err.error.detail
+                        }
+                        this.msgSrv.add({
+                            severity: 'error',
+                            summary: 'Tool version deletion erred',
+                            detail:
+                                'Tool version delete operation erred: ' + msg,
+                            life: 10000,
+                        })
+                    }
+                )
+        )
+    }
 }

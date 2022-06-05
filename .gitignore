@@ -18,6 +18,7 @@ venv
 /server/kraken/version.py
 /server/kkagent
 /server/kktool
+/server/tests/example_tool/vendor/
 /client/dist/
 /client/kraken/client/version.py
 /client/kraken/client/toolops.py

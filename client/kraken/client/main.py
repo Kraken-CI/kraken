@@ -160,10 +160,34 @@ def tools_cmd(ctx):
 @tools_cmd.command('list')
 @click.pass_context
 def list_(ctx):
-    'List registered Kraken Tools'
+    'List Kraken Tools but without versions'
     s = _make_session(ctx.obj['server'])
 
     resp = s.get('/tools')
+    data = resp.json()
+
+    tools = []
+    for t in data['items']:
+        tools.append(dict(id=t['id'],
+                          name=t['name'],
+                          location=t['location'],
+                          entry=t['entry'],
+                          version=t['version']))
+    log.info(tabulate(tools, headers={'id': 'Id',
+                                      'name': 'Name',
+                                      'location': 'Location',
+                                      'entry': 'Entry',
+                                      'version': 'Version'}))
+
+
+@tools_cmd.command()
+@click.argument('tool_name')
+@click.pass_context
+def list_versions(ctx, tool_name):
+    'List all versions of given Kraken Tool'
+    s = _make_session(ctx.obj['server'])
+
+    resp = s.get('/tools/%s' % tool_name)
     data = resp.json()
 
     tools = []
