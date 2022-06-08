@@ -368,7 +368,7 @@ task :build_client => ['client/kraken/client/version.py', 'client/pyproject.toml
     sh 'rm -rf dist'
     sh 'rm -rf kraken/agent'
     sh 'mkdir kraken/agent'
-    sh 'cp ../agent/kraken/agent/utils.py ../agent/kraken/agent/consts.py ../agent/kraken/agent/sysutils.py ../agent/kraken/agent/tool.py kraken/agent/'
+    sh 'cp ../agent/kraken/agent/utils.py ../server/kraken/server/consts.py ../agent/kraken/agent/sysutils.py ../agent/kraken/agent/tool.py kraken/agent/'
     sh '../venv/bin/poetry build -f sdist -vvv'
     sh 'tar -ztvf dist/krakenci-client-*.tar.gz'
   end
