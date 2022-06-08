@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import sys
 import json
 import logging
@@ -279,6 +280,114 @@ def upload(ctx, version, tool_file):
 
     finally:
         tf.close()
+
+
+@tools_cmd.command()
+@click.argument('tool-file')
+def generate_step_file(tool_file):
+    """Generate step file for a tool by indicating its TOOL-FILE.
+
+    This step file will allow running the tool on local machine."""
+    # load file and parse as JSON
+    with open(tool_file) as fp:
+        meta = json.load(fp)
+
+    tool_dir = os.path.abspath(os.path.dirname(tool_file))
+    step_file = os.path.join(tool_dir, 'step.json')
+
+    step = {
+        'id': 1,
+        "job_id": 1,
+        "run_id": 1,
+        "flow_id": 1,
+        'tool': meta['name'],
+        'tool_id': 1,
+        'tool_location': tool_dir,
+        "tool_entry": meta['entry'],
+        "status": None,
+        "result": None,
+    }
+
+    log.info('Please, enter values for %s tool parameters', meta['name'])
+    for pname, pdef in meta['parameters']['properties'].items():
+        if ('type' in pdef and pdef['type'] in ['object', 'array']) or 'oneOf' in pdef:
+            log.info('%s parameters is complex one, enter its value manually in the step file', pname)
+            if 'oneOf' in pdef:
+                step[pname] = ''
+            elif pdef['type'] == 'object':
+                step[pname] = {}
+            elif pdef['type'] == 'array':
+                step[pname] = '[]'
+            continue
+
+        prompt = '  %s (%s' % (pname, pdef.get('type', 'string'))
+        if 'enum' in pdef:
+            prompt += ', one of %s' % pdef['enum']
+        if 'default' in pdef:
+            prompt += ', default %s' % pdef['default']
+        prompt += '): '
+
+        val = input(prompt)
+
+        if 'default' in pdef and val == '':
+            val = str(pdef['default'])
+
+        if 'enum' in pdef:
+            if val not in pdef['enum']:
+                log.info('Incorrect enum value %s, should be one of %s', val, pdef['enum'])
+                sys.exit(1)
+        elif 'type' in pdef:
+            if pdef['type'] == 'integer':
+                val = int(val)
+            elif pdef['type'] == 'boolean':
+                val = val.lower()
+                if val == 'true':
+                    val = True
+                elif val == 'false':
+                    val = False
+                else:
+                    log.info('Incorrect boolean value %s, should be True or False', val)
+                    sys.exit(1)
+
+        step[pname] = val
+
+    with open(step_file, 'w') as fp:
+        json.dump(step, fp, sort_keys=True, indent=4)
+
+    log.info('Step file stored to %s', step_file)
+
+
+@tools_cmd.command()
+@click.option('-f', '--step-file', required=True, help='Path to step file.')
+@click.argument('tool-file')
+def run(tool_file, step_file):
+    """Run tool on local machine by indicating its TOOL-FILE with step file provide with -f option."""
+    # load file and parse as JSON
+    with open(tool_file) as fp:
+        meta = json.load(fp)
+
+    tool_dir = toolops.install_reqs(tool_file)
+
+    pypath = '%s:%s/vendor' % (tool_dir, tool_dir)
+    cmd = 'PYTHONPATH=%s %s -m kraken.agent.tool -m %s -s %s ' % (pypath, sys.executable, meta['entry'], step_file)
+
+    cmd1 = cmd + 'check-integrity'
+    toolops.run(cmd1)
+
+    cmd2 = cmd + 'get_commands'
+    p = toolops.run(cmd2, capture_output=True, text=True)
+    text = p.stderr
+
+    tool_cmd = 'run'
+    if 'run_artifacts' in text:
+        tool_cmd = 'run_artifacts'
+    elif 'run_analysis' in text:
+        tool_cmd = 'run_analysis'
+    elif 'run_tests' in text:
+        tool_cmd = 'run_tests'
+
+    cmd3 = cmd + tool_cmd
+    toolops.run(cmd3)
 
 
 @main.command()

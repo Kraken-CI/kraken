@@ -23,6 +23,7 @@ venv
 /client/kraken/client/version.py
 /client/kraken/client/toolops.py
 /client/pyproject.toml
+/client/kraken/agent/
 
 /ui/src/environments/environment.prod.ts
 /ui/dist/kraken/main-es5*

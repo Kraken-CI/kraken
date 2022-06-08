@@ -1125,7 +1125,7 @@ def upload_new_or_overwrite_tool(name, body, file=None):
         msg = 'Name in description (%s) does not match name in url (%s)' % (meta['name'], name)
         abort(400, msg)
 
-    tool = create_or_update_tool(meta)
+    tool = toolutils.create_or_update_tool(meta)
     db.session.flush()
 
     toolutils.store_tool_in_minio(file.stream, tool)

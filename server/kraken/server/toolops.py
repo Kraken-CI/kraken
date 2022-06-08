@@ -23,17 +23,13 @@ import subprocess
 log = logging.getLogger(__name__)
 
 
-def _run(cmd, check=True, cwd=None, capture_output=False, text=None):
+def run(cmd, check=True, cwd=None, capture_output=False, text=None):
     log.info("execute '%s' in '%s'", cmd, cwd)
     p = subprocess.run(cmd, shell=True, check=check, cwd=cwd, capture_output=capture_output, text=text)
     return p
 
 
-def package_tool(tool_file):
-    # load file and parse as JSON
-    with open(tool_file) as fp:
-        meta = json.load(fp)
-
+def install_reqs(tool_file):
     tool_dir = os.path.abspath(os.path.dirname(tool_file))
     vendor_dir = os.path.join(tool_dir, 'vendor')
     reqs_txt_path = os.path.join(tool_dir, 'requirements.txt')
@@ -45,8 +41,19 @@ def package_tool(tool_file):
         os.makedirs(vendor_dir)
 
         cmd = 'python3 -m pip install -r requirements.txt --target=./vendor'
-        _run(cmd, cwd=tool_dir)
+        run(cmd, cwd=tool_dir)
 
+    return tool_dir
+
+
+def package_tool(tool_file):
+    # load file and parse as JSON
+    with open(tool_file) as fp:
+        meta = json.load(fp)
+
+    tool_dir = install_reqs(tool_file)
+
+    # store tool files in zip package
     tf = tempfile.NamedTemporaryFile(prefix='kkci-pkg-', suffix='.zip', delete=True)
     with zipfile.ZipFile(tf, "w") as pz:
         for root, _, files in os.walk(tool_dir):

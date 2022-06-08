@@ -7,8 +7,8 @@ readme = "README.md"
 homepage = "https://kraken.ci/"
 repository = "https://github.com/kraken-ci/kraken"
 documentation = "https://kraken.ci/docs"
-
 keywords = ["building", "testing", "continuous-integration", "ci", "cd", "cicd"]
+license = "Apache-2.0"
 
 classifiers = [
     "Topic :: Software Development",
@@ -18,16 +18,18 @@ classifiers = [
     "License :: OSI Approved :: Apache Software License"
 ]
 
-
 packages = [
   { include = "kraken" },
 ]
+
+include = ["kraken/client/*.py"]
 
 [tool.poetry.dependencies]
 python = "^3.7"
 requests = "^2.26.0"
 click = "^7.1.2"
 tabulate = "^0.8.9"
+distro = "^1.7.0"
 
 [tool.poetry.scripts]
 kkci = 'kraken.client.main:main'
