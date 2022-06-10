@@ -130,14 +130,16 @@ task :fix_ui => [NG, :gen_client] do
   end
 end
 
-task :lint_py => 'client/pyproject.toml' do
+task :lint_py => ['./venv/bin/python3', 'client/pyproject.toml', 'server/kraken/version.py', './agent/venv/bin/python3'] do
   Dir.chdir('server') do
+    sh '../venv/bin/poetry install'
     sh '../venv/bin/poetry run pylint --rcfile ../pylint.rc kraken || true'
   end
   Dir.chdir('client') do
     sh '../venv/bin/poetry run pylint --rcfile ../pylint.rc kraken || true'
   end
   Dir.chdir('agent') do
+    sh './venv/bin/pip install -r reqs-ut.txt'
     sh './venv/bin/pylint --rcfile ../pylint.rc kraken || true'
   end
 end

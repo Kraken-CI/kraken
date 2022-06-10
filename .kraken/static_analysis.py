@@ -42,7 +42,7 @@ def stage(ctx):
             }, {
                 "tool": "pylint",
                 "rcfile": "pylint.rc",
-                "modules_or_packages": "agent/kraken/agent",
+                "modules_or_packages": "agent",
                 "cwd": "kraken"
             }],
             "environments": envs
@@ -53,9 +53,6 @@ def stage(ctx):
                 "cmd": "sudo apt update && sudo apt-get install -y --no-install-recommends python3-setuptools python3-wheel python3-pip gcc python3-dev libpq-dev python3-venv || ps axf",
                 "timeout": 300
             }, {
-                "tool": "shell",
-                "cmd": "sudo pip3 install poetry"
-            }, {
                 "tool": "artifacts",
                 "action": "download",
                 "source": "kraken.tar.gz"
@@ -64,18 +61,14 @@ def stage(ctx):
                 "cmd": "tar -zxf kraken.tar.gz"
             }, {
                 "tool": "shell",
-                "cmd": "echo 'version = \"0.0\"' > version.py",
-                "cwd": "kraken/server/kraken"
-            }, {
-                "tool": "shell",
-                "cmd": "poetry install -n --no-root",
-                "cwd": "kraken/server",
+                "cmd": "rake prepare_env",
+                "cwd": "kraken",
                 "timeout": 300
             }, {
                 "tool": "pylint",
-                "pylint_exe": "poetry run pylint",
+                "pylint_exe": "../venv/bin/poetry run pylint",
                 "rcfile": "../pylint.rc",
-                "modules_or_packages": "kraken/server",
+                "modules_or_packages": "kraken",
                 "cwd": "kraken/server",
                 "timeout": 300
             }, {
@@ -89,9 +82,9 @@ def stage(ctx):
                 "timeout": 300
             }, {
                 "tool": "pylint",
-                "pylint_exe": "poetry run pylint",
+                "pylint_exe": "../venv/bin/poetry run pylint",
                 "rcfile": "../pylint.rc",
-                "modules_or_packages": "kraken/client",
+                "modules_or_packages": "kraken",
                 "cwd": "kraken/client",
                 "timeout": 300
             }],
