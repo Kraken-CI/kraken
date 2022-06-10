@@ -73,11 +73,7 @@ def stage(ctx):
                 "timeout": 300
             }, {
                 "tool": "shell",
-                "script": """
-                    rake 'client/pyproject.toml'
-                    poetry install -n --no-root
-                    rake build_client
-                """,
+                "cmd": "rake build_client",
                 "cwd": "kraken/client",
                 "timeout": 300
             }, {
