@@ -354,7 +354,10 @@ def create_vms(ag, system, num,
                          credential, subscription_id)
 
 
-def _destroy_azure_vm(rg, vm_name, instance_id, cc, nc):
+def _destroy_azure_vm(rg, vm_name, cc, nc):
+    # get instance id from vm name, name is as follows "kraken-agent-<instance_id>-vm"
+    instance_id = vm_name[13:-3]
+
     try:
         vm = cc.virtual_machines.get(rg, vm_name)
         disk_name = vm.storage_profile.os_disk.name
@@ -394,7 +397,7 @@ def destroy_vm(ag, agent):  # pylint: disable=unused-argument
     cc = ComputeManagementClient(credential, subscription_id)
     nc = NetworkManagementClient(credential, subscription_id)
 
-    _destroy_azure_vm(rg, vm_name, instance_id, cc, nc)
+    _destroy_azure_vm(rg, vm_name, cc, nc)
 
 
 def vm_exists(ag, agent):
@@ -485,7 +488,7 @@ def cleanup_dangling_vms(ag):  # pylint: disable=unused-argument
         log.info('terminating lost azure vm instance %s', vm.name)
         orphaned_instances += 1
         try:
-            _destroy_azure_vm(rg, vm.name, instance_id, cc, nc)
+            _destroy_azure_vm(rg, vm.name, cc, nc)
         except Exception:
             log.exception('IGNORED EXCEPTION')
 

@@ -97,6 +97,37 @@ def test_check_if_machine_exists_azure():
 
 
 @pytest.mark.db
+def atest_cleanup_dangling_machines_azure():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+
+        agent = Agent(name='agent', address='adr', extra_attrs=dict(instance_id='123'))
+        ag = AgentsGroup(name='group', deployment=dict(method=consts.AGENT_DEPLOYMENT_METHOD_AZURE_VM,
+                                                       azure_vm={'region': 'aaa'}))
+        AgentAssignment(agent=agent, agents_group=ag)
+        db.session.commit()
+
+        # define azure credentials
+        set_setting('cloud', 'azure_subscription_id', 'val')
+        set_setting('cloud', 'azure_tenant_id', 'val')
+        set_setting('cloud', 'azure_client_id', 'val')
+        set_setting('cloud', 'azure_client_secret', 'val')
+
+        # check when vm does exist
+        #with (patch('kraken.server.cloud.azure.login_to_azure') as lta,
+        #      patch('kraken.server.cloud.azure.ComputeManagementClient.virtual_machines') as cmc,
+        #      patch('kraken.server.cloud.azure.MonitorManagementClient') as mmc,
+        #      patch('kraken.server.cloud.azure.NetworkManagementClient') as nmc):
+        # TODO it does not work
+        #    cmc.return_value = [1, 2, 3]
+        #    lta.return_value = 1, 2
+        #    res = cloud.cleanup_dangling_machines(ag)
+        #    assert res == True
+
+
+@pytest.mark.db
 def test_check_if_machine_exists_other():
     ag = Mock()
     ag.get_deployment.return_value = (-1, None)
