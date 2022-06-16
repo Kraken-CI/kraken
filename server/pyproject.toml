@@ -41,7 +41,7 @@ kubernetes = "^20.13.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.2"
-pylint = "^2.13.9"
+pylint = "2.13.9"
 pudb = "^2021.1"
 PyHamcrest = "^2.0.3"
 

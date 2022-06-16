@@ -34,6 +34,9 @@ distro = "^1.7.0"
 [tool.poetry.scripts]
 kkci = 'kraken.client.main:main'
 
+[tool.poetry.dev-dependencies]
+pylint = "2.13.9"
+
 [build-system]
 requires = ["poetry>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
