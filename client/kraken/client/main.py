@@ -161,7 +161,7 @@ def tools_cmd(ctx):
 @tools_cmd.command('list')
 @click.pass_context
 def list_(ctx):
-    'List Kraken Tools but without versions'
+    'List Kraken Tools the last versions.'
     s = _make_session(ctx.obj['server'])
 
     resp = s.get('/tools')
@@ -178,14 +178,14 @@ def list_(ctx):
                                       'name': 'Name',
                                       'location': 'Location',
                                       'entry': 'Entry',
-                                      'version': 'Version'}))
+                                      'version': 'Last Version'}))
 
 
 @tools_cmd.command()
 @click.argument('tool_name')
 @click.pass_context
 def list_versions(ctx, tool_name):
-    'List all versions of given Kraken Tool'
+    'List all versions of given Kraken Tool.'
     s = _make_session(ctx.obj['server'])
 
     resp = s.get('/tools/%s' % tool_name)
@@ -276,7 +276,9 @@ def upload(ctx, version, tool_file):
             }
 
             url = '/tools/%s/zip' % meta['name']
-            s.post(url, send_data, payload_type='files')
+            resp = s.post(url, send_data, payload_type='files')
+            data = resp.json()
+            log.info("Uploaded tool %s@%s", data['name'], data['version'])
 
     finally:
         tf.close()
