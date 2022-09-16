@@ -607,7 +607,7 @@ def serve_agent_request():
     if agent is None or agent.deleted:
         log.warning('unknown agent %s', address)
         _handle_unknown_agent(address, request.remote_addr, agent)
-        return json.dumps({})
+        return json.dumps({'unauthorized': True})
 
     agent.last_seen = utils.utcnow()
     db.session.commit()

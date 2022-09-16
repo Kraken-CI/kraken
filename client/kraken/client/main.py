@@ -313,7 +313,7 @@ def generate_step_file(tool_file):
     log.info('Please, enter values for %s tool parameters', meta['name'])
     for pname, pdef in meta['parameters']['properties'].items():
         if ('type' in pdef and pdef['type'] in ['object', 'array']) or 'oneOf' in pdef:
-            log.info('%s parameters is complex one, enter its value manually in the step file', pname)
+            log.info('%s parameter is complex one, enter its value manually in the step file', pname)
             if 'oneOf' in pdef:
                 step[pname] = ''
             elif pdef['type'] == 'object':
