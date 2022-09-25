@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core'
 import { Title } from '@angular/platform-browser'
-import { FormGroup, FormControl } from '@angular/forms'
+import { UntypedFormGroup, UntypedFormControl } from '@angular/forms'
 
 import { Subscription } from 'rxjs'
 
@@ -31,38 +31,38 @@ export class SettingsPageComponent implements OnInit, OnDestroy {
     kubernetesState = ''
     kubernetesChecking = false
 
-    generalForm = new FormGroup({
-        server_url: new FormControl(''),
-        minio_addr: new FormControl(''),
-        clickhouse_addr: new FormControl(''),
+    generalForm = new UntypedFormGroup({
+        server_url: new UntypedFormControl(''),
+        minio_addr: new UntypedFormControl(''),
+        clickhouse_addr: new UntypedFormControl(''),
     })
 
-    notificationForm = new FormGroup({
-        smtp_server: new FormControl(''),
-        smtp_tls: new FormControl(''),
-        smtp_from: new FormControl(''),
-        smtp_user: new FormControl(''),
-        smtp_password: new FormControl(''),
-        slack_token: new FormControl(''),
+    notificationForm = new UntypedFormGroup({
+        smtp_server: new UntypedFormControl(''),
+        smtp_tls: new UntypedFormControl(''),
+        smtp_from: new UntypedFormControl(''),
+        smtp_user: new UntypedFormControl(''),
+        smtp_password: new UntypedFormControl(''),
+        slack_token: new UntypedFormControl(''),
     })
 
-    monitoringForm = new FormGroup({
-        sentry_dsn: new FormControl(''),
+    monitoringForm = new UntypedFormGroup({
+        sentry_dsn: new UntypedFormControl(''),
     })
 
-    cloudForm = new FormGroup({
+    cloudForm = new UntypedFormGroup({
         // AWS
-        aws_access_key: new FormControl(''),
-        aws_secret_access_key: new FormControl(''),
+        aws_access_key: new UntypedFormControl(''),
+        aws_secret_access_key: new UntypedFormControl(''),
         // Azure
-        azure_subscription_id: new FormControl(''),
-        azure_tenant_id: new FormControl(''),
-        azure_client_id: new FormControl(''),
-        azure_client_secret: new FormControl(''),
+        azure_subscription_id: new UntypedFormControl(''),
+        azure_tenant_id: new UntypedFormControl(''),
+        azure_client_id: new UntypedFormControl(''),
+        azure_client_secret: new UntypedFormControl(''),
         // Kubernetes
-        k8s_api_server_url: new FormControl(''),
-        k8s_namespace: new FormControl(''),
-        k8s_token: new FormControl(''),
+        k8s_api_server_url: new UntypedFormControl(''),
+        k8s_namespace: new UntypedFormControl(''),
+        k8s_token: new UntypedFormControl(''),
     })
 
     private subs: Subscription = new Subscription()

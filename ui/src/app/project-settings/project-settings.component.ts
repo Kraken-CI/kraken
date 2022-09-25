@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core'
 import { Router, ActivatedRoute } from '@angular/router'
-import { FormGroup, FormControl } from '@angular/forms'
+import { UntypedFormGroup, UntypedFormControl } from '@angular/forms'
 import { Title } from '@angular/platform-browser'
 
 import { Subscription } from 'rxjs'
@@ -36,13 +36,13 @@ export class ProjectSettingsComponent implements OnInit, OnDestroy {
 
     // secret form
     secretMode = 0
-    secretForm = new FormGroup({
-        id: new FormControl(''),
-        name: new FormControl(''),
-        kind: new FormControl(''),
-        username: new FormControl(''),
-        key: new FormControl(''),
-        secret: new FormControl(''),
+    secretForm = new UntypedFormGroup({
+        id: new UntypedFormControl(''),
+        name: new UntypedFormControl(''),
+        kind: new UntypedFormControl(''),
+        username: new UntypedFormControl(''),
+        key: new UntypedFormControl(''),
+        secret: new UntypedFormControl(''),
     })
 
     secretKinds = [

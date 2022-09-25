@@ -6,7 +6,7 @@ import {
     ChangeDetectorRef,
 } from '@angular/core'
 import { Router, ActivatedRoute } from '@angular/router'
-import { FormGroup, FormControl } from '@angular/forms'
+import { UntypedFormGroup, UntypedFormControl } from '@angular/forms'
 import { Title } from '@angular/platform-browser'
 
 import { Subscription } from 'rxjs'
@@ -84,13 +84,13 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
     schemaCheckDisplay = false
     schemaCheckContent: any
 
-    schemaFromRepoForm = new FormGroup({
-        repo_url: new FormControl(''),
-        repo_branch: new FormControl(''),
-        repo_access_token: new FormControl(''),
-        schema_file: new FormControl(''),
-        repo_refresh_interval: new FormControl(''),
-        git_clone_params: new FormControl(''),
+    schemaFromRepoForm = new UntypedFormGroup({
+        repo_url: new UntypedFormControl(''),
+        repo_branch: new UntypedFormControl(''),
+        repo_access_token: new UntypedFormControl(''),
+        schema_file: new UntypedFormControl(''),
+        repo_refresh_interval: new UntypedFormControl(''),
+        git_clone_params: new UntypedFormControl(''),
     })
 
     sequences = []
