@@ -121,18 +121,23 @@ export class AppComponent implements OnInit, OnDestroy {
                 items: [
                     {
                         label: 'Agents',
+                        icon: 'pi pi-user',
                         routerLink: '/agents',
                     },
                     {
                         label: 'Groups',
+                        icon: 'pi pi-users',
                         routerLink: '/agents-groups',
                     },
                     {
                         label: 'Discovered',
+                        icon: 'pi pi-user-plus',
                         routerLink: '/discovered-agents',
+                        badge: '10'
                     },
                     {
                         label: 'Download',
+                        icon: 'pi pi-download',
                         command: (event) => {
                             this.downloadAgentInstallSh()
                         },
