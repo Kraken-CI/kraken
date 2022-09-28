@@ -1016,10 +1016,18 @@ class User(db.Model, DatesMixin):
     name = Column(UnicodeText)
     password = Column(UnicodeText)
     sessions = relationship("UserSession", back_populates="user")
+    details = Column(JSONB)
 
     def get_json(self):
+        if self.details:
+            details = self.details
+        else:
+            details = {}
+
         return dict(id=self.id,
-                    user=self.name)
+                    name=self.name,
+                    enabled=details.get('enabled', True),
+                    email=details.get('email', ''))
 
 
 class UserSession(db.Model, DatesMixin):

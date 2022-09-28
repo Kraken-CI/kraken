@@ -1,0 +1,109 @@
+<!-- change branch names dialog -->
+<p-dialog header="Add new user" [(visible)]="addUserDlgVisible" [style]="{width: '30rem', height: '20rem'}">
+    <div class="field grid">
+        <label for="username" class="col-fixed" style="width: 8rem;">User Name</label>
+        <div class="col">
+            <input id="username" type="text" [(ngModel)]="username" (keydown)="addUserKeyDown($event)" autofocus pInputText>
+        </div>
+    </div>
+
+    <div class="field grid">
+        <label for="password" class="col-fixed" style="width: 8rem;">Password</label>
+        <div class="col">
+            <p-password inputId="password" [(ngModel)]="password" [toggleMask]="true" (keydown)="addUserKeyDown($event)"></p-password>
+        </div>
+    </div>
+
+    <p-footer>
+        <button type="button" (click)="cancelAddUser()" pButton icon="pi pi-times" label="Cancel" class="p-button-outlined p-button-secondary"></button>
+        <button type="button" (click)="addUser()" pButton icon="pi pi-check" label="Add User"></button>
+    </p-footer>
+</p-dialog>
+
+<!-- change password dialog -->
+<app-change-passwd-dlg [user]="selectedUser" [(show)]="displayPasswdBox"></app-change-passwd-dlg>
+
+<!-- main page -->
+<div class="grid">
+    <div class="col-4">
+        <div>
+            <p-button label="Add User" icon="pi pi-plus" styleClass="p-button-sm" (onClick)="showAddUserDialog()"></p-button>
+        </div>
+
+<p-table #usersTable
+         id="users"
+         [value]="users"
+         [lazy]="true"
+         (onLazyLoad)="loadUsersLazy($event)"
+         [paginator]="true"
+         [rows]="30"
+         [totalRecords]="totalUsers"
+         [loading]="loadingUsers"
+         [rowsPerPageOptions]="[10,20,30,50,100]"
+         [showCurrentPageReport]="true"
+         [sortField]="'name'"
+         [sortOrder]="1"
+         styleClass="p-datatable-sm"
+         selectionMode="single"
+         [(selection)]="selectedUser"
+         (onRowSelect)="loadUserDetails($event.data)"
+         dataKey="name">
+  <ng-template pTemplate="header">
+    <tr>
+      <th style="width: 80px;" pSortableColumn="id">ID <p-sortIcon field="id"></p-sortIcon></th>
+      <th style="width: 200px;" pSortableColumn="name">Name <p-sortIcon field="name"></p-sortIcon></th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-user>
+    <tr [pSelectableRow]="user" [ngClass]="{'user-disabled': !user.enabled}">
+        <td>{{ user.id }}</td>
+        <td>{{ user.name }}</td>
+    </tr>
+  </ng-template>
+</p-table>
+
+    </div>
+
+    <div class="col-8" *ngIf="selectedUser">
+        <h2 class="bg-bluegray-100 p-2 mt-0">
+            {{ selectedUser.name }}
+        </h2>
+
+        <div>
+            <p-button label="Change Password" icon="pi pi-key" styleClass="p-button-outlined p-button-sm" (onClick)="displayPasswdBox=true" class="pr-3"></p-button>
+            <p-button *ngIf="selectedUser.enabled" label="Disable Account" icon="pi pi-ban" styleClass="p-button-outlined p-button-sm p-button-danger" (onClick)="disableUser()"></p-button>
+            <p-button *ngIf="!selectedUser.enabled" label="Enable Account" icon="pi pi-thumbs-up" styleClass="p-button-outlined p-button-sm p-button-success" (onClick)="enableUser()"></p-button>
+        </div>
+    <!--
+        <div class="p-2 flex align-items-center">
+            <div class="pr-2">
+                Add {{ selectedUser.name }} to project
+            </div>
+            <div class="pr-2">
+                <p-dropdown [options]="projects" optionLabel="name" [(ngModel)]="selectedProject"></p-dropdown>
+            </div>
+            <div class="pr-2">
+                as
+            </div>
+            <div class="pr-2">
+                <p-dropdown [options]="roles" optionLabel="name" [(ngModel)]="selectedRole"></p-dropdown>
+            </div>
+            <div>
+                <p-button icon="pi pi-plus" styleClass="p-button-outlined p-button-sm" (onClick)="addUserFromProject(selectedUser, selectedProject)"></p-button>
+            </div>
+        </div>
+        <div *ngFor="let p of selectedUser.projects" class="p-2 flex align-items-center">
+            <div class="pr-3">
+                {{ p.name }}
+            </div>
+            <div class="pr-4">
+                <p-selectButton [options]="roles" [(ngModel)]="p.role" optionLabel="name" optionValue="value">
+                </p-selectButton>
+            </div>
+            <div>
+                <p-button icon="pi pi-trash" styleClass="p-button-danger p-button-outlined p-button-sm" (onClick)="removeUserFromProject(selectedUser, p)"></p-button>
+            </div>
+        </div>
+    -->
+    </div>
+</div>

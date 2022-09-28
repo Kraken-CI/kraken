@@ -17,6 +17,7 @@ import { GroupsPageComponent } from './groups-page/groups-page.component'
 import { SettingsPageComponent } from './settings-page/settings-page.component'
 import { ToolsPageComponent } from './tools-page/tools-page.component'
 import { DiagsPageComponent } from './diags-page/diags-page.component'
+import { UsersPageComponent } from './users-page/users-page.component'
 
 const routes: Routes = [
     {
@@ -102,6 +103,10 @@ const routes: Routes = [
     {
         path: 'diagnostics/:tab',
         component: DiagsPageComponent,
+    },
+    {
+        path: 'users',
+        component: UsersPageComponent,
     },
 
     // otherwise redirect to home

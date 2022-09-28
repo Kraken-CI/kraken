@@ -22,7 +22,7 @@
       <!-- ></p-progressSpinner> -->
       <!-- <input type="text" pInputText placeholder="Search" /> -->
       <p-splitButton
-        label="Logout {{ session.user.user }}"
+        label="Logout {{ session.user.name }}"
         (onClick)="logout()"
         icon="pi pi-sign-out"
         [model]="logoutMenuItems"
@@ -84,26 +84,4 @@
   </div>
 </div>
 
-<!-- change password box -->
-<p-dialog header="Change Password" [(visible)]="displayPasswdBox">
-  <div class="p-fluid">
-    <div class="field">
-      <label for="password-old">Old Password</label>
-      <input id="password-old" type="password" pPassword [(ngModel)]="passwordOld" [feedback]="false"/>
-    </div>
-    <div class="field">
-      <label for="password-new1">New Password</label>
-      <input id="password-new1" type="password" pPassword [(ngModel)]="passwordNew1" [feedback]="true"/>
-    </div>
-    <div class="field">
-      <label for="password-new2">Repeat New Password</label>
-      <input id="password-new2" type="password" pPassword [(ngModel)]="passwordNew2" [feedback]="false"
-             (keyup)="passwdChangeKeyUp($event.key)"/>
-    </div>
-  </div>
-
-  <p-footer>
-    <p-button icon="pi pi-times" (click)="displayPasswdBox=false" label="Cancel" styleClass="p-button-outlined p-button-secondary"></p-button>
-    <p-button icon="pi pi-check" (click)="changePassword()" label="Change"></p-button>
-  </p-footer>
-</p-dialog>
+<app-change-passwd-dlg [user]="auth.session?.user" [(show)]="displayPasswdBox"></app-change-passwd-dlg>

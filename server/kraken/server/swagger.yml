@@ -69,6 +69,104 @@ paths:
         200:
           description: Successfully deleted session
           content: {}
+  /users:
+    get:
+      tags:
+      - Users
+      summary: List users
+      description: List users
+      operationId: get_users
+      parameters:
+      - name: start
+        in: query
+        description: How many items to return at one time (max 100)
+        schema:
+          type: integer
+          format: int32
+      - name: limit
+        in: query
+        description: How many items to return at one time (max 100)
+        schema:
+          type: integer
+          format: int32
+      - name: sort_field
+        in: query
+        schema:
+          type: string
+      - name: sort_dir
+        in: query
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Users'
+    post:
+      tags:
+      - Users
+      summary: Create a user
+      description: Create a new user
+      operationId: create_user
+      requestBody:
+        description: group
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        201:
+          description: Successfully created user
+          content: {}
+  /users/{user_id}:
+    get:
+      tags:
+      - Users
+      summary: Get user details
+      description: Get user details
+      operationId: get_user
+      parameters:
+      - name: user_id
+        in: path
+        description: ID of user
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        200:
+          description: Successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    patch:
+      tags:
+      - Users
+      summary: Change user details
+      description: Change user details
+      operationId: change_user_details
+      parameters:
+      - name: user_id
+        in: path
+        description: ID of user
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        description: secret
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+        required: false
+      responses:
+        201:
+          description: Successfully
+          content: {}
   /users/{user_id}/password:
     put:
       tags:
@@ -2143,6 +2241,30 @@ components:
           type: integer
           format: int64
         token:
+          type: string
+    Users:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        total:
+          type: integer
+          format: int64
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        password:
+          type: string
+        enabled:
+          type: boolean
+        email:
           type: string
     UserPassword:
       type: object

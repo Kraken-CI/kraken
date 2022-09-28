@@ -9,7 +9,6 @@ import { MessageService } from 'primeng/api'
 import { environment } from './../environments/environment'
 
 import { AuthService } from './auth.service'
-import { UsersService } from './backend/api/users.service'
 import { ManagementService } from './backend/api/management.service'
 import { SettingsService } from './services/settings.service'
 
@@ -29,13 +28,10 @@ export class AppComponent implements OnInit, OnDestroy {
     session: any
     settings: any
 
-    displayPasswdBox = false
     username: string
     password: string
 
-    passwordOld: string
-    passwordNew1: string
-    passwordNew2: string
+    displayPasswdBox = false
 
     errorsInLogsCount = 0
 
@@ -44,8 +40,7 @@ export class AppComponent implements OnInit, OnDestroy {
     private subs: Subscription = new Subscription()
 
     constructor(
-        private auth: AuthService,
-        private api: UsersService,
+        protected auth: AuthService,
         private settingsService: SettingsService,
         protected managementService: ManagementService,
         private msgSrv: MessageService
@@ -133,7 +128,7 @@ export class AppComponent implements OnInit, OnDestroy {
                         label: 'Discovered',
                         icon: 'pi pi-user-plus',
                         routerLink: '/discovered-agents',
-                        badge: '10'
+                        badge: '10' // todo: it does not work
                     },
                     {
                         label: 'Download',
@@ -166,6 +161,13 @@ export class AppComponent implements OnInit, OnDestroy {
                         label: 'Settings',
                         icon: 'fa fa-cogs',
                         routerLink: '/settings',
+                        disabled: !this.auth.hasPermission('manage'),
+                        title: this.auth.permTip('manage'),
+                    },
+                    {
+                        label: 'Users',
+                        icon: 'pi pi-user',
+                        routerLink: '/users',
                         disabled: !this.auth.hasPermission('manage'),
                         title: this.auth.permTip('manage'),
                     },
@@ -254,67 +256,6 @@ export class AppComponent implements OnInit, OnDestroy {
 
     isLocal() {
         return window.location.hostname === 'localhost'
-    }
-
-    changePassword() {
-        if (this.passwordNew1 !== this.passwordNew2) {
-            this.msgSrv.add({
-                severity: 'error',
-                summary: 'Changing password erred',
-                detail: 'New passwords are not the same',
-                life: 10000,
-            })
-            return
-        }
-        if (!this.passwordNew1) {
-            this.msgSrv.add({
-                severity: 'error',
-                summary: 'Changing password erred',
-                detail: 'New password cannot be empty',
-                life: 10000,
-            })
-            return
-        }
-
-        const passwds = {
-            password_old: this.passwordOld,
-            password_new: this.passwordNew1,
-        }
-        this.subs.add(
-            this.api
-                .changePassword(this.auth.session.user.id, passwds)
-                .subscribe(
-                    (data) => {
-                        this.msgSrv.add({
-                            severity: 'success',
-                            summary: 'Password changed',
-                            detail: 'Changing password succeeded.',
-                        })
-                        this.displayPasswdBox = false
-                        this.passwordOld = ''
-                        this.passwordNew1 = ''
-                        this.passwordNew2 = ''
-                    },
-                    (err) => {
-                        let msg = err.statusText
-                        if (err.error && err.error.detail) {
-                            msg = err.error.detail
-                        }
-                        this.msgSrv.add({
-                            severity: 'error',
-                            summary: 'Changing password erred',
-                            detail: 'Changing password erred: ' + msg,
-                            life: 10000,
-                        })
-                    }
-                )
-        )
-    }
-
-    passwdChangeKeyUp(evKey) {
-        if (evKey === 'Enter') {
-            this.changePassword()
-        }
     }
 
     downloadAgentInstallSh() {
