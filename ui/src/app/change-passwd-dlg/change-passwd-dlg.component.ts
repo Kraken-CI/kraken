@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, OnDestroy, EventEmitter } from '@angular/core';
+import { Component, Input, Output, OnDestroy, EventEmitter } from '@angular/core';
 
 import { MessageService } from 'primeng/api'
 
@@ -11,7 +11,7 @@ import { UsersService } from '../backend/api/users.service'
   templateUrl: './change-passwd-dlg.component.html',
   styleUrls: ['./change-passwd-dlg.component.sass']
 })
-export class ChangePasswdDlgComponent implements OnInit, OnDestroy {
+export class ChangePasswdDlgComponent implements OnDestroy {
     @Input() user: any
     @Input() show: any
     @Output() showChange = new EventEmitter<boolean>();
@@ -26,9 +26,6 @@ export class ChangePasswdDlgComponent implements OnInit, OnDestroy {
         protected usersService: UsersService,
         private msgSrv: MessageService,
     ) { }
-
-    ngOnInit(): void {
-    }
 
     ngOnDestroy() {
         this.subs.unsubscribe()
