@@ -12,15 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import datetime
-
 import pytest
-from hamcrest import assert_that, has_entries, matches_regexp, contains_exactly, instance_of
 
 import werkzeug.exceptions
 
-from kraken.server import consts, initdb, utils
-from kraken.server.models import db, Project, Branch, Flow
+from kraken.server import initdb
 
 from common import create_app
 
@@ -63,7 +59,7 @@ def test_users():
         assert code == 201
         assert 'id' in user and user['id']
         assert 'name' in user and user['name'] == body['name']
-        assert 'enabled' in user and user['enabled'] == True
+        assert 'enabled' in user and user['enabled'] is True
 
         body = {'user': 'borat', 'password': 'bad-pswd'}
         with pytest.raises(werkzeug.exceptions.Unauthorized):
@@ -92,12 +88,12 @@ def test_users():
         body = {}
         user2, code = users.change_user_details(user_id, body)
         assert code == 201
-        assert 'enabled' in user2 and user2['enabled'] == True
+        assert 'enabled' in user2 and user2['enabled'] is True
 
         body = {'enabled': False}
         user2, code = users.change_user_details(user_id, body)
         assert code == 201
-        assert 'enabled' in user2 and user2['enabled'] == False
+        assert 'enabled' in user2 and user2['enabled'] is False
 
         body = {'user': 'borat', 'password': 'pswd'}
         with pytest.raises(werkzeug.exceptions.Unauthorized):
@@ -106,7 +102,7 @@ def test_users():
         body = {'enabled': True}
         user2, code = users.change_user_details(user_id, body)
         assert code == 201
-        assert 'enabled' in user2 and user2['enabled'] == True
+        assert 'enabled' in user2 and user2['enabled'] is True
 
         body = {'user': 'borat', 'password': 'pswd'}
         sess, code = users.login(body)
