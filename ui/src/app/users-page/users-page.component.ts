@@ -13,7 +13,7 @@ import { BreadcrumbsService } from '../breadcrumbs.service'
   templateUrl: './users-page.component.html',
   styleUrls: ['./users-page.component.sass']
 })
-export class UsersPageComponent implements OnInit {
+export class UsersPageComponent implements OnInit, OnDestroy {
     private subs: Subscription = new Subscription()
 
     users: any[] = []

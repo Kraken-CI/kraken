@@ -11,7 +11,7 @@ import { UsersService } from '../backend/api/users.service'
   templateUrl: './change-passwd-dlg.component.html',
   styleUrls: ['./change-passwd-dlg.component.sass']
 })
-export class ChangePasswdDlgComponent implements OnInit {
+export class ChangePasswdDlgComponent implements OnInit, OnDestroy {
     @Input() user: any
     @Input() show: any
     @Output() showChange = new EventEmitter<boolean>();
