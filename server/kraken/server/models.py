@@ -15,7 +15,7 @@
 import logging
 
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Column, Boolean, DateTime, ForeignKey, Integer, Unicode, UnicodeText
+from sqlalchemy import Column, Boolean, DateTime, ForeignKey, Integer, Unicode, UnicodeText, String
 from sqlalchemy import event, UniqueConstraint, Index
 from sqlalchemy.orm import relationship, mapper
 from sqlalchemy.dialects.postgresql import JSONB, DOUBLE_PRECISION, BYTEA
@@ -1027,7 +1027,8 @@ class User(db.Model, DatesMixin):
         return dict(id=self.id,
                     name=self.name,
                     enabled=details.get('enabled', True),
-                    email=details.get('email', ''))
+                    email=details.get('email', ''),
+                    superadmin=self.name == 'admin')
 
 
 class UserSession(db.Model, DatesMixin):
@@ -1041,3 +1042,27 @@ class UserSession(db.Model, DatesMixin):
         return dict(id=self.id,
                     token=self.token,
                     user=self.user.get_json())
+
+
+class CasbinRule(db.Model, DatesMixin):
+    __tablename__ = "casbin_rules"
+
+    id = Column(Integer, primary_key=True)
+    ptype = Column(String(255))
+    v0 = Column(String(255))
+    v1 = Column(String(255))
+    v2 = Column(String(255))
+    v3 = Column(String(255))
+    v4 = Column(String(255))
+    v5 = Column(String(255))
+
+    def __str__(self):
+        arr = [self.ptype]
+        for v in (self.v0, self.v1, self.v2, self.v3, self.v4, self.v5):
+            if v is None:
+                break
+            arr.append(v)
+        return ", ".join(arr)
+
+    def __repr__(self):
+        return '<CasbinRule {}: "{}">'.format(self.id, str(self))

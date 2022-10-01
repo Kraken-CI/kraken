@@ -2266,6 +2266,8 @@ components:
           type: boolean
         email:
           type: string
+        superadmin:
+          type: boolean
     UserPassword:
       type: object
       properties:

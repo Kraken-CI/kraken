@@ -32,6 +32,7 @@ from . import storage
 from . import job_log
 from . import badge
 from . import minioops
+from . import access
 from .. import version
 
 log = logging.getLogger('server')
@@ -133,6 +134,9 @@ def create_app():
         else:
             minio_addr, _, _ = minioops.get_minio_addr()
             log.warning('No connection to minio at %s', minio_addr)
+
+        # prepare access control
+        access.init()
 
     # Read the swagger.yml file to configure the endpoints
     connex_app.add_api("swagger.yml", resolver=MyResolver())

@@ -73,37 +73,61 @@
             <p-button label="Change Password" icon="pi pi-key" styleClass="p-button-outlined p-button-sm" (onClick)="displayPasswdBox=true" class="pr-3"></p-button>
             <p-button *ngIf="selectedUser.enabled" label="Disable Account" icon="pi pi-ban" styleClass="p-button-outlined p-button-sm p-button-danger" (onClick)="disableUser()"></p-button>
             <p-button *ngIf="!selectedUser.enabled" label="Enable Account" icon="pi pi-thumbs-up" styleClass="p-button-outlined p-button-sm p-button-success" (onClick)="enableUser()"></p-button>
+            <p-toggleButton [(ngModel)]="selectedUser.superadmin"
+                            onLabel="Super Admin: YES" offLabel="Super Admin: NO"
+                            onIcon="pi pi-check" offIcon="pi pi-times"
+                            styleClass="p-button-outlined p-button-sm"
+                            class="pl-3"
+                            (onChange)="superadminChange()" ></p-toggleButton>
+
         </div>
-    <!--
-        <div class="p-2 flex align-items-center">
-            <div class="pr-2">
-                Add {{ selectedUser.name }} to project
+
+        <p-fieldset legend="User Projects, Roles and Permissions" [style]="{'margin-top': '1rem'}">
+            <div class="grid">
+
+                <div class="col-6">
+                    <div class="font-bold">User projects</div>
+                    <div *ngFor="let p of selectedUser.userProjects" class="p-2 flex align-items-center">
+                        <div class="pr-3 w-8rem">
+                            {{ p.name }}
+                        </div>
+                        <div class="pr-4">
+                            <p-selectButton [options]="roles" [(ngModel)]="p.role" optionLabel="name" optionValue="value"
+                                            (onChange)="changeUserRoleInProject(p)">
+                            </p-selectButton>
+                        </div>
+                        <div>
+                            <p-button icon="pi pi-trash" styleClass="p-button-danger p-button-outlined p-button-sm" (onClick)="removeUserFromProject(p)"></p-button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-6">
+                    <div class="font-bold">Add user to project</div>
+                    <div class="p-2 flex align-items-center">
+                        <div class="pr-4">
+                            <p-dropdown [options]="selectedUser.nonUserProjects" optionLabel="name" [(ngModel)]="selectedProject"
+                                        [style]="{width: '15em'}"
+                                        [panelStyle]="{'min-width': '15em'}"
+                                        scrollHeight='40vh'
+                                        ></p-dropdown>
+                        </div>
+                        <div class="pr-2">
+                            as
+                        </div>
+                        <div class="pr-2">
+                            <p-dropdown [options]="roles" optionLabel="name" [(ngModel)]="selectedRole"
+                                        [style]="{width: '10em'}"
+                                        [panelStyle]="{'min-width': '10em'}"
+                                        ></p-dropdown>
+                        </div>
+                        <div>
+                            <p-button icon="pi pi-plus" styleClass="p-button-outlined p-button-sm" (onClick)="addUserToProject(selectedProject, selectedRole)"></p-button>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="pr-2">
-                <p-dropdown [options]="projects" optionLabel="name" [(ngModel)]="selectedProject"></p-dropdown>
-            </div>
-            <div class="pr-2">
-                as
-            </div>
-            <div class="pr-2">
-                <p-dropdown [options]="roles" optionLabel="name" [(ngModel)]="selectedRole"></p-dropdown>
-            </div>
-            <div>
-                <p-button icon="pi pi-plus" styleClass="p-button-outlined p-button-sm" (onClick)="addUserFromProject(selectedUser, selectedProject)"></p-button>
-            </div>
-        </div>
-        <div *ngFor="let p of selectedUser.projects" class="p-2 flex align-items-center">
-            <div class="pr-3">
-                {{ p.name }}
-            </div>
-            <div class="pr-4">
-                <p-selectButton [options]="roles" [(ngModel)]="p.role" optionLabel="name" optionValue="value">
-                </p-selectButton>
-            </div>
-            <div>
-                <p-button icon="pi pi-trash" styleClass="p-button-danger p-button-outlined p-button-sm" (onClick)="removeUserFromProject(selectedUser, p)"></p-button>
-            </div>
-        </div>
-    -->
+        </p-fieldset>
+
     </div>
 </div>

@@ -5,6 +5,7 @@ import { MessageService } from 'primeng/api'
 
 import { Subscription } from 'rxjs'
 
+import { ManagementService } from '../backend/api/management.service'
 import { UsersService } from '../backend/api/users.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
 
@@ -20,6 +21,7 @@ export class UsersPageComponent implements OnInit, OnDestroy {
     totalUsers = 0
     loadingUsers = false
     selectedUser: any
+    superadmin = false
 
     addUserDlgVisible = false
     username = ''
@@ -29,10 +31,12 @@ export class UsersPageComponent implements OnInit, OnDestroy {
 
     roles: any[];
     projects: any[] = []
+    projectsById = {}
     selectedProject: any
     selectedRole: any
 
     constructor(
+        protected managementService: ManagementService,
         protected usersService: UsersService,
         protected breadcrumbService: BreadcrumbsService,
         private msgSrv: MessageService,
@@ -57,6 +61,15 @@ export class UsersPageComponent implements OnInit, OnDestroy {
             },
         ]
         this.breadcrumbService.setCrumbs(crumbs)
+
+        this.subs.add(
+            this.managementService.getProjects().subscribe((data) => {
+                this.projects = data.items
+                for (let p of this.projects) {
+                    this.projectsById[p.id] = p
+                }
+            })
+        )
     }
 
     ngOnDestroy() {
@@ -96,14 +109,34 @@ export class UsersPageComponent implements OnInit, OnDestroy {
             this.usersService
                 .getUser(user.id)
                 .subscribe((data) => {
-                    user.projects = [
-                        {id: 1, name: 'Proj1', role: 'viewer'},
-                        {id: 2, name: 'Proj2', role: 'admin'},
-                        {id: 3, name: 'Proj3', role: 'pwrusr'},
-                    ]
-                    //this.toolVersions = data.items
-
                     this.selectedProject = null
+
+                    for (var k in data) {
+                        user[k] = data[k]
+                    }
+
+                    let userProjectsById = {}
+                    user.userProjects = []
+                    for (const [projId, role] of Object.entries(user.projects)) {
+                        let p = this.projectsById[projId]
+                        if (!p) {
+                            return
+                        }
+                        userProjectsById[projId] = p
+                        user.userProjects.push({
+                            id: projId,
+                            name: p.name,
+                            role: role
+                        })
+                    }
+                    user.userProjects.sort((a, b) => a.name.localeCompare(b.name))
+
+                    user.nonUserProjects = []
+                    for (let p of this.projects) {
+                        if (!(p.id in userProjectsById)) {
+                            user.nonUserProjects.push(p)
+                        }
+                    }
                 })
         )
     }
@@ -161,18 +194,18 @@ export class UsersPageComponent implements OnInit, OnDestroy {
         }
     }
 
-    enableUser() {
-        let user = {enabled: true}
-
+    changeUserDetails(details, okSummary, okDetails, errSummary, errDetails) {
         this.subs.add(
             this.usersService
-                .changeUserDetails(this.selectedUser.id, user)
+                .changeUserDetails(this.selectedUser.id, details)
                 .subscribe(
                     (data) => {
+                        this.loadUserDetails(this.selectedUser)
+
                         this.msgSrv.add({
                             severity: 'success',
-                            summary: 'User enabled',
-                            detail: 'Enabling user succeeded.',
+                            summary: okSummary,
+                            detail: okDetails,
                         })
                     },
                     (err) => {
@@ -182,48 +215,63 @@ export class UsersPageComponent implements OnInit, OnDestroy {
                         }
                         this.msgSrv.add({
                             severity: 'error',
-                            summary: 'Enabling user erred',
-                            detail: 'Enabling user erred: ' + msg,
+                            summary: errSummary,
+                            detail: errDetails + msg,
                             life: 10000,
                         })
                     }
                 )
         )
+    }
+
+    enableUser() {
+        let details = {enabled: true}
+        this.changeUserDetails(details,
+                               'User enabled', 'Enabling user succeeded.',
+                               'Enabling user erred', 'Enabling user erred: ')
     }
 
     disableUser() {
-        let user = {enabled: false}
-
-        this.subs.add(
-            this.usersService
-                .changeUserDetails(this.selectedUser.id, user)
-                .subscribe(
-                    (data) => {
-                        this.msgSrv.add({
-                            severity: 'success',
-                            summary: 'User disabled',
-                            detail: 'Disabling user succeeded.',
-                        })
-                    },
-                    (err) => {
-                        let msg = err.statusText
-                        if (err.error && err.error.detail) {
-                            msg = err.error.detail
-                        }
-                        this.msgSrv.add({
-                            severity: 'error',
-                            summary: 'Disabling user erred',
-                            detail: 'Disabling user erred: ' + msg,
-                            life: 10000,
-                        })
-                    }
-                )
-        )
+        let details = {enabled: false}
+        this.changeUserDetails(details,
+                               'User disabled', 'Disabling user succeeded.',
+                               'Disabling user erred','Disabling user erred: ')
     }
 
-    addUserFromProject(user, project) {
+    superadminChange() {
+        let user = {superadmin: this.selectedUser.superadmin}
+        this.changeUserDetails(user,
+                               'Super admin role changed', 'Changing super admin role succeeded.',
+                               'Changing super admin role erred','Changing super admin role erred: ')
     }
 
-    removeUserFromProject(user, proj) {
+    addUserToProject(project, role) {
+        let projs = {}
+        projs[project.id] = role.value
+        let details = {projects: projs}
+
+        this.changeUserDetails(details,
+                               'User added to project', `User added to project ${project.name} as ${role.name}.`,
+                               'Adding user from project erred','Adding user from project erred: ')
+    }
+
+    changeUserRoleInProject(project) {
+        let projs = {}
+        projs[project.id] = project.role
+        let details = {projects: projs}
+
+        this.changeUserDetails(details,
+                               'User role changed', `User role changed in project ${project.name} to ${project.role}.`,
+                               'Changing user role erred','Changing user role erred: ')
+    }
+
+    removeUserFromProject(project) {
+        let projs = {}
+        projs[project.id] = null
+        let details = {projects: projs}
+
+        this.changeUserDetails(details,
+                               'User removed from project', `User removed from project ${project.name}.`,
+                               'Removing user from project erred','Removing user from project erred: ')
     }
 }

@@ -109,7 +109,7 @@ def get_projects():
                   joinedload('branches.ci_last_completed_flow'),
                   joinedload('branches.ci_last_completed_flow.runs'),
                   joinedload('secrets'))
-
+    q = q.order_by(Project.name)
     projects = []
     for p in q.all():
         projects.append(p.get_json(with_last_results=True))
