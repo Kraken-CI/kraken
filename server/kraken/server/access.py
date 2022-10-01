@@ -12,15 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import casbin
-
+from contextlib import contextmanager
 
 ## vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 ## copied from https://github.com/pycasbin/sqlalchemy-adapter/blob/606a631b1704d76c5ca0f83064158604851dc17f/casbin_sqlalchemy_adapter/adapter.py
 ## this is under apache 2.0 license
 
-from contextlib import contextmanager
 
+import casbin
 from casbin import persist
 from sqlalchemy import or_
 
@@ -63,22 +62,22 @@ class Adapter(persist.Adapter, persist.adapters.UpdateAdapter):
     def is_filtered(self):
         return self._filtered
 
-    def load_filtered_policy(self, model, filter) -> None:
+    def load_filtered_policy(self, model, flter) -> None:
         """loads all policy rules from the storage."""
         with self._session_scope():
             q = CasbinRule.query
-            q = self.filter_query(q, filter)
+            q = self.filter_query(q, flter)
             filtered = q.all()
 
             for line in filtered:
                 persist.load_policy_line(str(line), model)
             self._filtered = True
 
-    def filter_query(self, querydb, filter):
+    def filter_query(self, querydb, flter):
         for attr in ("ptype", "v0", "v1", "v2", "v3", "v4", "v5"):
-            if len(getattr(filter, attr)) > 0:
+            if len(getattr(flter, attr)) > 0:
                 querydb = querydb.filter(
-                    getattr(CasbinRule, attr).in_(getattr(filter, attr))
+                    getattr(CasbinRule, attr).in_(getattr(flter, attr))
                 )
         return querydb.order_by(CasbinRule.id)
 
@@ -101,16 +100,16 @@ class Adapter(persist.Adapter, persist.adapters.UpdateAdapter):
                         self._save_policy_line(ptype, rule)
         return True
 
-    def add_policy(self, sec, ptype, rule):
+    def add_policy(self, sec, ptype, rule):  # pylint: disable=unused-argument
         """adds a policy rule to the storage."""
         self._save_policy_line(ptype, rule)
 
-    def add_policies(self, sec, ptype, rules):
+    def add_policies(self, sec, ptype, rules):  # pylint: disable=unused-argument
         """adds a policy rules to the storage."""
         for rule in rules:
             self._save_policy_line(ptype, rule)
 
-    def remove_policy(self, sec, ptype, rule):
+    def remove_policy(self, sec, ptype, rule):  # pylint: disable=unused-argument
         """removes a policy rule from the storage."""
         with self._session_scope():
             q = CasbinRule.query.filter_by(ptype=ptype)
@@ -118,9 +117,9 @@ class Adapter(persist.Adapter, persist.adapters.UpdateAdapter):
                 q = q.filter(getattr(CasbinRule, "v{}".format(i)) == v)
             r = q.delete()
 
-        return True if r > 0 else False
+        return r > 0
 
-    def remove_policies(self, sec, ptype, rules):
+    def remove_policies(self, sec, ptype, rules):  # pylint: disable=unused-argument
         """remove policy rules from the storage."""
         if not rules:
             return
@@ -133,7 +132,7 @@ class Adapter(persist.Adapter, persist.adapters.UpdateAdapter):
                 )
             q.delete()
 
-    def remove_filtered_policy(self, sec, ptype, field_index, *field_values):
+    def remove_filtered_policy(self, sec, ptype, field_index, *field_values):  # pylint: disable=unused-argument
         """removes policy rules that match the filter from the storage.
         This is part of the Auto-Save feature.
         """
@@ -150,11 +149,11 @@ class Adapter(persist.Adapter, persist.adapters.UpdateAdapter):
                     q = q.filter(v_value == v)
             r = q.delete()
 
-        return True if r > 0 else False
+        return r > 0
 
     def update_policy(
         self, sec: str, ptype: str, old_rule: [str], new_rule: [str]
-    ) -> None:
+    ) -> None:  # pylint: disable=unused-argument
         """
         Update the old_rule with the new_rule in the database (storage).
 
@@ -214,39 +213,35 @@ class Adapter(persist.Adapter, persist.adapters.UpdateAdapter):
     ) -> [[str]]:
         """update_filtered_policies updates all the policies on the basis of the filter."""
 
-        filter = Filter()
-        filter.ptype = ptype
+        flter = Filter()
+        flter.ptype = ptype
 
         # Creating Filter from the field_index & field_values provided
         for i in range(len(field_values)):
             if field_index <= i and i < field_index + len(field_values):
-                setattr(filter, f"v{i}", field_values[i - field_index])
+                setattr(flter, f"v{i}", field_values[i - field_index])
             else:
                 break
 
-        self._update_filtered_policies(new_rules, filter)
+        self._update_filtered_policies(new_rules, flter)
 
-    def _update_filtered_policies(self, new_rules, filter) -> [[str]]:
+    def _update_filtered_policies(self, new_rules, flter) -> [[str]]:
         """_update_filtered_policies updates all the policies on the basis of the filter."""
 
         with self._session_scope():
 
             # Load old policies
-
-            q = CasbinRule.query.filter_by(ptype=filter.ptype)
-            q = self.filter_query(q, filter)
+            q = CasbinRule.query.filter_by(ptype=flter.ptype)
+            q = self.filter_query(q, flter)
             old_rules = q.all()
 
             # Delete old policies
-
-            self.remove_policies("p", filter.ptype, old_rules)
+            self.remove_policies("p", flter.ptype, old_rules)
 
             # Insert new policies
-
-            self.add_policies("p", filter.ptype, new_rules)
+            self.add_policies("p", flter.ptype, new_rules)
 
             # return deleted rules
-
             return old_rules
 
 
@@ -284,8 +279,4 @@ def init():
     model = casbin.Enforcer.new_model(text=model_txt)
 
     # Create enforcer from adapter and config policy
-    e = casbin.Enforcer(model, adapter)
-
-    enforcer = e
-
-    return e
+    enforcer = casbin.Enforcer(model, adapter)
