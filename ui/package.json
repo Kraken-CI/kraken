@@ -23,7 +23,7 @@
     "@ctrl/ngx-codemirror": "^5.1.1",
     "ansicolor": "^1.1.100",
     "chart.js": "^3.7.0",
-    "chartjs-chart-error-bars": "^3.6.0",
+    "chartjs-chart-error-bars": "^3.9.2",
     "chartjs-plugin-zoom": "^1.2.1",
     "codemirror": "^5.65.0",
     "font-awesome": "^4.7.0",
