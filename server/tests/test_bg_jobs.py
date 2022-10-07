@@ -660,5 +660,8 @@ def test_load_remote_tool():
 
         os.environ['MINIO_ACCESS_KEY'] = 'UFSEHRCFU4ACUEWHCHWU'
         os.environ['MINIO_SECRET_KEY'] = 'HICSHuhIIUhiuhMIUHIUhGFfUHugy6fGJuyyfiGY'
-
-        jobs.load_remote_tool(tool.id)
+        try:
+            jobs.load_remote_tool(tool.id)
+        finally:
+            del os.environ['MINIO_ACCESS_KEY']
+            del os.environ['MINIO_SECRET_KEY']

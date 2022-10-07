@@ -13,64 +13,413 @@
 # limitations under the License.
 
 import logging
+from unittest.mock import patch
 
 import pytest
 
-from kraken.server import consts, initdb
-from kraken.server.models import db, Run, Job, TestCaseResult, Branch, Flow, Stage, Project, System, AgentsGroup, TestCase, Tool
-from kraken.server import results
+from kraken.server import consts, initdb, access
+from kraken.server.models import db, Run, Job, TestCaseResult, Branch, Flow, Stage, Project, System, AgentsGroup, Agent, TestCase, Tool, BranchSequence
+from kraken.server import results, execution
 
-from common import create_app
+from common import create_app, prepare_user, check_missing_tests_in_mod
 
 log = logging.getLogger(__name__)
 
 
+def test_missing_tests():
+    check_missing_tests_in_mod(execution, __name__)
+
+
 @pytest.mark.db
-def test_create_or_update_test_case_comment():
+def test_create_flow():
     app = create_app()
 
     with app.app_context():
         initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        project = Project()
+        branch = Branch(project=project)
+        BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_FLOW, value=0)
+        BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_CI_FLOW, value=0)
+        BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_DEV_FLOW, value=0)
+        db.session.commit()
+
+        execution.create_flow(branch.id, 'dev', {}, token_info=token_info)
+
+
+@pytest.mark.db
+def test_get_flows():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        project = Project()
+        branch = Branch(project=project)
+        BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_FLOW, value=0)
+        BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_CI_FLOW, value=0)
+        BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_DEV_FLOW, value=0)
+        db.session.commit()
+
+        execution.get_flows(branch.id, 'dev', token_info=token_info)
+
+
+@pytest.mark.db
+def test_get_flow():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        project = Project()
+        branch = Branch(project=project)
+        BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_FLOW, value=0)
+        BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_CI_FLOW, value=0)
+        BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_DEV_FLOW, value=0)
+        flow = Flow(branch=branch, kind=consts.FLOW_KIND_CI)
+        db.session.commit()
+
+        execution.get_flow(flow.id, token_info=token_info)
+
+
+@pytest.mark.db
+def test_get_flow_runs():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        project = Project()
+        branch = Branch(project=project)
+        BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_FLOW, value=0)
+        BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_CI_FLOW, value=0)
+        BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_DEV_FLOW, value=0)
+        flow = Flow(branch=branch, kind=consts.FLOW_KIND_CI)
+        db.session.commit()
+
+        execution.get_flow_runs(flow.id, token_info=token_info)
+
+
+@pytest.mark.db
+def test_get_flow_artifacts():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        project = Project()
+        branch = Branch(project=project)
+        BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_FLOW, value=0)
+        BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_CI_FLOW, value=0)
+        BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_DEV_FLOW, value=0)
+        flow = Flow(branch=branch, kind=consts.FLOW_KIND_CI)
+        db.session.commit()
+
+        execution.get_flow_artifacts(flow.id, token_info=token_info)
+
+
+@pytest.mark.db
+def atest_create_run():  # TODO
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        project = Project()
+        branch = Branch(project=project)
+        stage = Stage(branch=branch, schema={
+            "parent": "Tarball",
+            "triggers": {
+                "parent": True
+            },
+            "parameters": [],
+            "configs": [],
+            "jobs": [],
+            "notification": {}
+        })
+        BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_FLOW, value=0)
+        BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_CI_FLOW, value=0)
+        BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_DEV_FLOW, value=0)
+        BranchSequence(branch=branch, stage=stage, kind=consts.BRANCH_SEQ_RUN, value=0)
+        BranchSequence(branch=branch, stage=stage, kind=consts.BRANCH_SEQ_CI_RUN, value=0)
+        BranchSequence(branch=branch, stage=stage, kind=consts.BRANCH_SEQ_DEV_RUN, value=0)
+        flow = Flow(branch=branch, kind=consts.FLOW_KIND_CI)
+        db.session.commit()
+
+        body = dict(stage_id=stage.id)
+        execution.create_run(flow.id, body, token_info=token_info)
+
+
+@pytest.mark.db
+def atest_run_run_jobs():  # TODO
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        project = Project()
+        branch = Branch(project=project)
+        stage = Stage(branch=branch, schema={
+            "parent": "Tarball",
+            "triggers": {
+                "parent": True
+            },
+            "parameters": [],
+            "configs": [],
+            "jobs": [],
+            "notification": {}
+        })
+        BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_FLOW, value=0)
+        BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_CI_FLOW, value=0)
+        BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_DEV_FLOW, value=0)
+        BranchSequence(branch=branch, stage=stage, kind=consts.BRANCH_SEQ_RUN, value=0)
+        BranchSequence(branch=branch, stage=stage, kind=consts.BRANCH_SEQ_CI_RUN, value=0)
+        BranchSequence(branch=branch, stage=stage, kind=consts.BRANCH_SEQ_DEV_RUN, value=0)
+        flow = Flow(branch=branch, kind=consts.FLOW_KIND_CI)
+        run = Run(stage=stage, flow=flow, reason='by me')
+        db.session.commit()
+
+        execution.run_run_jobs(run.id, token_info=token_info)
+
+
+@pytest.mark.db
+def test_job_rerun():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        project = Project()
+        branch = Branch(project=project)
+        stage = Stage(branch=branch, schema={
+            "parent": "Tarball",
+            "triggers": {
+                "parent": True
+            },
+            "parameters": [],
+            "configs": [],
+            "jobs": [],
+            "notification": {}
+        })
+        BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_FLOW, value=0)
+        BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_CI_FLOW, value=0)
+        BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_DEV_FLOW, value=0)
+        BranchSequence(branch=branch, stage=stage, kind=consts.BRANCH_SEQ_RUN, value=0)
+        BranchSequence(branch=branch, stage=stage, kind=consts.BRANCH_SEQ_CI_RUN, value=0)
+        BranchSequence(branch=branch, stage=stage, kind=consts.BRANCH_SEQ_DEV_RUN, value=0)
+        flow = Flow(branch=branch, kind=consts.FLOW_KIND_CI)
+        run = Run(stage=stage, flow=flow, reason='by me')
+        system = System()
+        agents_group = AgentsGroup()
+        job = Job(run=run, agents_group=agents_group, system=system)
+        db.session.commit()
+
+        execution.job_rerun(job.id, token_info=token_info)
+
+
+@pytest.mark.db
+def test_create_job():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        project = Project()
+        branch = Branch(project=project)
+        stage = Stage(branch=branch, schema={
+            "parent": "Tarball",
+            "triggers": {
+                "parent": True
+            },
+            "parameters": [],
+            "configs": [],
+            "jobs": [],
+            "notification": {}
+        })
+        BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_FLOW, value=0)
+        BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_CI_FLOW, value=0)
+        BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_DEV_FLOW, value=0)
+        BranchSequence(branch=branch, stage=stage, kind=consts.BRANCH_SEQ_RUN, value=0)
+        BranchSequence(branch=branch, stage=stage, kind=consts.BRANCH_SEQ_CI_RUN, value=0)
+        BranchSequence(branch=branch, stage=stage, kind=consts.BRANCH_SEQ_DEV_RUN, value=0)
+        flow = Flow(branch=branch, kind=consts.FLOW_KIND_CI)
+        run = Run(stage=stage, flow=flow, reason='by me')
+        system = System()
+        agents_group = AgentsGroup()
+        db.session.commit()
+
+        job = dict(run=run.id)
+        execution.create_job(job, token_info=token_info)
+
+
+@pytest.mark.db
+def test_get_runs():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
 
         project = Project()
         branch = Branch(project=project)
         stage = Stage(branch=branch, schema={})
-        system = System()
-        system2 = System()
-        agents_group = AgentsGroup()
-        tool = Tool(fields={})
-        test_case = TestCase(tool=tool)
-        flow = Flow(branch=branch)
-        run = Run(stage=stage, flow=flow, reason='by me')
-        job = Job(run=run, agents_group=agents_group, system=system, completion_status=consts.JOB_CMPLT_ALL_OK, state=consts.JOB_STATE_COMPLETED)
-        tcr = TestCaseResult(test_case=test_case, result=consts.TC_RESULT_PASSED, job=job)
-        job2 = Job(run=run, agents_group=agents_group, system=system2, completion_status=consts.JOB_CMPLT_ALL_OK, state=consts.JOB_STATE_COMPLETED)
-        tcr2 = TestCaseResult(test_case=test_case, result=consts.TC_RESULT_PASSED, job=job2)
+        flow = Flow(branch=branch, kind=consts.FLOW_KIND_CI)
+        run = Run(stage=stage, flow=flow, reason=dict(reason='manual'))
         db.session.commit()
 
-        resp, code = results.create_or_update_test_case_comment(tcr.id,
-                                                                dict(text='text', author='author', state=consts.TC_COMMENT_INVESTIGATING))
-        assert code == 200
-        assert resp['state'] == consts.TC_COMMENT_INVESTIGATING
-        assert len(resp['data']) == 1
-        assert resp['data'][0]['author'] == 'author'
-        assert resp['data'][0]['date'].startswith('20')
-        assert resp['data'][0]['text'] == 'text'
-        # checkc if assigning other tcrs with the same tc and flow works
-        assert tcr2.comment_id == tcr.comment_id
+        execution.get_runs(stage.id, token_info=token_info)
 
-        tcc_id = resp['id']
 
-        # just update the comment
-        resp, code = results.create_or_update_test_case_comment(tcr.id,
-                                                                dict(text='text2', author='author2', state=consts.TC_COMMENT_BUG_IN_PRODUCT))
-        assert code == 200
-        assert resp['id'] == tcc_id
-        assert resp['state'] == consts.TC_COMMENT_BUG_IN_PRODUCT
-        assert len(resp['data']) == 2
-        assert resp['data'][0]['author'] == 'author2'
-        assert resp['data'][0]['date'].startswith('20')
-        assert resp['data'][0]['text'] == 'text2'
-        assert resp['data'][1]['author'] == 'author'
-        assert resp['data'][1]['date'].startswith('20')
-        assert resp['data'][1]['text'] == 'text'
+@pytest.mark.db
+def test_get_run_jobs():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        project = Project()
+        branch = Branch(project=project)
+        stage = Stage(branch=branch, schema={})
+        flow = Flow(branch=branch, kind=consts.FLOW_KIND_CI)
+        run = Run(stage=stage, flow=flow, reason=dict(reason='manual'))
+        db.session.commit()
+
+        execution.get_run_jobs(run.id, token_info=token_info)
+
+
+@pytest.mark.db
+def test_get_run_issues():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        project = Project()
+        branch = Branch(project=project)
+        stage = Stage(branch=branch, schema={})
+        flow = Flow(branch=branch, kind=consts.FLOW_KIND_CI)
+        run = Run(stage=stage, flow=flow, reason=dict(reason='manual'))
+        db.session.commit()
+
+        execution.get_run_issues(run.id, token_info=token_info)
+
+
+@pytest.mark.db
+def test_get_run_artifacts():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        project = Project()
+        branch = Branch(project=project)
+        stage = Stage(branch=branch, schema={})
+        flow = Flow(branch=branch, kind=consts.FLOW_KIND_CI)
+        run = Run(stage=stage, flow=flow, reason=dict(reason='manual'))
+        db.session.commit()
+
+        execution.get_run_artifacts(run.id, token_info=token_info)
+
+
+@pytest.mark.db
+def test_get_job_logs():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        project = Project()
+        branch = Branch(project=project)
+        stage = Stage(branch=branch, schema={})
+        flow = Flow(branch=branch, kind=consts.FLOW_KIND_CI)
+        run = Run(stage=stage, flow=flow, reason='by me')
+        system = System()
+        agents_group = AgentsGroup()
+        job = Job(run=run, agents_group=agents_group, system=system)
+        db.session.commit()
+
+        with patch('clickhouse_driver.Client') as ch:
+            execution.get_job_logs(job.id, token_info=token_info)
+
+
+@pytest.mark.db
+def test_cancel_run():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        project = Project()
+        branch = Branch(project=project)
+        stage = Stage(branch=branch, schema={})
+        flow = Flow(branch=branch, kind=consts.FLOW_KIND_CI)
+        run = Run(stage=stage, flow=flow, reason='by me')
+        db.session.commit()
+
+        execution.cancel_run(run.id, token_info=token_info)
+
+
+@pytest.mark.db
+def test_delete_job():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        project = Project()
+        branch = Branch(project=project)
+        stage = Stage(branch=branch, schema={})
+        flow = Flow(branch=branch, kind=consts.FLOW_KIND_CI)
+        run = Run(stage=stage, flow=flow, reason='by me')
+        system = System()
+        agents_group = AgentsGroup()
+        job = Job(run=run, agents_group=agents_group, system=system)
+        db.session.commit()
+
+        execution.delete_job(job.id, token_info=token_info)
+
+
+@pytest.mark.db
+def test_get_agent_jobs():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        agent = Agent(name='agent', address='1.2.3.4', authorized=True, disabled=False)
+        db.session.commit()
+
+        execution.get_agent_jobs(agent.id, token_info=token_info)

@@ -13,18 +13,185 @@
 # limitations under the License.
 
 import datetime
+from unittest.mock import patch
 
 import pytest
 from hamcrest import assert_that, has_entries, matches_regexp, contains_exactly, instance_of
 
 import werkzeug.exceptions
 
-from kraken.server import consts, initdb, utils
-from kraken.server.models import db, Project, Branch, Flow
+from kraken.server import consts, initdb, utils, access
+from kraken.server.models import db, Project, Branch, Flow, Secret, Stage, System, AgentsGroup, Agent, Tool
 
-from common import create_app
+from common import create_app, prepare_user, check_missing_tests_in_mod
 
 from kraken.server import management
+
+
+def test_missing_tests():
+    check_missing_tests_in_mod(management, __name__)
+
+
+def test_get_server_version():
+    resp, code = management.get_server_version()
+    assert code == 200
+    assert 'version' in resp
+    assert resp['version'] == '0.0'
+
+
+@pytest.mark.db
+def test_create_project():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        body = dict(name='abc')
+        management.create_project(body, token_info=token_info)
+
+
+@pytest.mark.db
+def test_update_project():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        proj = Project(name='proj-1')
+        db.session.commit()
+
+        body = dict(webhooks='abc')
+        management.update_project(proj.id, body, token_info=token_info)
+
+
+@pytest.mark.db
+def test_get_project():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        proj = Project(name='proj-1')
+        db.session.commit()
+
+        management.get_project(proj.id, False, token_info=token_info)
+
+
+@pytest.mark.db
+def test_delete_project():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        proj = Project(name='proj-1')
+        db.session.commit()
+
+        management.delete_project(proj.id, token_info=token_info)
+
+
+@pytest.mark.db
+def test_get_projects():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        proj = Project(name='proj-1')
+        db.session.commit()
+
+        management.get_projects()
+
+
+@pytest.mark.db
+def test_create_branch():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        proj = Project(name='proj-1')
+        db.session.commit()
+
+        body = dict(name='abc')
+        management.create_branch(proj.id, body, token_info=token_info)
+
+
+@pytest.mark.db
+def test_update_branch():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        proj = Project(name='proj-1')
+        branch = Branch(name='br', project=proj)
+        db.session.commit()
+
+        body = dict(name='abc')
+        management.update_branch(branch.id, body, token_info=token_info)
+
+
+@pytest.mark.db
+def test_get_branch():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        proj = Project(name='proj-1')
+        branch = Branch(name='br', project=proj)
+        db.session.commit()
+
+        management.get_branch(branch.id, token_info=token_info)
+
+
+@pytest.mark.db
+def test_delete_branch():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        proj = Project(name='proj-1')
+        branch = Branch(name='br', project=proj)
+        db.session.commit()
+
+        management.delete_branch(branch.id, token_info=token_info)
+
+
+@pytest.mark.db
+def test_get_branch_sequences():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        proj = Project(name='proj-1')
+        branch = Branch(name='br', project=proj)
+        db.session.commit()
+
+        management.get_branch_sequences(branch.id, token_info=token_info)
 
 
 @pytest.mark.db
@@ -33,6 +200,8 @@ def test_move_branch():
 
     with app.app_context():
         initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
 
         proj1 = Project(name='proj-1')
         proj2 = Project(name='proj-2')
@@ -40,19 +209,19 @@ def test_move_branch():
         db.session.commit()
 
         with pytest.raises(werkzeug.exceptions.NotFound):
-            management.move_branch(123, {})
+            management.move_branch(123, {}, token_info=token_info)
 
         with pytest.raises(werkzeug.exceptions.BadRequest):
-            management.move_branch(br.id, {})
+            management.move_branch(br.id, {}, token_info=token_info)
 
         assert br.project_id == proj1.id
 
         # move branch to new project
-        management.move_branch(br.id, {'project_id': proj2.id})
+        management.move_branch(br.id, {'project_id': proj2.id}, token_info=token_info)
         assert br.project_id == proj2.id
 
         # move branch brack to previous project
-        management.move_branch(br.id, {'project_id': proj1.id})
+        management.move_branch(br.id, {'project_id': proj1.id}, token_info=token_info)
         assert br.project_id == proj1.id
 
 
@@ -62,6 +231,8 @@ def test_get_branch_stats():
 
     with app.app_context():
         initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
 
         proj = Project(name='proj-1')
         br = Branch(name='br', project=proj)
@@ -96,9 +267,9 @@ def test_get_branch_stats():
         db.session.commit()
 
         with pytest.raises(werkzeug.exceptions.NotFound):
-            management.get_branch_stats(123)
+            management.get_branch_stats(123, token_info=token_info)
 
-        resp, code = management.get_branch_stats(br.id)
+        resp, code = management.get_branch_stats(br.id, token_info=token_info)
         assert code == 200
         # assert resp is None
         lbl_re = matches_regexp(r'\d+\.')
@@ -143,3 +314,563 @@ def test_get_workflow_schema():
         schema, code = management.get_workflow_schema()
         assert schema
         assert code == 200
+
+
+@pytest.mark.db
+def test_create_secret():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        proj = Project(name='proj-1')
+        db.session.commit()
+
+        body = dict(kind='simple', secret='abc', name='def')
+        management.create_secret(proj.id, body, token_info=token_info)
+
+
+@pytest.mark.db
+def test_update_secret():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        proj = Project(name='proj-1')
+        secret = Secret(name="abc", project=proj, data={})
+        db.session.commit()
+
+        body = dict(secret='abc', kind=consts.SECRET_KIND_SIMPLE)
+        management.update_secret(secret.id, body, token_info=token_info)
+
+
+@pytest.mark.db
+def test_delete_secret():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        proj = Project(name='proj-1')
+        secret = Secret(name="abc", project=proj, data={})
+        db.session.commit()
+
+        management.delete_secret(secret.id, token_info=token_info)
+
+
+@pytest.mark.db
+def test_create_stage():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        initdb._prepare_builtin_tools()
+        access.init()
+        _, token_info = prepare_user()
+
+        proj = Project(name='proj-1')
+        branch = Branch(name='br', project=proj)
+        db.session.commit()
+
+        body = dict(name='abc')
+        management.create_stage(branch.id, body, token_info=token_info)
+
+
+@pytest.mark.db
+def test_get_stage():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        proj = Project(name='proj-1')
+        branch = Branch(name='br', project=proj)
+        stage = Stage(branch=branch, schema={})
+        db.session.commit()
+
+        management.get_stage(stage.id, token_info=token_info)
+
+
+@pytest.mark.db
+def test_update_stage():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        proj = Project(name='proj-1')
+        branch = Branch(name='br', project=proj)
+        stage = Stage(branch=branch, schema={})
+        db.session.commit()
+
+        body = dict(name='abc')
+        management.update_stage(stage.id, body, token_info=token_info)
+
+
+@pytest.mark.db
+def test_delete_stage():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        proj = Project(name='proj-1')
+        branch = Branch(name='br', project=proj)
+        stage = Stage(branch=branch, schema={})
+        db.session.commit()
+
+        management.delete_stage(stage.id, token_info=token_info)
+
+
+@pytest.mark.db
+def test_get_stage_schema_as_json():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        proj = Project(name='proj-1')
+        branch = Branch(name='br', project=proj)
+        stage = Stage(branch=branch, schema={})
+        db.session.commit()
+
+        body = {}
+        management.get_stage_schema_as_json(stage.id, body, token_info=token_info)
+
+
+@pytest.mark.db
+def test_get_stage_schedule():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        proj = Project(name='proj-1')
+        branch = Branch(name='br', project=proj)
+        stage = Stage(branch=branch, schema={})
+        db.session.commit()
+
+        management.get_stage_schedule(stage.id, token_info=token_info)
+
+
+@pytest.mark.db
+def test_get_agent():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        agent = Agent(name='agent', address='1.2.3.4', authorized=True, disabled=False)
+        db.session.commit()
+
+        management.get_agent(agent.id, token_info=token_info)
+
+
+@pytest.mark.db
+def test_get_agents():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        agent = Agent(name='agent', address='1.2.3.4', authorized=True, disabled=False)
+        db.session.commit()
+
+        management.get_agents(token_info=token_info)
+
+
+@pytest.mark.db
+def test_update_agents():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        agent = Agent(name='agent', address='1.2.3.4', authorized=True, disabled=False)
+        db.session.commit()
+
+        body = dict()
+        management.update_agents(body, token_info=token_info)
+
+
+@pytest.mark.db
+def test_update_agent():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        agent = Agent(name='agent', address='1.2.3.4', authorized=True, disabled=False)
+        db.session.commit()
+
+        body = dict()
+        management.update_agent(agent.id, body, token_info=token_info)
+
+
+@pytest.mark.db
+def test_delete_agent():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        agent = Agent(name='agent', address='1.2.3.4', authorized=True, disabled=False)
+        db.session.commit()
+
+        management.delete_agent(agent.id, token_info=token_info)
+
+
+@pytest.mark.db
+def test_get_group():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        agents_group = AgentsGroup()
+        db.session.commit()
+
+        management.get_group(agents_group.id, token_info=token_info)
+
+
+@pytest.mark.db
+def test_get_groups():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        agents_group = AgentsGroup()
+        db.session.commit()
+
+        management.get_groups(token_info=token_info)
+
+
+@pytest.mark.db
+def test_create_group():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        body = dict(name='abc')
+        management.create_group(body, token_info=token_info)
+
+
+@pytest.mark.db
+def test_update_group():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        agents_group = AgentsGroup()
+        db.session.commit()
+
+        body = dict(name='abc')
+        management.update_group(agents_group.id, body, token_info=token_info)
+
+
+@pytest.mark.db
+def test_delete_group():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        agents_group = AgentsGroup()
+        db.session.commit()
+
+        management.delete_group(agents_group.id, token_info=token_info)
+
+
+@pytest.mark.db
+def test_get_aws_ec2_regions():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        with pytest.raises(werkzeug.exceptions.InternalServerError) as ex:
+            management.get_aws_ec2_regions(token_info=token_info)
+        assert "Incorrect AWS credential" in str(ex.value)
+
+
+@pytest.mark.db
+def test_get_aws_ec2_instance_types():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        with pytest.raises(werkzeug.exceptions.InternalServerError) as ex:
+            management.get_aws_ec2_instance_types('region', token_info=token_info)
+        assert "Incorrect AWS credential" in str(ex.value)
+
+
+@pytest.mark.db
+def test_get_azure_locations():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        with pytest.raises(werkzeug.exceptions.InternalServerError) as ex:
+            management.get_azure_locations(token_info=token_info)
+        assert "Incorrect Azure credential" in str(ex.value)
+
+
+@pytest.mark.db
+def test_get_azure_vm_sizes():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        with pytest.raises(werkzeug.exceptions.InternalServerError) as ex:
+            management.get_azure_vm_sizes('location', token_info=token_info)
+        assert "Incorrect Azure credential" in str(ex.value)
+
+
+@pytest.mark.db
+def test_get_settings():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        management.get_settings(token_info=token_info)
+
+
+@pytest.mark.db
+def test_update_settings():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        body = {}
+        management.update_settings(body, token_info=token_info)
+
+
+@pytest.mark.db
+def test_get_diagnostics():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        with pytest.raises(KeyError) as ex:
+            management.get_diagnostics(token_info=token_info)
+        assert "MINIO_ACCESS_KEY" in str(ex.value)
+
+
+@pytest.mark.db
+def test_get_last_rq_jobs_names():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        body = {}
+        with patch('clickhouse_driver.Client') as ch:
+            management.get_last_rq_jobs_names(token_info=token_info)
+
+
+@pytest.mark.db
+def test_get_services_logs():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        with patch('clickhouse_driver.Client') as ch:
+            management.get_services_logs([], token_info=token_info)
+
+
+@pytest.mark.db
+def test_get_errors_in_logs_count():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+
+        management.get_errors_in_logs_count()
+
+
+@pytest.mark.db
+def test_get_settings_working_state():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        management.get_settings_working_state('email', token_info=token_info)
+
+
+@pytest.mark.db
+def test_get_systems():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+
+        management.get_systems()
+
+
+@pytest.mark.db
+def test_get_tools():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+
+        management.get_tools()
+
+
+@pytest.mark.db
+def test_get_tool_versions():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+
+        management.get_tool_versions('shell')
+
+
+@pytest.mark.db
+def test_create_or_update_tool():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        body = {
+            "name": "abc",
+            "description": "Abc.",
+            "location": ".",
+            "entry": "main",
+            "parameters": {
+                "additionalProperties": False,
+                "required": ["pkgs"],
+                "properties": {
+                    "pkgs": {
+                        "description": "Abc.",
+                        "type": "string"
+                    },
+                    "provider": {
+                        "description": "Abc",
+                        "enum": ["a", "b"]
+                    }
+                }
+            }
+        }
+
+        management.create_or_update_tool(body, token_info=token_info)
+
+
+@pytest.mark.db
+def atest_upload_new_or_overwrite_tool():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        body = dict(meta={
+            "name": "abc",
+            "description": "Abc.",
+            "location": ".",
+            "entry": "main",
+            "parameters": {
+                "additionalProperties": False,
+                "required": ["pkgs"],
+                "properties": {
+                    "pkgs": {
+                        "description": "Abc.",
+                        "type": "string"
+                    },
+                    "provider": {
+                        "description": "Abc",
+                        "enum": ["a", "b"]
+                    }
+                }
+            }
+        })
+
+        management.upload_new_or_overwrite_tool('abc', body, None, token_info=token_info)
+
+
+@pytest.mark.db
+def test_delete_tool():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        tool = Tool(name='t', fields={}, location='l', entry='e')
+        db.session.commit()
+
+        management.delete_tool(tool.id, token_info=token_info)

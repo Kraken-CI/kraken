@@ -602,7 +602,6 @@ def prepare_initial_data():
             BranchSequence(branch=branch, stage=stage, kind=seq_type, value=0)
     db.session.commit()
 
-
     # create default users: admin and demo
 
     admin_user = User.query.filter_by(name="admin").one_or_none()

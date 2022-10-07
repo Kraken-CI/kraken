@@ -91,16 +91,31 @@ export class UsersPageComponent implements OnInit, OnDestroy {
         this.subs.add(
             this.usersService
                 .getUsers(event.first, event.rows, sortField, sortDir)
-                .subscribe((data) => {
-                    this.users = data.items
-                    this.totalUsers = data.total
-                    this.loadingUsers = false
+                .subscribe(
+                    (data) => {
+                        this.users = data.items
+                        this.totalUsers = data.total
+                        this.loadingUsers = false
 
-                    if (!this.selectedUser) {
-                        this.selectedUser = this.users[0]
-                        this.loadUserDetails(this.selectedUser)
+                        if (!this.selectedUser) {
+                            this.selectedUser = this.users[0]
+                            this.loadUserDetails(this.selectedUser)
+                        }
+                    },
+                    (err) => {
+                        this.loadingUsers = false
+                        let msg = err.statusText
+                        if (err.error && err.error.detail) {
+                            msg = err.error.detail
+                        }
+                        this.msgSrv.add({
+                            severity: 'error',
+                            summary: 'Getting users erred',
+                            detail: 'Getting  users erred: ' + msg,
+                            life: 10000,
+                        })
                     }
-                })
+                )
         )
     }
 

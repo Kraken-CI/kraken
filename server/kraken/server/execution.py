@@ -28,14 +28,17 @@ from .models import db, Branch, Flow, Run, Stage, Job, Step
 from .models import Issue, Artifact
 from .schema import SchemaError
 from . import exec_utils
+from . import access
 
 log = logging.getLogger(__name__)
 
 
-def create_flow(branch_id, kind, body):
+def create_flow(branch_id, kind, body, token_info=None):
     branch = Branch.query.filter_by(id=branch_id).one_or_none()
     if branch is None:
-        abort(404, "Branch not found")
+        abort(404, "Branch %s not found" % branch_id)
+    access.check(token_info, branch.project_id, 'pwrusr',
+                 'only superadmin, project admin and project power user roles can create a flow')
 
     try:
         flow = exec_utils.create_a_flow(branch, kind, body)
@@ -47,7 +50,13 @@ def create_flow(branch_id, kind, body):
     return data, 201
 
 
-def get_flows(branch_id, kind, start=0, limit=10, middle=None):
+def get_flows(branch_id, kind, start=0, limit=10, middle=None, token_info=None):
+    branch = Branch.query.filter_by(id=branch_id).one_or_none()
+    if branch is None:
+        abort(404, "Branch %s not found" % branch_id)
+    access.check(token_info, branch.project_id, 'view',
+                 'only superadmin, project admin, project power and project viewer user roles can get flows')
+
     t0 = time.time()
 
     flows = []
@@ -91,17 +100,22 @@ def get_flows(branch_id, kind, start=0, limit=10, middle=None):
     return {'items': flows, 'total': total}, 200
 
 
-def get_flow(flow_id):
+def get_flow(flow_id, token_info=None):
     flow = Flow.query.filter_by(id=flow_id).one_or_none()
     if flow is None:
         abort(404, "Flow not found")
+    access.check(token_info, flow.branch.project_id, 'view',
+                 'only superadmin, project admin, project power and project viewer user roles can get a flow')
+
     return flow.get_json()
 
 
-def get_flow_runs(flow_id):
+def get_flow_runs(flow_id, token_info=None):
     flow = Flow.query.filter_by(id=flow_id).one_or_none()
     if flow is None:
         abort(404, "Flow not found")
+    access.check(token_info, flow.branch.project_id, 'view',
+                 'only superadmin, project admin, project power and project viewer user roles can get flow runs')
 
     runs = []
     for run in flow.runs:
@@ -109,10 +123,12 @@ def get_flow_runs(flow_id):
     return runs, 200
 
 
-def get_flow_artifacts(flow_id):
+def get_flow_artifacts(flow_id, token_info=None):
     flow = Flow.query.filter_by(id=flow_id).one_or_none()
     if flow is None:
         abort(404, "Flow not found")
+    access.check(token_info, flow.branch.project_id, 'view',
+                 'only superadmin, project admin, project power and project viewer user roles can get flow artifacts')
 
     base_url = '/artifacts/public/f/%d/' % flow_id
 
@@ -124,10 +140,12 @@ def get_flow_artifacts(flow_id):
     return {'items': artifacts, 'total': len(artifacts)}, 200
 
 
-def create_run(flow_id, body):
+def create_run(flow_id, body, token_info=None):
     flow = Flow.query.filter_by(id=flow_id).one_or_none()
     if flow is None:
         abort(404, "Flow not found")
+    access.check(token_info, flow.branch.project_id, 'pwrusr',
+                 'only superadmin, project admin and project power roles can create a run')
 
     stage = Stage.query.filter_by(id=body['stage_id']).one_or_none()
     if stage is None:
@@ -140,10 +158,12 @@ def create_run(flow_id, body):
     return data, 201
 
 
-def run_run_jobs(run_id):
+def run_run_jobs(run_id, token_info=None):
     run = Run.query.filter_by(id=run_id).one_or_none()
     if run is None:
         abort(404, "Run not found")
+    access.check(token_info, run.stage.branch.project_id, 'pwrusr',
+                 'only superadmin, project admin and project power roles can run jobs')
 
     if run.state == consts.RUN_STATE_MANUAL:
         replay = False
@@ -160,10 +180,12 @@ def run_run_jobs(run_id):
     return data, 200
 
 
-def job_rerun(job_id):
+def job_rerun(job_id, token_info=None):
     job = Job.query.filter_by(id=job_id).one_or_none()
     if job is None:
         abort(404, "Job not found")
+    access.check(token_info, job.run.stage.branch.project_id, 'pwrusr',
+                 'only superadmin, project admin and project power roles can rerun a job')
 
     # TODO rerun
     job2 = Job(run=job.run, name=job.name, agents_group=job.agents_group, system=job.system, timeout=job.timeout)
@@ -179,11 +201,13 @@ def job_rerun(job_id):
     return data, 200
 
 
-def create_job(job):
+def create_job(job, token_info=None):
     run_id = job.get("run")
     run = Run.query.filter_by(id=run_id).one_or_none()
     if run is None:
         abort(404, "Run not found")
+    access.check(token_info, run.stage.branch.project_id, 'pwrusr',
+                 'only superadmin, project admin and project power roles can create a job')
 
     log.info("job input: %s", job)
 
@@ -199,7 +223,13 @@ def create_job(job):
     return data, 201
 
 
-def get_runs(stage_id):
+def get_runs(stage_id, token_info=None):
+    stage = Stage.query.filter_by(id=stage_id).one_or_none()
+    if stage is None:
+        abort(404, "Stage not found")
+    access.check(token_info, stage.branch.project_id, 'view',
+                 'only superadmin, project admin, project power and project viewer user roles can get runs')
+
     q = Run.query.filter_by(stage_id=stage_id)
     runs = []
     for run in q.all():
@@ -207,7 +237,13 @@ def get_runs(stage_id):
     return runs, 200
 
 
-def get_run_jobs(run_id, start=0, limit=10, include_covered=False):
+def get_run_jobs(run_id, start=0, limit=10, include_covered=False, token_info=None):
+    run = Run.query.filter_by(id=run_id).one_or_none()
+    if run is None:
+        abort(404, "Run not found")
+    access.check(token_info, run.stage.branch.project_id, 'view',
+                 'only superadmin, project admin, project power and project viewer user roles can get run jobs')
+
     q = Job.query
     q = q.filter_by(run_id=run_id)
     if not include_covered:
@@ -222,7 +258,13 @@ def get_run_jobs(run_id, start=0, limit=10, include_covered=False):
     return {'items': jobs, 'total': total}, 200
 
 
-def get_run_issues(run_id, start=0, limit=10, issue_types=None, location=None, message=None, symbol=None, min_age=None, max_age=None, job=None):
+def get_run_issues(run_id, start=0, limit=10, issue_types=None, location=None, message=None, symbol=None, min_age=None, max_age=None, job=None, token_info=None):
+    run = Run.query.filter_by(id=run_id).one_or_none()
+    if run is None:
+        abort(404, "Run not found")
+    access.check(token_info, run.stage.branch.project_id, 'view',
+                 'only superadmin, project admin, project power and project viewer user roles can get run issues')
+
     q = Issue.query
     q = q.options(joinedload('job'),
                   joinedload('job.agents_group'),
@@ -257,10 +299,12 @@ def get_run_issues(run_id, start=0, limit=10, issue_types=None, location=None, m
     return {'items': issues, 'total': total}, 200
 
 
-def get_run_artifacts(run_id):
+def get_run_artifacts(run_id, token_info=None):
     run = Run.query.filter_by(id=run_id).one_or_none()
     if run is None:
         abort(404, "Run not found")
+    access.check(token_info, run.stage.branch.project_id, 'view',
+                 'only superadmin, project admin, project power and project viewer user roles can get run artifacts')
 
     base_url = '/artifacts/public/r/%d/' % run.id
 
@@ -272,14 +316,17 @@ def get_run_artifacts(run_id):
     return {'items': artifacts, 'total': len(artifacts)}, 200
 
 
-def get_run(run_id):
+def get_run(run_id, token_info=None):
     run = Run.query.filter_by(id=run_id).one_or_none()
     if run is None:
         abort(404, "Run not found")
+    access.check(token_info, run.stage.branch.project_id, 'view',
+                 'only superadmin, project admin, project power and project viewer user roles can get a run')
+
     return run.get_json(), 200
 
 
-def  get_job_logs(job_id, start=0, limit=200, order=None, internals=False, filters=None):  # pylint: disable=unused-argument
+def  get_job_logs(job_id, start=0, limit=200, order=None, internals=False, filters=None, token_info=None):  # pylint: disable=unused-argument
     if order not in [None, 'asc', 'desc']:
         abort(400, "incorrect order value: %s" % str(order))
 
@@ -289,7 +336,12 @@ def  get_job_logs(job_id, start=0, limit=200, order=None, internals=False, filte
     if limit < 0:
         abort(400, "incorrect limit value: %s" % str(limit))
 
-    job = Job.query.filter_by(id=job_id).one()
+    job = Job.query.filter_by(id=job_id).one_or_none()
+    if job is None:
+        abort(404, "Job not found")
+    access.check(token_info, job.run.stage.branch.project_id, 'view',
+                 'only superadmin, project admin, project power and project viewer user roles can get job logs')
+
     job_json = job.get_json()
 
     ch_url = os.environ.get('KRAKEN_CLICKHOUSE_URL', consts.DEFAULT_CLICKHOUSE_URL)
@@ -329,10 +381,12 @@ def  get_job_logs(job_id, start=0, limit=200, order=None, internals=False, filte
     return {'items': logs, 'total': total, 'job': job_json}, 200
 
 
-def cancel_run(run_id):
+def cancel_run(run_id, token_info=None):
     run = Run.query.filter_by(id=run_id).one_or_none()
     if run is None:
         abort(404, "Run not found")
+    access.check(token_info, run.stage.branch.project_id, 'pwrusr',
+                 'only superadmin, project admin and project power roles can cancel a run')
 
     # if run is completed then do nothing
     if run.state == consts.RUN_STATE_COMPLETED:
@@ -356,17 +410,21 @@ def cancel_run(run_id):
     return {}
 
 
-def delete_job(job_id):
+def delete_job(job_id, token_info=None):
     job = Job.query.filter_by(id=job_id).one_or_none()
     if job is None:
         abort(404, "Job not found")
+    access.check(token_info, job.run.stage.branch.project_id, 'pwrusr',
+                 'only superadmin, project admin and project power roles can cancel a job')
 
     exec_utils.cancel_job(job, 'canceled by user', consts.JOB_CMPLT_USER_CANCEL)
 
     return {}
 
 
-def get_agent_jobs(agent_id, start=0, limit=10):
+def get_agent_jobs(agent_id, start=0, limit=10, token_info=None):
+    access.check(token_info, '', 'admin',
+                 'only superadmin role can get agent jobs')
     q = Job.query
     q = q.filter_by(agent_used_id=agent_id)
     total = q.count()

@@ -16,11 +16,34 @@ import pytest
 
 import werkzeug.exceptions
 
-from kraken.server import initdb
+from kraken.server import initdb, access
+from kraken.server.models import User, UserSession
 
-from common import create_app
+from common import create_app, prepare_user, check_missing_tests_in_mod
 
 from kraken.server import users
+
+
+def test_missing_tests():
+    check_missing_tests_in_mod(users, __name__)
+
+
+@pytest.mark.db
+def test_check_auth_token():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+
+        token = 'bad'
+        with pytest.raises(werkzeug.exceptions.Unauthorized):
+            resp = users.check_auth_token(token)
+
+        _, token_info = prepare_user()
+        token = token_info['session'].token
+        resp = users.check_auth_token(token)
+        assert resp['sub'] == token_info['sub']
 
 
 @pytest.mark.db
@@ -29,6 +52,8 @@ def test_users():
 
     with app.app_context():
         initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
 
         body = {}
         with pytest.raises(werkzeug.exceptions.BadRequest):
@@ -40,22 +65,22 @@ def test_users():
 
         body = {}
         with pytest.raises(werkzeug.exceptions.BadRequest):
-            users.create_user(body)
+            users.create_user(body, token_info=token_info)
 
         body = {'name': ''}
         with pytest.raises(werkzeug.exceptions.BadRequest):
-            users.create_user(body)
+            users.create_user(body, token_info=token_info)
 
         body = {'name': 'borat'}
         with pytest.raises(werkzeug.exceptions.BadRequest):
-            users.create_user(body)
+            users.create_user(body, token_info=token_info)
 
         body = {'name': 'borat', 'password': ''}
         with pytest.raises(werkzeug.exceptions.BadRequest):
-            users.create_user(body)
+            users.create_user(body, token_info=token_info)
 
         body = {'name': 'borat', 'password': 'pswd'}
-        user, code = users.create_user(body)
+        user, code = users.create_user(body, token_info=token_info)
         assert code == 201
         assert 'id' in user and user['id']
         assert 'name' in user and user['name'] == body['name']
@@ -72,26 +97,30 @@ def test_users():
         assert 'token' in sess and sess['token']
         assert 'user' in sess and sess['user']['id'] == user['id']
 
-        users.logout(sess['id'])
+        user_rec = User.query.filter_by(id=user['id']).one()
+        us_rec = UserSession.query.filter_by(id=sess['id']).one()
 
-        resp, code = users.get_users()
+        token_info2 = dict(sub=user_rec, session=us_rec)
+        users.logout(sess['id'], token_info=token_info2)
+
+        resp, code = users.get_users(token_info=token_info)
         assert code == 200
-        assert resp and 'total' in resp and resp['total'] == 1
-        assert 'items' in resp and len(resp['items']) == 1
+        assert resp and 'total' in resp and resp['total'] == 2
+        assert 'items' in resp and len(resp['items']) == 2
 
         user_id = None
         body = {}
         with pytest.raises(werkzeug.exceptions.NotFound):
-            users.change_user_details(user_id, body)
+            users.change_user_details(user_id, body, token_info=token_info)
 
         user_id = user['id']
         body = {}
-        user2, code = users.change_user_details(user_id, body)
+        user2, code = users.change_user_details(user_id, body, token_info=token_info)
         assert code == 201
         assert 'enabled' in user2 and user2['enabled'] is True
 
         body = {'enabled': False}
-        user2, code = users.change_user_details(user_id, body)
+        user2, code = users.change_user_details(user_id, body, token_info=token_info)
         assert code == 201
         assert 'enabled' in user2 and user2['enabled'] is False
 
@@ -100,7 +129,7 @@ def test_users():
             users.login(body)
 
         body = {'enabled': True}
-        user2, code = users.change_user_details(user_id, body)
+        user2, code = users.change_user_details(user_id, body, token_info=token_info)
         assert code == 201
         assert 'enabled' in user2 and user2['enabled'] is True
 
@@ -111,10 +140,10 @@ def test_users():
 
         body = {'password_old': 'bad-pswd', 'password_new': 'pswd2'}
         with pytest.raises(werkzeug.exceptions.BadRequest):
-            users.change_password(user_id, body)
+            users.change_password(user_id, body, token_info=token_info)
 
         body = {'password_old': 'pswd', 'password_new': 'pswd2'}
-        users.change_password(user_id, body)
+        users.change_password(user_id, body, token_info=token_info2)
 
         body = {'user': 'borat', 'password': 'pswd'}
         with pytest.raises(werkzeug.exceptions.Unauthorized):

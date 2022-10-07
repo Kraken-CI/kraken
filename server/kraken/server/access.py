@@ -22,6 +22,7 @@ from contextlib import contextmanager
 import casbin
 from casbin import persist
 from sqlalchemy import or_
+from werkzeug.exceptions import Forbidden
 
 from .models import db, CasbinRule
 
@@ -274,9 +275,14 @@ def init():
         e = some(where (p.eft == allow))
 
         [matchers]
-        m = (g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act) || || g2(r.sub, 'superadmin') || r.sub == 'admin'
+        m = (g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act) || g2(r.sub, 'superadmin') || r.sub == '1'
     """
     model = casbin.Enforcer.new_model(text=model_txt)
 
     # Create enforcer from adapter and config policy
     enforcer = casbin.Enforcer(model, adapter)
+
+
+def check(token_info, obj, act, msg):
+    if not enforcer.enforce(str(token_info['sub'].id), str(obj), str(act)):
+        raise Forbidden(msg)

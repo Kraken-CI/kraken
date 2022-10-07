@@ -44,6 +44,7 @@ from . import notify
 from . import utils
 from . import minioops
 from . import schemaval
+from . import access
 
 
 log = logging.getLogger(__name__)
@@ -53,7 +54,9 @@ def get_server_version():
     return {'version': server_version}, 200
 
 
-def create_project(body):
+def create_project(body, token_info=None):
+    access.check(token_info, '', 'admin', 'only superadmin role can create projects')
+
     if 'name' not in body:
         abort(400, "Missing name in project")
     project = Project.query.filter_by(name=body['name']).one_or_none()
@@ -66,7 +69,10 @@ def create_project(body):
     return new_project.get_json(), 201
 
 
-def update_project(project_id, body):
+def update_project(project_id, body, token_info=None):
+    access.check(token_info, project_id, 'pwrusr',
+                 'only superadmin, project admin and project power user roles can modify project')
+
     project = Project.query.filter_by(id=project_id).one_or_none()
     if project is None:
         abort(404, "Project not found")
@@ -80,7 +86,7 @@ def update_project(project_id, body):
     return result, 200
 
 
-def get_project(project_id, with_results):
+def get_project(project_id, with_results, token_info=None):
     project = Project.query.filter_by(id=project_id).one_or_none()
     if project is None:
         abort(400, "Project with id %s does not exist" % project_id)
@@ -88,7 +94,10 @@ def get_project(project_id, with_results):
     return project.get_json(with_results=with_results), 200
 
 
-def delete_project(project_id):
+def delete_project(project_id, token_info=None):
+    access.check(token_info, project_id, 'admin',
+                 'only superadmin and project admin roles can delete project')
+
     project = Project.query.filter_by(id=project_id).one_or_none()
     if project is None:
         abort(400, "Project with id %s does not exist" % project_id)
@@ -116,7 +125,10 @@ def get_projects():
     return {'items': projects, 'total': len(projects)}, 200
 
 
-def create_branch(project_id, body):
+def create_branch(project_id, body, token_info=None):
+    access.check(token_info, project_id, 'pwrusr',
+                 'only superadmin, project admin and project power user roles can create a branch')
+
     project = Project.query.filter_by(id=project_id).one_or_none()
     if project is None:
         abort(404, "Project not found")
@@ -199,10 +211,13 @@ def create_branch(project_id, body):
     return branch.get_json(), 201
 
 
-def update_branch(branch_id, body):
+def update_branch(branch_id, body, token_info=None):
     branch = Branch.query.filter_by(id=branch_id).one_or_none()
     if branch is None:
         abort(404, "Branch not found")
+
+    access.check(token_info, branch.project_id, 'pwrusr',
+                 'only superadmin, project admin and project power user roles can modify a branch')
 
     if 'name' in body:
         branch.name = body['name']
@@ -216,17 +231,24 @@ def update_branch(branch_id, body):
     return result, 200
 
 
-def get_branch(branch_id):
+def get_branch(branch_id, token_info=None):
     branch = Branch.query.filter_by(id=branch_id).one_or_none()
     if branch is None:
         abort(404, "Branch not found")
+
+    access.check(token_info, branch.project_id, 'viewer',
+                 'only superadmin, project admin, project power user and project viewer roles can get a branch')
+
     return branch.get_json(with_cfg=True), 200
 
 
-def delete_branch(branch_id):
+def delete_branch(branch_id, token_info=None):
     branch = Branch.query.filter_by(id=branch_id).one_or_none()
     if branch is None:
         abort(400, "Branch with id %s does not exist" % branch_id)
+
+    access.check(token_info, branch.project_id, 'admin',
+                 'only superadmin and project admin roles can delete a branch')
 
     branch.deleted = utils.utcnow()
     db.session.commit()
@@ -234,7 +256,113 @@ def delete_branch(branch_id):
     return {}, 200
 
 
-def create_secret(project_id, body):
+def get_branch_sequences(branch_id, token_info=None):
+    branch = Branch.query.filter_by(id=branch_id).one_or_none()
+    if branch is None:
+        abort(404, "Branch not found")
+
+    access.check(token_info, branch.project_id, 'viewer',
+                 'only superadmin, project admin, project power user and project viewer roles can get branch sequences')
+
+    q = BranchSequence.query.filter_by(branch=branch)
+    q = q.order_by(BranchSequence.id)
+
+    seqs = []
+    for bs in q.all():
+        seqs.append(bs.get_json())
+
+    return {'items': seqs, 'total': len(seqs)}, 200
+
+
+def move_branch(branch_id, body, token_info=None):
+    branch = Branch.query.filter_by(id=branch_id).one_or_none()
+    if branch is None:
+        abort(404, "Branch not found")
+
+    access.check(token_info, branch.project_id, 'admin',
+                 'only superadmin and project admin roles can move a branch')
+
+    proj_id = body.get('project_id', None)
+    if proj_id is None:
+        abort(400, "Missing project id")
+
+    access.check(token_info, proj_id, 'admin',
+                 'only superadmin and project admin roles can move a branch')
+
+    proj = Project.query.filter_by(id=proj_id).one_or_none()
+    if proj is None:
+        abort(400, "Project with id %s does not exist" % proj_id)
+
+    branch.project_id = proj.id
+    db.session.commit()
+
+    return branch.get_json(with_cfg=True), 200
+
+
+def get_branch_stats(branch_id, token_info=None):
+    branch = Branch.query.filter_by(id=branch_id).one_or_none()
+    if branch is None:
+        abort(404, "Branch not found")
+
+    access.check(token_info, branch.project_id, 'viewer',
+                 'only superadmin, project admin, project power user and project viewer roles can get branch sequences')
+
+    resp = {
+        'id': branch.id,
+        'ci': {},
+        'dev': {},
+    }
+
+    today = utils.utcnow()
+    week_ago = today - datetime.timedelta(days=7)
+    month_ago = today - datetime.timedelta(days=30)
+
+    for kind, rsp in [(consts.FLOW_KIND_CI, resp['ci']), (consts.FLOW_KIND_DEV, resp['dev'])]:
+        q = Flow.query.filter_by(branch=branch, kind=kind)
+
+        # total stats
+        rsp['flows_total'] = q.count()
+        rsp['flows_last_month'] = q.filter(Flow.created >= month_ago).count()
+        rsp['flows_last_week'] = q.filter(Flow.created >= week_ago).count()
+
+        # duration stats
+        rsp['avg_duration_last_month'] = None
+        rsp['avg_duration_last_week'] = None
+        rsp['durations'] = []
+        if rsp['flows_last_month'] > 0:
+            q2 = q.filter(Flow.finished.is_not(None))
+            q2 = q2.with_entities(func.avg(extract('epoch', Flow.finished) - extract('epoch', Flow.created)).label('average'))
+            secs = q2.filter(Flow.created >= month_ago).all()[0][0]
+            dur = datetime.timedelta(seconds=secs)
+            rsp['avg_duration_last_month'] = duration_to_txt(dur)
+            if rsp['flows_last_week'] > 0:
+                secs = q2.filter(Flow.created >= week_ago).all()[0][0]
+                if secs:
+                    dur = datetime.timedelta(seconds=secs)
+                    rsp['avg_duration_last_week'] = duration_to_txt(dur)
+
+            # durations table
+            q2 = q.with_entities(Flow.id, Flow.label, extract('epoch', Flow.finished) - extract('epoch', Flow.created))
+            q2 = q2.order_by(asc(Flow.created))
+            durs = []
+            for f_id, f_label, f_dur in q2.all():
+                durs.append(dict(flow_label=f_label if f_label else ("%d." % f_id),
+                                 duration=None if f_dur is None else int(f_dur)))
+            rsp['durations'] = durs
+
+    return resp, 200
+
+
+def get_workflow_schema():
+    schema, tools_schemas = schemaval.get_schema()
+    schema["properties"]["jobs"]["items"]["properties"]["steps"]["items"]["oneOf"] = list(tools_schemas.values())
+    return schema, 200
+
+
+def create_secret(project_id, body, token_info=None):
+    access.check(token_info, project_id, 'admin',
+                 'only superadmin and project admin roles can create a secret')
+
     project = Project.query.filter_by(id=project_id).one_or_none()
     if project is None:
         abort(400, "Project with id %s does not exist" % project_id)
@@ -255,10 +383,13 @@ def create_secret(project_id, body):
     return secret.get_json(), 201
 
 
-def update_secret(secret_id, body):
+def update_secret(secret_id, body, token_info=None):
     secret = Secret.query.filter_by(id=secret_id, deleted=None).one_or_none()
     if secret is None:
         abort(404, "Secret not found")
+
+    access.check(token_info, secret.project_id, 'admin',
+                 'only superadmin and project admin roles can modify a secret')
 
     if 'name' in body:
         old_name = secret.name
@@ -281,10 +412,13 @@ def update_secret(secret_id, body):
     return result, 200
 
 
-def delete_secret(secret_id):
+def delete_secret(secret_id, token_info=None):
     secret = Secret.query.filter_by(id=secret_id, deleted=None).one_or_none()
     if secret is None:
         abort(404, "Secret not found")
+
+    access.check(token_info, secret.project_id, 'admin',
+                 'only superadmin and project admin roles can delete a secret')
 
     secret.deleted = utils.utcnow()
     db.session.commit()
@@ -292,10 +426,13 @@ def delete_secret(secret_id):
     return {}, 200
 
 
-def create_stage(branch_id, body):
+def create_stage(branch_id, body, token_info=None):
     branch = Branch.query.filter_by(id=branch_id).one_or_none()
     if branch is None:
         abort(404, "Branch not found")
+
+    access.check(token_info, branch.project_id, 'pwrusr',
+                 'only superadmin, project admin and project power user roles can create a stage')
 
     schema_code = None
     if 'schema_code' in body:
@@ -322,19 +459,25 @@ def create_stage(branch_id, body):
     return stage.get_json(), 201
 
 
-def get_stage(stage_id):
+def get_stage(stage_id, token_info=None):
     stage = Stage.query.filter_by(id=stage_id).one_or_none()
     if stage is None:
         abort(404, "Stage not found")
+
+    access.check(token_info, stage.branch.project_id, 'viewer',
+                 'only superadmin, project admin, project power user and project viewer roles can get a stage')
 
     result = stage.get_json()
     return result, 200
 
 
-def update_stage(stage_id, body):
+def update_stage(stage_id, body, token_info=None):
     stage = Stage.query.filter_by(id=stage_id).one_or_none()
     if stage is None:
         abort(404, "Stage not found")
+
+    access.check(token_info, stage.branch.project_id, 'pwrusr',
+                 'only superadmin, project admin and project power user roles can modify a stage')
 
     if 'name' in body:
         stage.name = body['name']
@@ -410,10 +553,13 @@ def update_stage(stage_id, body):
     return result, 200
 
 
-def delete_stage(stage_id):
+def delete_stage(stage_id, token_info=None):
     stage = Stage.query.filter_by(id=stage_id).one_or_none()
     if stage is None:
         abort(404, "Stage not found")
+
+    access.check(token_info, stage.branch.project_id, 'pwrusr',
+                 'only superadmin, project admin and project power user roles can delete a stage')
 
     stage.deleted = utils.utcnow()
     db.session.commit()
@@ -421,11 +567,14 @@ def delete_stage(stage_id):
     return {}, 200
 
 
-def get_stage_schema_as_json(stage_id, body):
+def get_stage_schema_as_json(stage_id, body, token_info=None):
     schema_code = body
     stage = Stage.query.filter_by(id=stage_id).one_or_none()
     if stage is None:
         abort(404, "Stage not found")
+
+    access.check(token_info, stage.branch.project_id, 'viewer',
+                 'only superadmin, project admin, project power user and project viewer roles can get a stage')
 
     try:
         schema = execute_schema_code(stage.branch, schema_code['schema_code'])
@@ -436,10 +585,14 @@ def get_stage_schema_as_json(stage_id, body):
 
     return dict(stage_id=stage_id, schema=schema), 200
 
-def get_stage_schedule(stage_id):
+
+def get_stage_schedule(stage_id, token_info=None):
     stage = Stage.query.filter_by(id=stage_id).one_or_none()
     if stage is None:
         abort(404, "Stage not found")
+
+    access.check(token_info, stage.branch.project_id, 'viewer',
+                 'only superadmin, project admin, project power user and project viewer roles can get a stage')
 
     schedules = []
 
@@ -462,7 +615,11 @@ def get_stage_schedule(stage_id):
 
     return dict(schedules=schedules), 200
 
-def get_agent(agent_id):
+
+def get_agent(agent_id, token_info=None):
+    access.check(token_info, '', 'admin',
+                 'only superadmin can get an agent')
+
     ag = Agent.query.filter_by(id=agent_id).one_or_none()
     if ag is None:
         abort(400, "Cannot find agent with id %s" % agent_id)
@@ -470,7 +627,10 @@ def get_agent(agent_id):
     return ag.get_json(), 200
 
 
-def get_agents(unauthorized=None, start=0, limit=10, sort_field="name", sort_dir="asc"):
+def get_agents(unauthorized=None, start=0, limit=10, sort_field="name", sort_dir="asc", token_info=None):
+    access.check(token_info, '', 'admin',
+                 'only superadmin can get agents')
+
     q = Agent.query
     q = q.filter_by(deleted=None)
     if unauthorized:
@@ -497,7 +657,10 @@ def get_agents(unauthorized=None, start=0, limit=10, sort_field="name", sort_dir
     return {'items': agents, 'total': total}, 200
 
 
-def update_agents(body):
+def update_agents(body, token_info=None):
+    access.check(token_info, '', 'admin',
+                 'only superadmin can modify agents')
+
     agents = body
     log.info('agents %s', agents)
 
@@ -528,7 +691,10 @@ def update_agents(body):
     return {}, 200
 
 
-def update_agent(agent_id, body):
+def update_agent(agent_id, body, token_info=None):
+    access.check(token_info, '', 'admin',
+                 'only superadmin can modify an agent')
+
     agent = Agent.query.filter_by(id=agent_id).one_or_none()
     if agent is None:
         abort(404, "Agent not found")
@@ -569,7 +735,10 @@ def update_agent(agent_id, body):
     return agent.get_json(), 200
 
 
-def delete_agent(agent_id):
+def delete_agent(agent_id, token_info=None):
+    access.check(token_info, '', 'admin',
+                 'only superadmin can delete an agent')
+
     agent = Agent.query.filter_by(id=agent_id).one_or_none()
     if agent is None:
         abort(404, "Agent not found")
@@ -593,7 +762,10 @@ def delete_agent(agent_id):
     return {}, 200
 
 
-def get_group(group_id):
+def get_group(group_id, token_info=None):
+    access.check(token_info, '', 'admin',
+                 'only superadmin can get an agents group')
+
     ag = AgentsGroup.query.filter_by(id=group_id).one_or_none()
     if ag is None:
         abort(400, "Cannot find agent group with id %s" % group_id)
@@ -601,7 +773,10 @@ def get_group(group_id):
     return ag.get_json(), 200
 
 
-def get_groups(start=0, limit=10):
+def get_groups(start=0, limit=10, token_info=None):
+    access.check(token_info, '', 'admin',
+                 'only superadmin can get agents groups')
+
     q = AgentsGroup.query
     q = q.filter_by(deleted=None)
     q = q.order_by(AgentsGroup.name)
@@ -613,7 +788,10 @@ def get_groups(start=0, limit=10):
     return {'items': groups, 'total': total}, 200
 
 
-def create_group(body):
+def create_group(body, token_info=None):
+    access.check(token_info, '', 'admin',
+                 'only superadmin can create an agents group')
+
     group = AgentsGroup.query.filter_by(name=body['name']).one_or_none()
     if group is not None:
         abort(400, "Group with name %s already exists" % body['name'])
@@ -630,7 +808,10 @@ def create_group(body):
     return group.get_json(), 201
 
 
-def update_group(group_id, body):
+def update_group(group_id, body, token_info=None):
+    access.check(token_info, '', 'admin',
+                 'only superadmin can modify an agents group')
+
     group = AgentsGroup.query.filter_by(id=group_id).one_or_none()
     if group_id is None:
         abort(404, "Group not found")
@@ -650,7 +831,10 @@ def update_group(group_id, body):
     return group.get_json(), 200
 
 
-def delete_group(group_id):
+def delete_group(group_id, token_info=None):
+    access.check(token_info, '', 'admin',
+                 'only superadmin can delete an agents group')
+
     group = AgentsGroup.query.filter_by(id=group_id).one_or_none()
     if group is None:
         abort(404, "Agents group with id %s not found" % group_id)
@@ -661,7 +845,10 @@ def delete_group(group_id):
     return {}, 200
 
 
-def get_aws_ec2_regions():
+def get_aws_ec2_regions(token_info=None):
+    access.check(token_info, '', 'admin',
+                 'only superadmin can get aws ec2 regions')
+
     credential = aws.login_to_aws()
     if not credential:
         abort(500, "Incorrect AWS credential, set them in global cloud settings")
@@ -670,7 +857,10 @@ def get_aws_ec2_regions():
     return {'items': resp['Regions'], 'total': len(resp['Regions'])}, 200
 
 
-def get_aws_ec2_instance_types(region):
+def get_aws_ec2_instance_types(region, token_info=None):
+    access.check(token_info, '', 'admin',
+                 'only superadmin can get aws ec2 instance types')
+
     credential = aws.login_to_aws()
     if not credential:
         abort(500, "Incorrect AWS credential, set them in global cloud settings")
@@ -681,7 +871,10 @@ def get_aws_ec2_instance_types(region):
     return {'items': types, 'total': len(types)}, 200
 
 
-def get_azure_locations():
+def get_azure_locations(token_info=None):
+    access.check(token_info, '', 'admin',
+                 'only superadmin can get azure locations')
+
     # Acquire a credential object using service principal authentication.
     credential, subscription_id = azure.login_to_azure()
     if not credential:
@@ -696,7 +889,10 @@ def get_azure_locations():
     return {'items': locs, 'total': len(locs)}, 200
 
 
-def get_azure_vm_sizes(location):
+def get_azure_vm_sizes(location, token_info=None):
+    access.check(token_info, '', 'admin',
+                 'only superadmin can get azure vm sizes')
+
     # Acquire a credential object using service principal authentication.
     credential, subscription_id = azure.login_to_azure()
     if not credential:
@@ -710,7 +906,8 @@ def get_azure_vm_sizes(location):
 
     return {'items': vm_sizes, 'total': len(vm_sizes)}, 200
 
-def get_settings():
+
+def _get_settings():
     settings = Setting.query.filter_by().all()
 
     groups = {}
@@ -720,10 +917,22 @@ def get_settings():
         grp = groups[s.group]
         grp[s.name] = s.get_value()
 
+    return groups
+
+
+def get_settings(token_info=None):
+    access.check(token_info, '', 'admin',
+                 'only superadmin can get settings')
+
+    groups = _get_settings()
+
     return groups, 200
 
 
-def update_settings(body):
+def update_settings(body, token_info=None):
+    access.check(token_info, '', 'admin',
+                 'only superadmin can get modify settings')
+
     settings = Setting.query.filter_by().all()
 
     for group_name, group in body.items():
@@ -736,26 +945,14 @@ def update_settings(body):
 
     db.session.commit()
 
-    settings, _ = get_settings()
+    settings = _get_settings()
     return settings, 200
 
 
-def get_branch_sequences(branch_id):
-    branch = Branch.query.filter_by(id=branch_id).one_or_none()
-    if branch is None:
-        abort(404, "Branch not found")
+def get_diagnostics(token_info=None):
+    access.check(token_info, '', 'admin',
+                 'only superadmin can get diagnostics')
 
-    q = BranchSequence.query.filter_by(branch=branch)
-    q = q.order_by(BranchSequence.id)
-
-    seqs = []
-    for bs in q.all():
-        seqs.append(bs.get_json())
-
-    return {'items': seqs, 'total': len(seqs)}, 200
-
-
-def get_diagnostics():
     diags = {}
 
     # check postgresql
@@ -835,7 +1032,10 @@ def get_diagnostics():
     return diags
 
 
-def get_last_rq_jobs_names():
+def get_last_rq_jobs_names(token_info=None):
+    access.check(token_info, '', 'admin',
+                 'only superadmin can get last rq job names')
+
     # get the last RQ jobs
     ch_url = os.environ.get('KRAKEN_CLICKHOUSE_URL', consts.DEFAULT_CLICKHOUSE_URL)
     o = urlparse(ch_url)
@@ -857,7 +1057,10 @@ def get_last_rq_jobs_names():
     return {'items': task_names}, 200
 
 
-def  get_services_logs(services, level=None):
+def get_services_logs(services, level=None, token_info=None):
+    access.check(token_info, '', 'admin',
+                 'only superadmin can get services logs')
+
     ch_url = os.environ.get('KRAKEN_CLICKHOUSE_URL', consts.DEFAULT_CLICKHOUSE_URL)
     o = urlparse(ch_url)
     ch = clickhouse_driver.Client(host=o.hostname)
@@ -925,7 +1128,10 @@ def get_errors_in_logs_count():
     return {'errors_count': errors_count}, 200
 
 
-def get_settings_working_state(resource):
+def get_settings_working_state(resource, token_info=None):
+    access.check(token_info, '', 'admin',
+                 'only superadmin can get settings working state')
+
     if resource == 'email':
         state = notify.check_email_settings()
     elif resource == 'slack':
@@ -950,82 +1156,6 @@ def get_systems():
     for s in q.all():
         systems.append(s.get_json())
     return {'items': systems, 'total': len(systems)}, 200
-
-
-def move_branch(branch_id, body):
-    branch = Branch.query.filter_by(id=branch_id).one_or_none()
-    if branch is None:
-        abort(404, "Branch not found")
-
-    proj_id = body.get('project_id', None)
-    if proj_id is None:
-        abort(400, "Missing project id")
-
-    proj = Project.query.filter_by(id=proj_id).one_or_none()
-    if proj is None:
-        abort(400, "Project with id %s does not exist" % proj_id)
-
-    branch.project_id = proj.id
-    db.session.commit()
-
-    return branch.get_json(with_cfg=True), 200
-
-
-def get_branch_stats(branch_id):
-    branch = Branch.query.filter_by(id=branch_id).one_or_none()
-    if branch is None:
-        abort(404, "Branch not found")
-
-    resp = {
-        'id': branch.id,
-        'ci': {},
-        'dev': {},
-    }
-
-    today = utils.utcnow()
-    week_ago = today - datetime.timedelta(days=7)
-    month_ago = today - datetime.timedelta(days=30)
-
-    for kind, rsp in [(consts.FLOW_KIND_CI, resp['ci']), (consts.FLOW_KIND_DEV, resp['dev'])]:
-        q = Flow.query.filter_by(branch=branch, kind=kind)
-
-        # total stats
-        rsp['flows_total'] = q.count()
-        rsp['flows_last_month'] = q.filter(Flow.created >= month_ago).count()
-        rsp['flows_last_week'] = q.filter(Flow.created >= week_ago).count()
-
-        # duration stats
-        rsp['avg_duration_last_month'] = None
-        rsp['avg_duration_last_week'] = None
-        rsp['durations'] = []
-        if rsp['flows_last_month'] > 0:
-            q2 = q.filter(Flow.finished.is_not(None))
-            q2 = q2.with_entities(func.avg(extract('epoch', Flow.finished) - extract('epoch', Flow.created)).label('average'))
-            secs = q2.filter(Flow.created >= month_ago).all()[0][0]
-            dur = datetime.timedelta(seconds=secs)
-            rsp['avg_duration_last_month'] = duration_to_txt(dur)
-            if rsp['flows_last_week'] > 0:
-                secs = q2.filter(Flow.created >= week_ago).all()[0][0]
-                if secs:
-                    dur = datetime.timedelta(seconds=secs)
-                    rsp['avg_duration_last_week'] = duration_to_txt(dur)
-
-            # durations table
-            q2 = q.with_entities(Flow.id, Flow.label, extract('epoch', Flow.finished) - extract('epoch', Flow.created))
-            q2 = q2.order_by(asc(Flow.created))
-            durs = []
-            for f_id, f_label, f_dur in q2.all():
-                durs.append(dict(flow_label=f_label if f_label else ("%d." % f_id),
-                                 duration=None if f_dur is None else int(f_dur)))
-            rsp['durations'] = durs
-
-    return resp, 200
-
-
-def get_workflow_schema():
-    schema, tools_schemas = schemaval.get_schema()
-    schema["properties"]["jobs"]["items"]["properties"]["steps"]["items"]["oneOf"] = list(tools_schemas.values())
-    return schema, 200
 
 
 def get_tools(start=0, limit=30, sort_field="name", sort_dir="asc"):
@@ -1105,7 +1235,10 @@ def _create_remote_tool(body):
     return tool
 
 
-def create_or_update_tool(body):
+def create_or_update_tool(body, token_info=None):
+    access.check(token_info, '', 'admin',
+                 'only superadmin can create or update a tool')
+
     if 'name' in body:
         tool = toolutils.create_or_update_tool(body)
         db.session.commit()
@@ -1115,11 +1248,16 @@ def create_or_update_tool(body):
 
         from .bg import jobs as bg_jobs  # pylint: disable=import-outside-toplevel
         kkrq.enq_neck(bg_jobs.load_remote_tool, tool.id)
+    else:
+        abort(400, 'missing name or url in body')
 
     return tool.get_json(with_details=True), 201
 
 
-def upload_new_or_overwrite_tool(name, body, file=None):
+def upload_new_or_overwrite_tool(name, body, file=None, token_info=None):
+    access.check(token_info, '', 'admin',
+                 'only superadmin can upload a tool')
+
     meta = body['meta']
     if name != meta['name']:
         msg = 'Name in description (%s) does not match name in url (%s)' % (meta['name'], name)
@@ -1134,7 +1272,10 @@ def upload_new_or_overwrite_tool(name, body, file=None):
     return tool.get_json(with_details=True), 201
 
 
-def delete_tool(tool_id):
+def delete_tool(tool_id, token_info=None):
+    access.check(token_info, '', 'admin',
+                 'only superadmin can delete a tool')
+
     tool = Tool.query.filter_by(id=tool_id).one_or_none()
 
     if tool is None:

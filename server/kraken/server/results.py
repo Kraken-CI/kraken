@@ -21,8 +21,9 @@ from sqlalchemy.orm.attributes import flag_modified
 
 from . import consts
 from . import utils
-from .models import db, Branch, Flow, Run, Job, TestCaseResult
+from .models import db, Branch, Flow, Run, Job, TestCaseResult, Project
 from .models import TestCase, TestCaseComment, System, AgentsGroup
+from . import access
 
 log = logging.getLogger(__name__)
 
@@ -32,7 +33,14 @@ def get_run_results(run_id, start=0, limit=10, sort_field="name", sort_dir="asc"
                     min_age=None, max_age=None,
                     min_instability=None, max_instability=None,
                     test_case_text=None, job=None,
-                    systems=None, groups=None):
+                    systems=None, groups=None, token_info=None):
+
+    run = Run.query.filter_by(id=run_id).one_or_none()
+    if run is None:
+        abort(404, "Run %s not found" % run_id)
+    access.check(token_info, run.stage.branch.project_id, 'view',
+                 'only superadmin, project admin, project power user or project viewer roles can view results')
+
     log.info('filters %s %s %s %s %s %s %s %s %s %s',
              statuses, changes, min_age, max_age, min_instability, max_instability,
              test_case_text, job, systems, groups)
@@ -98,8 +106,12 @@ def get_run_results(run_id, start=0, limit=10, sort_field="name", sort_dir="asc"
     return {'items': results, 'total': total}, 200
 
 
-def get_result_history(test_case_result_id, start=0, limit=10):
-    tcr = TestCaseResult.query.filter_by(id=test_case_result_id).one_or_none()
+def get_result_history(test_case_result_id, start=0, limit=10, token_info=None):
+    tcr = TestCaseResult.query.filter_by(id= test_case_result_id).one_or_none()
+    if tcr is None:
+        abort(404, "Test case result %s not found" % test_case_result_id)
+    access.check(token_info, tcr.job.run.stage.branch.project_id, 'view',
+                 'only superadmin, project admin, project power user or project viewer roles can view results')
 
     q = TestCaseResult.query
     q = q.options(joinedload('test_case'),
@@ -126,14 +138,18 @@ def get_result_history(test_case_result_id, start=0, limit=10):
     return {'items': results, 'total': total}, 200
 
 
-def get_result(test_case_result_id):
+def get_result(test_case_result_id, token_info=None):
     tcr = TestCaseResult.query.filter_by(id=test_case_result_id).one_or_none()
     if tcr is None:
-        abort(404, "Test case result not found")
+        abort(404, "Test case result %s not found" % test_case_result_id)
+
+    access.check(token_info, tcr.job.run.stage.branch.project_id, 'view',
+                 'only superadmin, project admin, project power user or project viewer roles can view results')
+
     return tcr.get_json(with_extra=True), 200
 
 
-def create_or_update_test_case_comment(test_case_result_id, body):
+def create_or_update_test_case_comment(test_case_result_id, body, token_info=None):
     author = body.get('author', None)
     state = body.get('state', None)
     text = body.get('text', None)
@@ -146,7 +162,10 @@ def create_or_update_test_case_comment(test_case_result_id, body):
 
     tcr = TestCaseResult.query.filter_by(id=test_case_result_id).one_or_none()
     if tcr is None:
-        abort(404, "Run not found")
+        abort(404, "Test case result %s not found" % test_case_result_id)
+
+    access.check(token_info, tcr.job.run.stage.branch.project_id, 'pwrusr',
+                 'only superadmin, project admin and project power user roles can comment results')
 
     if tcr.comment:
         tcc = tcr.comment
@@ -200,7 +219,13 @@ def create_or_update_test_case_comment(test_case_result_id, body):
     return resp, 200
 
 
-def get_flow_analysis(flow_id):
+def get_flow_analysis(flow_id, token_info=None):
+    flow = Flow.query.filter_by(id=flow_id).one_or_none()
+    if flow is None:
+        abort(404, "Flow %s not found" % flow_id)
+    access.check(token_info, flow.branch.project_id, 'view',
+                 'only superadmin, project admin, project power user or project viewer roles can view results')
+
     q = Run.query.filter_by(flow_id=flow_id)
 
     recs_map = dict(systems={}, groups={})
@@ -259,10 +284,13 @@ def get_flow_analysis(flow_id):
     return analysis, 200
 
 
-def get_branch_history(flow_id, limit=30):
+def get_branch_history(flow_id, limit=30, token_info=None):
     flow = Flow.query.filter_by(id=flow_id).one_or_none()
     if flow is None:
         abort(404, "Flow %s not found", flow_id)
+
+    access.check(token_info, flow.branch.project_id, 'view',
+                 'only superadmin, project admin, project power user or project viewer roles can view results')
 
     if flow.kind != consts.FLOW_KIND_CI:
         abort(400, "Branch history works only for CI, not DEV")

@@ -17,7 +17,7 @@ import logging
 
 from flask import abort
 from passlib.hash import pbkdf2_sha256
-from werkzeug.exceptions import Unauthorized, BadRequest, NotFound
+from werkzeug.exceptions import Unauthorized, BadRequest, NotFound, Forbidden
 from sqlalchemy.sql.expression import asc, desc
 from sqlalchemy.orm.attributes import flag_modified
 
@@ -74,7 +74,10 @@ def login(body):
     return resp, 201
 
 
-def logout(session_id):
+def logout(session_id, token_info=None):
+    if token_info['session'].id != session_id:
+        raise Forbidden('only user can logout itself')
+
     us = UserSession.query.filter_by(id=int(session_id), deleted=None).one_or_none()
     if us is None:
         return None
@@ -91,7 +94,10 @@ def check_auth_token(token):
     return resp
 
 
-def change_password(user_id, body):
+def change_password(user_id, body, token_info=None):
+    if token_info['sub'].id != user_id:
+        access.check(token_info, '', 'admin', 'only superadmin role can change users passwords')
+
     user_password = body
     if 'password_new' not in user_password or not user_password['password_new']:
         raise BadRequest('new password cannot be empty')
@@ -105,7 +111,9 @@ def change_password(user_id, body):
     db.session.commit()
 
 
-def create_user(body):
+def create_user(body, token_info=None):
+    access.check(token_info, '', 'admin', 'only superadmin role can create users')
+
     for f in ['name', 'password']:
         if f not in body:
             abort(400, "Missing %s in user" % f)
@@ -122,7 +130,9 @@ def create_user(body):
     return new_user.get_json(), 201
 
 
-def get_users(start=0, limit=30, sort_field="name", sort_dir="asc"):
+def get_users(start=0, limit=30, sort_field="name", sort_dir="asc", token_info=None):
+    access.check(token_info, '', 'view', 'only superadmin role can get users')
+
     q = User.query
     q = q.filter_by(deleted=None)
     q = q.order_by(User.name)
@@ -144,7 +154,9 @@ def get_users(start=0, limit=30, sort_field="name", sort_dir="asc"):
     return {'items': users, 'total': total}, 200
 
 
-def get_user(user_id):
+def get_user(user_id, token_info=None):
+    access.check(token_info, '', 'view', 'only superadmin role can get user')
+
     q = User.query
     q = q.filter_by(id=user_id)
     q = q.filter_by(deleted=None)
@@ -177,7 +189,9 @@ def get_user(user_id):
     return user_data, 200
 
 
-def change_user_details(user_id, body):
+def change_user_details(user_id, body, token_info=None):
+    access.check(token_info, '', 'admin', 'only superadmin role can create users')
+
     q = User.query
     q = q.filter_by(id=user_id)
     q = q.filter_by(deleted=None)
@@ -224,23 +238,23 @@ def change_user_details(user_id, body):
 
             if role == ROLE_VIEWER:
                 # p, viewer-p1, proj1, view
-                done = access.enforcer.add_policy("p", proj_role_viewer, 'view')
+                done = access.enforcer.add_policy(proj_role_viewer, str(proj.id), 'view')
                 # g, user, viewer-p1
                 done = access.enforcer.add_named_grouping_policy("g", str(user.id), proj_role_viewer)
             elif role == ROLE_PWRUSR:
                 # p, pwrusr-p1, proj1, view
-                done = access.enforcer.add_policy("p", proj_role_pwrusr, 'view')
+                done = access.enforcer.add_policy(proj_role_pwrusr, str(proj.id), 'view')
                 # p, pwrusr-p1, proj1, pwrusr
-                done = access.enforcer.add_policy("p", proj_role_pwrusr, 'pwrusr')
+                done = access.enforcer.add_policy(proj_role_pwrusr, str(proj.id), 'pwrusr')
                 # g, user, pwrusr-p1
                 done = access.enforcer.add_named_grouping_policy("g", str(user.id), proj_role_pwrusr)
             elif role == ROLE_ADMIN:
                 # p, admin-p1, proj1, view
-                done = access.enforcer.add_policy("p", proj_role_admin, 'view')
+                done = access.enforcer.add_policy(proj_role_admin, str(proj.id), 'view')
                 # p, admin-p1, proj1, pwrusr
-                done = access.enforcer.add_policy("p", proj_role_admin, 'pwrusr')
+                done = access.enforcer.add_policy(proj_role_admin, str(proj.id), 'pwrusr')
                 # p, admin-p1, proj1, admin
-                done = access.enforcer.add_policy("p", proj_role_admin, 'admin')
+                done = access.enforcer.add_policy(proj_role_admin, str(proj.id), 'admin')
                 # g, user, admin-p1
                 done = access.enforcer.add_named_grouping_policy("g", str(user.id), proj_role_admin)
             db.session.commit()
