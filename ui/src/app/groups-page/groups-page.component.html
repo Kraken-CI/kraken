@@ -46,8 +46,8 @@
                 icon="pi pi-plus"
                 style="margin-right: 20px;"
                 (click)="showNewGroupDlg()"
-                [disabled]="!auth.hasPermission('manage')"
-                [pTooltip]="auth.permTip('manage')"
+                [disabled]="!auth.hasPermission(null, 'admin')"
+                [pTooltip]="auth.permTip(null, 'admin')"
             ></button>
             <button
                 type="button"
@@ -120,7 +120,7 @@
   <app-grp-cloud-cfg [deployment]="groupTab.group.deployment"></app-grp-cloud-cfg>
 
   <p-button label="Save" icon="pi pi-check" (onClick)="saveGroup()"
-            [disabled]="!auth.hasPermission('manage')"
-            [pTooltip]="auth.permTip('manage')"></p-button>
+            [disabled]="!auth.hasPermission(null, 'admin')"
+            [pTooltip]="auth.permTip(null, 'admin')"></p-button>
 
 </div>

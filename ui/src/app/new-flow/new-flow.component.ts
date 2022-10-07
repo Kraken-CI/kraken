@@ -16,6 +16,7 @@ import { BreadcrumbsService } from '../breadcrumbs.service'
     styleUrls: ['./new-flow.component.sass'],
 })
 export class NewFlowComponent implements OnInit, OnDestroy {
+    projectId = 0
     kind: string
     branchId = 0
     branch: any = { name: '' }
@@ -44,6 +45,7 @@ export class NewFlowComponent implements OnInit, OnDestroy {
             this.managementService
                 .getBranch(this.branchId)
                 .subscribe((branch) => {
+                    this.projectId = branch.project_id
                     this.branch = branch
 
                     // prepare breadcrumb

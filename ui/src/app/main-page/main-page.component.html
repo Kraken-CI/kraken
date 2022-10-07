@@ -20,8 +20,8 @@
 <!-- Page header -->
 <div style="margin-bottom: 10px;">
   <p-button label="New Project" icon="pi pi-plus" (onClick)="newProject()"
-            [disabled]="!auth.hasPermission('manage')"
-            [pTooltip]="auth.permTip('manage')"></p-button>
+            [disabled]="!auth.hasPermission(null, 'admin')"
+            [pTooltip]="auth.permTip(null, 'admin')"></p-button>
 </div>
 
 <!-- Grid with all projects -->
@@ -35,8 +35,8 @@
         <div style="margin-top: 10px;">
           <a pButton icon="pi pi-cog" routerLink="/projects/{{ proj.id }}" class="p-button-outlined p-button-secondary p-button-sm" style="margin-right: 6px;"></a>
           <p-button label="New Branch" icon="pi pi-plus" (onClick)="newBranch(proj)" styleClass="p-button-outlined p-button-secondary p-button-sm"
-            [disabled]="!auth.hasPermission('manage')"
-            [pTooltip]="auth.permTip('manage')"></p-button>
+            [disabled]="!auth.hasPermission(proj.id, 'pwrusr')"
+            [pTooltip]="auth.permTip(proj.id, 'pwrusr')"></p-button>
         </div>
       </div>
 

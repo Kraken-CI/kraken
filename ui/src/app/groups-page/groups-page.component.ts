@@ -89,8 +89,8 @@ export class GroupsPageComponent implements OnInit, OnDestroy {
             {
                 label: 'Delete',
                 icon: 'pi pi-times',
-                disabled: !this.auth.hasPermission('manage'),
-                title: this.auth.permTip('manage'),
+                disabled: !this.auth.hasPermission(null, 'admin'),
+                title: this.auth.permTip(null, 'admin'),
             },
         ]
 

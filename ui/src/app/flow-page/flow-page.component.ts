@@ -20,6 +20,7 @@ import { BreadcrumbsService } from '../breadcrumbs.service'
     styleUrls: ['./flow-page.component.sass'],
 })
 export class FlowPageComponent implements OnInit, OnDestroy {
+    projectId = 0
     flowId = 0
     flow = null
     runs: any[]
@@ -176,6 +177,7 @@ export class FlowPageComponent implements OnInit, OnDestroy {
                 this.refreshing = false
                 this.refreshTimer = null
 
+                this.projectId = flow.project_id
                 this.flow = flow
                 const crumbs = [
                     {
@@ -296,8 +298,8 @@ export class FlowPageComponent implements OnInit, OnDestroy {
                 {
                     label: 'Rerun',
                     icon: 'pi pi-replay',
-                    disabled: !this.auth.hasPermission('manage'),
-                    title: this.auth.permTip('manage'),
+                    disabled: !this.auth.hasPermission(this.projectId, 'pwrusr'),
+                    title: this.auth.permTip(this.projectId, 'pwrusr'),
                 },
             ]
         } else {
@@ -339,8 +341,8 @@ export class FlowPageComponent implements OnInit, OnDestroy {
                             ])
                         }
                     },
-                    disabled: !this.auth.hasPermission('manage'),
-                    title: this.auth.permTip('manage'),
+                    disabled: !this.auth.hasPermission(this.projectId, 'pwrusr'),
+                    title: this.auth.permTip(this.projectId, 'pwrusr'),
                 },
             ]
         }

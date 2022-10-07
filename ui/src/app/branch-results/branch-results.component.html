@@ -2,8 +2,8 @@
   <div style="margin-bottom: 5px;">
     <a routerLink="/branches/{{branchId}}/{{kind}}/flows/new">
       <p-button label="Run Flow" icon="pi pi-caret-right" [style]="{'margin-right': '5px'}"
-            [disabled]="!auth.hasPermission('manage')"
-            [pTooltip]="auth.permTip('manage')"></p-button>
+            [disabled]="!auth.hasPermission(projectId, 'pwrusr')"
+            [pTooltip]="auth.permTip(projectId, 'pwrusr')"></p-button>
     </a>
     <p-button label="Refresh" icon="pi pi-refresh" (onClick)="refresh()" [style]="{'margin-right': '10px'}" [loading]="refreshing"></p-button>
     <!--
@@ -50,7 +50,7 @@
     <div class="col" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr)); gap: 6px;">
       <ng-container *ngFor="let run of flow.runs">
         <app-run-box *ngIf="filterStageName === 'All' || run.stage_name === filterStageName"
-                     [run]="run" [flowId]="flow.id" (stageRun)="onStageRun($event)">
+                     [projectId]="projectId" [run]="run" [flowId]="flow.id" (stageRun)="onStageRun($event)">
         </app-run-box>
       </ng-container>
     </div>

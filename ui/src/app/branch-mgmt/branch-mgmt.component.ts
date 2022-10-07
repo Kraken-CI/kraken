@@ -25,6 +25,7 @@ import { Branch } from '../backend/model/models'
     styleUrls: ['./branch-mgmt.component.sass'],
 })
 export class BranchMgmtComponent implements OnInit, OnDestroy {
+    projectId = 0
     branchId: number
     branch: Branch = {
         id: 0,
@@ -184,6 +185,7 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
             this.managementService
                 .getBranch(this.branchId)
                 .subscribe((branch) => {
+                    this.projectId = branch.project_id
                     this.titleService.setTitle(
                         'Kraken - Branch Management - ' + branch.name
                     )

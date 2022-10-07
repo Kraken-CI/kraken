@@ -258,7 +258,8 @@ def get_run_jobs(run_id, start=0, limit=10, include_covered=False, token_info=No
     return {'items': jobs, 'total': total}, 200
 
 
-def get_run_issues(run_id, start=0, limit=10, issue_types=None, location=None, message=None, symbol=None, min_age=None, max_age=None, job=None, token_info=None):
+def get_run_issues(run_id, start=0, limit=10, issue_types=None, location=None, message=None,
+                   symbol=None, min_age=None, max_age=None, job=None, token_info=None):
     run = Run.query.filter_by(id=run_id).one_or_none()
     if run is None:
         abort(404, "Run not found")

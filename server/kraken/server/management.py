@@ -108,7 +108,9 @@ def delete_project(project_id, token_info=None):
     return {}, 200
 
 
-def get_projects():
+def get_projects(token_info):
+    roles = access.get_user_roles(token_info['sub'])
+
     q = Project.query
     q = q.filter_by(deleted=None)
     q = q.options(joinedload('branches'),
@@ -121,6 +123,8 @@ def get_projects():
     q = q.order_by(Project.name)
     projects = []
     for p in q.all():
+        if not roles['superadmin'] and p.id not in roles['projects']:
+            continue
         projects.append(p.get_json(with_last_results=True))
     return {'items': projects, 'total': len(projects)}, 200
 
@@ -236,7 +240,7 @@ def get_branch(branch_id, token_info=None):
     if branch is None:
         abort(404, "Branch not found")
 
-    access.check(token_info, branch.project_id, 'viewer',
+    access.check(token_info, branch.project_id, 'view',
                  'only superadmin, project admin, project power user and project viewer roles can get a branch')
 
     return branch.get_json(with_cfg=True), 200
@@ -261,7 +265,7 @@ def get_branch_sequences(branch_id, token_info=None):
     if branch is None:
         abort(404, "Branch not found")
 
-    access.check(token_info, branch.project_id, 'viewer',
+    access.check(token_info, branch.project_id, 'view',
                  'only superadmin, project admin, project power user and project viewer roles can get branch sequences')
 
     q = BranchSequence.query.filter_by(branch=branch)
@@ -304,7 +308,7 @@ def get_branch_stats(branch_id, token_info=None):
     if branch is None:
         abort(404, "Branch not found")
 
-    access.check(token_info, branch.project_id, 'viewer',
+    access.check(token_info, branch.project_id, 'view',
                  'only superadmin, project admin, project power user and project viewer roles can get branch sequences')
 
     resp = {
@@ -464,7 +468,7 @@ def get_stage(stage_id, token_info=None):
     if stage is None:
         abort(404, "Stage not found")
 
-    access.check(token_info, stage.branch.project_id, 'viewer',
+    access.check(token_info, stage.branch.project_id, 'view',
                  'only superadmin, project admin, project power user and project viewer roles can get a stage')
 
     result = stage.get_json()
@@ -573,7 +577,7 @@ def get_stage_schema_as_json(stage_id, body, token_info=None):
     if stage is None:
         abort(404, "Stage not found")
 
-    access.check(token_info, stage.branch.project_id, 'viewer',
+    access.check(token_info, stage.branch.project_id, 'view',
                  'only superadmin, project admin, project power user and project viewer roles can get a stage')
 
     try:
@@ -591,7 +595,7 @@ def get_stage_schedule(stage_id, token_info=None):
     if stage is None:
         abort(404, "Stage not found")
 
-    access.check(token_info, stage.branch.project_id, 'viewer',
+    access.check(token_info, stage.branch.project_id, 'view',
                  'only superadmin, project admin, project power user and project viewer roles can get a stage')
 
     schedules = []

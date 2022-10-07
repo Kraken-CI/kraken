@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 from contextlib import contextmanager
 
 ## vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -25,6 +26,9 @@ from sqlalchemy import or_
 from werkzeug.exceptions import Forbidden
 
 from .models import db, CasbinRule
+
+
+log = logging.getLogger(__name__)
 
 
 class Filter:
@@ -248,6 +252,10 @@ class Adapter(persist.Adapter, persist.adapters.UpdateAdapter):
 
 ## ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+ROLE_SUPERADMIN = "superadmin"
+ROLE_VIEWER = 'viewer'
+ROLE_PWRUSR = 'pwrusr'
+ROLE_ADMIN = 'admin'
 
 
 enforcer = None
@@ -284,5 +292,37 @@ def init():
 
 
 def check(token_info, obj, act, msg):
-    if not enforcer.enforce(str(token_info['sub'].id), str(obj), str(act)):
+    sub2 = str(token_info['sub'].id)
+    obj2 = str(obj)
+    act2 = str(act)
+    log.info('check access sub:%s obj:%s act:%s',
+             sub2, obj2, act2)
+    if not enforcer.enforce(sub2, obj2, act2):
         raise Forbidden(msg)
+
+
+def get_user_roles(user):
+    resp = {}
+
+    if user.name == 'admin':
+        resp['superadmin'] = True
+    else:
+        policies = enforcer.get_filtered_named_grouping_policy("g2", 0, str(user.id))
+        superadmin = False
+        for _, role in policies:
+            if role == ROLE_SUPERADMIN:
+                superadmin = True
+                break
+
+        resp['superadmin'] = superadmin
+
+    policies = enforcer.get_filtered_named_grouping_policy("g", 0, str(user.id))
+    projects = {}
+    for _, role in policies:
+        parts = role.split('-')
+        proj_role = parts[0]
+        proj_id = int(parts[1][1:])
+        projects[proj_id] = proj_role
+    resp['projects'] = projects
+
+    return resp

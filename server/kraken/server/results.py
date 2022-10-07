@@ -21,7 +21,7 @@ from sqlalchemy.orm.attributes import flag_modified
 
 from . import consts
 from . import utils
-from .models import db, Branch, Flow, Run, Job, TestCaseResult, Project
+from .models import db, Branch, Flow, Run, Job, TestCaseResult
 from .models import TestCase, TestCaseComment, System, AgentsGroup
 from . import access
 

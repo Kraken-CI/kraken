@@ -23,9 +23,11 @@ export class SettingsService {
             if (!session) {
                 return
             }
-            this.managementService.getSettings().subscribe((settings) => {
-                this.settingsSubject.next(settings)
-            })
+            if (session.roles.superadmin) {
+                this.managementService.getSettings().subscribe((settings) => {
+                    this.settingsSubject.next(settings)
+                })
+            }
         })
     }
 

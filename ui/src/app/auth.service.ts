@@ -88,15 +88,36 @@ export class AuthService {
         this.currentSessionSubject.next(null)
     }
 
-    public hasPermission(permName) {
-        if (this.session && this.session.user.user === 'demo') {
+    public hasPermission(projectId, expectedRole) {
+        if (this.session.roles.superadmin) {
+            return true
+        }
+        if (projectId === null) {
             return false
         }
-        return true
+
+        if (!this.session.roles.projects[projectId]) {
+            return false
+        }
+
+        let sufficientRoles = []
+        if (expectedRole === 'admin') {
+            sufficientRoles = ['admin']
+        } else if (expectedRole === 'pwrusr') {
+            sufficientRoles = ['admin', 'pwrusr']
+        }else if (expectedRole === 'viewer') {
+            sufficientRoles = ['admin', 'pwrusr', 'viewer']
+        }
+        let roleInProj = this.session.roles.projects[projectId]
+        if (sufficientRoles.includes(roleInProj)) {
+            return true
+        }
+
+        return false
     }
 
-    public permTip(permName) {
-        if (!this.hasPermission(permName)) {
+    public permTip(projectId, roleName) {
+        if (!this.hasPermission(projectId, roleName)) {
             return 'no permission to invoke this action'
         }
         return ''

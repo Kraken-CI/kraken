@@ -28,5 +28,5 @@
 </table>
 
 <p-button label="Submit" icon="pi pi-check" (onClick)="submitRun()"
-          [disabled]="!auth.hasPermission('manage')"
-          [pTooltip]="auth.permTip('manage')"></p-button>
+          [disabled]="!auth.hasPermission(projectId, 'pwrusr')"
+          [pTooltip]="auth.permTip(projectId, 'pwrusr')"></p-button>

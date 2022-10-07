@@ -23,6 +23,7 @@ import { Run, Stage } from '../backend/model/models'
     styleUrls: ['./run-box.component.sass'],
 })
 export class RunBoxComponent implements OnInit, OnDestroy {
+    @Input() projectId: number
     @Input() run: Run
     @Input() stage: Stage
     @Input() flowId: number
@@ -63,8 +64,8 @@ export class RunBoxComponent implements OnInit, OnDestroy {
                     command: () => {
                         this.runRunJobs(opName)
                     },
-                    disabled: !this.auth.hasPermission('manage'),
-                    title: this.auth.permTip('manage'),
+                    disabled: !this.auth.hasPermission(this.projectId, 'pwrusr'),
+                    title: this.auth.permTip(this.projectId, 'pwrusr'),
                 },
             ]
 
@@ -78,8 +79,8 @@ export class RunBoxComponent implements OnInit, OnDestroy {
                     command: () => {
                         this.cancelRun()
                     },
-                    disabled: !this.auth.hasPermission('manage'),
-                    title: this.auth.permTip('manage'),
+                    disabled: !this.auth.hasPermission(this.projectId, 'pwrusr'),
+                    title: this.auth.permTip(this.projectId, 'pwrusr'),
                 })
             }
 
@@ -149,8 +150,8 @@ export class RunBoxComponent implements OnInit, OnDestroy {
                             ])
                         }
                     },
-                    disabled: !this.auth.hasPermission('manage'),
-                    title: this.auth.permTip('manage'),
+                    disabled: !this.auth.hasPermission(this.projectId, 'pwrusr'),
+                    title: this.auth.permTip(this.projectId, 'pwrusr'),
                 },
             ]
         }

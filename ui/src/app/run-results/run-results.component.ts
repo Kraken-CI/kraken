@@ -24,6 +24,8 @@ export class RunResultsComponent implements OnInit, OnDestroy {
     activeTabIdx = 0
     recordsCount: string[] = ['0', '0', '0', '0']
 
+    projectId = 0
+
     runId = 0
     run: Run = { state: 'in-progress', tests_passed: 0 }
 
@@ -151,6 +153,8 @@ export class RunResultsComponent implements OnInit, OnDestroy {
                         this.executionService
                             .getRun(this.runId)
                             .subscribe((run) => {
+                                this.projectId = run.project_id
+
                                 this.titleService.setTitle(
                                     'Kraken - Run ' +
                                         (run.label || run.stage_name) +

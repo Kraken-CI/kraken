@@ -3,11 +3,11 @@
 
 <div style="float: right;">
   <p-button label="New Branch" icon="pi pi-plus" (onClick)="newBranch()"
-            [disabled]="!auth.hasPermission('manage')"
-            [pTooltip]="auth.permTip('manage')"></p-button>
+            [disabled]="!auth.hasPermission(projectId, 'pwrusr')"
+            [pTooltip]="auth.permTip(projectId, 'pwrusr')"></p-button>
   <p-button label="Archive Project" icon="pi pi-trash" styleClass="p-button-danger p-button-outlined" [style]="{'margin-left': '30px'}" (onClick)="deleteProject()"
-            [disabled]="!auth.hasPermission('manage')"
-            [pTooltip]="auth.permTip('manage')"></p-button>
+            [disabled]="!auth.hasPermission(projectId, 'admin')"
+            [pTooltip]="auth.permTip(projectId, 'admin')"></p-button>
 </div>
 </div>
 
@@ -70,10 +70,8 @@
     </p-tabPanel>
 
     <!-- SECRETS -->
-    <p-tabPanel header="Secrets">
-      <p-button label="New Secret" icon="pi pi-plus" (onClick)="newSecret()"
-                [disabled]="!auth.hasPermission('manage')"
-                [pTooltip]="auth.permTip('manage')"></p-button>
+    <p-tabPanel header="Secrets" *ngIf="auth.hasPermission(projectId, 'admin')">
+      <p-button label="New Secret" icon="pi pi-plus" (onClick)="newSecret()"></p-button>
 
       <div class="grid">
 
@@ -141,18 +139,12 @@
 
                 <!-- action buttons -->
                 <div class="flex justify-content-between">
-                    <p-button *ngIf="secretMode === 1" label="Add" icon="pi pi-plus" (onClick)="secretAdd()"
-                              [disabled]="!auth.hasPermission('manage')"
-                              [pTooltip]="auth.permTip('manage')"></p-button>
-                    <p-button *ngIf="secretMode === 2" label="Save" icon="pi pi-check" (onClick)="secretSave()"
-                              [disabled]="!auth.hasPermission('manage')"
-                              [pTooltip]="auth.permTip('manage')"></p-button>
+                    <p-button *ngIf="secretMode === 1" label="Add" icon="pi pi-plus" (onClick)="secretAdd()"></p-button>
+                    <p-button *ngIf="secretMode === 2" label="Save" icon="pi pi-check" (onClick)="secretSave()"></p-button>
 
                     <p-button *ngIf="secretMode === 2" label="Delete" icon="pi pi-trash" [style]="{'margin-left': '20px'}"
                               styleClass="p-button-danger p-button-outlined"
-                              (onClick)="secretDelete()"
-                              [disabled]="!auth.hasPermission('manage')"
-                              [pTooltip]="auth.permTip('manage')"></p-button>
+                              (onClick)="secretDelete()"></p-button>
                 </div>
             </form>
         </div>
@@ -161,7 +153,7 @@
     </p-tabPanel>
 
     <!-- WEB HOOKS -->
-    <p-tabPanel header="Web Hooks">
+    <p-tabPanel header="Web Hooks" *ngIf="auth.hasPermission(projectId, 'admin')">
 
         <div>
         <div *ngFor="let srv of webhookServices" style="margin: 0 0 30px 10px;">
@@ -192,8 +184,6 @@
         </div>
         </div>
 
-        <p-button label="Save" icon="pi pi-check" (onClick)="saveWebhooks()"
-                  [disabled]="!auth.hasPermission('manage')"
-                  [pTooltip]="auth.permTip('manage')"></p-button>
+        <p-button label="Save" icon="pi pi-check" (onClick)="saveWebhooks()"></p-button>
     </p-tabPanel>
 </p-tabView>

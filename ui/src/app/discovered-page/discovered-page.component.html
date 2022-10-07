@@ -2,8 +2,8 @@
 
     <p-button label="Refresh" icon="pi pi-refresh" (onClick)="refreshAgents(agentsTable)" [style]="{'margin-right': '10px'}"></p-button>
     <p-button label="Authorize" icon="pi pi-check" (onClick)="authorize(agentsTable)"
-              [disabled]="!auth.hasPermission('manage')"
-              [pTooltip]="auth.permTip('manage')"></p-button>
+              [disabled]="!auth.hasPermission(null, 'admin')"
+              [pTooltip]="auth.permTip(null, 'admin')"></p-button>
 
 </div>
 

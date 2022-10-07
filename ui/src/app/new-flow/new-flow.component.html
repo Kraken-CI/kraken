@@ -31,6 +31,6 @@
 <p-button label="Submit"
           icon="pi pi-check"
           (onClick)="submitFlow()"
-          [disabled]="!auth.hasPermission('manage')"
-          [pTooltip]="auth.permTip('manage')"
+          [disabled]="!auth.hasPermission(projectId, 'pwrusr')"
+          [pTooltip]="auth.permTip(projectId, 'pwrusr')"
           [loading]="waiting"></p-button>

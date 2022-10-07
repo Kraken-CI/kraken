@@ -18,6 +18,7 @@ import { datetimeToLocal, humanBytes } from '../utils'
     styleUrls: ['./branch-results.component.sass'],
 })
 export class BranchResultsComponent implements OnInit, OnDestroy {
+    projectId = 0
     branchId = 0
     branch: any
     kind: string
@@ -98,6 +99,7 @@ export class BranchResultsComponent implements OnInit, OnDestroy {
         if (this.branch == null) {
             return
         }
+        this.projectId = this.branch.project_id
         const crumbs = [
             {
                 label: 'Projects',

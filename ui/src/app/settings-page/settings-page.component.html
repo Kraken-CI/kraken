@@ -156,6 +156,6 @@
 
 <div style="margin: 8px 0 0 4px;">
   <p-button label="Save Settings" icon="pi pi-check" (onClick)="saveSettings()"
-            [disabled]="!auth.hasPermission('manage')"
-            [pTooltip]="auth.permTip('manage')"></p-button>
+            [disabled]="!auth.hasPermission(null, 'admin')"
+            [pTooltip]="auth.permTip(null, 'admin')"></p-button>
 </div>

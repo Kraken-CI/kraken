@@ -19,7 +19,8 @@
                                 <line x1="0" y1="5" x2="20" y2="25" style="stroke:rgb(0,0,0);stroke-width:1" />
                             </svg>
                             -->
-                            <app-run-box [run]="n.run"
+                            <app-run-box [projectId]="projectId"
+                                         [run]="n.run"
                                          [stage]="n.stage"
                                          [flowId]="flowId"
                                          (stageRun)="onStageRun($event)"

@@ -208,13 +208,13 @@
     <!-- buttons to trigger a new flow -->
     <a routerLink="/branches/{{branchId}}/ci/flows/new">
       <button type="button" pButton icon="pi pi-caret-right" label="Run CI Flow" style="margin: 0 10px 0 100px;"
-              [disabled]="!auth.hasPermission('manage')"
-              [pTooltip]="auth.permTip('manage')"></button>
+              [disabled]="!auth.hasPermission(projectId, 'pwrusr')"
+              [pTooltip]="auth.permTip(projectId, 'pwrusr')"></button>
     </a>
     <a routerLink="/branches/{{branchId}}/dev/flows/new">
       <button type="button" pButton icon="pi pi-caret-right" label="Run Dev Flow"
-              [disabled]="!auth.hasPermission('manage')"
-              [pTooltip]="auth.permTip('manage')"
+              [disabled]="!auth.hasPermission(projectId, 'pwrusr')"
+              [pTooltip]="auth.permTip(projectId, 'pwrusr')"
               ></button>
     </a>
   </div>
@@ -223,20 +223,20 @@
   <div style="display: flex; align-items: baseline;">
     <!-- fork button -->
     <p-button label="Fork Branch" icon="fa fa-code-fork" styleClass="p-button-outlined" (onClick)="showForkBranchDialog()"
-              [disabled]="!auth.hasPermission('manage')"
-              [pTooltip]="auth.permTip('manage')"
+              [disabled]="!auth.hasPermission(projectId, 'pwrusr')"
+              [pTooltip]="auth.permTip(projectId, 'pwrusr')"
               [ngStyle]="{'margin-right': '10px'}"></p-button>
 
     <!-- Move button -->
     <p-button label="Move Branch" icon="pi pi-sign-in" styleClass="p-button-warning p-button-outlined" (onClick)="showMoveBranchDialog()"
-              [disabled]="!auth.hasPermission('manage')"
-              [pTooltip]="auth.permTip('manage')"
+              [disabled]="!auth.hasPermission(projectId, 'pwrusr')"
+              [pTooltip]="auth.permTip(projectId, 'pwrusr')"
               [ngStyle]="{'margin-right': '10px'}"></p-button>
 
     <!-- archive button -->
     <p-button label="Archive Branch" icon="pi pi-trash" styleClass="p-button-danger p-button-outlined" (onClick)="deleteBranch()"
-              [disabled]="!auth.hasPermission('manage')"
-              [pTooltip]="auth.permTip('manage')"></p-button>
+              [disabled]="!auth.hasPermission(projectId, 'pwrusr')"
+              [pTooltip]="auth.permTip(projectId, 'pwrusr')"></p-button>
   </div>
 </div>
 
@@ -247,8 +247,8 @@
     <div class="grid">
       <div class="col-3">
         <button type="button" (click)="newStage()" pButton icon="pi pi-plus" label="New Stage"
-                [disabled]="!auth.hasPermission('manage')"
-                [pTooltip]="auth.permTip('manage')"></button>
+                [disabled]="!auth.hasPermission(projectId, 'pwrusr')"
+                [pTooltip]="auth.permTip(projectId, 'pwrusr')"></button>
         <div *ngFor="let stage of branch.stages" style="margin: 6px 0 12px 0; cursor: pointer;" class="round-shadow {{ stage.selectedClass }} {{ stage.enabled ? '' : 'disabled-stage' }}" (click)="selectStage(stage)">
           <div style="font-size: 1.1rem; font-weight: bold; margin-bottom: 4px;">{{stage.name}}</div>
           <div style="margin-bottom: 6px;">{{stage.description}}</div>
@@ -391,11 +391,11 @@
         <!-- buttons -->
         <div>
           <button type="button" (click)="saveStage()" pButton icon="pi pi-check" label="Save Stage" style="margin: 0 30px 0 0;"
-                  [disabled]="stage.repo_state === 1 || !auth.hasPermission('manage')"
-                  [pTooltip]="auth.permTip('manage')"></button>
+                  [disabled]="stage.repo_state === 1 || !auth.hasPermission(projectId, 'pwrusr')"
+                  [pTooltip]="auth.permTip(projectId, 'pwrusr')"></button>
           <button type="button" (click)="deleteStage()" pButton icon="pi pi-trash" class="p-button-danger p-button-outlined" label="Delete Stage"
-                  [disabled]="!auth.hasPermission('manage')"
-                  [pTooltip]="auth.permTip('manage')"></button>
+                  [disabled]="!auth.hasPermission(projectId, 'pwrusr')"
+                  [pTooltip]="auth.permTip(projectId, 'pwrusr')"></button>
         </div>
 
       </div>

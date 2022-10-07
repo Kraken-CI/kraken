@@ -43,3 +43,17 @@ export function humanBytes(bytes, si) {
     } while (Math.abs(bytes) >= thresh && u < units.length - 1)
     return bytes.toFixed(1) + ' ' + units[u]
 }
+
+
+export function showErrorBox(msgSrv, err, summary) {
+    let msg = err.statusText
+    if (err.error && err.error.detail) {
+        msg = err.error.detail
+    }
+    msgSrv.add({
+        severity: 'error',
+        summary: summary,
+        detail: 'Error: ' + msg,
+        life: 10000,
+    })
+}

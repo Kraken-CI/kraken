@@ -161,22 +161,20 @@ export class AppComponent implements OnInit, OnDestroy {
                         label: 'Settings',
                         icon: 'fa fa-cogs',
                         routerLink: '/settings',
-                        disabled: !this.auth.hasPermission('manage'),
-                        title: this.auth.permTip('manage'),
+                        disabled: !this.auth.hasPermission(null, 'admin'),
+                        title: this.auth.permTip(null, 'admin'),
                     },
                     {
                         label: 'Users',
                         icon: 'pi pi-user',
                         routerLink: '/users',
-                        disabled: !this.auth.hasPermission('manage'),
-                        title: this.auth.permTip('manage'),
+                        disabled: !this.auth.hasPermission(null, 'admin'),
+                        title: this.auth.permTip(null, 'admin'),
                     },
                     {
                         label: 'Tools',
                         icon: 'fa fa-wrench',
-                        routerLink: '/tools',
-                        disabled: !this.auth.hasPermission('manage'),
-                        title: this.auth.permTip('manage'),
+                        routerLink: '/tools'
                     },
                 ],
             },
@@ -189,8 +187,6 @@ export class AppComponent implements OnInit, OnDestroy {
                 command: () => {
                     this.displayPasswdBox = true
                 },
-                disabled: !this.auth.hasPermission('manage'),
-                title: this.auth.permTip('manage'),
             },
             {
                 label: 'Dark Mode',

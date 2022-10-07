@@ -124,7 +124,7 @@ export class DiagsPageComponent implements OnInit, OnDestroy {
     }
 
     loadServicesLogs() {
-        if (!this.auth.hasPermission('manage')) {
+        if (!this.auth.hasPermission(null, 'admin')) {
             return
         }
         this.servicesLogsAreLoading = true

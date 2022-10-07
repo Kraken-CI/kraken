@@ -14,10 +14,8 @@
 
 import pytest
 
-import werkzeug.exceptions
-
 from kraken.server import initdb, access, consts
-from kraken.server.models import db, User, UserSession, Run, Stage, Flow, Branch, Project, TestCaseResult, TestCase, Tool, System, AgentsGroup, Job
+from kraken.server.models import db, Run, Stage, Flow, Branch, Project, TestCaseResult, TestCase, Tool, System, AgentsGroup, Job
 
 from common import create_app, prepare_user, check_missing_tests_in_mod
 
@@ -163,7 +161,7 @@ def test_get_flow_analysis():
 
         project = Project()
         branch = Branch(project=project)
-        stage = Stage(branch=branch, schema={})
+        Stage(branch=branch, schema={})
         flow = Flow(branch=branch, kind=consts.FLOW_KIND_CI)
         db.session.commit()
 

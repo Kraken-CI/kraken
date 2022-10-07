@@ -18,8 +18,8 @@ from unittest.mock import patch
 import pytest
 
 from kraken.server import consts, initdb, access
-from kraken.server.models import db, Run, Job, TestCaseResult, Branch, Flow, Stage, Project, System, AgentsGroup, Agent, TestCase, Tool, BranchSequence
-from kraken.server import results, execution
+from kraken.server.models import db, Run, Job, Branch, Flow, Stage, Project, System, AgentsGroup, Agent, TestCase, Tool, BranchSequence
+from kraken.server import execution
 
 from common import create_app, prepare_user, check_missing_tests_in_mod
 
@@ -262,8 +262,6 @@ def test_create_job():
         BranchSequence(branch=branch, stage=stage, kind=consts.BRANCH_SEQ_DEV_RUN, value=0)
         flow = Flow(branch=branch, kind=consts.FLOW_KIND_CI)
         run = Run(stage=stage, flow=flow, reason='by me')
-        system = System()
-        agents_group = AgentsGroup()
         db.session.commit()
 
         job = dict(run=run.id)
@@ -283,7 +281,7 @@ def test_get_runs():
         branch = Branch(project=project)
         stage = Stage(branch=branch, schema={})
         flow = Flow(branch=branch, kind=consts.FLOW_KIND_CI)
-        run = Run(stage=stage, flow=flow, reason=dict(reason='manual'))
+        Run(stage=stage, flow=flow, reason=dict(reason='manual'))
         db.session.commit()
 
         execution.get_runs(stage.id, token_info=token_info)
@@ -365,7 +363,7 @@ def test_get_job_logs():
         job = Job(run=run, agents_group=agents_group, system=system)
         db.session.commit()
 
-        with patch('clickhouse_driver.Client') as ch:
+        with patch('clickhouse_driver.Client'):
             execution.get_job_logs(job.id, token_info=token_info)
 
 

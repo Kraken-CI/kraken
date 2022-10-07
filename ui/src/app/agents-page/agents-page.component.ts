@@ -10,6 +10,7 @@ import { AuthService } from '../auth.service'
 import { ManagementService } from '../backend/api/management.service'
 import { ExecutionService } from '../backend/api/execution.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
+import { showErrorBox } from '../utils'
 
 @Component({
     selector: 'app-agents-page',
@@ -97,8 +98,8 @@ export class AgentsPageComponent implements OnInit, OnDestroy {
             {
                 label: 'Delete',
                 icon: 'pi pi-times',
-                disabled: !this.auth.hasPermission('manage'),
-                title: this.auth.permTip('manage'),
+                disabled: !this.auth.hasPermission(null, 'admin'),
+                title: this.auth.permTip(null, 'admin'),
             },
         ]
 
@@ -144,20 +145,7 @@ export class AgentsPageComponent implements OnInit, OnDestroy {
                                     this.switchToTab(this.tabs.length - 1)
                                 },
                                 (err) => {
-                                    let msg = err.statusText
-                                    if (err.error && err.error.message) {
-                                        msg = err.error.message
-                                    }
-                                    this.msgSrv.add({
-                                        severity: 'error',
-                                        summary: 'Cannot get agent',
-                                        detail:
-                                            'Getting agent with ID ' +
-                                            agentId +
-                                            ' erred: ' +
-                                            msg,
-                                        life: 10000,
-                                    })
+                                    showErrorBox(this.msgSrv, err, `Getting agent with ID ${agentId} erred`)
                                     this.router.navigate(['/agents/all'])
                                 }
                             )
@@ -168,11 +156,16 @@ export class AgentsPageComponent implements OnInit, OnDestroy {
         )
 
         this.subs.add(
-            this.managementService.getGroups(0, 1000).subscribe((data) => {
-                this.agentGroups = data.items.map((g) => {
-                    return { id: g.id, name: g.name }
-                })
-            })
+            this.managementService.getGroups(0, 1000).subscribe(
+                (data) => {
+                    this.agentGroups = data.items.map((g) => {
+                        return { id: g.id, name: g.name }
+                    })
+                },
+                (err) => {
+                    showErrorBox(this.msgSrv, err, 'Getting agents groups erred')
+                }
+            )
         )
     }
 
@@ -185,11 +178,17 @@ export class AgentsPageComponent implements OnInit, OnDestroy {
         this.subs.add(
             this.managementService
                 .getAgents(false, event.first, event.rows)
-                .subscribe((data) => {
-                    this.agents = data.items
-                    this.totalAgents = data.total
-                    this.loadingAgents = false
-                })
+                .subscribe(
+                    (data) => {
+                        this.agents = data.items
+                        this.totalAgents = data.total
+                        this.loadingAgents = false
+                    },
+                    (err) => {
+                        showErrorBox(this.msgSrv, err, 'Getting agents erred')
+                        this.loadingAgents = false
+                    }
+                )
         )
     }
 
@@ -279,16 +278,7 @@ export class AgentsPageComponent implements OnInit, OnDestroy {
                     })
                 },
                 (err) => {
-                    let msg = err.statusText
-                    if (err.error && err.error.message) {
-                        msg = err.error.message
-                    }
-                    this.msgSrv.add({
-                        severity: 'error',
-                        summary: 'Agent update failed',
-                        detail: 'Updating agent erred: ' + msg,
-                        life: 10000,
-                    })
+                    showErrorBox(this.msgSrv, err, 'Agent update erred')
                 }
             )
         )

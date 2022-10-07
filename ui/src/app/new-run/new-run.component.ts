@@ -13,6 +13,7 @@ import { BreadcrumbsService } from '../breadcrumbs.service'
     styleUrls: ['./new-run.component.sass'],
 })
 export class NewRunComponent implements OnInit, OnDestroy {
+    projectId = 0
     flowId = 0
     stageId = 0
     flow: any = { id: 0 }
@@ -38,6 +39,7 @@ export class NewRunComponent implements OnInit, OnDestroy {
         )
         this.subs.add(
             this.executionService.getFlow(this.flowId).subscribe((flow) => {
+                this.projectId = flow.project_id
                 this.flow = flow
 
                 for (const s of flow.stages) {

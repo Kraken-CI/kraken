@@ -21,7 +21,7 @@ from hamcrest import assert_that, has_entries, matches_regexp, contains_exactly,
 import werkzeug.exceptions
 
 from kraken.server import consts, initdb, utils, access
-from kraken.server.models import db, Project, Branch, Flow, Secret, Stage, System, AgentsGroup, Agent, Tool
+from kraken.server.models import db, Project, Branch, Flow, Secret, Stage, AgentsGroup, Agent, Tool
 
 from common import create_app, prepare_user, check_missing_tests_in_mod
 
@@ -107,10 +107,10 @@ def test_get_projects():
         access.init()
         _, token_info = prepare_user()
 
-        proj = Project(name='proj-1')
+        Project(name='proj-1')
         db.session.commit()
 
-        management.get_projects()
+        management.get_projects(token_info=token_info)
 
 
 @pytest.mark.db
@@ -494,7 +494,7 @@ def test_get_agents():
         access.init()
         _, token_info = prepare_user()
 
-        agent = Agent(name='agent', address='1.2.3.4', authorized=True, disabled=False)
+        Agent(name='agent', address='1.2.3.4', authorized=True, disabled=False)
         db.session.commit()
 
         management.get_agents(token_info=token_info)
@@ -571,7 +571,7 @@ def test_get_groups():
         access.init()
         _, token_info = prepare_user()
 
-        agents_group = AgentsGroup()
+        AgentsGroup()
         db.session.commit()
 
         management.get_groups(token_info=token_info)
@@ -725,8 +725,7 @@ def test_get_last_rq_jobs_names():
         access.init()
         _, token_info = prepare_user()
 
-        body = {}
-        with patch('clickhouse_driver.Client') as ch:
+        with patch('clickhouse_driver.Client'):
             management.get_last_rq_jobs_names(token_info=token_info)
 
 
@@ -739,7 +738,7 @@ def test_get_services_logs():
         access.init()
         _, token_info = prepare_user()
 
-        with patch('clickhouse_driver.Client') as ch:
+        with patch('clickhouse_driver.Client'):
             management.get_services_logs([], token_info=token_info)
 
 
