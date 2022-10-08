@@ -509,7 +509,7 @@ def test_update_agents():
         access.init()
         _, token_info = prepare_user()
 
-        agent = Agent(name='agent', address='1.2.3.4', authorized=True, disabled=False)
+        Agent(name='agent', address='1.2.3.4', authorized=True, disabled=False)
         db.session.commit()
 
         body = dict()

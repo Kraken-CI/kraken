@@ -18,7 +18,7 @@ from unittest.mock import patch
 import pytest
 
 from kraken.server import consts, initdb, access
-from kraken.server.models import db, Run, Job, Branch, Flow, Stage, Project, System, AgentsGroup, Agent, TestCase, Tool, BranchSequence
+from kraken.server.models import db, Run, Job, Branch, Flow, Stage, Project, System, AgentsGroup, Agent, BranchSequence
 from kraken.server import execution
 
 from common import create_app, prepare_user, check_missing_tests_in_mod

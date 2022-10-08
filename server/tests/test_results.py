@@ -179,7 +179,7 @@ def test_get_branch_history():
 
         project = Project()
         branch = Branch(project=project)
-        stage = Stage(branch=branch, schema={})
+        Stage(branch=branch, schema={})
         flow = Flow(branch=branch, kind=consts.FLOW_KIND_CI)
         db.session.commit()
 

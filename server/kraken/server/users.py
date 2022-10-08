@@ -194,9 +194,9 @@ def change_user_details(user_id, body, token_info=None):
 
     if 'superadmin' in body:
         if body['superadmin']:
-            done = access.enforcer.add_named_grouping_policy("g2", str(user.id), access.ROLE_SUPERADMIN)
+            access.enforcer.add_named_grouping_policy("g2", str(user.id), access.ROLE_SUPERADMIN)
         else:
-            done = access.enforcer.remove_named_grouping_policy("g2", str(user.id), access.ROLE_SUPERADMIN)
+            access.enforcer.remove_named_grouping_policy("g2", str(user.id), access.ROLE_SUPERADMIN)
         db.session.commit()
 
     if 'projects' in body:
@@ -215,29 +215,29 @@ def change_user_details(user_id, body, token_info=None):
             proj_role_admin = 'admin-p%d' % proj.id
 
             for r in [proj_role_viewer, proj_role_pwrusr, proj_role_admin]:
-                done = access.enforcer.remove_named_grouping_policy("g", str(user.id), r)
+                access.enforcer.remove_named_grouping_policy("g", str(user.id), r)
 
             if role == access.ROLE_VIEWER:
                 # p, viewer-p1, proj1, view
-                done = access.enforcer.add_policy(proj_role_viewer, str(proj.id), 'view')
+                access.enforcer.add_policy(proj_role_viewer, str(proj.id), 'view')
                 # g, user, viewer-p1
-                done = access.enforcer.add_named_grouping_policy("g", str(user.id), proj_role_viewer)
+                access.enforcer.add_named_grouping_policy("g", str(user.id), proj_role_viewer)
             elif role == access.ROLE_PWRUSR:
                 # p, pwrusr-p1, proj1, view
-                done = access.enforcer.add_policy(proj_role_pwrusr, str(proj.id), 'view')
+                access.enforcer.add_policy(proj_role_pwrusr, str(proj.id), 'view')
                 # p, pwrusr-p1, proj1, pwrusr
-                done = access.enforcer.add_policy(proj_role_pwrusr, str(proj.id), 'pwrusr')
+                access.enforcer.add_policy(proj_role_pwrusr, str(proj.id), 'pwrusr')
                 # g, user, pwrusr-p1
-                done = access.enforcer.add_named_grouping_policy("g", str(user.id), proj_role_pwrusr)
+                access.enforcer.add_named_grouping_policy("g", str(user.id), proj_role_pwrusr)
             elif role == access.ROLE_ADMIN:
                 # p, admin-p1, proj1, view
-                done = access.enforcer.add_policy(proj_role_admin, str(proj.id), 'view')
+                access.enforcer.add_policy(proj_role_admin, str(proj.id), 'view')
                 # p, admin-p1, proj1, pwrusr
-                done = access.enforcer.add_policy(proj_role_admin, str(proj.id), 'pwrusr')
+                access.enforcer.add_policy(proj_role_admin, str(proj.id), 'pwrusr')
                 # p, admin-p1, proj1, admin
-                done = access.enforcer.add_policy(proj_role_admin, str(proj.id), 'admin')
+                access.enforcer.add_policy(proj_role_admin, str(proj.id), 'admin')
                 # g, user, admin-p1
-                done = access.enforcer.add_named_grouping_policy("g", str(user.id), proj_role_admin)
+                access.enforcer.add_named_grouping_policy("g", str(user.id), proj_role_admin)
             db.session.commit()
 
     return user.get_json(), 201
