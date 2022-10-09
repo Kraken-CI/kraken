@@ -544,7 +544,8 @@ def test_delete_agent():
         agent = Agent(name='agent', address='1.2.3.4', authorized=True, disabled=False)
         db.session.commit()
 
-        management.delete_agent(agent.id, token_info=token_info)
+        with patch('kraken.server.kkrq.enq'):
+            management.delete_agent(agent.id, token_info=token_info)
 
 
 @pytest.mark.db
@@ -749,7 +750,8 @@ def test_get_errors_in_logs_count():
     with app.app_context():
         initdb._prepare_initial_preferences()
 
-        management.get_errors_in_logs_count()
+        with patch('redis.Redis'):
+            management.get_errors_in_logs_count()
 
 
 @pytest.mark.db

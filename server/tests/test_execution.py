@@ -383,7 +383,8 @@ def test_cancel_run():
         run = Run(stage=stage, flow=flow, reason='by me')
         db.session.commit()
 
-        execution.cancel_run(run.id, token_info=token_info)
+        with patch('kraken.server.kkrq.enq'):
+            execution.cancel_run(run.id, token_info=token_info)
 
 
 @pytest.mark.db
@@ -405,7 +406,8 @@ def test_delete_job():
         job = Job(run=run, agents_group=agents_group, system=system)
         db.session.commit()
 
-        execution.delete_job(job.id, token_info=token_info)
+        with patch('kraken.server.kkrq.enq'):
+            execution.delete_job(job.id, token_info=token_info)
 
 
 @pytest.mark.db

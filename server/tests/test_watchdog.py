@@ -124,7 +124,8 @@ def test__check_agents_to_destroy():
         a.created = now - datetime.timedelta(seconds=60 * 12)
         db.session.commit()
 
-        all_count, outdated_count, dangling_count = watchdog._check_agents_to_destroy()
+        with patch('kraken.server.kkrq.enq'):
+            all_count, outdated_count, dangling_count = watchdog._check_agents_to_destroy()
         assert all_count == 1
         assert outdated_count == 1
         assert dangling_count == 0
@@ -147,7 +148,8 @@ def test__check_agents_to_destroy():
         job.state = consts.JOB_STATE_COMPLETED
         db.session.commit()
 
-        all_count, outdated_count, dangling_count = watchdog._check_agents_to_destroy()
+        with patch('kraken.server.kkrq.enq'):
+            all_count, outdated_count, dangling_count = watchdog._check_agents_to_destroy()
         assert all_count == 1
         assert outdated_count == 1
         assert dangling_count == 0

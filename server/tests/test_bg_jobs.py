@@ -442,7 +442,8 @@ def test_analyze_results_history(flow_kind):
     with app.app_context():
         initdb._prepare_initial_preferences()
 
-        with patch('kraken.server.bg.jobs.log') as mylog:
+        with (patch('kraken.server.bg.jobs.log') as mylog,
+              patch('kraken.server.kkrq.enq')):
             jobs._analyze_results_history(77777777)
             mylog.error.assert_called_with('got unknown run to analyze results history: %s', 77777777)
 
@@ -483,7 +484,8 @@ def test_analyze_results_history(flow_kind):
                              consts.TC_RESULT_PASSED, consts.TC_RESULT_PASSED,
                              consts.TC_RESULT_PASSED, consts.TC_RESULT_PASSED,
                              flow_kind)
-        with patch('kraken.server.bg.jobs.log') as mylog:
+        with (patch('kraken.server.bg.jobs.log') as mylog,
+              patch('kraken.server.kkrq.enq')):
             jobs._analyze_results_history(run.id)
             assert mylog.info.call_args_list[0][0][0] == 'starting results history analysis of run %s, flow %s [%s] '
             assert mylog.info.call_args_list[0][0][1].id == run.id
@@ -511,7 +513,8 @@ def test_analyze_results_history(flow_kind):
                                 consts.TC_RESULT_DISABLED, consts.TC_RESULT_UNSUPPORTED,
                                 flow_kind)
         if flow_kind == consts.FLOW_KIND_CI:
-            with patch('kraken.server.bg.jobs.log') as mylog:
+            with (patch('kraken.server.bg.jobs.log') as mylog,
+                  patch('kraken.server.kkrq.enq')):
                 jobs._analyze_results_history(run.id)
                 assert mylog.info.call_count == 2
                 assert mylog.info.call_args_list[0][0][0] == 'starting results history analysis of run %s, flow %s [%s] '
@@ -574,7 +577,8 @@ def test_analyze_results_history(flow_kind):
 
         prev_run.state = consts.RUN_STATE_PROCESSED
         db.session.commit()
-        with patch('kraken.server.bg.jobs.log') as mylog:
+        with (patch('kraken.server.bg.jobs.log') as mylog,
+              patch('kraken.server.kkrq.enq')):
             jobs._analyze_results_history(run.id)
             _check_logs(mylog, tcrs, run)
 
@@ -595,7 +599,8 @@ def test_analyze_results_history(flow_kind):
                                 flow_kind)
         prev_run.state = consts.RUN_STATE_PROCESSED
         db.session.commit()
-        with patch('kraken.server.bg.jobs.log') as mylog:
+        with (patch('kraken.server.bg.jobs.log') as mylog,
+              patch('kraken.server.kkrq.enq')):
             jobs._analyze_results_history(run.id)
             _check_logs(mylog, tcrs, run)
 
@@ -616,7 +621,8 @@ def test_analyze_results_history(flow_kind):
                                 flow_kind)
         prev_run.state = consts.RUN_STATE_PROCESSED
         db.session.commit()
-        with patch('kraken.server.bg.jobs.log') as mylog:
+        with (patch('kraken.server.bg.jobs.log') as mylog,
+              patch('kraken.server.kkrq.enq')):
             jobs._analyze_results_history(run.id)
             _check_logs(mylog, tcrs, run)
 
@@ -637,7 +643,8 @@ def test_analyze_results_history(flow_kind):
                                 flow_kind)
         prev_run.state = consts.RUN_STATE_PROCESSED
         db.session.commit()
-        with patch('kraken.server.bg.jobs.log') as mylog:
+        with (patch('kraken.server.bg.jobs.log') as mylog,
+              patch('kraken.server.kkrq.enq')):
             jobs._analyze_results_history(run.id)
             _check_logs(mylog, tcrs, run)
 
