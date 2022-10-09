@@ -115,6 +115,8 @@ def test__analyze_job_results_history__1_job_with_cover():
     app = create_app()
 
     with app.app_context():
+        initdb._prepare_initial_preferences()
+
         project = Project()
         branch = Branch(project=project)
         stage = Stage(branch=branch, schema={})
@@ -203,6 +205,8 @@ def test__analyze_job_issues_history():
     app = create_app()
 
     with app.app_context():
+        initdb._prepare_initial_preferences()
+
         project = Project()
         branch = Branch(project=project)
         stage = Stage(branch=branch, schema={})
