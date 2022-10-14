@@ -89,6 +89,10 @@ export class AuthService {
     }
 
     public hasPermission(projectId, expectedRole) {
+        if (!this.session.roles) {
+            this.logout()
+        }
+
         if (this.session.roles.superadmin) {
             return true
         }
