@@ -161,7 +161,7 @@ def test_create_machines_aws_ec2():
         import boto3
         from botocore.stub import Stubber, ANY
 
-        b3r = boto3.resource('ec2')
+        b3r = boto3.resource('ec2', region_name='aaa')
         stub_r = Stubber(b3r.meta.client)
         stub_r.add_response('run_instances',
                             {'Instances': [{'InstanceId': '123'}]},  # resp

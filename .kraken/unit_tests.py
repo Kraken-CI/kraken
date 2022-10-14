@@ -10,7 +10,7 @@ def stage(ctx):
             "name": "pytest agent",
             "steps": [{
                 "tool": "shell",
-                "cmd": "sudo apt update && sudo apt-get install -y python3-pip || ps axf",
+                "cmd": "sudo apt update && sudo apt-get install -y python3-pip zsh",
                 "timeout": 300
             }, {
                 "tool": "shell",
@@ -77,7 +77,7 @@ def stage(ctx):
                 "timeout": 500
             }, {
                 "tool": "shell",
-                "cmd": "echo 'version = \'0.0\'' > version.py",
+                "cmd": "echo 'version = \\'0.0\\'' > version.py",
                 "cwd": "kraken/server/kraken",
             }, {
                 "tool": "pytest",
