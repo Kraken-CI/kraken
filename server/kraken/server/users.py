@@ -192,7 +192,12 @@ def change_user_details(user_id, body, token_info=None):
         flag_modified(user, 'details')
         db.session.commit()
 
+    enforcer_reloaded = False
     if 'superadmin' in body:
+        if not enforcer_reloaded:
+            access.enforcer.load_policy()
+            enforcer_reloaded = True
+
         if body['superadmin']:
             access.enforcer.add_named_grouping_policy("g2", str(user.id), access.ROLE_SUPERADMIN)
         else:
@@ -200,6 +205,10 @@ def change_user_details(user_id, body, token_info=None):
         db.session.commit()
 
     if 'projects' in body:
+        if not enforcer_reloaded:
+            access.enforcer.load_policy()
+            enforcer_reloaded = True
+
         for proj_id, role in body['projects'].items():
             q = Project.query
             q = q.filter_by(id=proj_id)
