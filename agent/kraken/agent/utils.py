@@ -43,7 +43,7 @@ def _trace_log_text2(log_text, output_handler, text, tracing, mask, out_prefix, 
         if output_handler:
             output_handler(frag_to_print_now)
         elif text is not None:
-            text.append(frag_to_print_now)
+            text.append(frag_to_print_now + '\n')
         if tracing:
             if mask:
                 frag_to_print_now = frag_to_print_now.rstrip().replace(mask, '******')
@@ -54,7 +54,7 @@ def _trace_log_text2(log_text, output_handler, text, tracing, mask, out_prefix, 
 
 def _trace_log_text(log_text, output_handler, text, tracing, mask, out_prefix, trace_all=False):
     text_left = ''
-    # cut log to chunk to not get over log.info msg limit
+    # cut log to chunks to not get over log.info msg limit
     for i in range(0, len(log_text), 2048):
         chunk = log_text[i:i + 2048]
 
