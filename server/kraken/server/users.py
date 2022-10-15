@@ -249,4 +249,8 @@ def change_user_details(user_id, body, token_info=None):
                 access.enforcer.add_named_grouping_policy("g", str(user.id), proj_role_admin)
             db.session.commit()
 
-    return user.get_json(), 201
+    user_data = user.get_json()
+    roles_data = access.get_user_roles(user)
+    user_data.update(roles_data)
+
+    return user_data, 201

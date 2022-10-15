@@ -302,6 +302,9 @@ def check(token_info, obj, act, msg):
 
 
 def get_user_roles(user):
+    # force reloading policies from db
+    enforcer.load_policy()
+
     resp = {}
 
     if user.name == 'admin':

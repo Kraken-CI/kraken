@@ -119,39 +119,42 @@ export class UsersPageComponent implements OnInit, OnDestroy {
         )
     }
 
+    reflecUserChangesLocally(user, data) {
+        for (var k in data) {
+            user[k] = data[k]
+        }
+
+        let userProjectsById = {}
+        user.userProjects = []
+        for (const [projId, role] of Object.entries(user.projects)) {
+            let p = this.projectsById[projId]
+            if (!p) {
+                return
+            }
+            userProjectsById[projId] = p
+            user.userProjects.push({
+                id: projId,
+                name: p.name,
+                role: role
+            })
+        }
+        user.userProjects.sort((a, b) => a.name.localeCompare(b.name))
+
+        user.nonUserProjects = []
+        for (let p of this.projects) {
+            if (!(p.id in userProjectsById)) {
+                user.nonUserProjects.push(p)
+            }
+        }
+    }
+
     loadUserDetails(user) {
         this.subs.add(
             this.usersService
                 .getUser(user.id)
                 .subscribe((data) => {
                     this.selectedProject = null
-
-                    for (var k in data) {
-                        user[k] = data[k]
-                    }
-
-                    let userProjectsById = {}
-                    user.userProjects = []
-                    for (const [projId, role] of Object.entries(user.projects)) {
-                        let p = this.projectsById[projId]
-                        if (!p) {
-                            return
-                        }
-                        userProjectsById[projId] = p
-                        user.userProjects.push({
-                            id: projId,
-                            name: p.name,
-                            role: role
-                        })
-                    }
-                    user.userProjects.sort((a, b) => a.name.localeCompare(b.name))
-
-                    user.nonUserProjects = []
-                    for (let p of this.projects) {
-                        if (!(p.id in userProjectsById)) {
-                            user.nonUserProjects.push(p)
-                        }
-                    }
+                    this.reflecUserChangesLocally(user, data)
                 })
         )
     }
@@ -215,7 +218,7 @@ export class UsersPageComponent implements OnInit, OnDestroy {
                 .changeUserDetails(this.selectedUser.id, details)
                 .subscribe(
                     (data) => {
-                        this.loadUserDetails(this.selectedUser)
+                        this.reflecUserChangesLocally(this.selectedUser, data)
 
                         this.msgSrv.add({
                             severity: 'success',
