@@ -262,6 +262,8 @@ class CasbinWatcher:
     def __init__(self, redis_addr):
         self.stale = False
         self.redis_addr = redis_addr
+        if not self.redis_addr:
+            return
         self.watcher_thread = threading.Thread(target=self._watcher)
         self.watcher_thread.start()
 
@@ -275,7 +277,7 @@ class CasbinWatcher:
             # wait 20 seconds to see if there is a casbin update
             try:
                 message = p.get_message(timeout=20)
-            except Exception as e:
+            except Exception:
                 log.exception("Casbin watcher failed to get message from redis due to")
                 p.close()
                 r = None
@@ -286,6 +288,8 @@ class CasbinWatcher:
                 self.stale = True
 
     def notify(self):
+        if not self.redis_addr:
+            return
         addr, port = self.redis_addr.split(':')
         r = Redis(addr, port)
         r.publish(self.REDIS_CHANNEL_NAME, 'updated')
@@ -299,7 +303,7 @@ ROLE_ADMIN = 'admin'
 
 enforcer = None
 
-def init(redis_addr):
+def init(redis_addr=None):
     global enforcer
     if enforcer:
         return
