@@ -271,20 +271,18 @@ class CasbinWatcher:
         p = r.pubsub()
         p.subscribe(self.REDIS_CHANNEL_NAME)
         log.info("Waiting for casbin policy updates...")
-        while True and r:
+        while r:
             # wait 20 seconds to see if there is a casbin update
             try:
                 message = p.get_message(timeout=20)
             except Exception as e:
-                log.info("Casbin watcher failed to get message from redis due to: {}"
-                         .format(repr(e)))
+                log.exception("Casbin watcher failed to get message from redis due to")
                 p.close()
                 r = None
                 break
 
             if message and message.get('type') == "message":
-                log.info("Casbin policy update identified.."
-                      " Message was: {}".format(message))
+                log.info("Casbin policy update identified, message: %s", message)
                 self.stale = True
 
     def notify(self):
@@ -331,7 +329,7 @@ def init(redis_addr):
     # Create enforcer from adapter and config policy
     enforcer = casbin.Enforcer(model, adapter)
 
-    enforcer._my_watcher = CasbinWatcher(redis_addr)
+    enforcer.my_watcher = CasbinWatcher(redis_addr)
 
 
 def check(token_info, obj, act, msg):
@@ -341,9 +339,9 @@ def check(token_info, obj, act, msg):
     log.info('check access sub:%s obj:%s act:%s',
              sub2, obj2, act2)
 
-    if enforcer._my_watcher.stale:
+    if enforcer.my_watcher.stale:
         enforcer.load_policy()
-        enforcer._my_watcher.stale = False
+        enforcer.my_watcher.stale = False
 
     if not enforcer.enforce(sub2, obj2, act2):
         raise Forbidden(msg)
@@ -380,4 +378,4 @@ def get_user_roles(user):
 
 
 def notify_policy_change():
-    enforcer._my_watcher.notify()
+    enforcer.my_watcher.notify()
