@@ -193,7 +193,9 @@ def change_user_details(user_id, body, token_info=None):
         db.session.commit()
 
     enforcer_reloaded = False
+    policy_changed = False
     if 'superadmin' in body:
+        policy_changed = True
         if not enforcer_reloaded:
             access.enforcer.load_policy()
             enforcer_reloaded = True
@@ -205,6 +207,7 @@ def change_user_details(user_id, body, token_info=None):
         db.session.commit()
 
     if 'projects' in body:
+        policy_changed = True
         if not enforcer_reloaded:
             access.enforcer.load_policy()
             enforcer_reloaded = True
@@ -248,6 +251,9 @@ def change_user_details(user_id, body, token_info=None):
                 # g, user, admin-p1
                 access.enforcer.add_named_grouping_policy("g", str(user.id), proj_role_admin)
             db.session.commit()
+
+    if policy_changed:
+        access.notify_policy_change()
 
     user_data = user.get_json()
     roles_data = access.get_user_roles(user)

@@ -13,7 +13,10 @@
 # limitations under the License.
 
 import logging
+import threading
 from contextlib import contextmanager
+
+from redis import Redis
 
 ## vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 ## copied from https://github.com/pycasbin/sqlalchemy-adapter/blob/606a631b1704d76c5ca0f83064158604851dc17f/casbin_sqlalchemy_adapter/adapter.py
@@ -252,6 +255,44 @@ class Adapter(persist.Adapter, persist.adapters.UpdateAdapter):
 
 ## ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+class CasbinWatcher:
+
+    REDIS_CHANNEL_NAME = 'casbin-watcher'
+
+    def __init__(self, redis_addr):
+        self.stale = False
+        self.redis_addr = redis_addr
+        self.watcher_thread = threading.Thread(target=self._watcher)
+        self.watcher_thread.start()
+
+    def _watcher(self):
+        addr, port = self.redis_addr.split(':')
+        r = Redis(addr, port)
+        p = r.pubsub()
+        p.subscribe(self.REDIS_CHANNEL_NAME)
+        log.info("Waiting for casbin policy updates...")
+        while True and r:
+            # wait 20 seconds to see if there is a casbin update
+            try:
+                message = p.get_message(timeout=20)
+            except Exception as e:
+                log.info("Casbin watcher failed to get message from redis due to: {}"
+                         .format(repr(e)))
+                p.close()
+                r = None
+                break
+
+            if message and message.get('type') == "message":
+                log.info("Casbin policy update identified.."
+                      " Message was: {}".format(message))
+                self.stale = True
+
+    def notify(self):
+        addr, port = self.redis_addr.split(':')
+        r = Redis(addr, port)
+        r.publish(self.REDIS_CHANNEL_NAME, 'updated')
+
+
 ROLE_SUPERADMIN = "superadmin"
 ROLE_VIEWER = 'viewer'
 ROLE_PWRUSR = 'pwrusr'
@@ -260,7 +301,7 @@ ROLE_ADMIN = 'admin'
 
 enforcer = None
 
-def init():
+def init(redis_addr):
     global enforcer
     if enforcer:
         return
@@ -290,6 +331,8 @@ def init():
     # Create enforcer from adapter and config policy
     enforcer = casbin.Enforcer(model, adapter)
 
+    enforcer._my_watcher = CasbinWatcher(redis_addr)
+
 
 def check(token_info, obj, act, msg):
     sub2 = str(token_info['sub'].id)
@@ -297,6 +340,11 @@ def check(token_info, obj, act, msg):
     act2 = str(act)
     log.info('check access sub:%s obj:%s act:%s',
              sub2, obj2, act2)
+
+    if enforcer._my_watcher.stale:
+        enforcer.load_policy()
+        enforcer._my_watcher.stale = False
+
     if not enforcer.enforce(sub2, obj2, act2):
         raise Forbidden(msg)
 
@@ -329,3 +377,7 @@ def get_user_roles(user):
     resp['projects'] = projects
 
     return resp
+
+
+def notify_policy_change():
+    enforcer._my_watcher.notify()

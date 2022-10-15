@@ -136,7 +136,7 @@ def create_app():
             log.warning('No connection to minio at %s', minio_addr)
 
         # prepare access control
-        access.init()
+        access.init(redis_addr)
 
     # Read the swagger.yml file to configure the endpoints
     connex_app.add_api("swagger.yml", resolver=MyResolver())
