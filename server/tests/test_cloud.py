@@ -191,7 +191,7 @@ def test_create_machines_aws_ec2():
                             {'InstanceIds': ['123']})  # args
         stub_r.activate()
 
-        b3c = boto3.client('ec2')
+        b3c = boto3.client('ec2', region_name='aaa')
         stub_c = Stubber(b3c)
         stub_c.add_response('create_key_pair',
                             {},  # resp

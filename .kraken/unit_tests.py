@@ -79,7 +79,7 @@ def stage(ctx):
                 "tool": "shell",
                 "cwd": "kraken/server/kraken",
                 "script": """
-                    echo 'version = \'0.0\'' > version.py
+                    echo 'version = \"0.0\"' > version.py
                     cat version.py
                 """,
             }, {
