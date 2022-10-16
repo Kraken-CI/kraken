@@ -29,6 +29,7 @@ from sqlalchemy import or_
 from werkzeug.exceptions import Forbidden
 
 from .models import db, CasbinRule
+from . import utils
 
 
 log = logging.getLogger(__name__)
@@ -268,8 +269,8 @@ class CasbinWatcher:
         self.watcher_thread.start()
 
     def _watcher(self):
-        addr, port = self.redis_addr.split(':')
-        r = Redis(addr, port)
+        host, port = utils.split_host_port(self.redis_addr, 6379)
+        r = Redis(host, port)
         p = r.pubsub()
         p.subscribe(self.REDIS_CHANNEL_NAME)
         log.info("Waiting for casbin policy updates...")
@@ -290,8 +291,8 @@ class CasbinWatcher:
     def notify(self):
         if not self.redis_addr:
             return
-        addr, port = self.redis_addr.split(':')
-        r = Redis(addr, port)
+        host, port = utils.split_host_port(self.redis_addr, 6379)
+        r = Redis(host, port)
         r.publish(self.REDIS_CHANNEL_NAME, 'updated')
 
 
