@@ -338,11 +338,15 @@ def init(redis_addr=None):
 
 
 def check(token_info, obj, act, msg):
-    sub2 = str(token_info['sub'].id)
+    user = token_info['sub']
+    sub2 = str(user.id)
     obj2 = str(obj)
     act2 = str(act)
     log.info('check access sub:%s obj:%s act:%s',
              sub2, obj2, act2)
+
+    if not user.details.get('enabled', True):
+        raise Forbidden('User %s is disabled' % user.name)
 
     if enforcer.my_watcher.stale:
         enforcer.load_policy()

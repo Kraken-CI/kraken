@@ -10,7 +10,7 @@ import { AuthService } from '../auth.service'
 import { ManagementService } from '../backend/api/management.service'
 import { ExecutionService } from '../backend/api/execution.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
-import { datetimeToLocal, humanBytes } from '../utils'
+import { datetimeToLocal, humanBytes, showErrorBox } from '../utils'
 
 @Component({
     selector: 'app-branch-results',
@@ -144,29 +144,36 @@ export class BranchResultsComponent implements OnInit, OnDestroy {
                         )
                     )
                 )
-                .subscribe((data) => {
-                    this.refreshing = false
-                    this.refreshTimer = null
+                .subscribe(
+                    (data) => {
+                        this.refreshing = false
+                        this.refreshTimer = null
 
-                    let flows = []
-                    const stages = new Set<string>()
-                    this.totalFlows = data.total
-                    flows = flows.concat(data.items)
-                    for (const flow of flows) {
-                        this._processFlowData(flow, stages)
-                    }
-                    this.flows = flows
-                    const newStages = [{ name: 'All' }]
-                    for (const st of Array.from(stages).sort()) {
-                        newStages.push({ name: st })
-                    }
-                    this.stagesAvailable = newStages
+                        let flows = []
+                        const stages = new Set<string>()
+                        this.totalFlows = data.total
+                        flows = flows.concat(data.items)
+                        for (const flow of flows) {
+                            this._processFlowData(flow, stages)
+                        }
+                        this.flows = flows
+                        const newStages = [{ name: 'All' }]
+                        for (const st of Array.from(stages).sort()) {
+                            newStages.push({ name: st })
+                        }
+                        this.stagesAvailable = newStages
 
-                    // refresh again in 10 seconds
-                    this.refreshTimer = setTimeout(() => {
-                        this.refresh()
-                    }, 10000)
-                })
+                        // refresh again in 10 seconds
+                        this.refreshTimer = setTimeout(() => {
+                            this.refresh()
+                        }, 10000)
+                    },
+                    (err) => {
+                        showErrorBox(this.msgSrv, err, 'Getting branch flows erred')
+                        this.refreshing = false
+                        this.refreshTimer = null
+                    }
+                )
         )
     }
 
