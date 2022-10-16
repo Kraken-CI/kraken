@@ -167,9 +167,21 @@ export class AppComponent implements OnInit, OnDestroy {
                     {
                         label: 'Users',
                         icon: 'pi pi-user',
-                        routerLink: '/users',
-                        disabled: !this.auth.hasPermission(null, 'admin'),
-                        title: this.auth.permTip(null, 'admin'),
+                        items: [
+                            {
+                                label: 'Users',
+                                icon: 'pi pi-user',
+                                routerLink: '/users',
+                                disabled: !this.auth.hasPermission(null, 'admin'),
+                                title: this.auth.permTip(null, 'admin'),
+                            }, {
+                                label: 'Identity Providers',
+                                icon: 'fa fa-users',
+                                routerLink: '/users',
+                                disabled: true,
+                                title: this.auth.permTip(null, 'admin'),
+                            },
+                        ]
                     },
                     {
                         label: 'Tools',
