@@ -345,7 +345,7 @@ def check(token_info, obj, act, msg):
     log.info('check access sub:%s obj:%s act:%s',
              sub2, obj2, act2)
 
-    if not user.details.get('enabled', True):
+    if user.details and not user.details.get('enabled', True):
         raise Forbidden('User %s is disabled' % user.name)
 
     if enforcer.my_watcher.stale:
