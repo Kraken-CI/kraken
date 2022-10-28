@@ -93,7 +93,7 @@ const routes: Routes = [
         component: GroupsPageComponent,
     },
     {
-        path: 'settings',
+        path: 'settings/:tab',
         component: SettingsPageComponent,
     },
     {

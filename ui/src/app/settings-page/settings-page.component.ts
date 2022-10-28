@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core'
 import { Title } from '@angular/platform-browser'
-import { UntypedFormGroup, UntypedFormControl } from '@angular/forms'
+import { UntypedFormGroup, UntypedFormControl, FormGroup, FormControl } from '@angular/forms'
 
 import { Subscription } from 'rxjs'
 
@@ -18,7 +18,7 @@ import { SettingsService } from '../services/settings.service'
 export class SettingsPageComponent implements OnInit, OnDestroy {
     settings: any
 
-    tabIndex = 0
+    tabName = 'general'
 
     emailState = ''
     emailChecking = false
@@ -30,6 +30,8 @@ export class SettingsPageComponent implements OnInit, OnDestroy {
     azureChecking = false
     kubernetesState = ''
     kubernetesChecking = false
+    ldapState = ''
+    ldapChecking = false
 
     generalForm = new UntypedFormGroup({
         server_url: new UntypedFormControl(''),
@@ -65,6 +67,38 @@ export class SettingsPageComponent implements OnInit, OnDestroy {
         k8s_token: new UntypedFormControl(''),
     })
 
+    idpForm = new FormGroup({
+        // LDAP
+        ldap_enabled: new FormControl(false),
+        ldap_server: new FormControl(''),
+        bind_dn: new FormControl(''),
+        bind_password: new FormControl(''),
+        base_dn: new FormControl(''),
+        search_filter: new FormControl(''),
+
+        // Google OIDC
+        google_enabled: new FormControl(false),
+        google_client_id: new FormControl(''),
+        google_client_secret: new FormControl(''),
+
+        // Microsoft Azure
+        microsoft_enabled: new FormControl(false),
+        microsoft_client_id: new FormControl(''),
+        microsoft_client_secret: new FormControl(''),
+
+        // GitHub
+        github_enabled: new FormControl(false),
+        github_client_id: new FormControl(''),
+        github_client_secret: new FormControl(''),
+
+        // Auth0
+        auth0_enabled: new FormControl(false),
+        auth0_client_id: new FormControl(''),
+        auth0_client_secret: new FormControl(''),
+        auth0_openid_config_url: new FormControl(''),
+    })
+
+
     private subs: Subscription = new Subscription()
 
     constructor(
@@ -89,13 +123,14 @@ export class SettingsPageComponent implements OnInit, OnDestroy {
 
         this.subs.add(
             this.settingsService.settings.subscribe((settings) => {
-                if (settings === null) {
+                if (settings === null || !settings.general ) {
                     return
                 }
                 this.generalForm.setValue(settings.general)
                 this.notificationForm.setValue(settings.notification)
                 this.monitoringForm.setValue(settings.monitoring)
                 this.cloudForm.setValue(settings.cloud)
+                this.idpForm.setValue(settings.idp)
             })
         )
     }
@@ -104,22 +139,29 @@ export class SettingsPageComponent implements OnInit, OnDestroy {
         this.subs.unsubscribe()
     }
 
+    handleTabChange(tabName) {
+        this.tabName = tabName
+    }
+
     saveSettings() {
         const settings: any = {}
 
         // save settings from current tab
-        switch (this.tabIndex) {
-            case 0:
+        switch (this.tabName) {
+            case 'general':
                 settings.general = this.generalForm.value
                 break
-            case 1:
+            case 'notifications':
                 settings.notification = this.notificationForm.value
                 break
-            case 2:
+            case 'monitoring':
                 settings.monitoring = this.monitoringForm.value
                 break
-            case 3:
+            case 'cloud':
                 settings.cloud = this.cloudForm.value
+                break
+            case 'identity-providers':
+                settings.idp = this.idpForm.value
                 break
         }
 
@@ -166,6 +208,9 @@ export class SettingsPageComponent implements OnInit, OnDestroy {
             case 'kubernetes':
                 this.kubernetesChecking = true
                 break
+            case 'ldap':
+                this.ldapChecking = true
+                break
         }
         this.subs.add(
             this.settingsService.checkResourceWorkingState(resource).subscribe(
@@ -192,6 +237,10 @@ export class SettingsPageComponent implements OnInit, OnDestroy {
                             this.kubernetesState = data.state
                             this.kubernetesChecking = false
                             break
+                        case 'ldap':
+                            this.ldapState = data.state
+                            this.ldapChecking = false
+                            break
                     }
                 },
                 (err) => {
@@ -210,6 +259,9 @@ export class SettingsPageComponent implements OnInit, OnDestroy {
                             break
                         case 'kubernetes':
                             this.kubernetesChecking = false
+                            break
+                        case 'ldap':
+                            this.ldapChecking = false
                             break
                     }
                     let msg = err.statusText

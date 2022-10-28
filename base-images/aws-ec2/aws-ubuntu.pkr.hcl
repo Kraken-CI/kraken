@@ -63,10 +63,10 @@ build {
       "sudo apt-get install -y docker-ce",
 
       # Setup kraken agent
-      #"wget http://lab.kraken.ci/install/kraken-agent-install.sh",
+      #"wget http://lab.kraken.ci/bk/install/kraken-agent-install.sh",
       #"chmod a+x kraken-agent-install.sh",
       #"./kraken-agent-install.sh",
-      #"wget -O kkagent https://lab.kraken.ci/install/agent",
+      #"wget -O kkagent https://lab.kraken.ci/bk/install/agent",
       #"chmod a+x kkagent",
       #"./kkagent install -s https://lab.kraken.ci",
       #"systemctl status kraken-agent"

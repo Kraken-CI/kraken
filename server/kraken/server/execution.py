@@ -130,7 +130,7 @@ def get_flow_artifacts(flow_id, token_info=None):
     access.check(token_info, flow.branch.project_id, 'view',
                  'only superadmin, project admin, project power and project viewer user roles can get flow artifacts')
 
-    base_url = '/artifacts/public/f/%d/' % flow_id
+    base_url = '/bk/artifacts/public/f/%d/' % flow_id
 
     artifacts = []
     for art in Artifact.query.filter_by(flow=flow, section=consts.ARTIFACTS_SECTION_PUBLIC):
@@ -307,7 +307,7 @@ def get_run_artifacts(run_id, token_info=None):
     access.check(token_info, run.stage.branch.project_id, 'view',
                  'only superadmin, project admin, project power and project viewer user roles can get run artifacts')
 
-    base_url = '/artifacts/public/r/%d/' % run.id
+    base_url = '/bk/artifacts/public/r/%d/' % run.id
 
     artifacts = []
     for art in Artifact.query.filter_by(run=run, section=consts.ARTIFACTS_SECTION_PUBLIC):

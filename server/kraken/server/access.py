@@ -265,7 +265,7 @@ class CasbinWatcher:
         self.redis_addr = redis_addr
         if not self.redis_addr:
             return
-        self.watcher_thread = threading.Thread(target=self._watcher)
+        self.watcher_thread = threading.Thread(target=self._watcher, daemon=True)
         self.watcher_thread.start()
 
     def _watcher(self):

@@ -291,7 +291,7 @@ def _get_report_entries(artifacts, infix):
     report_entries = []
     if (isinstance(artifacts, dict) and 'public' in artifacts and 'entries' in artifacts['public']):
         for rep_ent in artifacts['public']['entries']:
-            url = '/artifacts/public/%s/%s' % (infix, rep_ent)
+            url = '/bk/artifacts/public/%s/%s' % (infix, rep_ent)
             name = rep_ent.rsplit('/', 1)[-1].split('.', 1)[0].capitalize()
             rep = dict(name=name,
                        url=url)
@@ -1001,6 +1001,17 @@ def get_setting(group, name):
     return s.value
 
 
+def get_settings_group(group):
+    ss = Setting.query.filter_by(group=group).all()
+    if not ss:
+        raise Exception('cannot find settings in %s group' % group)
+
+    resp = {}
+    for s in ss:
+        resp[s.name] = s.value
+    return resp
+
+
 def set_setting(group, name, val):
     s = Setting.query.filter_by(group=group, name=name).one_or_none()
     if s is None:
@@ -1035,13 +1046,14 @@ class UserSession(db.Model, DatesMixin):
     __tablename__ = "user_sessions"
     id = Column(Integer, primary_key=True)
     token = Column(UnicodeText)
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=True)
     user = relationship('User', back_populates="sessions")
+    details = Column(JSONB)
 
     def get_json(self):
         return dict(id=self.id,
                     token=self.token,
-                    user=self.user.get_json())
+                    user=self.user.get_json() if self.user else None)
 
 
 class CasbinRule(db.Model, DatesMixin):

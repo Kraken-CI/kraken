@@ -51,15 +51,15 @@
 </div>
 
 <!-- login screen -->
-<div class="content" role="main" *ngIf="!session" style="background-color: #007ad9; color: white; height: 100vh;">
+<div class="content" role="main" *ngIf="!session" style="background-color: #007ad9; color: white; min-height: 100vh; padding-bottom: 2em;">
 
   <div style="text-align: center; font-size: 10em; padding: 5rem 0 3rem 0;" class="logo1">
     Kraken
   </div>
 
   <!-- login box -->
-  <div style="width: 20vw; margin: auto;">
-    <div class="p-fluid">
+  <div>
+    <div class="p-fluid" style="width: 20em; margin: auto;">
       <div class="field">
         <label for="username">Username</label>
         <input id="username" type="username" pInputText [(ngModel)]="username" />
@@ -80,6 +80,21 @@
     </div>
     <div style="text-align: center; padding-top: 8px; font-size: 1.2em;" *ngIf="isLocal()">
       For admin enter: admin / admin.
+    </div>
+
+    <div style="padding-top: 60px; display: flex; width: 60em; margin: auto; justify-content: center; gap: 2em;">
+        <div *ngIf="settings.idp.google_enabled">
+            <p-button icon="pi pi-google" (click)="loginWith('google')" label="Login with Google"></p-button>
+        </div>
+        <div *ngIf="settings.idp.microsoft_enabled">
+            <p-button icon="pi pi-microsoft" (click)="loginWith('microsoft')" label="Login with Microsoft"></p-button>
+        </div>
+        <div *ngIf="settings.idp.github_enabled">
+            <p-button icon="pi pi-github" (click)="loginWith('github')" label="Login with GitHub"></p-button>
+        </div>
+        <div *ngIf="settings.idp.auth0_enabled">
+            <p-button icon="pi pi-sign-in" (click)="loginWith('auth0')" label="Login with Auth0"></p-button>
+        </div>
     </div>
   </div>
 </div>

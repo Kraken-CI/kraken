@@ -53,6 +53,36 @@ INITIAL_SETTINGS = {
         'k8s_api_server_url': '',
         'k8s_namespace': 'kraken',
         'k8s_token': None,  # password
+    },
+    'idp': {
+        # LDAP
+        'ldap_enabled': False,
+        'ldap_server': '',
+        'bind_dn': '',
+        'bind_password': None,  # password
+        'base_dn': '',
+        'search_filter': '',
+
+        # Google OIDC
+        'google_enabled': False,
+        'google_client_id': '',
+        'google_client_secret': None,  # password
+
+        # Microsoft Azure
+        'microsoft_enabled': False,
+        'microsoft_client_id': '',
+        'microsoft_client_secret': None,  # password
+
+        # GitHub
+        'github_enabled': False,
+        'github_client_id': '',
+        'github_client_secret': None,  # password
+
+        # Auth0
+        'auth0_enabled': False,
+        'auth0_client_id': '',
+        'auth0_client_secret': None,  # password
+        'auth0_openid_config_url': '',
     }
 }
 

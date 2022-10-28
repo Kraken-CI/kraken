@@ -5,6 +5,7 @@ import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http'
 import { ReactiveFormsModule, FormsModule } from '@angular/forms'
 
 import { CodemirrorModule } from '@ctrl/ngx-codemirror'
+import { CookieService } from 'ngx-cookie-service'
 
 import { PanelMenuModule } from 'primeng/panelmenu'
 import { MenuModule } from 'primeng/menu'
@@ -201,6 +202,7 @@ Chart.register(zoomPlugin)
             useClass: AuthInterceptor,
             multi: true,
         },
+        CookieService,
     ],
     bootstrap: [AppComponent],
 })

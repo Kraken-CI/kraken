@@ -99,7 +99,7 @@ def create_vms(ag, system, num,
     # prepare init script
     init_script = """#!/usr/bin/env bash
                      exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
-                     wget -O agent {server_url}/install/agent
+                     wget -O agent {server_url}/bk/install/agent
                      chmod a+x agent
                      ./agent install -s {server_url} -c {clickhouse_addr} --system-id {system_id}
                   """

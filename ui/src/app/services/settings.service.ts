@@ -20,14 +20,9 @@ export class SettingsService {
         this.settings = this.settingsSubject.asObservable()
 
         this.auth.currentSession.subscribe((session) => {
-            if (!session) {
-                return
-            }
-            if (session.roles.superadmin) {
-                this.managementService.getSettings().subscribe((settings) => {
-                    this.settingsSubject.next(settings)
-                })
-            }
+            this.managementService.getSettings().subscribe((settings) => {
+                this.settingsSubject.next(settings)
+            })
         })
     }
 

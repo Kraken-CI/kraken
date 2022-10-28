@@ -24,6 +24,7 @@ from sqlalchemy.orm.attributes import flag_modified
 from .models import db, User, UserSession, Project
 from . import utils
 from . import access
+from . import authn
 
 log = logging.getLogger(__name__)
 
@@ -36,50 +37,108 @@ def _check_user_password(user_id_or_name, password):
     else:
         q = q.filter_by(id=user_id_or_name)
     user = q.filter_by(deleted=None).one_or_none()
-    if user is None:
-        return None
 
-    # check password
-    if not pbkdf2_sha256.verify(password, user.password):
-        return None
+    if user:
+        # check password
+        if not user.password:
+            if not user.details:
+                return None
+            ldap_user = authn.authenticate_ldap(user_id_or_name, password)
+            if not ldap_user:
+                return None
+        elif not pbkdf2_sha256.verify(password, user.password):
+            return None
+    else:
+        ldap_user = authn.authenticate_ldap(user_id_or_name, password)
+        if ldap_user:
+            details = dict(idp_type='ldap', idp='ldap://ldap.forumsys.com')
+            if ldap_user['email']:
+                details['email'] = ldap_user['email']
+            user = User(name=ldap_user['username'], password='', details=details)
+            db.session.commit()
 
     return user
 
 
 def login(body):
-    creds = body
+    if 'method' not in body:
+        method = 'local'
+    else:
+        method = body['method']
 
-    if 'user' not in creds or 'password' not in creds:
-        raise BadRequest('bad credentials')
+    user = None
+    details = {}
+    redirect_url = None
 
-    # find user for given name with given password
-    user = _check_user_password(creds['user'], creds['password'])
-    if user is None:
-        raise Unauthorized('missing user or incorrect password')
+    if method == 'local':
+        if 'user' not in body or 'password' not in body:
+            raise BadRequest('bad credentials')
 
-    if user.details and not user.details.get('enabled', True):
-        raise Unauthorized('user account is disabled')
+        # find user for given name with given password
+        user = _check_user_password(body['user'], body['password'])
+        if user is None:
+            raise Unauthorized('missing user or incorrect password')
+        token = uuid.uuid4().hex
+
+        if user.details and not user.details.get('enabled', True):
+            raise Unauthorized('user account is disabled')
+
+    elif method == 'oidc':
+        if 'oidc_provider' not in body:
+            raise BadRequest('missing OIDC provider')
+        if body['oidc_provider'] not in ['google', 'microsoft', 'github', 'auth0']:
+            raise BadRequest('bad OIDC provider: %s' % body['oidc_provider'])
+
+        idp = body['oidc_provider']
+        redirect_url, state_data = authn.authenticate_oidc(idp)
+        token = state_data['state']
+        details['idp_type'] = 'oidc'
+        details['idp'] = idp
+        details['state'] = state_data
 
     # prepare user session
-    us = UserSession(user=user, token=uuid.uuid4().hex)
+    us = UserSession(user=user, token=token, details=details)
     db.session.commit()
 
-    roles_data = access.get_user_roles(user)
-
     resp = us.get_json()
-    resp['roles'] = roles_data
+
+    if user:
+        roles_data = access.get_user_roles(user)
+        resp['roles'] = roles_data
+
+    if redirect_url:
+        resp['redirect_url'] = redirect_url
+
     return resp, 201
 
 
-def logout(session_id, token_info=None):
-    if token_info['session'].id != session_id:
+def get_session(session_token, token_info=None):
+    if token_info['session'].token != session_token:
+        raise Forbidden('only user can get its session data')
+
+    us = UserSession.query.filter_by(token=session_token, deleted=None).one_or_none()
+    if us is None:
+        raise BadRequest('user session not found')
+
+    resp = us.get_json()
+    resp['roles'] = access.get_user_roles(us.user)
+
+    return resp, 200
+
+
+def logout(session_token, token_info=None):
+    if token_info['session'].token != session_token:
         raise Forbidden('only user can logout itself')
 
-    us = UserSession.query.filter_by(id=int(session_id), deleted=None).one_or_none()
+    us = UserSession.query.filter_by(token=session_token, deleted=None).one_or_none()
     if us is None:
         return None
     us.deleted = utils.utcnow()
     db.session.commit()
+
+    if us.details and 'idp_type' in us.details and us.details['idp_type'] == 'oidc':
+        authn.oidc_logout(us.details)
+
     return None
 
 

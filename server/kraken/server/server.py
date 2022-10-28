@@ -33,6 +33,7 @@ from . import job_log
 from . import badge
 from . import minioops
 from . import access
+from . import authn
 from .. import version
 
 log = logging.getLogger('server')
@@ -47,19 +48,19 @@ class MyResolver(Resolver):
 
 
 def _set_log_ctx():
-    if request.path.startswith('/api'):
+    if request.path.startswith(('/api', '/bk/api')):
         name = 'api'
-    elif request.path.startswith('/backend'):
+    elif request.path.startswith(('/backend', '/bk/backend')):
         name = 'backend'
-    elif request.path.startswith('/install'):
+    elif request.path.startswith(('/install', '/bk/install')):
         name = 'install'
-    elif request.path.startswith('/artifacts'):
+    elif request.path.startswith(('/artifacts', '/bk/artifacts')):
         name = 'artifacts'
-    elif request.path.startswith('/job_log'):
+    elif request.path.startswith(('/job_log', '/bk/job_log')):
         name = 'job-log'
-    elif request.path.startswith('/branch-badge'):
+    elif request.path.startswith(('/branch-badge', '/bk/branch-badge')):
         name = 'badge'
-    elif request.path.startswith('/webhooks'):
+    elif request.path.startswith(('/webhooks', '/bk/webhooks')):
         name = 'webhooks'
     else:
         name = 'other'
@@ -138,29 +139,43 @@ def create_app():
         # prepare access control
         access.init(redis_addr)
 
+    authn.oauth.init_app(app)
+
     # Read the swagger.yml file to configure the endpoints
     connex_app.add_api("swagger.yml", resolver=MyResolver())
+    connex_app.add_api("swagger.yml", resolver=MyResolver(), base_path='/api')  # for backward compatibility
 
     # backend for serving agents
     connex_app.add_url_rule("/backend", view_func=backend.serve_agent_request, methods=['POST'])
+    connex_app.add_url_rule("/bk/backend", view_func=backend.serve_agent_request, methods=['POST'])
 
     # serve agent files for agent update
     connex_app.add_url_rule("/install/<blob>", view_func=agentblob.serve_agent_blob, methods=['GET'])
+    connex_app.add_url_rule("/bk/install/<blob>", view_func=agentblob.serve_agent_blob, methods=['GET'])
 
     # serve build artifacts
     connex_app.add_url_rule("/artifacts/<store_type>/f/<flow_id>/<path:path>", view_func=storage.serve_flow_artifact, methods=['GET'])
     connex_app.add_url_rule("/artifacts/<store_type>/r/<run_id>/<path:path>", view_func=storage.serve_run_artifact, methods=['GET'])
+    connex_app.add_url_rule("/bk/artifacts/<store_type>/f/<flow_id>/<path:path>", view_func=storage.serve_flow_artifact, methods=['GET'])
+    connex_app.add_url_rule("/bk/artifacts/<store_type>/r/<run_id>/<path:path>", view_func=storage.serve_run_artifact, methods=['GET'])
 
     # serve job log
     connex_app.add_url_rule("/job_log/<job_id>", view_func=job_log.serve_job_log, methods=['GET'])
+    connex_app.add_url_rule("/bk/job_log/<job_id>", view_func=job_log.serve_job_log, methods=['GET'])
 
     # install webhooks
     webhooks_bp = webhooks.create_blueprint()
     app.register_blueprint(webhooks_bp, url_prefix='/webhooks')
+    app.register_blueprint(webhooks_bp, url_prefix='/bk/webhooks')
 
     # branch status badge
     app.add_url_rule("/branch-badge/<branch_id>", view_func=badge.get_branch_badge, methods=['GET'], defaults={'what': None})
     app.add_url_rule("/branch-badge/<branch_id>/<what>", view_func=badge.get_branch_badge, methods=['GET'])
+    app.add_url_rule("/bk/branch-badge/<branch_id>", view_func=badge.get_branch_badge, methods=['GET'], defaults={'what': None})
+    app.add_url_rule("/bk/branch-badge/<branch_id>/<what>", view_func=badge.get_branch_badge, methods=['GET'])
+
+    # oauth2 redirect after login
+    app.add_url_rule("/bk/oidc-logged", view_func=authn.oidc_logged, methods=['GET'])
 
     app.before_request(_set_log_ctx)
     app.teardown_request(_clear_request_ctx)

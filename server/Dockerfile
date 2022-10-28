@@ -1,5 +1,7 @@
 FROM krakenci/srv-builder as builder
 
+# libsasl2-dev
+
 # install python dependencies first
 COPY pyproject.toml poetry.lock /server/
 RUN \

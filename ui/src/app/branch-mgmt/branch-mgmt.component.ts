@@ -698,7 +698,7 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
     }
 
     getBadgeUrl(what) {
-        const url = window.location.origin + '/branch-badge/' + this.branchId
+        const url = window.location.origin + '/bk/branch-badge/' + this.branchId
         if (what === 'tests') {
             return url + '/tests'
         } else if (what === 'issues') {

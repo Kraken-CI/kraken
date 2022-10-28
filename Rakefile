@@ -263,7 +263,7 @@ task :run_agent_in_lxd_all do
       end
       #sh "lxc file push agent/kkagent #{cntr_name}/root/kkagent"
       #sh "lxc exec #{cntr_name} -- ./kkagent install -s http://#{LOCALHOST_IP}:8080"
-      sh "lxc exec #{cntr_name} -- wget http://#{LOCALHOST_IP}:4200/install/kraken-agent-install.sh"
+      sh "lxc exec #{cntr_name} -- wget http://#{LOCALHOST_IP}:4200/bk/install/kraken-agent-install.sh"
       sh "lxc exec #{cntr_name} -- chmod a+x kraken-agent-install.sh"
       #sh "lxc exec #{cntr_name} -- bash -c 'LC_ALL=en_US.utf8 LANG=en_US.utf8 ./kraken-agent-install.sh'"
       sh "lxc exec #{cntr_name} -- ./kraken-agent-install.sh"
@@ -307,7 +307,7 @@ task :run_agent_in_lxd do
       sh "lxc exec #{cntr_name} -- apt-get update"
       sh "lxc exec #{cntr_name} -- apt-get install -y python3-docker docker.io"
 
-      sh "lxc exec #{cntr_name} -- curl -o agent http://#{LOCALHOST_IP}:8080/install/agent"
+      sh "lxc exec #{cntr_name} -- curl -o agent http://#{LOCALHOST_IP}:8080/bk/install/agent"
       sh "lxc exec #{cntr_name} -- chmod a+x agent"
       sh "lxc exec #{cntr_name} -- ./agent install -s http://#{LOCALHOST_IP}:8080"
       #sh "lxc exec #{cntr_name} -- journalctl -u kraken-agent.service"

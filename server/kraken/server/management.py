@@ -45,6 +45,7 @@ from . import utils
 from . import minioops
 from . import schemaval
 from . import access
+from . import authn
 
 
 log = logging.getLogger(__name__)
@@ -911,11 +912,17 @@ def get_azure_vm_sizes(location, token_info=None):
     return {'items': vm_sizes, 'total': len(vm_sizes)}, 200
 
 
-def _get_settings():
+def _get_settings(scope=None):
     settings = Setting.query.filter_by().all()
 
     groups = {}
     for s in settings:
+        if scope == 'public':
+            if s.group not in ['idp']:
+                continue
+            if 'enabled' not in s.name:
+                continue
+
         if s.group not in groups:
             groups[s.group] = {}
         grp = groups[s.group]
@@ -925,10 +932,15 @@ def _get_settings():
 
 
 def get_settings(token_info=None):
-    access.check(token_info, '', 'admin',
-                 'only superadmin can get settings')
+    scope = 'public'
+    try:
+        access.check(token_info, '', 'admin',
+                     'only superadmin can get settings')
+        scope = None
+    except Exception:
+        pass
 
-    groups = _get_settings()
+    groups = _get_settings(scope)
 
     return groups, 200
 
@@ -1146,6 +1158,8 @@ def get_settings_working_state(resource, token_info=None):
         state = azure.check_azure_settings()
     elif resource == 'kubernetes':
         state = k8s.check_k8s_settings()
+    elif resource == 'ldap':
+        state = authn.check_ldap_settings()
     else:
         abort(400, "Unsupported resource type: %s" % resource)
 

@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core'
 
 import { Subscription } from 'rxjs'
+import { CookieService } from 'ngx-cookie-service'
 
 import { Menubar } from 'primeng/menubar'
 import { MenuItem } from 'primeng/api'
@@ -27,6 +28,11 @@ export class AppComponent implements OnInit, OnDestroy {
 
     session: any
     settings: any
+    initSettings = {
+        idp: {
+            google_enabled: false,
+        }
+    }
 
     username: string
     password: string
@@ -43,9 +49,11 @@ export class AppComponent implements OnInit, OnDestroy {
         protected auth: AuthService,
         private settingsService: SettingsService,
         protected managementService: ManagementService,
-        private msgSrv: MessageService
+        private msgSrv: MessageService,
+        private cookieService: CookieService
     ) {
         this.session = null
+        this.settings = this.initSettings
     }
 
     initDarkMode() {
@@ -92,23 +100,35 @@ export class AppComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit() {
+        let token = this.cookieService.get('kk_session_token');
+        this.cookieService.delete('kk_session_token');
+        if (token) {
+            this.auth.getSession(token)
+        }
+
         this.subs.add(
             this.auth.currentSession.subscribe((session) => {
                 this.session = session
+                if (this.session) {
+                    this.lateInit()
+                }
             })
         )
 
         this.subs.add(
             this.settingsService.settings.subscribe((settings) => {
                 if (settings === null) {
-                    return
+                    this.settings = this.initSettings
+                } else {
+                    this.settings = settings
                 }
-                this.settings = settings
             })
         )
 
         this.krakenVersion = environment.krakenVersion
+    }
 
+    lateInit() {
         this.topMenuItems = [
             {
                 label: 'Agents',
@@ -160,7 +180,7 @@ export class AppComponent implements OnInit, OnDestroy {
                     {
                         label: 'Settings',
                         icon: 'fa fa-cogs',
-                        routerLink: '/settings',
+                        routerLink: '/settings/general',
                         disabled: !this.auth.hasPermission(null, 'admin'),
                         title: this.auth.permTip(null, 'admin'),
                     },
@@ -177,8 +197,8 @@ export class AppComponent implements OnInit, OnDestroy {
                             }, {
                                 label: 'Identity Providers',
                                 icon: 'fa fa-users',
-                                routerLink: '/users',
-                                disabled: true,
+                                routerLink: '/settings/identity-providers',
+                                disabled: !this.auth.hasPermission(null, 'admin'),
                                 title: this.auth.permTip(null, 'admin'),
                             },
                         ]
@@ -266,6 +286,10 @@ export class AppComponent implements OnInit, OnDestroy {
         return window.location.hostname === 'localhost'
     }
 
+    loginWith(id_provider) {
+        this.auth.loginWith(id_provider)
+    }
+
     downloadAgentInstallSh() {
         if (!this.settings || !this.settings.general) {
             this.msgSrv.add({
@@ -292,7 +316,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
         // invoke download
         const link = document.createElement('a')
-        link.href = '/install/kraken-agent-install.sh'
+        link.href = '/bk/install/kraken-agent-install.sh'
         document.body.appendChild(link)
         link.click()
         link.remove()

@@ -5,7 +5,7 @@ info:
   version: "1"
 
 servers:
-- url: /api
+- url: /bk/api
 
 security:
   - bearerAuth: []  # by default all functions require this security
@@ -43,6 +43,10 @@ paths:
                   type: string
                 password:
                   type: string
+                method:
+                  type: string
+                oidc_provider:
+                  type: string
       responses:
         201:
           description: Successfully created session.
@@ -50,7 +54,27 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Session'
-  /sessions/{session_id}:
+  /sessions/{session_token}:
+    get:
+      tags:
+      - Users
+      summary: Get session data
+      description: Get user session data
+      operationId: get_session
+      parameters:
+      - name: session_token
+        in: path
+        description: session token
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successfully created session.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
     delete:
       tags:
       - Users
@@ -58,13 +82,12 @@ paths:
       description: Logut
       operationId: logout
       parameters:
-      - name: session_id
+      - name: session_token
         in: path
-        description: ID of session
+        description: session token
         required: true
         schema:
-          type: integer
-          format: int64
+          type: string
       responses:
         200:
           description: Successfully deleted session
@@ -2014,6 +2037,9 @@ paths:
       summary: Get settings
       description: Get settings details
       operationId: get_settings
+      security:
+        - bearerAuth: []
+        - {}  # no security, it is used to get public settings
       responses:
         200:
           description: Settings details

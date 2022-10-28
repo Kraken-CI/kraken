@@ -115,8 +115,8 @@ def create_pods(ag, system, num,
     # prepare create_container
     cmd = 'apt-get update && apt-get install -y --no-install-recommends ca-certificates sudo wget python3'
     cmd += ' && mkdir -p /opt/kraken'
-    cmd += ' && wget -O /opt/kraken/kkagent {server_url}/install/agent'
-    cmd += ' && wget -O /opt/kraken/kktool {server_url}/install/tool'
+    cmd += ' && wget -O /opt/kraken/kkagent {server_url}/bk/install/agent'
+    cmd += ' && wget -O /opt/kraken/kktool {server_url}/bk/install/tool'
     cmd += ' && chmod a+x /opt/kraken/kkagent /opt/kraken/kktool'
     cmd += ' && mkdir -p /tmp/kk-jobs'
     cmd += ' && /opt/kraken/kkagent run -d /tmp/kk-jobs -s {server_url} -c {clickhouse_addr}'

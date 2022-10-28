@@ -69,9 +69,48 @@ export class AuthService {
         })
     }
 
+    loginWith(idProvider) {
+        const data = {method: 'oidc', oidc_provider: idProvider}
+        this.api.login(data).subscribe(
+            (data) => {
+                window.location.href = data['redirect_url']
+            },
+            (err) => {
+                let msg = err.statusText
+                if (err.error && err.error.detail) {
+                    msg = err.error.detail
+                }
+                // observer.next({
+                //     severity: 'error',
+                //     summary: 'Login erred',
+                //     detail: msg,
+                //     life: 10000,
+                // })
+            }
+        )
+    }
+
+    getSession(token) {
+        this.session = {token: token}
+        this.api.getSession(token).subscribe(
+            (data) => {
+                this.session = data
+                this.currentSessionSubject.next(this.session)
+                localStorage.setItem(
+                    'session',
+                    JSON.stringify(this.session)
+                )
+                // this.router.navigate([returnUrl])
+            },
+            (err) => {
+                this.deleteLocalSession()
+            }
+        )
+    }
+
     logout() {
-        if (this.session && this.session.id) {
-            this.api.logout(this.session.id).subscribe(
+        if (this.session && this.session.token) {
+            this.api.logout(this.session.token).subscribe(
                 (resp) => {
                     this.deleteLocalSession()
                 },

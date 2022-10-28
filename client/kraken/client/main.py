@@ -37,7 +37,7 @@ class Session:
             port = ''
         else:
             port = ':%d' % port
-        self.base_url = '%s://%s%s/api' % (u.scheme, u.hostname, port)
+        self.base_url = '%s://%s%s/bk/api' % (u.scheme, u.hostname, port)
 
         self.auth_token = None
         self.user = 'admin'

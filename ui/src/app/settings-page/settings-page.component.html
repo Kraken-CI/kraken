@@ -1,12 +1,12 @@
-<p-tabView [(activeIndex)]="tabIndex">
-    <p-tabPanel header="General">
-        <div style="max-width: 60em">
+<app-tabbed-page baseLinkUrl="/settings" (tabChanged)="handleTabChange($event)">
+    <app-tabbed-page-tab label="General">
+    <div style="max-width: 60em">
         The addresses below are used when Kraken Agent is connecting to
         Kraken Server remotelly from different network, ie. internal
         address of Kraken Server e.g. from Docker Compose cannot be
         used as it is unreachable. The same applies to Clickhouse for
         collecting logs and Minio for storing artifacts.
-        </div>
+    </div>
 
       <!-- https://www.sanwebe.com/2014/08/css-html-forms-designs -->
       <form [formGroup]="generalForm" class="form-style-2">
@@ -22,9 +22,9 @@
           <input type="text" class="input-field" name="clickhouse_addr" pInputText formControlName="clickhouse_addr" placeholder="ex: 1.2.3.4:9001"/>
         </label>
       </form>
-  </p-tabPanel>
+  </app-tabbed-page-tab>
 
-  <p-tabPanel header="Notifications">
+  <app-tabbed-page-tab label="Notifications">
       <!-- https://www.sanwebe.com/2014/08/css-html-forms-designs -->
       <form [formGroup]="notificationForm" class="form-style-2">
 
@@ -67,9 +67,9 @@
         </span>
 -->
       </form>
-  </p-tabPanel>
+  </app-tabbed-page-tab>
 
-  <p-tabPanel header="Monitoring">
+  <app-tabbed-page-tab label="Monitoring">
       <!-- https://www.sanwebe.com/2014/08/css-html-forms-designs -->
       <form [formGroup]="monitoringForm" class="form-style-2">
 
@@ -78,9 +78,9 @@
           <input type="password" class="input-field" name="sentry_dsn" pPassword [feedback]="false" formControlName="sentry_dsn"/>
         </label>
       </form>
-  </p-tabPanel>
+  </app-tabbed-page-tab>
 
-  <p-tabPanel header="Cloud">
+  <app-tabbed-page-tab label="Cloud">
     <!-- https://www.sanwebe.com/2014/08/css-html-forms-designs -->
     <form [formGroup]="cloudForm" class="form-style-2">
 
@@ -150,9 +150,209 @@
     </p-fieldset>
     </form>
 
-  </p-tabPanel>
+  </app-tabbed-page-tab>
 
-</p-tabView>
+  <app-tabbed-page-tab label="Identity Providers">
+    <form [formGroup]="idpForm">
+
+    <p-fieldset legend="LDAP" [toggleable]="true">
+        <div class="mb-4">
+            <p-checkbox formControlName="ldap_enabled" binary="true" label="LDAP Enabled"></p-checkbox>
+        </div>
+
+        <div class="formgrid grid" *ngIf="idpForm.controls['ldap_enabled'].value">
+
+            <!-- ldap server -->
+            <div class="field col-12 grid">
+                <label class="col-1" for="ldap_server">Server Address</label>
+                <div class="col-11">
+                    <input class="input-field w-full" pInputText name="ldap_server" id="ldap_server" formControlName="ldap_server" placeholder="eg: ldap://ldap.forumsys.com"/>
+                </div>
+            </div>
+
+            <!-- bind dn -->
+            <div class="field col-12 grid">
+                <label class="col-1" for="bind_dn">Bind DN</label>
+                <div class="col-11">
+                    <input class="input-field w-full" pInputText name="bind_dn" id="bind_dn" formControlName="bind_dn" placeholder="eg: cn=read-only-admin,dc=example,dc=com"/>
+                </div>
+            </div>
+
+            <!-- password -->
+            <div class="field col-12 grid">
+                <label class="col-1" for="bind_password">Bind Password</label>
+                <div class="col-11">
+                    <input class="input-field w-full" pPassword type="password" name="bind_password" [feedback]="false" formControlName="bind_password"/>
+                </div>
+            </div>
+
+            <!-- base dn -->
+            <div class="field col-12 grid">
+                <label class="col-1" for="base_dn">Base DN</label>
+                <div class="col-11">
+                    <input class="input-field w-full" pInputText name="base_dn" id="base_dn" formControlName="base_dn" placeholder="eg: dc=example,dc=com"/>
+                </div>
+            </div>
+
+            <!-- search filter -->
+            <div class="field col-12 grid">
+                <label class="col-1" for="search_filter">User Search Filter</label>
+                <div class="col-11">
+                    <input class="input-field w-full" pInputText name="search_filter" id="search_filter" formControlName="search_filter" placeholder="eg: uid=%s"/>
+                </div>
+            </div>
+
+            <!-- connection test button -->
+            <div class="field col-12 grid">
+                <p-button label="Test LDAP Connection" icon="pi pi-check"
+                          (onClick)="checkResourceWorkingState('ldap')"
+                          [loading]="ldapChecking"
+                          styleClass="p-button-outlined p-button-secondary p-button-sm"></p-button>
+                <span [ngStyle]="{ 'color': (ldapState === 'ok' ? '#2bc62b' : 'red'), 'font-size': '1.2rem', 'font-weight': 'bold', 'padding-left': '2em'  }">
+                    {{ ldapState }}
+                </span>
+            </div>
+
+        </div>
+
+    </p-fieldset>
+
+    <p-fieldset legend="OpenID Connect / OAuth 2" [toggleable]="true">
+        <!-- GOOGLE -->
+        <p-divider align="left">
+            <b class="text-xl">Google</b>
+        </p-divider>
+
+        <div class="mb-4">
+            <p-checkbox formControlName="google_enabled" binary="true" label="Enabled"></p-checkbox>
+            <a style="margin-left: 4em;" target="blank" href="https://developers.google.com/identity/openid-connect/openid-connect#python">Help Docs</a>
+        </div>
+
+        <div class="formgrid grid" *ngIf="idpForm.controls['google_enabled'].value">
+
+            <!-- google client id -->
+            <div class="field col-12 grid">
+                <label class="col-1" for="google_client_id">Client ID</label>
+                <div class="col-11">
+                    <input class="input-field w-full" pInputText name="google_client_id" id="google_client_id" formControlName="google_client_id"/>
+                </div>
+            </div>
+
+            <!-- google client secret -->
+            <div class="field col-12 grid">
+                <label class="col-1" for="google_client_secret">Client Secret</label>
+                <div class="col-11">
+                    <input class="input-field w-full" pPassword type="password" name="google_client_secret" id="google_client_secret" formControlName="google_client_secret"/>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- MICROSOFT -->
+        <p-divider align="left">
+            <b class="text-xl">Microsoft</b>
+        </p-divider>
+
+        <div class="mb-4">
+            <p-checkbox formControlName="microsoft_enabled" binary="true" label="Enabled"></p-checkbox>
+            <a style="margin-left: 4em;" target="blank" href="https://learn.microsoft.com/en-us/azure/active-directory/develop/v2-protocols-oidc">Help Docs</a>
+        </div>
+
+        <div class="formgrid grid" *ngIf="idpForm.controls['microsoft_enabled'].value">
+
+            <!-- microsoft client id -->
+            <div class="field col-12 grid">
+                <label class="col-1" for="microsoft_client_id">Client ID</label>
+                <div class="col-11">
+                    <input class="input-field w-full" pInputText name="microsoft_client_id" id="microsoft_client_id" formControlName="microsoft_client_id"/>
+                </div>
+            </div>
+
+            <!-- microsoft client secret -->
+            <div class="field col-12 grid">
+                <label class="col-1" for="microsoft_client_secret">Client Secret</label>
+                <div class="col-11">
+                    <input class="input-field w-full" pPassword type="password" name="microsoft_client_secret" id="microsoft_client_secret" formControlName="microsoft_client_secret"/>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- GITHUB -->
+        <p-divider align="left">
+            <b class="text-xl">GitHub</b>
+        </p-divider>
+
+        <div class="mb-4">
+            <p-checkbox formControlName="github_enabled" binary="true" label="Enabled"></p-checkbox>
+            <a style="margin-left: 4em;" target="blank" href="https://docs.github.com/en/developers/apps/building-oauth-apps/authorizing-oauth-apps">Help Docs</a>
+        </div>
+
+        <div class="formgrid grid" *ngIf="idpForm.controls['github_enabled'].value">
+
+            <!-- github client id -->
+            <div class="field col-12 grid">
+                <label class="col-1" for="github_client_id">Client ID</label>
+                <div class="col-11">
+                    <input class="input-field w-full" pInputText name="github_client_id" id="github_client_id" formControlName="github_client_id"/>
+                </div>
+            </div>
+
+            <!-- github client secret -->
+            <div class="field col-12 grid">
+                <label class="col-1" for="github_client_secret">Client Secret</label>
+                <div class="col-11">
+                    <input class="input-field w-full" pPassword type="password" name="github_client_secret" id="github_client_secret" formControlName="github_client_secret"/>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- AUTH0 -->
+        <p-divider align="left">
+            <b class="text-xl">Auth0</b>
+        </p-divider>
+
+        <div class="mb-4">
+            <p-checkbox formControlName="auth0_enabled" binary="true" label="Enabled"></p-checkbox>
+            <a style="margin-left: 4em;" target="blank" href="https://auth0.com/docs/quickstart/webapp/python/01-login">Help Docs</a>
+        </div>
+
+        <div class="formgrid grid" *ngIf="idpForm.controls['auth0_enabled'].value">
+
+            <!-- auth0 client id -->
+            <div class="field col-12 grid">
+                <label class="col-1" for="auth0_client_id">Client ID</label>
+                <div class="col-11">
+                    <input class="input-field w-full" pInputText name="auth0_client_id" id="auth0_client_id" formControlName="auth0_client_id"/>
+                </div>
+            </div>
+
+            <!-- auth0 client secret -->
+            <div class="field col-12 grid">
+                <label class="col-1" for="auth0_client_secret">Client Secret</label>
+                <div class="col-11">
+                    <input class="input-field w-full" pPassword type="password" name="auth0_client_secret" id="auth0_client_secret" formControlName="auth0_client_secret"/>
+                </div>
+            </div>
+
+            <!-- auth0 openid config url -->
+            <div class="field col-12 grid">
+                <label class="col-1" for="auth0_openid_config_url">Auth0 OpenID Config URL</label>
+                <div class="col-11">
+                    <input class="input-field w-full" pInputText name="auth0_openid_config_url" id="auth0_openid_config_url" formControlName="auth0_openid_config_url"
+                           placeholder="eg: https://dev-lk3j1h5k37e5yyiv.us.auth0.com/.well-known/openid-configuration"/>
+                </div>
+            </div>
+
+        </div>
+
+    </p-fieldset>
+    </form>
+
+  </app-tabbed-page-tab>
+
+</app-tabbed-page>
 
 <div style="margin: 8px 0 0 4px;">
   <p-button label="Save Settings" icon="pi pi-check" (onClick)="saveSettings()"
