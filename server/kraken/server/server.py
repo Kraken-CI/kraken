@@ -139,8 +139,6 @@ def create_app():
         # prepare access control
         access.init(redis_addr)
 
-    authn.oauth.init_app(app)
-
     # Read the swagger.yml file to configure the endpoints
     connex_app.add_api("swagger.yml", resolver=MyResolver())
     connex_app.add_api("swagger.yml", resolver=MyResolver(), base_path='/api')  # for backward compatibility
@@ -174,7 +172,7 @@ def create_app():
     app.add_url_rule("/bk/branch-badge/<branch_id>", view_func=badge.get_branch_badge, methods=['GET'], defaults={'what': None})
     app.add_url_rule("/bk/branch-badge/<branch_id>/<what>", view_func=badge.get_branch_badge, methods=['GET'])
 
-    # oauth2 redirect after login
+    # oidc/oauth2 redirect after login
     app.add_url_rule("/bk/oidc-logged", view_func=authn.oidc_logged, methods=['GET'])
 
     app.before_request(_set_log_ctx)

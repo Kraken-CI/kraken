@@ -20,15 +20,13 @@ import ldap
 import ldap.filter
 
 # OAuth & OIDC
-from authlib.integrations.flask_client import OAuth
+from authlib.integrations.base_client import BaseOAuth, FrameworkIntegration, OAuth2Mixin, OpenIDMixin, BaseApp
+from authlib.integrations.requests_client import OAuth1Session, OAuth2Session
 
 from werkzeug.exceptions import Unauthorized
 from flask import request, redirect, url_for
 
 from .models import db, User, UserSession, get_settings_group
-
-
-oauth = OAuth()
 
 
 log = logging.getLogger(__name__)
@@ -127,9 +125,75 @@ def test_ldap():
     print(resp)
 
 
+class KrakenOAuth2App(OAuth2Mixin, OpenIDMixin, BaseApp):
+    client_cls = OAuth2Session
+
+
+class KrakenOAuthIntegration(FrameworkIntegration):
+    @staticmethod
+    def load_config(oauth, name, params):
+        return {}
+
+
+class KrakenOAuth(BaseOAuth):
+    # oauth1_client_cls = FlaskOAuth1App
+    oauth2_client_cls = KrakenOAuth2App
+    framework_integration_cls = KrakenOAuthIntegration
+
+
+def setup_oauth(id_provider):
+    idp_settings = get_settings_group('idp')
+
+    oauth = KrakenOAuth()
+    if id_provider == 'google':
+        if not idp_settings['google_enabled']:
+            raise Exception('Google OIDC/OAuth not enabled')
+        idp = oauth.register(name='google',
+                             client_id=idp_settings['google_client_id'],
+                             client_secret=idp_settings['google_client_secret'],
+                             server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+                             client_kwargs={'scope': 'openid email profile'})
+
+    elif id_provider == 'microsoft':
+        if not idp_settings['microsoft_enabled']:
+            raise Exception('Microsoft OIDC/OAuth not enabled')
+        idp = oauth.register(name='microsoft',
+                             client_id=idp_settings['microsoft_client_id'],
+                             client_secret=idp_settings['microsoft_client_secret'],
+                             api_base_url='https://graph.microsoft.com/',
+                             # server_metadata_url='https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration',
+                             server_metadata_url='https://login.microsoftonline.com/organizations/v2.0/.well-known/openid-configuration',
+                             client_kwargs={'scope': 'openid email profile'})
+
+    elif id_provider == 'github':
+        if not idp_settings['github_enabled']:
+            raise Exception('GitHub OIDC/OAuth not enabled')
+        idp = oauth.register(name='github',
+                             client_id=idp_settings['github_client_id'],
+                             client_secret=idp_settings['github_client_secret'],
+                             api_base_url='https://api.github.com/',
+                             access_token_url='https://github.com/login/oauth/access_token',
+                             authorize_url='https://github.com/login/oauth/authorize',
+                             client_kwargs={'scope': 'user:email'},
+                             userinfo_endpoint='https://api.github.com/user')
+
+    elif id_provider == 'auth0':
+        if not idp_settings['auth0_enabled']:
+            raise Exception('Auth0 OIDC/OAuth not enabled')
+        idp = oauth.register(name='auth0',
+                             client_id=idp_settings['auth0_client_id'],
+                             client_secret=idp_settings['auth0_client_secret'],
+                             client_kwargs={'scope': 'openid profile email'},
+                             server_metadata_url=idp_settings['auth0_openid_config_url'])
+
+    else:
+        raise Exception('unsupported identity provider: %s' % id_provider)
+    return idp
+
+
 def authenticate_oidc(id_provider):
+    idp = setup_oauth(id_provider)
     redirect_uri = url_for('oidc_logged', _external=True)
-    idp = oauth.create_client(id_provider)
     state_data = idp.create_authorization_url(redirect_uri)
     state_data['redirect_uri'] = redirect_uri
     url = state_data['url']
@@ -144,7 +208,7 @@ def oidc_logged():
     if us is None:
         raise Unauthorized
 
-    idp = oauth.create_client(us.details['idp'])
+    idp = setup_oauth(us.details['idp'])
 
     if request.method == 'GET':
         error = request.args.get('error')
@@ -191,7 +255,7 @@ def oidc_logged():
 
 
 def oidc_logout(session_details):
-    idp = oauth.create_client(session_details['idp'])
+    idp = setup_oauth(session_details['idp'])
     logout_uri = idp.load_server_metadata().get('end_session_endpoint')
     if logout_uri:
         #return_url = url_join(request.url_root, return_url)
