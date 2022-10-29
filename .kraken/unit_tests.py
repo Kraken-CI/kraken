@@ -49,7 +49,7 @@ def stage(ctx):
             "timeout": 1200,
             "steps": [{
                 "tool": "shell",
-                "cmd": "sudo apt-get update && sudo apt-get install -y --no-install-recommends apt-transport-https software-properties-common postgresql-client python3-pip python curl gpg-agent python3-dev libldap-dev libsasl2-dev",
+                "cmd": "sudo apt-get update && sudo apt-get install -y --no-install-recommends apt-transport-https software-properties-common postgresql-client python3-pip python curl gpg-agent gcc python3-dev libldap-dev libsasl2-dev",
                 "timeout": 300
             }, {
                 "tool": "shell",
