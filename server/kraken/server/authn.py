@@ -52,13 +52,11 @@ def authenticate_ldap(username, password):
         conn = ldap.initialize(ldap_server)
         conn.set_option(ldap.OPT_REFERRALS, 0)
         conn.simple_bind_s(bind_dn, bind_pswd)
-    except ldap.INVALID_CREDENTIALS:
+    except ldap.INVALID_CREDENTIALS as ex:
         conn.unbind_s()
-        raise Exception('LDAP: incorrect bind credentials')
-    except ldap.SERVER_DOWN:
-        raise Exception('LDAP: server is down')
-    except Exception:
-        raise
+        raise Exception('LDAP: incorrect bind credentials') from ex
+    except ldap.SERVER_DOWN as ex:
+        raise Exception('LDAP: server is down') from ex
 
     ldap_filter = search_filter % (ldap.filter.escape_filter_chars(username))
     attrs = ['mail']
@@ -199,6 +197,7 @@ def oidc_logout(session_details):
         #return_url = url_join(request.url_root, return_url)
         #query = url_encode({'post_logout_redirect_uri': return_url})
         return redirect(logout_uri) # + '?' + query)
+    return None
 
 
 
