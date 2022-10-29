@@ -49,11 +49,15 @@ def stage(ctx):
             "timeout": 1200,
             "steps": [{
                 "tool": "shell",
-                "cmd": "sudo apt-get update && sudo apt-get install -y --no-install-recommends apt-transport-https software-properties-common postgresql-client python3-pip python curl gpg-agent",
+                "cmd": "sudo apt-get update && sudo apt-get install -y --no-install-recommends apt-transport-https software-properties-common postgresql-client python3-pip python curl gpg-agent python3-dev libldap-dev libsasl2-dev",
                 "timeout": 300
             }, {
                 "tool": "shell",
-                "cmd": "bash -c \"curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - && sudo add-apt-repository 'deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable' && sudo apt update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y docker-ce-cli\"",
+                "script": """
+                    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+                    sudo add-apt-repository 'deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable'
+                    sudo apt update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y docker-ce-cli
+                """,
                 "timeout": 300
             }, {
                 "tool": "shell",
