@@ -55,30 +55,37 @@ def test_users():
         access.init()
         _, token_info = prepare_user()
 
+        # login: empty body - bad request
         body = {}
         with pytest.raises(werkzeug.exceptions.BadRequest):
             users.login(body)
 
+        # login: incorrect creds (non-existing) - unauthorized
         body = {'user': 'borat', 'password': 'pswd'}
         with pytest.raises(werkzeug.exceptions.Unauthorized):
             users.login(body)
 
+        # create user: empty body - bad request
         body = {}
         with pytest.raises(werkzeug.exceptions.BadRequest):
             users.create_user(body, token_info=token_info)
 
+        # create user: empty name field - bad request
         body = {'name': ''}
         with pytest.raises(werkzeug.exceptions.BadRequest):
             users.create_user(body, token_info=token_info)
 
+        # create user: no password field - bad request
         body = {'name': 'borat'}
         with pytest.raises(werkzeug.exceptions.BadRequest):
             users.create_user(body, token_info=token_info)
 
+        # create user: empty password field - bad request
         body = {'name': 'borat', 'password': ''}
         with pytest.raises(werkzeug.exceptions.BadRequest):
             users.create_user(body, token_info=token_info)
 
+        # create user: all ok
         body = {'name': 'borat', 'password': 'pswd'}
         user, code = users.create_user(body, token_info=token_info)
         assert code == 201
@@ -86,10 +93,12 @@ def test_users():
         assert 'name' in user and user['name'] == body['name']
         assert 'enabled' in user and user['enabled'] is True
 
+        # login: incorrect creds - bad request
         body = {'user': 'borat', 'password': 'bad-pswd'}
         with pytest.raises(werkzeug.exceptions.Unauthorized):
             users.login(body)
 
+        # login: all ok
         body = {'user': 'borat', 'password': 'pswd'}
         sess, code = users.login(body)
         assert code == 201
@@ -101,38 +110,53 @@ def test_users():
         us_rec = UserSession.query.filter_by(id=sess['id']).one()
 
         token_info2 = dict(sub=user_rec, session=us_rec)
-        users.logout(sess['id'], token_info=token_info2)
 
+        # get session
+        sess2, code = users.get_session(sess['token'], token_info=token_info2)
+        assert code == 200
+        assert sess2['token'] == sess['token']
+        assert sess2['id'] == sess['id']
+
+        # logout: all ok
+        users.logout(sess['token'], token_info=token_info2)
+
+        # get users, 2 present
         resp, code = users.get_users(token_info=token_info)
         assert code == 200
         assert resp and 'total' in resp and resp['total'] == 2
         assert 'items' in resp and len(resp['items']) == 2
 
+        # update user: bad user id - not found
         user_id = None
         body = {}
         with pytest.raises(werkzeug.exceptions.NotFound):
             users.change_user_details(user_id, body, token_info=token_info)
 
+        # update user: no changes - all ok
         user_id = user['id']
         body = {}
         user2, code = users.change_user_details(user_id, body, token_info=token_info)
         assert code == 201
         assert 'enabled' in user2 and user2['enabled'] is True
 
+        # update user: disable user - all ok
         body = {'enabled': False}
         user2, code = users.change_user_details(user_id, body, token_info=token_info)
         assert code == 201
         assert 'enabled' in user2 and user2['enabled'] is False
 
+        # login disabled user - should raise unauthorized
         body = {'user': 'borat', 'password': 'pswd'}
         with pytest.raises(werkzeug.exceptions.Unauthorized):
             users.login(body)
 
+        # update user: re-enable user - all ok
         body = {'enabled': True}
         user2, code = users.change_user_details(user_id, body, token_info=token_info)
         assert code == 201
         assert 'enabled' in user2 and user2['enabled'] is True
 
+        # login re-enabled user - should be ok
         body = {'user': 'borat', 'password': 'pswd'}
         sess, code = users.login(body)
         assert code == 201

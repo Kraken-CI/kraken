@@ -45,8 +45,8 @@ def _get_ldap_settings():
 
 
 def authenticate_ldap(username, password):
-    enabed, ldap_server, bind_dn, bind_pswd, base_dn, search_filter = _get_ldap_settings()
-    if not enabed:
+    enabled, ldap_server, bind_dn, bind_pswd, base_dn, search_filter = _get_ldap_settings()
+    if not enabled:
         return None
     try:
         conn = ldap.initialize(ldap_server)
@@ -79,8 +79,8 @@ def authenticate_ldap(username, password):
 
 
 def check_ldap_settings():
-    enabed, ldap_server, bind_dn, bind_pswd, _, _ = _get_ldap_settings()
-    if not enabed:
+    enabled, ldap_server, bind_dn, bind_pswd, _, _ = _get_ldap_settings()
+    if not enabled:
         return 'ok'
     try:
         conn = ldap.initialize(ldap_server)

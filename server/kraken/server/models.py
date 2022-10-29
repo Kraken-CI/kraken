@@ -998,7 +998,7 @@ def get_setting(group, name):
     if s is None:
         raise Exception('cannot find setting %s:%s' % (group, name))
 
-    return s.value
+    return s.get_value(password_blank=False)
 
 
 def get_settings_group(group):
@@ -1008,7 +1008,7 @@ def get_settings_group(group):
 
     resp = {}
     for s in ss:
-        resp[s.name] = s.value
+        resp[s.name] = s.get_value(password_blank=False)
     return resp
 
 
