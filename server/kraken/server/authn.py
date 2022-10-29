@@ -20,16 +20,10 @@ import ldap
 import ldap.filter
 
 # OAuth & OIDC
-import authlib.common.security
-import authlib.integrations.requests_client
-import authlib.jose
-import authlib.oidc.core
-from authlib.jose import jwt
 from authlib.integrations.flask_client import OAuth
 
-import requests
 from werkzeug.exceptions import Unauthorized
-from flask import abort, request, redirect, url_for
+from flask import request, redirect, url_for
 
 from .models import db, User, UserSession, get_settings_group
 
@@ -87,7 +81,7 @@ def authenticate_ldap(username, password):
 
 
 def check_ldap_settings():
-    enabed, ldap_server, bind_dn, bind_pswd, base_dn, search_filter = _get_ldap_settings()
+    enabed, ldap_server, bind_dn, bind_pswd, _, _ = _get_ldap_settings()
     if not enabed:
         return 'ok'
     try:
@@ -106,32 +100,32 @@ def check_ldap_settings():
 def test_ldap():
     # https://www.forumsys.com/2022/05/10/online-ldap-test-server/
     # ldap.forumsys.com
-    resp = authenticate_ldap('gauss', 'password',
-                             'ldap://ldap.forumsys.com',
-                             'cn=read-only-admin,dc=example,dc=com',
-                             'password',
-                             'dc=example,dc=com',
-                             'uid=%s')
+    resp = authenticate_ldap('gauss', 'password')
+                             # 'ldap://ldap.forumsys.com',
+                             # 'cn=read-only-admin,dc=example,dc=com',
+                             # 'password',
+                             # 'dc=example,dc=com',
+                             # 'uid=%s')
     print(resp)
 
     # https://github.com/rroemhild/docker-test-openldap
     # docker run --rm -p 10389:10389 -p 10636:10636 rroemhild/test-openldap
-    resp = authenticate_ldap('bender', 'bender',
-                             'ldap://localhost:10389',
-                             'cn=admin,dc=planetexpress,dc=com',
-                             'GoodNewsEveryone',
-                             'ou=people,dc=planetexpress,dc=com',
-                             '(&(uid=%s)(objectClass=inetOrgPerson))')
+    resp = authenticate_ldap('bender', 'bender')
+                             # 'ldap://localhost:10389',
+                             # 'cn=admin,dc=planetexpress,dc=com',
+                             # 'GoodNewsEveryone',
+                             # 'ou=people,dc=planetexpress,dc=com',
+                             # '(&(uid=%s)(objectClass=inetOrgPerson))')
     print(resp)
 
     # https://www.zflexldapadministrator.com/index.php/blog/82-free-online-ldap
     # www.zflexldap.com
-    resp = authenticate_ldap('guest1', 'guest1password',
-                             'ldap://www.zflexldap.com',
-                             'cn=ro_admin,ou=sysadmins,dc=zflexsoftware,dc=com',
-                             'zflexpass',
-                             'ou=guests,dc=zflexsoftware,dc=com',
-                             '(uid=%s)')
+    resp = authenticate_ldap('guest1', 'guest1password')
+                             # 'ldap://www.zflexldap.com',
+                             # 'cn=ro_admin,ou=sysadmins,dc=zflexsoftware,dc=com',
+                             # 'zflexpass',
+                             # 'ou=guests,dc=zflexsoftware,dc=com',
+                             # '(uid=%s)')
     print(resp)
 
 
@@ -158,7 +152,7 @@ def oidc_logged():
         error = request.args.get('error')
         if error:
             description = request.args.get('error_description')
-            raise OAuthError(error=error, description=description)
+            raise Exception("%s: %s" % (error, description))
         params = {
             'code': request.args['code'],
             'state': request.args.get('state'),

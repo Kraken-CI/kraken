@@ -1,6 +1,7 @@
 FROM krakenci/srv-builder as builder
 
 # libsasl2-dev
+RUN apt-get update && apt-get install -y --no-install-recommends supervisor gcc python3-dev libldap-dev libsasl2-dev && rm -rf /var/lib/apt/lists/*
 
 # install python dependencies first
 COPY pyproject.toml poetry.lock /server/
