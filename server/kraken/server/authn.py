@@ -14,6 +14,7 @@
 
 import uuid
 import logging
+import urllib.parse
 
 # LDAP
 import ldap
@@ -21,12 +22,12 @@ import ldap.filter
 
 # OAuth & OIDC
 from authlib.integrations.base_client import BaseOAuth, FrameworkIntegration, OAuth2Mixin, OpenIDMixin, BaseApp
-from authlib.integrations.requests_client import OAuth1Session, OAuth2Session
+from authlib.integrations.requests_client import OAuth2Session  # OAuth1Session,
 
 from werkzeug.exceptions import Unauthorized
-from flask import request, redirect, url_for
+from flask import request, redirect
 
-from .models import db, User, UserSession, get_settings_group
+from .models import db, User, UserSession, get_setting, get_settings_group
 
 
 log = logging.getLogger(__name__)
@@ -193,9 +194,12 @@ def setup_oauth(id_provider):
 
 def authenticate_oidc(id_provider):
     idp = setup_oauth(id_provider)
-    redirect_uri = url_for('oidc_logged', _external=True)
-    state_data = idp.create_authorization_url(redirect_uri)
-    state_data['redirect_uri'] = redirect_uri
+
+    server_url = get_setting('general', 'server_url')
+    redir_url = urllib.parse.urljoin(server_url, 'bk/oidc-logged')
+
+    state_data = idp.create_authorization_url(redir_url)
+    state_data['redirect_uri'] = redir_url
     url = state_data['url']
 
     return url, state_data
