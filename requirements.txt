@@ -5,3 +5,4 @@ fabric
 boto3
 awscli==1.19.104
 rsa>=4.7 # not directly required, pinned by Snyk to avoid a vulnerability
+poetry-arbitrary-version-plugin

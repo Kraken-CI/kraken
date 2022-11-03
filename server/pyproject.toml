@@ -1,8 +1,26 @@
 [tool.poetry]
-name = "kraken"
+name = "krakenci-server"
 version = "0.0"
-description = ""
+description = "Kraken CI server."
 authors = ["Michal Nowikowski <godfryd@gmail.com>"]
+readme = "README.md"
+homepage = "https://kraken.ci/"
+repository = "https://github.com/kraken-ci/kraken"
+documentation = "https://kraken.ci/docs"
+keywords = ["building", "testing", "continuous-integration", "ci", "cd", "cicd"]
+license = "Apache-2.0"
+
+classifiers = [
+    "Topic :: Software Development",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Software Development :: Testing",
+    "License :: OSI Approved :: Apache Software License"
+]
+
+packages = [
+  { include = "kraken" },
+]
 
 [tool.poetry.dependencies]
 python = "^3.7"

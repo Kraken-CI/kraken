@@ -115,7 +115,7 @@ services:
       - server
 
   postgres:
-    image: postgres:11
+    image: postgres:11.16-bullseye
     environment:
       - POSTGRES_USER
       - POSTGRES_PASSWORD
@@ -126,7 +126,7 @@ services:
       - db_net
 
   redis:
-    image: redis:alpine
+    image: redis:7.0.5-alpine3.16
     networks:
       - db_net
 

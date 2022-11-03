@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "krakenci-client"
-version = "x.y"
+version = "0.0"
 description = "A client tool for Kraken CI server."
 authors = ["Michal Nowikowski <godfryd@gmail.com>"]
 readme = "README.md"

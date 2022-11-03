@@ -51,6 +51,15 @@ MINIO_ADDR="#{LOCALHOST_IP}:9999"
 MINIO_ACCESS_KEY='UFSEHRCFU4ACUEWHCHWU'
 MINIO_SECRET_KEY='HICSHuhIIUhiuhMIUHIUhGFfUHugy6fGJuyyfiGY'
 
+KK_SERVER_TGZ="krakenci_server-#{kk_ver}.tar.gz"
+KK_SERVER_TGZ_PATH="server/dist/#{KK_SERVER_TGZ}"
+KK_AGENT_TGZ="krakenci_agent-#{kk_ver}.tar.gz"
+KK_AGENT_TGZ_PATH="agent/#{KK_AGENT_TGZ}"
+KK_CLIENT_TGZ="krakenci_client-#{kk_ver}.tar.gz"
+KK_CLIENT_TGZ_PATH="client/dist/#{KK_CLIENT_TGZ}"
+KK_WEB_UI_TGZ="krakenci_ui-#{kk_ver}.tar.gz"
+KK_WEB_UI_TGZ_PATH="ui/dist/#{KK_WEB_UI_TGZ}"
+
 file DOCKER_COMPOSE do
   sh "mkdir -p #{TOOLS_DIR}"
   sh "wget -nv https://github.com/docker/compose/releases/download/v#{DOCKER_COMPOSE_VER}/docker-compose-#{sysname}-x86_64 -O #{DOCKER_COMPOSE}"
@@ -70,7 +79,7 @@ file './agent/venv/bin/python3' do
   sh './agent/venv/bin/pip install -r agent/reqs-ut.txt'
 end
 
-task :prepare_env => ['./venv/bin/python3', './agent/venv/bin/python3', 'client/pyproject.toml'] do
+task :prepare_env => ['./venv/bin/python3', './agent/venv/bin/python3'] do
   sh 'sudo DEBIAN_FRONTEND=noninteractive apt-get install -y default-jre python3-venv libpq-dev gcc libpython3-dev libldap-dev libsasl2-dev'
   sh 'cd server && ../venv/bin/poetry install'
   sh 'cd client && ../venv/bin/poetry install'
@@ -106,7 +115,13 @@ task :build_ui => [NG, :gen_client] do
   Dir.chdir('ui') do
     sh "sed -e 's/0\.0/#{kk_ver}/g' src/environments/environment.prod.ts.in > src/environments/environment.prod.ts"
     sh 'npx ng build --configuration production'
+    sh 'cp nginx.conf dist/kraken'
+    sh 'sed -i -e "s/\${DOLLAR}/\$/g" dist/kraken/nginx.conf'
+    Dir.chdir('dist') do
+      sh "tar --transform 's,^kraken,krakenci_ui-#{kk_ver},' -zcf #{KK_WEB_UI_TGZ} kraken/"
+    end
   end
+  sh "tar -ztvf #{KK_WEB_UI_TGZ_PATH}"
 end
 
 task :serve_ui => [NG, :gen_client] do
@@ -130,7 +145,7 @@ task :fix_ui => [NG, :gen_client] do
   end
 end
 
-task :lint_py => ['./venv/bin/python3', 'client/pyproject.toml', 'server/kraken/version.py', './agent/venv/bin/python3'] do
+task :lint_py => ['./venv/bin/python3', 'server/kraken/version.py', './agent/venv/bin/python3'] do
   Dir.chdir('server') do
     sh '../venv/bin/poetry install'
     sh '../venv/bin/poetry run pylint --rcfile ../pylint.rc kraken || true'
@@ -173,10 +188,6 @@ end
 
 file 'client/kraken/client/version.py' => KRAKEN_VERSION_FILE do
   sh "echo \"version = '#{kk_ver}'\" > client/kraken/client/version.py"
-end
-
-file 'client/pyproject.toml' => ['client/pyproject.toml.in', KRAKEN_VERSION_FILE] do
-  sh "sed s/x.y/#{kk_ver}/g client/pyproject.toml.in > client/pyproject.toml"
 end
 
 task :run_server => 'server/kraken/version.py' do
@@ -357,28 +368,48 @@ task :build_agent => './venv/bin/shiv' do
     sh '../venv/bin/pip install --target dist-tool -r reqs-tool.txt'
     sh '../venv/bin/pip install --target dist-tool --upgrade .'
     sh "../venv/bin/shiv --site-packages dist-tool --compressed -p '/usr/bin/env python3' -o kktool -c kktool"
+    sh "tar --transform 's,^,krakenci_agent-#{kk_ver}/,' -zcf #{KK_AGENT_TGZ} kkagent kktool"
   end
   sh "cp agent/kkagent agent/kktool server/"
+  sh "tar -ztvf #{KK_AGENT_TGZ_PATH}"
 end
 
 file 'client/kraken/client/toolops.py' => 'server/kraken/server/toolops.py' do
   sh 'cp server/kraken/server/toolops.py client/kraken/client/'
 end
 
-task :build_client => ['client/kraken/client/version.py', 'client/pyproject.toml', 'client/kraken/client/toolops.py']  do
+task :build_client => ['client/kraken/client/version.py', 'client/kraken/client/toolops.py']  do
   Dir.chdir('client') do
     sh 'rm -rf dist'
     sh 'rm -rf kraken/agent'
     sh 'mkdir kraken/agent'
     sh 'cp ../agent/kraken/agent/utils.py ../server/kraken/server/consts.py ../agent/kraken/agent/sysutils.py ../agent/kraken/agent/tool.py kraken/agent/'
-    sh '../venv/bin/poetry build -f sdist -vvv'
-    sh 'tar -ztvf dist/krakenci*client-*.tar.gz'
+    sh "../venv/bin/poetry build -f sdist -vvv --override-version #{kk_ver}"
   end
+  sh "tar -ztvf #{KK_CLIENT_TGZ_PATH}"
 end
 
 task :publish_client => :build_client do
   Dir.chdir('client') do
     sh "../venv/bin/poetry publish -u godfryd -p #{ENV['PYPI_PASSWORD']}"
+  end
+end
+
+task :build_server => ['server/kraken/version.py']  do
+  Dir.chdir('server') do
+    sh 'rm -rf dist'
+    sh 'cp ../README.md .'
+    sh "../venv/bin/poetry build -f sdist -vvv --override-version #{kk_ver}"
+    sh 'rm README.md'
+  end
+  sh "tar -ztvf #{KK_SERVER_TGZ_PATH}"
+end
+
+task :publish_server => :build_server do
+  Dir.chdir('server') do
+    sh 'cp ../README.md .'
+    sh "../venv/bin/poetry publish -u godfryd -p #{ENV['PYPI_PASSWORD']} --override-version #{kk_ver}"
+    sh 'rm README.md'
   end
 end
 
@@ -707,7 +738,12 @@ task :github_release do
   rel = JSON.parse(file)
   upload_url = rel['upload_url'].chomp('{?name,label}')
   sh "curl -H \"Authorization: token $GITHUB_TOKEN\" -H 'Content-Type:text/plain' #{curl_opts} --data-binary @kraken-docker-compose-#{kk_ver}.yaml '#{upload_url}?name=kraken-docker-compose-#{kk_ver}.yaml'"
-  sh "curl -H \"Authorization: token $GITHUB_TOKEN\" -H 'Content-Type:text/plain' #{curl_opts} --data-binary @dot.env '#{upload_url}?name=kraken-#{kk_ver}.env'"
+  sh "curl -H \"Authorization: token $GITHUB_TOKEN\" -H 'Content-Type:text/plain' #{curl_opts} --data-binary @dot.env '#{upload_url}?name=krakenci-#{kk_ver}.env'"
+  sh "curl -H \"Authorization: token $GITHUB_TOKEN\" -H 'Content-Type:text/plain' #{curl_opts} --data-binary @#{KK_SERVER_TGZ_PATH} '#{upload_url}?name=#{KK_SERVER_TGZ}'"
+  sh "curl -H \"Authorization: token $GITHUB_TOKEN\" -H 'Content-Type:text/plain' #{curl_opts} --data-binary @#{KK_CLIENT_TGZ_PATH} '#{upload_url}?name=#{KK_CLIENT_TGZ}'"
+  sh "curl -H \"Authorization: token $GITHUB_TOKEN\" -H 'Content-Type:text/plain' #{curl_opts} --data-binary @#{KK_WEB_UI_TGZ_PATH} '#{upload_url}?name=#{KK_WEB_UI_TGZ}'"
+  sh "curl -H \"Authorization: token $GITHUB_TOKEN\" -H 'Content-Type:text/plain' #{curl_opts} --data-binary @#{KK_AGENT_TGZ_PATH} '#{upload_url}?name=#{KK_AGENT_TGZ}'"
+
   sh "rm -f github-release-#{kk_ver}.json"
 
   # generate and set release notes
