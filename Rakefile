@@ -547,6 +547,7 @@ task :build_docker => DOCKER_COMPOSE do
   sh "sed -i -e s/kk_ver/#{kk_ver}/g kraken-docker-compose-#{kk_ver}-tmp.yaml"
   sh "sed -i -e 's#127.0.0.1:5000#us-docker.pkg.dev/kraken-261806/kk#g' kraken-docker-compose-#{kk_ver}-tmp.yaml"
   sh "cp agent/kkagent agent/kktool server/"
+  sh 'cp README.md server/'
 
   # build images, in case of server everything is build in containers
   if ENV['reuse'] == 'true'
@@ -555,6 +556,7 @@ task :build_docker => DOCKER_COMPOSE do
     flags = '--force-rm --no-cache --pull'
   end
   sh "#{DOCKER_COMPOSE} -f kraken-docker-compose-#{kk_ver}-tmp.yaml build #{flags} --build-arg kkver=#{kk_ver}"
+  sh 'rm server/README.md '
 end
 
 task :publish_docker => DOCKER_COMPOSE do
