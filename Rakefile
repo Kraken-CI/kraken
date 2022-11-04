@@ -81,7 +81,9 @@ end
 
 task :prepare_env => ['./venv/bin/python3', './agent/venv/bin/python3'] do
   sh 'sudo DEBIAN_FRONTEND=noninteractive apt-get install -y default-jre python3-venv libpq-dev gcc libpython3-dev libldap-dev libsasl2-dev'
+  sh 'cp README.md server/'
   sh 'cd server && ../venv/bin/poetry install'
+  sh 'rm server/README.md'
   sh 'cd client && ../venv/bin/poetry install'
 end
 
@@ -556,7 +558,7 @@ task :build_docker => DOCKER_COMPOSE do
     flags = '--force-rm --no-cache --pull'
   end
   sh "#{DOCKER_COMPOSE} -f kraken-docker-compose-#{kk_ver}-tmp.yaml build #{flags} --build-arg kkver=#{kk_ver}"
-  sh 'rm server/README.md '
+  sh 'rm server/README.md'
 end
 
 task :publish_docker => DOCKER_COMPOSE do

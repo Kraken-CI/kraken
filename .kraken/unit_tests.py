@@ -70,10 +70,11 @@ def stage(ctx):
                 "source": "kraken.tar.gz"
             }, {
                 "tool": "shell",
-                "cmd": "tar -zxf kraken.tar.gz"
-            }, {
-                "tool": "shell",
-                "cmd": "sudo pip3 install poetry",
+                "script": """
+                    tar -zxf kraken.tar.gz
+                    sudo pip3 install poetry
+                    cp kraken/README.md kraken/server/
+                """
             }, {
                 "tool": "shell",
                 "cmd": "poetry install",
