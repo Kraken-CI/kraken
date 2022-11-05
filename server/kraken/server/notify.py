@@ -251,7 +251,7 @@ def notify(run, event):
     args = prepare_secrets(run)
     args.update(run.args)
     # log.info('notification1 %s', notification)
-    notification = substitute_vars(notification, args)
+    notification, _ = substitute_vars(notification, args)
     # log.info('notification2 %s', notification)
 
     # slack
