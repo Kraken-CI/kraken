@@ -17,7 +17,7 @@ depends_on = None
 
 
 def upgrade():
-    op.add_column('steps', sa.Column('fields_masked', postgresql.JSONB(astext_type=sa.Text()), nullable=False))
+    op.add_column('steps', sa.Column('fields_masked', postgresql.JSONB(astext_type=sa.Text()), nullable=True))
 
 
 def downgrade():
