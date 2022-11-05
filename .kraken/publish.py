@@ -20,8 +20,21 @@ def stage(ctx):
                 "tool": "artifacts",
                 "action": "download",
                 "public": True,
-                "source": "kraken-docker-compose-0.#{KK_FLOW_SEQ}.yaml",
+                "source": [
+                    "kraken-docker-compose-0.#{KK_FLOW_SEQ}.yaml",
+                    "server/dist/krakenci_server-0.#{KK_FLOW_SEQ}.tar.gz",
+                    "agent/krakenci_agent-0.#{KK_FLOW_SEQ}.tar.gz",
+                    "client/dist/krakenci_client-0.#{KK_FLOW_SEQ}.tar.gz",
+                    "ui/dist/krakenci_ui-0.#{KK_FLOW_SEQ}.tar.gz",
+                ],
                 "cwd": "kraken"
+            }, {
+                "tool": "shell",
+                "cmd": "rake publish_client publish_server",
+                "env": {
+                    "kk_ver": "0.#{KK_FLOW_SEQ}",
+                    "PYPI_PASSWORD": "#{KK_SECRET_SIMPLE_pypi_password}"
+                }
             }, {
                 "tool": "shell",
                 "cmd": "git config --global user.email 'godfryd@gmail.com'; git config --global user.name 'Michal Nowikowski'"
@@ -56,14 +69,6 @@ def stage(ctx):
                 "cmd": "rake kk_ver=0.#{KK_FLOW_SEQ} helm_dest=../helm-repo/charts helm_release",
                 "cwd": "kraken",
                 "timeout": 120
-            }, {
-                "tool": "shell",
-                "cmd": "rake kk_ver=0.#{KK_FLOW_SEQ} prepare_env publish_client",
-                "cwd": "kraken",
-                "timeout": 600,
-                "env": {
-                    "PYPI_PASSWORD": "#{KK_SECRET_SIMPLE_pypi_password}"
-                }
             }, {
                 "tool": "shell",
                 "cmd": "rake kk_ver=0.#{KK_FLOW_SEQ} github_release",
