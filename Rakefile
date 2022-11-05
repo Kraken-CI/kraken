@@ -113,7 +113,8 @@ file NG => NPX do
   end
 end
 
-task :build_ui => [NG, :gen_client] do
+task :build_ui => KK_WEB_UI_TGZ_PATH
+file KK_WEB_UI_TGZ_PATH => [NG, :gen_client] do
   Dir.chdir('ui') do
     sh "sed -e 's/0\.0/#{kk_ver}/g' src/environments/environment.prod.ts.in > src/environments/environment.prod.ts"
     sh 'npx ng build --configuration production'
@@ -358,7 +359,8 @@ file './venv/bin/shiv' => ['./venv/bin/python3', 'requirements.txt'] do
     sh './venv/bin/pip install -r requirements.txt'
 end
 
-task :build_agent => './venv/bin/shiv' do
+task :build_agent => KK_AGENT_TGZ_PATH
+file KK_AGENT_TGZ_PATH => './venv/bin/shiv' do
   sh 'cp server/kraken/server/consts.py agent/kraken/agent/'
   sh 'cp server/kraken/server/logs.py agent/kraken/agent/'
   Dir.chdir('agent') do
@@ -380,7 +382,8 @@ file 'client/kraken/client/toolops.py' => 'server/kraken/server/toolops.py' do
   sh 'cp server/kraken/server/toolops.py client/kraken/client/'
 end
 
-task :build_client => ['client/kraken/client/version.py', 'client/kraken/client/toolops.py']  do
+task :build_client => KK_CLIENT_TGZ_PATH
+file KK_CLIENT_TGZ_PATH => ['client/kraken/client/version.py', 'client/kraken/client/toolops.py']  do
   Dir.chdir('client') do
     sh 'rm -rf dist'
     sh 'rm -rf kraken/agent'
@@ -391,13 +394,14 @@ task :build_client => ['client/kraken/client/version.py', 'client/kraken/client/
   sh "tar -ztvf #{KK_CLIENT_TGZ_PATH}"
 end
 
-task :publish_client => :build_client do
+task :publish_client => KK_CLIENT_TGZ_PATH do
   Dir.chdir('client') do
     sh "../venv/bin/poetry publish -u godfryd -p #{ENV['PYPI_PASSWORD']}"
   end
 end
 
-task :build_server => ['server/kraken/version.py']  do
+task :build_server => KK_SERVER_TGZ_PATH
+file KK_SERVER_TGZ_PATH => ['server/kraken/version.py']  do
   Dir.chdir('server') do
     sh 'rm -rf dist'
     sh 'cp ../README.md .'
@@ -407,7 +411,7 @@ task :build_server => ['server/kraken/version.py']  do
   sh "tar -ztvf #{KK_SERVER_TGZ_PATH}"
 end
 
-task :publish_server => :build_server do
+task :publish_server => KK_SERVER_TGZ_PATH do
   Dir.chdir('server') do
     sh 'cp ../README.md .'
     sh "../venv/bin/poetry publish -u godfryd -p #{ENV['PYPI_PASSWORD']} --override-version #{kk_ver}"
@@ -415,7 +419,7 @@ task :publish_server => :build_server do
   end
 end
 
-task :build_py => [:build_agent, :build_client, 'server/kraken/version.py']
+task :build_py => [:build_server, :build_agent, :build_client]
 
 task :clean_backend do
   sh 'rm -rf venv'
