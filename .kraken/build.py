@@ -51,7 +51,7 @@ def stage(ctx):
         steps.append({
             "tool": "artifacts",
             "source": [
-                "kraken-docker-compose-*.yaml",
+                "kraken-docker-compose-0.#{KK_FLOW_SEQ}.yaml",
                 ".env",
                 "server/dist/krakenci_server-0.#{KK_FLOW_SEQ}.tar.gz",
                 "agent/krakenci_agent-0.#{KK_FLOW_SEQ}.tar.gz",

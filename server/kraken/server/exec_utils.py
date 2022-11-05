@@ -123,7 +123,7 @@ def complete_starting_run(run_id):
             if label_pattern:
                 lbl_vals[lbl_field] = label_pattern
         if lbl_vals:
-            lbl_vals = substitute_vars(lbl_vals, run_args)
+            lbl_vals, _ = substitute_vars(lbl_vals, run_args)
             if run.flow.label is None:
                 run.flow.label = lbl_vals.get('flow_label', None)
 
@@ -405,9 +405,9 @@ def trigger_jobs(run, replay=False):
                         args = secrets.copy()
                         if run.args:
                             args.update(run.args)
-                        fields = substitute_vars(s, args)
+                        fields, fields_masked = substitute_vars(s, args)
                         del fields['tool']
-                        Step(job=job, index=idx, tool=tools[idx], fields=fields)
+                        Step(job=job, index=idx, tool=tools[idx], fields=fields, fields_masked=fields_masked)
 
                 # if this is rerun/replay then mark prev jobs as covered
                 if replay:

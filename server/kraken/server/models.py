@@ -504,28 +504,10 @@ class Step(db.Model, DatesMixin):
     tool_id = Column(Integer, ForeignKey('tools.id'), nullable=False)
     tool = relationship("Tool", back_populates="steps")
     fields = Column(JSONB, nullable=False)
+    fields_masked = Column(JSONB, nullable=False)
     result = Column(JSONB)
     status = Column(Integer)
     # services
-
-    def _filter_masked_fields(self, fields):
-        data = {}
-        masked_fields = [f[:-7] for f in fields if f.endswith('.masked')]
-
-        for f, v in fields.items():
-            if f.endswith('.masked'):
-                continue
-
-            if isinstance(v, dict):
-                data[f] = self._filter_masked_fields(v)
-                continue
-
-            if f in masked_fields:
-                data[f] = fields[f + '.masked']
-            else:
-                data[f] = v
-
-        return data
 
     def get_json(self, mask_secrets=False):
         data = dict(id=self.id,
@@ -540,11 +522,11 @@ class Step(db.Model, DatesMixin):
                     result=self.result)
 
         if mask_secrets:
-            d = self._filter_masked_fields(self.fields)
-            data.update(d)
+            fields = self.fields_masked
         else:
-            for f, v in self.fields.items():
-                data[f] = v
+            fields = self.fields
+        for f, v in fields.items():
+            data[f] = v
         return data
 
 

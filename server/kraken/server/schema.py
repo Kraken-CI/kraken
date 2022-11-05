@@ -179,13 +179,21 @@ def prepare_secrets(run):
 
 def substitute_val(val, args):
     if isinstance(val, dict):
-        return substitute_vars(val, args), None
+        return substitute_vars(val, args)
+    if isinstance(val, list):
+        list2 = []
+        list2_masked = []
+        for e in val:
+            e2, e2_masked = substitute_val(e, args)
+            list2.append(e2)
+            list2_masked.append(e2_masked)
+        return list2, list2_masked
     if not isinstance(val, str):
-        return val, None
+        return val, val
 
     val_masked = val
     secret_present = False
-    for var in re.findall(r'#{[A-Za-z_ ]+}', val):
+    for var in re.findall(r'#{[A-Za-z0-9_ ]+}', val):
         name = var[2:-1]
         if name in args:
             arg_val = args[name]
@@ -195,20 +203,22 @@ def substitute_val(val, args):
             if name.startswith('KK_SECRET_'):
                 val_masked = val_masked.replace(var, '******')
                 secret_present = True
+            else:
+                val_masked = val_masked.replace(var, arg_val)
 
     if secret_present:
         return val, val_masked
-    return val, None
+    return val, val
 
 
 def substitute_vars(fields, args):
     new_fields = {}
+    new_fields_masked = {}
     for f, val in fields.items():
         val, val_masked = substitute_val(val, args)
         new_fields[f] = val
-        if val_masked is not None:
-            new_fields[f + '.masked'] = val_masked
-    return new_fields
+        new_fields_masked[f] = val_masked
+    return new_fields, new_fields_masked
 
 
 def prepare_new_planner_triggers(stage_id, new_triggers, prev_triggers, triggers):
