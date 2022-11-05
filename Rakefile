@@ -360,7 +360,7 @@ file './venv/bin/shiv' => ['./venv/bin/python3', 'requirements.txt'] do
 end
 
 task :build_agent => KK_AGENT_TGZ_PATH
-file KK_AGENT_TGZ_PATH => './venv/bin/shiv' do
+file KK_AGENT_TGZ_PATH => ['./venv/bin/python3', './venv/bin/shiv'] do
   sh 'cp server/kraken/server/consts.py agent/kraken/agent/'
   sh 'cp server/kraken/server/logs.py agent/kraken/agent/'
   Dir.chdir('agent') do
@@ -383,7 +383,7 @@ file 'client/kraken/client/toolops.py' => 'server/kraken/server/toolops.py' do
 end
 
 task :build_client => KK_CLIENT_TGZ_PATH
-file KK_CLIENT_TGZ_PATH => ['client/kraken/client/version.py', 'client/kraken/client/toolops.py']  do
+file KK_CLIENT_TGZ_PATH => ['./venv/bin/python3', 'client/kraken/client/version.py', 'client/kraken/client/toolops.py']  do
   Dir.chdir('client') do
     sh 'rm -rf dist'
     sh 'rm -rf kraken/agent'
@@ -401,7 +401,7 @@ task :publish_client => KK_CLIENT_TGZ_PATH do
 end
 
 task :build_server => KK_SERVER_TGZ_PATH
-file KK_SERVER_TGZ_PATH => ['server/kraken/version.py']  do
+file KK_SERVER_TGZ_PATH => ['./venv/bin/python3', 'server/kraken/version.py']  do
   Dir.chdir('server') do
     sh 'rm -rf dist'
     sh 'cp ../README.md .'
