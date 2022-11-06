@@ -32,6 +32,7 @@ def stage(ctx):
                 "tool": "shell",
                 "cmd": "rake publish_client publish_server",
                 "cwd": "kraken",
+                "timeout": 300,
                 "env": {
                     "kk_ver": "0.#{KK_FLOW_SEQ}",
                     "PYPI_PASSWORD": "#{KK_SECRET_SIMPLE_pypi_password}"
