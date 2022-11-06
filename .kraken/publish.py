@@ -30,7 +30,10 @@ def stage(ctx):
                 "cwd": "kraken"
             }, {
                 "tool": "shell",
-                "cmd": "rake publish_client publish_server",
+                "script": """
+                    rake prepare_env
+                    rake publish_client publish_server
+                """,
                 "cwd": "kraken",
                 "timeout": 300,
                 "env": {
@@ -47,10 +50,12 @@ def stage(ctx):
                 "branch": "gh-pages"
             }, {
                 "tool": "shell",
-                "cmd": "curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add - && "
-                       "echo 'deb https://packages.cloud.google.com/apt cloud-sdk main' | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && "
-                       "sudo apt update && "
-                       "sudo apt install -y --no-install-recommends google-cloud-sdk",
+                "script": """
+                   curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+                   echo 'deb https://packages.cloud.google.com/apt cloud-sdk main' | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+                   sudo apt update
+                   sudo apt install -y --no-install-recommends google-cloud-sdk
+                """,
                 "timeout": 300
             }, {
                 "tool": "shell",

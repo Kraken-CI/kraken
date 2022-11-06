@@ -525,8 +525,11 @@ class Step(db.Model, DatesMixin):
             fields = self.fields_masked
         else:
             fields = self.fields
-        for f, v in fields.items():
-            data[f] = v
+
+        if fields:
+            for f, v in fields.items():
+                data[f] = v
+
         return data
 
 
