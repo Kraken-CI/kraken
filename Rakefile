@@ -396,7 +396,7 @@ end
 
 task :publish_client => KK_CLIENT_TGZ_PATH do
   Dir.chdir('client') do
-    sh "../venv/bin/poetry publish -u godfryd -p #{ENV['PYPI_PASSWORD']}"
+    sh "../venv/bin/poetry publish -u godfryd -p #{ENV['PYPI_PASSWORD']} --override-version #{kk_ver}"
   end
 end
 

@@ -31,8 +31,8 @@ def stage(ctx):
             }, {
                 "tool": "shell",
                 "script": """
-                    rake prepare_env
-                    rake publish_client publish_server
+                    rake -t prepare_env
+                    rake -t publish_client publish_server
                 """,
                 "cwd": "kraken",
                 "timeout": 300,
