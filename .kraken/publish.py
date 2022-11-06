@@ -86,7 +86,7 @@ def stage(ctx):
                 "timeout": 300
             }],
             "environments": [{
-                "system": "krakenci/bld-kraken",
+                "system": "krakenci/bld-kraken:20221106",
                 "executor": "docker",
             	"agents_group": "all",
                 "config": "default"

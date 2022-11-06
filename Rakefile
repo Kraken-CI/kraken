@@ -394,7 +394,7 @@ file KK_CLIENT_TGZ_PATH => ['./venv/bin/python3', 'client/kraken/client/version.
   sh "tar -ztvf #{KK_CLIENT_TGZ_PATH}"
 end
 
-task :publish_client => KK_CLIENT_TGZ_PATH do
+task :publish_client => './venv/bin/python3' do
   Dir.chdir('client') do
     sh "../venv/bin/poetry publish -u godfryd -p #{ENV['PYPI_PASSWORD']} --override-version #{kk_ver}"
   end
@@ -411,7 +411,7 @@ file KK_SERVER_TGZ_PATH => ['./venv/bin/python3', 'server/kraken/version.py']  d
   sh "tar -ztvf #{KK_SERVER_TGZ_PATH}"
 end
 
-task :publish_server => KK_SERVER_TGZ_PATH do
+task :publish_server => './venv/bin/python3' do
   Dir.chdir('server') do
     sh 'cp ../README.md .'
     sh "../venv/bin/poetry publish -u godfryd -p #{ENV['PYPI_PASSWORD']} --override-version #{kk_ver}"

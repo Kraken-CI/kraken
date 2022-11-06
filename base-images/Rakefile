@@ -1,5 +1,5 @@
 images = {
-  'bld-kraken'    => ['bld-kraken'],
+  'bld-kraken'    => ['bld-kraken:20221106'],
 
   'centos'        => ['centos:8'],
   'fedora'        => ['fedora:33'],
