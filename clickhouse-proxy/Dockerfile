@@ -1,5 +1,5 @@
 ##############################################################################################################
-FROM krakenci/chp-builder as builder
+FROM krakenci/chp-builder:20221108 as builder
 
 # copy your source tree
 COPY ./src ./src
@@ -11,7 +11,7 @@ RUN rm ./target/release/deps/clickhouse_proxy*
 RUN cargo build --release
 
 ##############################################################################################################
-FROM alpine:3.14 as clickhouse-proxy
+FROM debian:bullseye-20221024-slim as clickhouse-proxy
 WORKDIR /proxy
 COPY --from=builder /proxy/target/release/clickhouse-proxy /proxy
 CMD /proxy/clickhouse-proxy

@@ -59,6 +59,7 @@ KK_CLIENT_TGZ="krakenci_client-#{kk_ver}.tar.gz"
 KK_CLIENT_TGZ_PATH="client/dist/#{KK_CLIENT_TGZ}"
 KK_WEB_UI_TGZ="krakenci_ui-#{kk_ver}.tar.gz"
 KK_WEB_UI_TGZ_PATH="ui/dist/#{KK_WEB_UI_TGZ}"
+KK_CH_PROXY_TGZ="clickhouse-proxy-#{kk_ver}.tar.gz"
 
 file DOCKER_COMPOSE do
   sh "mkdir -p #{TOOLS_DIR}"
@@ -563,6 +564,13 @@ task :build_docker => DOCKER_COMPOSE do
   end
   sh "#{DOCKER_COMPOSE} -f kraken-docker-compose-#{kk_ver}-tmp.yaml build #{flags} --build-arg kkver=#{kk_ver}"
   sh 'rm server/README.md'
+
+  # extract clickhouse-proxy
+  chp_img = "us-docker.pkg.dev/kraken-261806/kk/kkchproxy:#{kk_ver}"
+  dkr_id = `docker create #{chp_img}`
+  dkr_id = dkr_id.strip
+  sh "docker cp #{dkr_id}:/proxy/clickhouse-proxy - | gzip > #{KK_CH_PROXY_TGZ}"
+  sh "docker rm -v #{dkr_id}"
 end
 
 task :publish_docker => DOCKER_COMPOSE do
@@ -736,21 +744,23 @@ task :deploy_lab => ['./venv/bin/python3'] do
 end
 
 task :github_release do
-  curl_opts = '--retry 3 --silent --location'
+  curl_opts = '--retry 3 --silent --location -H "Authorization: token $GITHUB_TOKEN"'
 
   # create release entry
-  sh "curl -H \"Authorization: token $GITHUB_TOKEN\"  #{curl_opts} --fail --data '{\"tag_name\": \"v#{kk_ver}\"}' -o github-release-#{kk_ver}.json  https://api.github.com/repos/kraken-ci/kraken/releases"
+  sh "curl #{curl_opts} --fail --data '{\"tag_name\": \"v#{kk_ver}\"}' -o github-release-#{kk_ver}.json  https://api.github.com/repos/kraken-ci/kraken/releases"
 
   # upload artifacts
   file = File.read("github-release-#{kk_ver}.json")
   rel = JSON.parse(file)
   upload_url = rel['upload_url'].chomp('{?name,label}')
-  sh "curl -H \"Authorization: token $GITHUB_TOKEN\" -H 'Content-Type:text/plain' #{curl_opts} --data-binary @kraken-docker-compose-#{kk_ver}.yaml '#{upload_url}?name=kraken-docker-compose-#{kk_ver}.yaml'"
-  sh "curl -H \"Authorization: token $GITHUB_TOKEN\" -H 'Content-Type:text/plain' #{curl_opts} --data-binary @dot.env '#{upload_url}?name=krakenci-#{kk_ver}.env'"
-  sh "curl -H \"Authorization: token $GITHUB_TOKEN\" -H 'Content-Type:text/plain' #{curl_opts} --data-binary @#{KK_SERVER_TGZ_PATH} '#{upload_url}?name=#{KK_SERVER_TGZ}'"
-  sh "curl -H \"Authorization: token $GITHUB_TOKEN\" -H 'Content-Type:text/plain' #{curl_opts} --data-binary @#{KK_CLIENT_TGZ_PATH} '#{upload_url}?name=#{KK_CLIENT_TGZ}'"
-  sh "curl -H \"Authorization: token $GITHUB_TOKEN\" -H 'Content-Type:text/plain' #{curl_opts} --data-binary @#{KK_WEB_UI_TGZ_PATH} '#{upload_url}?name=#{KK_WEB_UI_TGZ}'"
-  sh "curl -H \"Authorization: token $GITHUB_TOKEN\" -H 'Content-Type:text/plain' #{curl_opts} --data-binary @#{KK_AGENT_TGZ_PATH} '#{upload_url}?name=#{KK_AGENT_TGZ}'"
+  curl_opts2 = "#{curl_opts} -H 'Content-Type:text/plain'"
+  sh "curl #{curl_opts} --data-binary @kraken-docker-compose-#{kk_ver}.yaml '#{upload_url}?name=kraken-docker-compose-#{kk_ver}.yaml'"
+  sh "curl #{curl_opts} --data-binary @dot.env '#{upload_url}?name=krakenci-#{kk_ver}.env'"
+  sh "curl #{curl_opts} --data-binary @#{KK_SERVER_TGZ_PATH} '#{upload_url}?name=#{KK_SERVER_TGZ}'"
+  sh "curl #{curl_opts} --data-binary @#{KK_CLIENT_TGZ_PATH} '#{upload_url}?name=#{KK_CLIENT_TGZ}'"
+  sh "curl #{curl_opts} --data-binary @#{KK_WEB_UI_TGZ_PATH} '#{upload_url}?name=#{KK_WEB_UI_TGZ}'"
+  sh "curl #{curl_opts} --data-binary @#{KK_AGENT_TGZ_PATH} '#{upload_url}?name=#{KK_AGENT_TGZ}'"
+  sh "curl #{curl_opts} --data-binary @#{KK_CH_PROXY_TGZ} '#{upload_url}?name=#{KK_CH_PROXY_TGZ}'"
 
   sh "rm -f github-release-#{kk_ver}.json"
 
