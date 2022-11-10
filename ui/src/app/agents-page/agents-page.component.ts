@@ -145,7 +145,11 @@ export class AgentsPageComponent implements OnInit, OnDestroy {
                                     this.switchToTab(this.tabs.length - 1)
                                 },
                                 (err) => {
-                                    showErrorBox(this.msgSrv, err, `Getting agent with ID ${agentId} erred`)
+                                    showErrorBox(
+                                        this.msgSrv,
+                                        err,
+                                        `Getting agent with ID ${agentId} erred`
+                                    )
                                     this.router.navigate(['/agents/all'])
                                 }
                             )
@@ -163,7 +167,11 @@ export class AgentsPageComponent implements OnInit, OnDestroy {
                     })
                 },
                 (err) => {
-                    showErrorBox(this.msgSrv, err, 'Getting agents groups erred')
+                    showErrorBox(
+                        this.msgSrv,
+                        err,
+                        'Getting agents groups erred'
+                    )
                 }
             )
         )

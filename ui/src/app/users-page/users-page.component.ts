@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core'
 import { Title } from '@angular/platform-browser'
 
 import { MessageService } from 'primeng/api'
@@ -10,9 +10,9 @@ import { UsersService } from '../backend/api/users.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
 
 @Component({
-  selector: 'app-users-page',
-  templateUrl: './users-page.component.html',
-  styleUrls: ['./users-page.component.sass']
+    selector: 'app-users-page',
+    templateUrl: './users-page.component.html',
+    styleUrls: ['./users-page.component.sass'],
 })
 export class UsersPageComponent implements OnInit, OnDestroy {
     private subs: Subscription = new Subscription()
@@ -29,7 +29,7 @@ export class UsersPageComponent implements OnInit, OnDestroy {
 
     displayPasswdBox = false
 
-    roles: any[];
+    roles: any[]
     projects: any[] = []
     projectsById = {}
     selectedProject: any
@@ -43,11 +43,10 @@ export class UsersPageComponent implements OnInit, OnDestroy {
         private titleService: Title
     ) {
         this.roles = [
-            {name: 'Viewer', value: 'viewer'},
-            {name: 'Power User', value: 'pwrusr'},
-            {name: 'Admin', value: 'admin'},
-        ];
-
+            { name: 'Viewer', value: 'viewer' },
+            { name: 'Power User', value: 'pwrusr' },
+            { name: 'Admin', value: 'admin' },
+        ]
     }
 
     ngOnInit(): void {
@@ -135,7 +134,7 @@ export class UsersPageComponent implements OnInit, OnDestroy {
             user.userProjects.push({
                 id: projId,
                 name: p.name,
-                role: role
+                role: role,
             })
         }
         user.userProjects.sort((a, b) => a.name.localeCompare(b.name))
@@ -150,12 +149,10 @@ export class UsersPageComponent implements OnInit, OnDestroy {
 
     loadUserDetails(user) {
         this.subs.add(
-            this.usersService
-                .getUser(user.id)
-                .subscribe((data) => {
-                    this.selectedProject = null
-                    this.reflecUserChangesLocally(user, data)
-                })
+            this.usersService.getUser(user.id).subscribe((data) => {
+                this.selectedProject = null
+                this.reflecUserChangesLocally(user, data)
+            })
         )
     }
 
@@ -168,38 +165,36 @@ export class UsersPageComponent implements OnInit, OnDestroy {
     }
 
     addUser() {
-        let user = {name: this.username, password: this.password}
+        let user = { name: this.username, password: this.password }
 
         this.subs.add(
-            this.usersService
-                .createUser(user)
-                .subscribe(
-                    (data) => {
-                        this.users.unshift(data)
-                        this.addUserDlgVisible = false
+            this.usersService.createUser(user).subscribe(
+                (data) => {
+                    this.users.unshift(data)
+                    this.addUserDlgVisible = false
 
-                        this.username = ''
-                        this.password = ''
+                    this.username = ''
+                    this.password = ''
 
-                        this.msgSrv.add({
-                            severity: 'success',
-                            summary: 'User added',
-                            detail: 'Adding user succeeded.',
-                        })
-                    },
-                    (err) => {
-                        let msg = err.statusText
-                        if (err.error && err.error.detail) {
-                            msg = err.error.detail
-                        }
-                        this.msgSrv.add({
-                            severity: 'error',
-                            summary: 'Adding user erred',
-                            detail: 'Adding user erred: ' + msg,
-                            life: 10000,
-                        })
+                    this.msgSrv.add({
+                        severity: 'success',
+                        summary: 'User added',
+                        detail: 'Adding user succeeded.',
+                    })
+                },
+                (err) => {
+                    let msg = err.statusText
+                    if (err.error && err.error.detail) {
+                        msg = err.error.detail
                     }
-                )
+                    this.msgSrv.add({
+                        severity: 'error',
+                        summary: 'Adding user erred',
+                        detail: 'Adding user erred: ' + msg,
+                        life: 10000,
+                    })
+                }
+            )
         )
     }
 
@@ -243,53 +238,77 @@ export class UsersPageComponent implements OnInit, OnDestroy {
     }
 
     enableUser() {
-        let details = {enabled: true}
-        this.changeUserDetails(details,
-                               'User enabled', 'Enabling user succeeded.',
-                               'Enabling user erred', 'Enabling user erred: ')
+        let details = { enabled: true }
+        this.changeUserDetails(
+            details,
+            'User enabled',
+            'Enabling user succeeded.',
+            'Enabling user erred',
+            'Enabling user erred: '
+        )
     }
 
     disableUser() {
-        let details = {enabled: false}
-        this.changeUserDetails(details,
-                               'User disabled', 'Disabling user succeeded.',
-                               'Disabling user erred','Disabling user erred: ')
+        let details = { enabled: false }
+        this.changeUserDetails(
+            details,
+            'User disabled',
+            'Disabling user succeeded.',
+            'Disabling user erred',
+            'Disabling user erred: '
+        )
     }
 
     superadminChange() {
-        let user = {superadmin: this.selectedUser.superadmin}
-        this.changeUserDetails(user,
-                               'Super admin role changed', 'Changing super admin role succeeded.',
-                               'Changing super admin role erred','Changing super admin role erred: ')
+        let user = { superadmin: this.selectedUser.superadmin }
+        this.changeUserDetails(
+            user,
+            'Super admin role changed',
+            'Changing super admin role succeeded.',
+            'Changing super admin role erred',
+            'Changing super admin role erred: '
+        )
     }
 
     addUserToProject(project, role) {
         let projs = {}
         projs[project.id] = role.value
-        let details = {projects: projs}
+        let details = { projects: projs }
 
-        this.changeUserDetails(details,
-                               'User added to project', `User added to project ${project.name} as ${role.name}.`,
-                               'Adding user from project erred','Adding user from project erred: ')
+        this.changeUserDetails(
+            details,
+            'User added to project',
+            `User added to project ${project.name} as ${role.name}.`,
+            'Adding user from project erred',
+            'Adding user from project erred: '
+        )
     }
 
     changeUserRoleInProject(project) {
         let projs = {}
         projs[project.id] = project.role
-        let details = {projects: projs}
+        let details = { projects: projs }
 
-        this.changeUserDetails(details,
-                               'User role changed', `User role changed in project ${project.name} to ${project.role}.`,
-                               'Changing user role erred','Changing user role erred: ')
+        this.changeUserDetails(
+            details,
+            'User role changed',
+            `User role changed in project ${project.name} to ${project.role}.`,
+            'Changing user role erred',
+            'Changing user role erred: '
+        )
     }
 
     removeUserFromProject(project) {
         let projs = {}
         projs[project.id] = null
-        let details = {projects: projs}
+        let details = { projects: projs }
 
-        this.changeUserDetails(details,
-                               'User removed from project', `User removed from project ${project.name}.`,
-                               'Removing user from project erred','Removing user from project erred: ')
+        this.changeUserDetails(
+            details,
+            'User removed from project',
+            `User removed from project ${project.name}.`,
+            'Removing user from project erred',
+            'Removing user from project erred: '
+        )
     }
 }

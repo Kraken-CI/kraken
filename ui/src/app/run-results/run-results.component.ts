@@ -632,6 +632,10 @@ export class RunResultsComponent implements OnInit, OnDestroy {
     getStepInfo(step) {
         switch (step.tool) {
             case 'shell':
+                if (step.script) {
+                    let t = step.script.trim().split(/\r?\n/)[0]
+                    return 'script: ' + t + '...'
+                }
                 return 'cmd: ' + step.cmd
             case 'git':
                 return 'checkout: ' + step.checkout

@@ -1,6 +1,11 @@
 import { Component, OnInit, OnDestroy } from '@angular/core'
 import { Title } from '@angular/platform-browser'
-import { UntypedFormGroup, UntypedFormControl, FormGroup, FormControl } from '@angular/forms'
+import {
+    UntypedFormGroup,
+    UntypedFormControl,
+    FormGroup,
+    FormControl,
+} from '@angular/forms'
 
 import { Subscription } from 'rxjs'
 
@@ -98,7 +103,6 @@ export class SettingsPageComponent implements OnInit, OnDestroy {
         auth0_openid_config_url: new FormControl(''),
     })
 
-
     private subs: Subscription = new Subscription()
 
     constructor(
@@ -123,7 +127,7 @@ export class SettingsPageComponent implements OnInit, OnDestroy {
 
         this.subs.add(
             this.settingsService.settings.subscribe((settings) => {
-                if (settings === null || !settings.general ) {
+                if (settings === null || !settings.general) {
                     return
                 }
                 this.generalForm.setValue(settings.general)

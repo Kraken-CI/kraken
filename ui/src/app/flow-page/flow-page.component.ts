@@ -298,7 +298,10 @@ export class FlowPageComponent implements OnInit, OnDestroy {
                 {
                     label: 'Rerun',
                     icon: 'pi pi-replay',
-                    disabled: !this.auth.hasPermission(this.projectId, 'pwrusr'),
+                    disabled: !this.auth.hasPermission(
+                        this.projectId,
+                        'pwrusr'
+                    ),
                     title: this.auth.permTip(this.projectId, 'pwrusr'),
                 },
             ]
@@ -341,7 +344,10 @@ export class FlowPageComponent implements OnInit, OnDestroy {
                             ])
                         }
                     },
-                    disabled: !this.auth.hasPermission(this.projectId, 'pwrusr'),
+                    disabled: !this.auth.hasPermission(
+                        this.projectId,
+                        'pwrusr'
+                    ),
                     title: this.auth.permTip(this.projectId, 'pwrusr'),
                 },
             ]

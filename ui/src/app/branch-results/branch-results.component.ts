@@ -169,7 +169,11 @@ export class BranchResultsComponent implements OnInit, OnDestroy {
                         }, 10000)
                     },
                     (err) => {
-                        showErrorBox(this.msgSrv, err, 'Getting branch flows erred')
+                        showErrorBox(
+                            this.msgSrv,
+                            err,
+                            'Getting branch flows erred'
+                        )
                         this.refreshing = false
                         this.refreshTimer = null
                     }

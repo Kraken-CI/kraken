@@ -504,9 +504,9 @@ class Step(db.Model, DatesMixin):
     tool_id = Column(Integer, ForeignKey('tools.id'), nullable=False)
     tool = relationship("Tool", back_populates="steps")
     fields = Column(JSONB, nullable=False)
-    fields_masked = Column(JSONB, nullable=True)
     result = Column(JSONB)
     status = Column(Integer)
+    fields_masked = Column(JSONB, nullable=True)
     # services
 
     def get_json(self, mask_secrets=False):

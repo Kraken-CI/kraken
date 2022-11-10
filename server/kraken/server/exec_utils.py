@@ -203,7 +203,7 @@ def create_a_flow(branch, kind, body, trigger_data=None):
     flow_args.update(seq_vals)
 
     flow_args['KK_FLOW_TYPE'] = 'CI' if kind == 0 else 'DEV'
-    flow_args['KK_BRANCH'] = branch_name if branch_name is not None else 'master'
+    flow_args['KK_BRANCH'] = branch_name if branch_name else 'master'
 
     # create flow instance
     flow = Flow(branch=branch, kind=kind, branch_name=branch_name, args=flow_args, trigger_data=trigger_data)

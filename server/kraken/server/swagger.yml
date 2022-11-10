@@ -1642,28 +1642,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
-  /errors-in-logs:
+  /live-data:
     get:
       tags:
       - Management
       summary: Get errors in logs count in the last hour
       description: Get errors in logs count in the last hour
-      operationId: get_errors_in_logs_count
-      parameters:
-      - name: services
-        in: query
-        description: ID of pet to return
-        schema:
-          type: array
-          items:
-            type: string
+      operationId: get_live_data
       responses:
         200:
           description: A paged array of logs
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorsInLogsCount'
+                $ref: '#/components/schemas/LiveData'
         default:
           description: unexpected error
           content:
@@ -2627,10 +2619,16 @@ components:
         total:
           type: integer
           format: int64
-    ErrorsInLogsCount:
+    LiveData:
       type: object
       properties:
-        errors_count:
+        error_logs_count:
+          type: integer
+          format: int64
+        authorized_agents:
+          type: integer
+          format: int64
+        non_authorized_agents:
           type: integer
           format: int64
     Job:

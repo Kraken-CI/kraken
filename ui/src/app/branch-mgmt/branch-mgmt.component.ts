@@ -400,7 +400,7 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
     saveBranchName() {
         this.doSaveBranch(this.branch.id, {
             name: this.newBranchDisplayName,
-            branch_name: this.newBranchRepoName,
+            branch_name: this.newBranchRepoName || '',
         })
         this.branchNameDlgVisible = false
     }

@@ -281,4 +281,7 @@ def test_compare_create_db():
     #     f.write(schema_migr)
 
     # compare dumped schemas
-    assert schema_once.splitlines() == schema_migr.splitlines()
+    schema_once_lines = schema_once.splitlines()
+    schema_migr_lines = schema_migr.splitlines()
+    for idx, (l1, l2) in enumerate(zip(schema_once_lines, schema_migr_lines)):
+        assert l1 == l2, 'line %d: %s != %s' % (idx, l1, l2)

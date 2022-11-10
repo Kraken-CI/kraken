@@ -44,7 +44,6 @@ export function humanBytes(bytes, si) {
     return bytes.toFixed(1) + ' ' + units[u]
 }
 
-
 export function showErrorBox(msgSrv, err, summary) {
     let msg = err.statusText
     if (err.error && err.error.detail) {

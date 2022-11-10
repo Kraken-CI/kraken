@@ -64,7 +64,10 @@ export class RunBoxComponent implements OnInit, OnDestroy {
                     command: () => {
                         this.runRunJobs(opName)
                     },
-                    disabled: !this.auth.hasPermission(this.projectId, 'pwrusr'),
+                    disabled: !this.auth.hasPermission(
+                        this.projectId,
+                        'pwrusr'
+                    ),
                     title: this.auth.permTip(this.projectId, 'pwrusr'),
                 },
             ]
@@ -79,7 +82,10 @@ export class RunBoxComponent implements OnInit, OnDestroy {
                     command: () => {
                         this.cancelRun()
                     },
-                    disabled: !this.auth.hasPermission(this.projectId, 'pwrusr'),
+                    disabled: !this.auth.hasPermission(
+                        this.projectId,
+                        'pwrusr'
+                    ),
                     title: this.auth.permTip(this.projectId, 'pwrusr'),
                 })
             }
@@ -150,7 +156,10 @@ export class RunBoxComponent implements OnInit, OnDestroy {
                             ])
                         }
                     },
-                    disabled: !this.auth.hasPermission(this.projectId, 'pwrusr'),
+                    disabled: !this.auth.hasPermission(
+                        this.projectId,
+                        'pwrusr'
+                    ),
                     title: this.auth.permTip(this.projectId, 'pwrusr'),
                 },
             ]

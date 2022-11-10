@@ -31,7 +31,7 @@ export class AppComponent implements OnInit, OnDestroy {
     initSettings = {
         idp: {
             google_enabled: false,
-        }
+        },
     }
 
     username: string
@@ -40,6 +40,8 @@ export class AppComponent implements OnInit, OnDestroy {
     displayPasswdBox = false
 
     errorsInLogsCount = 0
+    authorizedAgents = 0
+    nonAuthorizedAgents = 0
 
     darkMode = false
 
@@ -100,8 +102,8 @@ export class AppComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit() {
-        let token = this.cookieService.get('kk_session_token');
-        this.cookieService.delete('kk_session_token');
+        let token = this.cookieService.get('kk_session_token')
+        this.cookieService.delete('kk_session_token')
         if (token) {
             this.auth.getSession(token)
         }
@@ -138,6 +140,7 @@ export class AppComponent implements OnInit, OnDestroy {
                         label: 'Agents',
                         icon: 'pi pi-user',
                         routerLink: '/agents',
+                        badge: '0',
                     },
                     {
                         label: 'Groups',
@@ -148,7 +151,7 @@ export class AppComponent implements OnInit, OnDestroy {
                         label: 'Discovered',
                         icon: 'pi pi-user-plus',
                         routerLink: '/discovered-agents',
-                        badge: '10' // todo: it does not work
+                        badge: '0',
                     },
                     {
                         label: 'Download',
@@ -169,7 +172,6 @@ export class AppComponent implements OnInit, OnDestroy {
                 icon: 'fa fa-smile-o',
                 routerLink: '/diagnostics/logs',
                 queryParams: { level: 'error' },
-                // badge: '0' TODO: it does not work
                 title: '0 errors in the last hour',
                 styleClass: '',
             },
@@ -192,21 +194,28 @@ export class AppComponent implements OnInit, OnDestroy {
                                 label: 'Users',
                                 icon: 'pi pi-user',
                                 routerLink: '/users',
-                                disabled: !this.auth.hasPermission(null, 'admin'),
+                                disabled: !this.auth.hasPermission(
+                                    null,
+                                    'admin'
+                                ),
                                 title: this.auth.permTip(null, 'admin'),
-                            }, {
+                            },
+                            {
                                 label: 'Identity Providers',
                                 icon: 'fa fa-users',
                                 routerLink: '/settings/identity-providers',
-                                disabled: !this.auth.hasPermission(null, 'admin'),
+                                disabled: !this.auth.hasPermission(
+                                    null,
+                                    'admin'
+                                ),
                                 title: this.auth.permTip(null, 'admin'),
                             },
-                        ]
+                        ],
                     },
                     {
                         label: 'Tools',
                         icon: 'fa fa-wrench',
-                        routerLink: '/tools'
+                        routerLink: '/tools',
                     },
                 ],
             },
@@ -229,7 +238,7 @@ export class AppComponent implements OnInit, OnDestroy {
             },
         ]
 
-        this.checkForErrors()
+        this.pullLiveData()
 
         this.initDarkMode()
     }
@@ -322,12 +331,12 @@ export class AppComponent implements OnInit, OnDestroy {
         link.remove()
     }
 
-    checkForErrors() {
+    pullLiveData() {
         this.subs.add(
-            this.managementService.getErrorsInLogsCount().subscribe((data) => {
+            this.managementService.getLiveData().subscribe((data) => {
                 // change menu with errors indicator if needed
-                if (this.errorsInLogsCount !== data.errors_count) {
-                    this.errorsInLogsCount = data.errors_count
+                if (this.errorsInLogsCount !== data.error_logs_count) {
+                    this.errorsInLogsCount = data.error_logs_count
                     this.topMenuItems[2].label = '' + this.errorsInLogsCount
                     this.topMenuItems[2].title =
                         '' + this.errorsInLogsCount + ' errors in the last hour'
@@ -343,8 +352,26 @@ export class AppComponent implements OnInit, OnDestroy {
                     this.topmenubar.cd.markForCheck()
                 }
 
+                if (this.authorizedAgents !== data.authorized_agents) {
+                    this.authorizedAgents = data.authorized_agents
+                    this.topMenuItems[0].items[0].badge =
+                        '' + this.authorizedAgents
+
+                    // force detection change in menu
+                    this.topmenubar.cd.markForCheck()
+                }
+
+                if (this.nonAuthorizedAgents !== data.non_authorized_agents) {
+                    this.nonAuthorizedAgents = data.non_authorized_agents
+                    this.topMenuItems[0].items[2].badge =
+                        '' + this.nonAuthorizedAgents
+
+                    // force detection change in menu
+                    this.topmenubar.cd.markForCheck()
+                }
+
                 setTimeout(() => {
-                    this.checkForErrors()
+                    this.pullLiveData()
                 }, 15000)
             })
         )

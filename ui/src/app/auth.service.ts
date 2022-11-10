@@ -70,7 +70,7 @@ export class AuthService {
     }
 
     loginWith(idProvider) {
-        const data = {method: 'oidc', oidc_provider: idProvider}
+        const data = { method: 'oidc', oidc_provider: idProvider }
         this.api.login(data).subscribe(
             (data) => {
                 window.location.href = data['redirect_url']
@@ -91,15 +91,12 @@ export class AuthService {
     }
 
     getSession(token) {
-        this.session = {token: token}
+        this.session = { token: token }
         this.api.getSession(token).subscribe(
             (data) => {
                 this.session = data
                 this.currentSessionSubject.next(this.session)
-                localStorage.setItem(
-                    'session',
-                    JSON.stringify(this.session)
-                )
+                localStorage.setItem('session', JSON.stringify(this.session))
                 // this.router.navigate([returnUrl])
             },
             (err) => {
@@ -148,7 +145,7 @@ export class AuthService {
             sufficientRoles = ['admin']
         } else if (expectedRole === 'pwrusr') {
             sufficientRoles = ['admin', 'pwrusr']
-        }else if (expectedRole === 'viewer') {
+        } else if (expectedRole === 'viewer') {
             sufficientRoles = ['admin', 'pwrusr', 'viewer']
         }
         let roleInProj = this.session.roles.projects[projectId]

@@ -1130,18 +1130,24 @@ def get_services_logs(services, level=None, token_info=None):
     return {'items': logs, 'total': len(logs)}, 200
 
 
-def get_errors_in_logs_count():
+def get_live_data():
     redis_addr = os.environ.get('KRAKEN_REDIS_ADDR', consts.DEFAULT_REDIS_ADDR)
     redis_host, redis_port = utils.split_host_port(redis_addr, 6379)
     rds = redis.Redis(host=redis_host, port=redis_port, db=consts.REDIS_KRAKEN_DB)
 
-    errors_count = rds.get('error-logs-count')
-    if errors_count:
-        errors_count = int(errors_count)
-    else:
-        errors_count = 0
+    counters = {
+        'error_logs_count': 0,
+        'authorized_agents': 0,
+        'non_authorized_agents': 0,
+    }
 
-    return {'errors_count': errors_count}, 200
+    for cntr in counters.keys():
+        rds_cntr = cntr.replace('_', '-')
+        cnt = rds.get(rds_cntr)
+        if cnt:
+            counters[cntr] = int(cnt)
+
+    return counters, 200
 
 
 def get_settings_working_state(resource, token_info=None):

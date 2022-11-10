@@ -744,14 +744,16 @@ def test_get_services_logs():
 
 
 @pytest.mark.db
-def test_get_errors_in_logs_count():
+def test_get_live_data():
     app = create_app()
 
     with app.app_context():
         initdb._prepare_initial_preferences()
 
         with patch('redis.Redis'):
-            management.get_errors_in_logs_count()
+            resp, code = management.get_live_data()
+            assert code == 200
+            assert resp == {'authorized_agents': 1, 'error_logs_count': 1, 'non_authorized_agents': 1}
 
 
 @pytest.mark.db

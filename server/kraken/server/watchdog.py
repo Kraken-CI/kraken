@@ -22,7 +22,7 @@ from urllib.parse import urlparse
 
 from flask import Flask
 from sqlalchemy.sql.expression import asc, desc, cast, or_
-from sqlalchemy import Integer
+from sqlalchemy import Integer, func
 import clickhouse_driver
 import redis
 
@@ -71,6 +71,18 @@ def create_app():
     return app
 
 
+def _exc_handler_with_db_rollback(func):
+    def inner_function(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception:
+            log.exception('IGNORED EXCEPTION')
+            db.session.rollback()
+            time.sleep(10)
+    return inner_function
+
+
+@_exc_handler_with_db_rollback
 def _check_jobs_if_expired():
     now = utils.utcnow()
 
@@ -97,6 +109,7 @@ def _check_jobs_if_expired():
         log.info('canceled jobs:%d / all:%d', canceled_count, job_count)
 
 
+@_exc_handler_with_db_rollback
 def _check_jobs_if_missing_agents():
     groups_jobs = {}  # keep here groups that are needed and one, any job
 
@@ -126,6 +139,7 @@ def _check_jobs():
     _check_jobs_if_missing_agents()
 
 
+@_exc_handler_with_db_rollback
 def _check_runs_timeout():
     now = utils.utcnow()
 
@@ -158,6 +172,7 @@ def _check_runs_timeout():
             exec_utils.complete_run(run, now)
 
 
+@_exc_handler_with_db_rollback
 def _check_runs_missing_history_analysis():
     now = utils.utcnow()
     three_months = now - datetime.timedelta(days=90)
@@ -190,6 +205,7 @@ def _cancel_job_and_unassign_agent(agent):
     db.session.commit()
 
 
+@_exc_handler_with_db_rollback
 def _check_agents_keep_alive():
     now = utils.utcnow()
     five_mins_ago = now - datetime.timedelta(seconds=consts.AGENT_TIMEOUT)
@@ -306,6 +322,7 @@ def _delete_if_missing_in_cloud(ag, agent):
     return False
 
 
+@_exc_handler_with_db_rollback
 def _check_agents_to_destroy():
     # look for agents that are not deleted, still available for use ie. authorized
     # and without currently running job
@@ -366,6 +383,7 @@ def _check_agents_to_destroy():
     return all_count, outdated_count, dangling_count
 
 
+@_exc_handler_with_db_rollback
 def _check_machines_with_no_agent():
     # look for AWS EC2 or Azure VM machines that do not have agents in database
     # and destroy such machines
@@ -412,12 +430,32 @@ def _check_machines_with_no_agent():
                  aws_ec2_groups, azure_vm_groups, k8s_groups, all_groups)
 
 
+@_exc_handler_with_db_rollback
+def _check_agents_counts():
+    q = db.session.query(Agent.authorized, func.count(Agent.authorized))
+    q = q.filter_by(deleted=None)
+    q = q.group_by(Agent.authorized)
+    counts = q.all()
+
+    redis_addr = os.environ.get('KRAKEN_REDIS_ADDR', consts.DEFAULT_REDIS_ADDR)
+    redis_host, redis_port = utils.split_host_port(redis_addr, 6379)
+    rds = redis.Redis(host=redis_host, port=redis_port, db=consts.REDIS_KRAKEN_DB)
+
+    for authorized, cnt in counts:
+        if authorized:
+            rds.set('authorized-agents', cnt)
+        else:
+            rds.set('non-authorized-agents', cnt)
+
+
 def _check_agents():
     _check_agents_keep_alive()
     _check_agents_to_destroy()
     _check_machines_with_no_agent()
+    _check_agents_counts()
 
 
+@_exc_handler_with_db_rollback
 def _check_for_errors_in_logs():
     ch_url = os.environ.get('KRAKEN_CLICKHOUSE_URL', consts.DEFAULT_CLICKHOUSE_URL)
     o = urlparse(ch_url)
