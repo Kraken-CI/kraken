@@ -71,14 +71,15 @@ def create_app():
     return app
 
 
-def _exc_handler_with_db_rollback(func):
+def _exc_handler_with_db_rollback(fnc):
     def inner_function(*args, **kwargs):
         try:
-            return func(*args, **kwargs)
+            return fnc(*args, **kwargs)
         except Exception:
             log.exception('IGNORED EXCEPTION')
             db.session.rollback()
             time.sleep(10)
+        return None
     return inner_function
 
 

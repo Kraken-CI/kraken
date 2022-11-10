@@ -1141,7 +1141,7 @@ def get_live_data():
         'non_authorized_agents': 0,
     }
 
-    for cntr in counters.keys():
+    for cntr in counters:
         rds_cntr = cntr.replace('_', '-')
         cnt = rds.get(rds_cntr)
         if cnt:
