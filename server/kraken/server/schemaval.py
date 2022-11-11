@@ -872,6 +872,11 @@ def get_schema():
                 "description": "A sleep time between subsequent execution attempts.",
                 "default": 0,
                 "type": "integer"
+            },
+            "name": {
+                "description": "A name of the step, displayed in web UI.",
+                "default": "",
+                "type": "string"
             }
         }
 

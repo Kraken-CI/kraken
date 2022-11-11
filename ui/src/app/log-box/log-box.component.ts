@@ -99,7 +99,7 @@ export class LogBoxComponent implements OnDestroy, AfterViewInit {
             if (fragment === undefined) {
                 let title = ''
                 if (l.step !== undefined) {
-                    title = l.tool
+                    title = job.steps[l.step].name
                 }
                 fragment = {
                     title,
@@ -113,7 +113,7 @@ export class LogBoxComponent implements OnDestroy, AfterViewInit {
                     this._addStepStatusEntryToLogs(job, fragment.step)
                     let title = ''
                     if (l.step !== undefined) {
-                        title = l.tool
+                        title = job.steps[l.step].name
                     }
                     fragment = {
                         title,
@@ -125,7 +125,7 @@ export class LogBoxComponent implements OnDestroy, AfterViewInit {
                 }
             }
             if (fragment.title === '' && l.tool !== '') {
-                fragment.title = l.tool
+                fragment.title = job.steps[l.step].name
             }
             l.cls = ''
             if (l.level === 'ERROR') {

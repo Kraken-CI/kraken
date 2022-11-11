@@ -521,14 +521,26 @@ class Step(db.Model, DatesMixin):
                     status=self.status,
                     result=self.result)
 
-        if mask_secrets:
+        if mask_secrets and self.fields_masked:
             fields = self.fields_masked
         else:
             fields = self.fields
 
-        if fields:
-            for f, v in fields.items():
-                data[f] = v
+        name = self.tool.name
+        if 'name' in fields:
+            name = fields['name']
+        elif self.tool.name == 'shell':
+            if 'script' in fields and fields['script']:
+                name = fields['script'].strip().splitlines()[0] + '...'
+            elif 'cmd' in fields and fields['cmd']:
+                name = fields['cmd']
+        elif self.tool.name == 'git':
+            name = 'checkout: ' + fields['checkout']
+
+        data['name'] = name
+
+        for f, v in fields.items():
+            data[f] = v
 
         return data
 
