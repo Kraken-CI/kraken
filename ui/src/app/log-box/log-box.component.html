@@ -20,7 +20,7 @@
     <div *ngIf="frag.title" style="font-size: 1.2em; font-weight: bold; color: lawngreen; cursor: pointer;" (click)="frag.expanded = !frag.expanded">
       <i *ngIf="!frag.expanded" class="pi pi-caret-right" style="vertical-align: bottom;"></i>
       <i *ngIf="frag.expanded" class="pi pi-caret-down" style="vertical-align: bottom;"></i>
-      {{ frag.step }}. {{frag.title }}
+      {{ frag.step + 1 }}. {{frag.title }}
     </div>
     <div *ngIf="frag.expanded" [ngStyle]="{'font-size': '' + fontSize + 'em'}">
       <div *ngFor="let log of frag.logs" style="display: flex;">
