@@ -26,6 +26,7 @@ def stage(ctx):
                     "agent/krakenci_agent-0.#{KK_FLOW_SEQ}.tar.gz",
                     "client/dist/krakenci_client-0.#{KK_FLOW_SEQ}.tar.gz",
                     "ui/dist/krakenci_ui-0.#{KK_FLOW_SEQ}.tar.gz",
+                    "clickhouse-proxy-0.#{KK_FLOW_SEQ}.tar.gz",
                 ],
                 "cwd": "kraken"
             }, {
