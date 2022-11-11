@@ -754,13 +754,13 @@ task :github_release do
   rel = JSON.parse(file)
   upload_url = rel['upload_url'].chomp('{?name,label}')
   curl_opts2 = "#{curl_opts} -H 'Content-Type:text/plain'"
-  sh "curl #{curl_opts} --data-binary @kraken-docker-compose-#{kk_ver}.yaml '#{upload_url}?name=kraken-docker-compose-#{kk_ver}.yaml'"
-  sh "curl #{curl_opts} --data-binary @dot.env '#{upload_url}?name=krakenci-#{kk_ver}.env'"
-  sh "curl #{curl_opts} --data-binary @#{KK_SERVER_TGZ_PATH} '#{upload_url}?name=#{KK_SERVER_TGZ}'"
-  sh "curl #{curl_opts} --data-binary @#{KK_CLIENT_TGZ_PATH} '#{upload_url}?name=#{KK_CLIENT_TGZ}'"
-  sh "curl #{curl_opts} --data-binary @#{KK_WEB_UI_TGZ_PATH} '#{upload_url}?name=#{KK_WEB_UI_TGZ}'"
-  sh "curl #{curl_opts} --data-binary @#{KK_AGENT_TGZ_PATH} '#{upload_url}?name=#{KK_AGENT_TGZ}'"
-  sh "curl #{curl_opts} --data-binary @#{KK_CH_PROXY_TGZ} '#{upload_url}?name=#{KK_CH_PROXY_TGZ}'"
+  sh "curl #{curl_opts2} --data-binary @kraken-docker-compose-#{kk_ver}.yaml '#{upload_url}?name=kraken-docker-compose-#{kk_ver}.yaml'"
+  sh "curl #{curl_opts2} --data-binary @dot.env '#{upload_url}?name=krakenci-#{kk_ver}.env'"
+  sh "curl #{curl_opts2} --data-binary @#{KK_SERVER_TGZ_PATH} '#{upload_url}?name=#{KK_SERVER_TGZ}'"
+  sh "curl #{curl_opts2} --data-binary @#{KK_CLIENT_TGZ_PATH} '#{upload_url}?name=#{KK_CLIENT_TGZ}'"
+  sh "curl #{curl_opts2} --data-binary @#{KK_WEB_UI_TGZ_PATH} '#{upload_url}?name=#{KK_WEB_UI_TGZ}'"
+  sh "curl #{curl_opts2} --data-binary @#{KK_AGENT_TGZ_PATH} '#{upload_url}?name=#{KK_AGENT_TGZ}'"
+  sh "curl #{curl_opts2} --data-binary @#{KK_CH_PROXY_TGZ} '#{upload_url}?name=#{KK_CH_PROXY_TGZ}'"
 
   sh "rm -f github-release-#{kk_ver}.json"
 
