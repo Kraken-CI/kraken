@@ -48,16 +48,24 @@ async fn read_and_parse_log(buf: [u8; 65536], len: usize, mut tx: Sender<LogEntr
         return
     }
     let le_in: Value = res.unwrap();
-    //println!("{:?}", le_in);
+    // println!("{:?}", le_in);
 
     let ts = NaiveDateTime::parse_from_str(&le_in["@timestamp"].as_str().unwrap(), "%Y-%m-%dT%H:%M:%S%.6fZ").unwrap();
     let ts2 = ts.timestamp_nanos() / 100_000;
+
+    let service = match le_in["service"].as_str() {
+        Some(s) => s.to_string(),
+        None => {
+            println!("warn: no service {:?}", le_in["message"].as_str().unwrap().to_string());
+            "unknown".to_string()
+        }
+    };
 
     let le_out = LogEntryOut{
         time: DateTime64(ts2),
         seq: 0,
         message: le_in["message"].as_str().unwrap().to_string(),
-        service: le_in["service"].as_str().unwrap().to_string(),
+        service: service,
         host: le_in["host"].as_str().unwrap().to_string(),
         path: le_in["path"].as_str().unwrap().to_string(),
         lineno: le_in["lineno"].as_i64().unwrap() as u32,
@@ -201,6 +209,15 @@ async fn store_logs(rx: &mut Receiver<LogEntryOut>) -> Result<()> {
 #[tokio::main]
 async fn main() -> io::Result<()> {
     println!("started clickhouse proxy");
+
+    let ch_url = env::var("KRAKEN_CLICKHOUSE_URL");
+    match ch_url {
+        Ok(url) => println!("Clickhouse address: {:?}", url),
+        Err(_) => {
+            println!("Error: environment variable KRAKEN_CLICKHOUSE_URL is not set, exiting.");
+            std::process::exit(1);
+        }
+    }
 
     let (tx, mut rx) = mpsc::channel(32);
 

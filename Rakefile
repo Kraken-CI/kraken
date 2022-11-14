@@ -528,6 +528,11 @@ end
 
 task :build_chp => DOCKER_COMPOSE do
   sh "#{DOCKER_COMPOSE} build --build-arg kkver=#{kk_ver} clickhouse-proxy"
+
+  dkr_id = `docker create 127.0.0.1:5000/kkchproxy:kk_ver`
+  dkr_id = dkr_id.strip
+  sh "docker cp #{dkr_id}:/proxy/clickhouse-proxy - | tar -C clickhouse-proxy -xvf -"
+  sh "docker rm -v #{dkr_id}"
 end
 
 task :run_chcli do

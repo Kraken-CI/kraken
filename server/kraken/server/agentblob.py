@@ -62,9 +62,9 @@ fi
 set -e
 
 if [ "$DL_TOOL" == "wget" ]; then
-    wget -O /tmp/kkagent ${KRAKEN_URL}install/agent
+    wget -O /tmp/kkagent ${KRAKEN_URL}/install/agent
 else
-    curl -o /tmp/kkagent ${KRAKEN_URL}install/agent
+    curl -o /tmp/kkagent ${KRAKEN_URL}/install/agent
 fi
 chmod a+x /tmp/kkagent
 
