@@ -1,7 +1,7 @@
 #docker==4.1.0
 #pylxd==2.2.10
 distro==1.7.0
-setuptools==49.6.0
+setuptools==65.5.1
 giturlparse==0.10.0
 minio==7.0.0
 click==7.1.2
