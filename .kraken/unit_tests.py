@@ -49,18 +49,6 @@ def stage(ctx):
             "timeout": 1200,
             "steps": [{
                 "tool": "shell",
-                "cmd": "sudo apt-get update && sudo apt-get install -y --no-install-recommends apt-transport-https software-properties-common postgresql-client python3-pip python curl gpg-agent gcc python3-dev libldap-dev libsasl2-dev",
-                "timeout": 300
-            }, {
-                "tool": "shell",
-                "script": """
-                    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-                    sudo add-apt-repository 'deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable'
-                    sudo apt update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y docker-ce-cli
-                """,
-                "timeout": 300
-            }, {
-                "tool": "shell",
                 "cmd": "docker rm -f -v kkut; docker run --rm --name kkut -p 15432:5432 -e POSTGRES_DB=kkut -e POSTGRES_USER=kkut -e POSTGRES_PASSWORD=kkut postgres:11",
                 "background": True,
                 "timeout": 12400
@@ -82,7 +70,7 @@ def stage(ctx):
                 "cwd": "kraken/server"
             }],
             "environments": [{
-                "system": "krakenci/ubuntu:20.04",
+                "system": "krakenci/bld-kraken:20221115",
                 "agents_group": "docker",
                 "executor": "docker",
                 #"system": "ubuntu:20.04",
