@@ -80,7 +80,7 @@ file './agent/venv/bin/python3' do
   sh './agent/venv/bin/pip install -r agent/reqs-ut.txt'
 end
 
-task :prepare_env => ['./venv/bin/python3', './agent/venv/bin/python3'] do
+task :prepare_env => ['./venv/bin/python3', './agent/venv/bin/python3', 'server/kraken/version.py'] do
   sh 'sudo DEBIAN_FRONTEND=noninteractive apt-get install -y openjdk-13-jre-headless python3-venv libpq-dev gcc libpython3-dev libldap-dev libsasl2-dev'
   sh 'cp README.md server/'
   sh 'cd server && ../venv/bin/poetry install'

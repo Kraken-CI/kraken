@@ -70,23 +70,12 @@ def stage(ctx):
                 "source": "kraken.tar.gz"
             }, {
                 "tool": "shell",
-                "script": """
-                    tar -zxf kraken.tar.gz
-                    sudo pip3 install poetry
-                    cp kraken/README.md kraken/server/
-                """
+                "cmd": "tar -zxf kraken.tar.gz"
             }, {
                 "tool": "shell",
-                "cmd": "poetry install",
-                "cwd": "kraken/server",
-                "timeout": 500
-            }, {
-                "tool": "shell",
-                "cwd": "kraken/server/kraken",
-                "script": """
-                    echo 'version = \"0.0\"' > version.py
-                    cat version.py
-                """,
+                "cmd": "rake prepare_env",
+                "cwd": "kraken",
+                "timeout": 300
             }, {
                 "tool": "pytest",
                 "pytest_exe": "POSTGRES_URL=postgresql://kkut:kkut@172.17.0.1:15432/ poetry run pytest",
