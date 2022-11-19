@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: clickhouse
-          image: {{ .Values.image.baseUrl }}/clickhouse-server:20.11.4.13.{{ .Chart.AppVersion }}
+          image: {{ .Values.image.baseUrl }}/clickhouse-server:22.10.2.11.{{ .Chart.AppVersion }}
           ports:
             - name: http
               containerPort: 8123

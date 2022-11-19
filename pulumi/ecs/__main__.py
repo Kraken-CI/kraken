@@ -303,7 +303,7 @@ def main():
                                secgrp,
                                lg,
                                'clickhouse',
-                               kk_image('clickhouse-server:20.11.4.13', kk_ver),
+                               kk_image('clickhouse-server:22.10.2.11', kk_ver),
                                1,
                                8123)
 

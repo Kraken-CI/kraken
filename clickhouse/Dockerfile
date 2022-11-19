@@ -1,3 +1,3 @@
-FROM yandex/clickhouse-server:20.11.4.13
+FROM clickhouse/clickhouse-server:22.10.2.11-alpine
 
 COPY config.xml /etc/clickhouse-server/config.xml

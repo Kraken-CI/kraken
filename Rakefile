@@ -535,6 +535,10 @@ task :build_chp => DOCKER_COMPOSE do
   sh "docker rm -v #{dkr_id}"
 end
 
+task :build_ch => DOCKER_COMPOSE do
+  sh "#{DOCKER_COMPOSE} build --build-arg kkver=#{kk_ver} clickhouse"
+end
+
 task :run_chcli do
   sh 'docker run -it --rm --network kraken_db_net --link kraken_clickhouse_1:clickhouse-server yandex/clickhouse-client --host clickhouse-server'
 end
@@ -598,7 +602,7 @@ task :publish_docker_aws do
            'kkrq:',
            'kkagent:',
            'kkui:',
-           'clickhouse-server:20.11.4.13.',
+           'clickhouse-server:22.10.2.11.',
            'kkchproxy:']
   names.each do |name|
     sh "docker tag us-docker.pkg.dev/kraken-261806/kk/#{name}#{kk_ver} public.ecr.aws/kraken-ci/#{name}#{kk_ver}"
@@ -622,7 +626,7 @@ task :mark_images_as_published do
            'kkrq:',
            'kkagent:',
            'kkui:',
-           'clickhouse-server:20.11.4.13.',
+           'clickhouse-server:22.10.2.11.',
            'kkchproxy:']
   names.each do |name|
     sh "gcloud artifacts docker tags add us-docker.pkg.dev/kraken-261806/kk/#{name}#{kk_ver} us-docker.pkg.dev/kraken-261806/kk/#{name}#{kk_ver}-released"
