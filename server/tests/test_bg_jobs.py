@@ -662,10 +662,10 @@ def test_load_remote_tool():
         tool = Tool(name=url, version=tag, url=url, tag=tag, tool_file=tool_file, fields={})
         db.session.commit()
 
-        os.environ['MINIO_ACCESS_KEY'] = 'UFSEHRCFU4ACUEWHCHWU'
-        os.environ['MINIO_SECRET_KEY'] = 'HICSHuhIIUhiuhMIUHIUhGFfUHugy6fGJuyyfiGY'
+        os.environ['MINIO_ROOT_USER'] = 'UFSEHRCFU4ACUEWHCHWU'
+        os.environ['MINIO_ROOT_PASSWORD'] = 'HICSHuhIIUhiuhMIUHIUhGFfUHugy6fGJuyyfiGY'
         try:
             jobs.load_remote_tool(tool.id)
         finally:
-            del os.environ['MINIO_ACCESS_KEY']
-            del os.environ['MINIO_SECRET_KEY']
+            del os.environ['MINIO_ROOT_USER']
+            del os.environ['MINIO_ROOT_PASSWORD']

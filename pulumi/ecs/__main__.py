@@ -278,8 +278,8 @@ def main():
     ####### MINIO
 
     minio_env = [
-        { "name": "MINIO_ACCESS_KEY", "value": 'UFSEHRCFU4ACUEWHCHWU'  },
-        { "name": "MINIO_SECRET_KEY", "value": 'HICSHuhIIUhiuhMIUHIUhGFfUHugy6fGJuyyfiGY'  },
+        { "name": "MINIO_ROOT_USER", "value": 'UFSEHRCFU4ACUEWHCHWU'  },
+        { "name": "MINIO_ROOT_PASSWORD", "value": 'HICSHuhIIUhiuhMIUHIUhGFfUHugy6fGJuyyfiGY'  },
     ]
 
     minio_sd = kk_service(cluster,
@@ -289,7 +289,7 @@ def main():
                           secgrp,
                           lg,
                           'minio',
-                          'minio/minio:RELEASE.2020-12-18T03-27-42Z',
+                          'minio/minio:RELEASE.2022-10-24T18-35-07Z',
                           1,
                           9999,
                           env=minio_env)
@@ -373,8 +373,8 @@ def main():
         ch_proxy_addr=clickhouse_proxy_sd.name,   # clickhouse proxy addr
         planner=kk_controller_sd.name,
         minio=minio_sd.name,  # TODO 's3.ca-central-1.amazonaws.com:443',
-        minio_access_key='UFSEHRCFU4ACUEWHCHWU',  # TODO s3_access_key.id,
-        minio_secret_key='HICSHuhIIUhiuhMIUHIUhGFfUHugy6fGJuyyfiGY',  # TODO s3_access_key.secret
+        minio_root_user='UFSEHRCFU4ACUEWHCHWU',  # TODO s3_access_key.id,
+        minio_root_password='HICSHuhIIUhiuhMIUHIUhGFfUHugy6fGJuyyfiGY',  # TODO s3_access_key.secret
     ).apply(lambda args: [
         { "name": "KRAKEN_REDIS_ADDR", "value": "%s.%s" % (args['redis'], args['domain'])  },
         { "name": "KRAKEN_DB_URL", "value": "postgresql://kraken:kk123kk4321@%s/kraken" % args['pgsql']  },
@@ -382,8 +382,8 @@ def main():
         { "name": "KRAKEN_CLICKHOUSE_ADDR", "value": "%s.%s:%s" % (args['ch_proxy_addr'], args['domain'], args['ch_proxy_port'])  },
         { "name": "KRAKEN_PLANNER_URL", "value": "http://%s.%s:7997/" % (args['planner'], args['domain'])  },
         { "name": "KRAKEN_MINIO_ADDR", "value": '%s.%s:9999' % (args['minio'], args['domain'])  },
-        { "name": "MINIO_ACCESS_KEY", "value": args['minio_access_key']  },
-        { "name": "MINIO_SECRET_KEY", "value": args['minio_secret_key']  },
+        { "name": "MINIO_ROOT_USER", "value": args['minio_root_user']  },
+        { "name": "MINIO_ROOT_PASSWORD", "value": args['minio_root_password']  },
     ])
 
     kk_service(cluster,
@@ -410,8 +410,8 @@ def main():
         ch_port="8123",                 # clickhouse service port
         planner=kk_controller_sd.name,
         minio=minio_sd.name,  # TODO 's3.ca-central-1.amazonaws.com:443',
-        minio_access_key='UFSEHRCFU4ACUEWHCHWU',  # TODO s3_access_key.id,
-        minio_secret_key='HICSHuhIIUhiuhMIUHIUhGFfUHugy6fGJuyyfiGY',  # TODO s3_access_key.secret
+        minio_root_user='UFSEHRCFU4ACUEWHCHWU',  # TODO s3_access_key.id,
+        minio_root_password='HICSHuhIIUhiuhMIUHIUhGFfUHugy6fGJuyyfiGY',  # TODO s3_access_key.secret
     ).apply(lambda args: [
         { "name": "KRAKEN_REDIS_ADDR", "value": "%s.%s" % (args['redis'], args['domain'])  },
         { "name": "KRAKEN_DB_URL", "value": "postgresql://kraken:kk123kk4321@%s/kraken" % args['pgsql']  },
@@ -422,8 +422,8 @@ def main():
         { "name": "KRAKEN_SERVER_ADDR", "value": "server:6363"  },
         { "name": "KRAKEN_PLANNER_URL", "value": "http://%s.%s:7997/" % (args['planner'], args['domain'])  },
         { "name": "KRAKEN_MINIO_ADDR", "value": '%s.%s:9999' % (args['minio'], args['domain'])  },
-        { "name": "MINIO_ACCESS_KEY", "value": args['minio_access_key']  },
-        { "name": "MINIO_SECRET_KEY", "value": args['minio_secret_key']  },
+        { "name": "MINIO_ROOT_USER", "value": args['minio_root_user']  },
+        { "name": "MINIO_ROOT_PASSWORD", "value": args['minio_root_password']  },
     ])
 
     kk_server_sd = kk_service(cluster,

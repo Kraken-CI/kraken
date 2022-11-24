@@ -7,8 +7,8 @@ postgresql:
   password: kk123
 
 minio:
-  access_key: URDS4GCFU4ACSDFERFAU
-  secret_key: HIsgg5DIIGSRRerIUHIUhGFEUHugJjfrJuyyaiGY
+  root_user: URDS4GCFU4ACSDFERFAU
+  root_password: HIsgg5DIIGSRRerIUHIUhGFEUHugJjfrJuyyaiGY
 
 access:
   # possible methods: external-ips, node-port, load-balancer

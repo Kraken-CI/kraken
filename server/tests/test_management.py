@@ -714,7 +714,7 @@ def test_get_diagnostics():
 
         with pytest.raises(KeyError) as ex:
             management.get_diagnostics(token_info=token_info)
-        assert "MINIO_ACCESS_KEY" in str(ex.value)
+        assert "MINIO_ROOT_USER" in str(ex.value)
 
 
 @pytest.mark.db

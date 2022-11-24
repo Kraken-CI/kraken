@@ -32,13 +32,13 @@ def get_minio_addr():
     minio_addr = get_setting('general', 'minio_addr')
     if not minio_addr:
         minio_addr = os.environ.get('KRAKEN_MINIO_ADDR', consts.DEFAULT_MINIO_ADDR)
-    access_key = os.environ['MINIO_ACCESS_KEY']
-    secret_key = os.environ['MINIO_SECRET_KEY']
-    return minio_addr, access_key, secret_key
+    root_user = os.environ['MINIO_ROOT_USER']
+    root_password = os.environ['MINIO_ROOT_PASSWORD']
+    return minio_addr, root_user, root_password
 
 
 def get_minio():
-    minio_addr, access_key, secret_key = get_minio_addr()
+    minio_addr, root_user, root_password = get_minio_addr()
     http_client = urllib3.PoolManager(
         timeout=5,
         maxsize=10,
@@ -49,12 +49,12 @@ def get_minio():
             status_forcelist=[500, 502, 503, 504]
         )
     )
-    mc = minio.Minio(minio_addr, access_key=access_key, secret_key=secret_key, secure=False, http_client=http_client)
+    mc = minio.Minio(minio_addr, access_key=root_user, secret_key=root_password, secure=False, http_client=http_client)
     return mc
 
 
 def check_connection():
-    minio_addr, access_key, secret_key = get_minio_addr()
+    minio_addr, root_user, root_password = get_minio_addr()
     http_client = urllib3.PoolManager(
         timeout=1,
         maxsize=10,
@@ -65,7 +65,7 @@ def check_connection():
             status_forcelist=[500, 502, 503, 504]
         )
     )
-    mc = minio.Minio(minio_addr, access_key=access_key, secret_key=secret_key, secure=False, http_client=http_client)
+    mc = minio.Minio(minio_addr, access_key=root_user, secret_key=root_password, secure=False, http_client=http_client)
     try:
         mc.list_buckets()
     except MaxRetryError:

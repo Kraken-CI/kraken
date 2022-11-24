@@ -33,10 +33,10 @@ log = logging.getLogger('storage')
 class MinioDownloader:
     def __init__(self, bucket_name, timeout=0.01):
         minio_addr = os.environ.get('KRAKEN_MINIO_ADDR', consts.DEFAULT_MINIO_ADDR)
-        access_key = os.environ['MINIO_ACCESS_KEY']
-        secret_key = os.environ['MINIO_SECRET_KEY']
+        root_user = os.environ['MINIO_ROOT_USER']
+        root_password = os.environ['MINIO_ROOT_PASSWORD']
 
-        self.mc = minio.Minio(minio_addr, access_key=access_key, secret_key=secret_key, secure=False)
+        self.mc = minio.Minio(minio_addr, access_key=root_user, secret_key=root_password, secure=False)
         found = self.mc.bucket_exists(bucket_name)
         if not found:
             raise Exception('missing %s minio bucket' % bucket_name)

@@ -48,8 +48,8 @@ end
 LOCALHOST_IP=ENV['LOCALHOST_IP'] || '192.168.0.89'
 CLICKHOUSE_ADDR="#{LOCALHOST_IP}:9001"
 MINIO_ADDR="#{LOCALHOST_IP}:9999"
-MINIO_ACCESS_KEY='UFSEHRCFU4ACUEWHCHWU'
-MINIO_SECRET_KEY='HICSHuhIIUhiuhMIUHIUhGFfUHugy6fGJuyyfiGY'
+MINIO_ROOT_USER='UFSEHRCFU4ACUEWHCHWU'
+MINIO_ROOT_PASSWORD='HICSHuhIIUhiuhMIUHIUhGFfUHugy6fGJuyyfiGY'
 
 KK_SERVER_TGZ="krakenci_server-#{kk_ver}.tar.gz"
 KK_SERVER_TGZ_PATH="server/dist/#{KK_SERVER_TGZ}"
@@ -197,7 +197,7 @@ end
 task :run_server => 'server/kraken/version.py' do
   sh 'cp dot.env .env'
   Dir.chdir('server') do
-    sh "KRAKEN_CLICKHOUSE_ADDR=#{CLICKHOUSE_ADDR} KRAKEN_MINIO_ADDR=#{MINIO_ADDR} MINIO_ACCESS_KEY='#{MINIO_ACCESS_KEY}' MINIO_SECRET_KEY='#{MINIO_SECRET_KEY}' ../venv/bin/poetry run python -m kraken.server.server"
+    sh "KRAKEN_CLICKHOUSE_ADDR=#{CLICKHOUSE_ADDR} KRAKEN_MINIO_ADDR=#{MINIO_ADDR} MINIO_ROOT_USER='#{MINIO_ROOT_USER}' MINIO_ROOT_PASSWORD='#{MINIO_ROOT_PASSWORD}' ../venv/bin/poetry run python -m kraken.server.server"
   end
 end
 
@@ -334,13 +334,13 @@ end
 task :run_rq => './server/kraken/version.py' do
   sh 'cp dot.env .env'
   Dir.chdir('server') do
-    sh "KRAKEN_CLICKHOUSE_ADDR=#{CLICKHOUSE_ADDR} KRAKEN_MINIO_ADDR=#{MINIO_ADDR} MINIO_ACCESS_KEY='#{MINIO_ACCESS_KEY}' MINIO_SECRET_KEY='#{MINIO_SECRET_KEY}' ../venv/bin/poetry run kkrq"
+    sh "KRAKEN_CLICKHOUSE_ADDR=#{CLICKHOUSE_ADDR} KRAKEN_MINIO_ADDR=#{MINIO_ADDR} MINIO_ROOT_USER='#{MINIO_ROOT_USER}' MINIO_ROOT_PASSWORD='#{MINIO_ROOT_PASSWORD}' ../venv/bin/poetry run kkrq"
   end
 end
 
 task :run_qneck => './server/kraken/version.py' do
   Dir.chdir('server') do
-    sh "KRAKEN_CLICKHOUSE_ADDR=#{CLICKHOUSE_ADDR} KRAKEN_MINIO_ADDR=#{MINIO_ADDR} MINIO_ACCESS_KEY='#{MINIO_ACCESS_KEY}' MINIO_SECRET_KEY='#{MINIO_SECRET_KEY}' ../venv/bin/poetry run kkqneck"
+    sh "KRAKEN_CLICKHOUSE_ADDR=#{CLICKHOUSE_ADDR} KRAKEN_MINIO_ADDR=#{MINIO_ADDR} MINIO_ROOT_USER='#{MINIO_ROOT_USER}' MINIO_ROOT_PASSWORD='#{MINIO_ROOT_PASSWORD}' ../venv/bin/poetry run kkqneck"
   end
 end
 
