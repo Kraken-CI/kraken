@@ -18,6 +18,7 @@ import logging
 import minio
 from minio.lifecycleconfig import LifecycleConfig, Expiration, Rule
 from minio.commonconfig import ENABLED, Filter
+from minio.error import S3Error
 import urllib3
 from urllib3.exceptions import MaxRetryError
 
@@ -69,7 +70,12 @@ def check_connection():
     try:
         mc.list_buckets()
     except MaxRetryError:
+        log.error('minio connection error: %s', ex)
         return False
+    except S3Error as ex:
+        log.error('minio connection error: %s', ex)
+        return False
+
     return True
 
 
