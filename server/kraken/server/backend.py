@@ -590,7 +590,7 @@ def _handle_unknown_agent(address, ip_address, agent):
         log.warning('IGNORED EXCEPTION: %s', str(e))
 
 
-def serve_agent_request():
+def _serve_agent_request():
     req = request.get_json()
     # log.info('request headers: %s', request.headers)
     # log.info('request remote_addr: %s', request.remote_addr)
@@ -644,3 +644,12 @@ def serve_agent_request():
 
     log.info('sending response: %s', str(response)[:200])
     return json.dumps(response)
+
+
+def serve_agent_request():
+    try:
+        return _serve_agent_request()
+    except Exception:
+        db.session.rollback()
+        db.session.close()
+        raise
