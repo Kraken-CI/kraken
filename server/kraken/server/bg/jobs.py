@@ -152,10 +152,16 @@ def _prepare_flow_summary(flow):
                issues_total=issues_total,
                issues_new=issues_new)
 
-    # store in redis flow state
+    # store in redis flow state for badge and cctray
     key = 'branch-%d' % flow.branch_id
-    rds.set(key, json.dumps(val))
-    log.info('cached flow results: %s = %s', key, val)
+    val_ext = val.copy()
+    val_ext['project'] = flow.branch.project.name
+    val_ext['branch'] = flow.branch.name
+    val_ext['activity'] = 'Sleeping'
+    val_ext['lastBuildTime'] = utils.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+    val_ext['url'] = '%s/branches/%d/ci' % (get_setting('general', 'server_url'), flow.branch_id)
+    rds.set(key, json.dumps(val_ext))
+    log.info('cached flow results: %s = %s', key, val_ext)
 
     # store in db as well, it will be used for charts in UI,
     flow.summary = val
