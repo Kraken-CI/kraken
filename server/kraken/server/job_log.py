@@ -22,6 +22,7 @@ from flask import abort, Response
 import clickhouse_driver
 
 from . import consts
+from . import access
 from .models import Job
 
 
@@ -67,6 +68,9 @@ def serve_job_log(job_id):
     job = Job.query.filter_by(id=job_id).one_or_none()
     if job is None:
         abort(404, "Job not found")
+
+    access.check(token_info, job.run.flow.branch.project_id, 'view',
+                 'only superadmin, project admin, project power user and project viewer roles can fetch job logs')
 
     try:
         jld = JobLogDownloader(job_id)

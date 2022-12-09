@@ -24,6 +24,7 @@ from flask import abort, Response
 import minio
 
 from .models import Run, Flow
+from . import access
 from . import consts
 
 
@@ -93,6 +94,10 @@ def serve_artifact(store_type, flow_id, run_id, path):
         if run is None:
             abort(404, "Run not found")
         flow = run.flow
+
+
+    access.check(token_info, flow.branch.project_id, 'view',
+                 'only superadmin, project admin, project power user and project viewer roles can fetch artifacts')
 
     mt, _ = mimetypes.guess_type(path)
     if mt is None:
