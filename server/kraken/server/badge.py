@@ -141,5 +141,4 @@ def get_branch_badge(branch_id, what=None):
 
     if what == 'cctray':
         return _get_cctray_status(rds, branch_id)
-    else:
-        return _redir_to_badge_image(rds, branch_id, what)
+    return _redir_to_badge_image(rds, branch_id, what)

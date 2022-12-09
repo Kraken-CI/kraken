@@ -64,7 +64,7 @@ class JobLogDownloader:
         return self.send_logs()
 
 
-def serve_job_log(job_id):
+def serve_job_log(job_id, token_info=None):
     job = Job.query.filter_by(id=job_id).one_or_none()
     if job is None:
         abort(404, "Job not found")

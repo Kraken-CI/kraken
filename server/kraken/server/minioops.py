@@ -69,7 +69,7 @@ def check_connection():
     mc = minio.Minio(minio_addr, access_key=root_user, secret_key=root_password, secure=False, http_client=http_client)
     try:
         mc.list_buckets()
-    except MaxRetryError:
+    except MaxRetryError as ex:
         log.error('minio connection error: %s', ex)
         return False
     except S3Error as ex:

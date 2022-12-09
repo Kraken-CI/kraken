@@ -73,7 +73,7 @@ class MinioDownloader:
         return self.send_bytes()
 
 
-def serve_artifact(store_type, flow_id, run_id, path):
+def serve_artifact(store_type, flow_id, run_id, path, token_info=None):
     log.info('path %s, %s, %s, %s', store_type, flow_id, run_id, path)
 
     if store_type not in ['public', 'report']:
