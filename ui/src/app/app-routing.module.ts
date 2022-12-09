@@ -35,8 +35,18 @@ const routes: Routes = [
         component: BranchMgmtComponent,
     },
     {
-        path: 'branches/:id/:kind',
+        path: 'branches/:id/ci',
         component: BranchResultsComponent,
+        data: {kind: 'ci'},
+    },
+    {
+        path: 'branches/:id/dev',
+        component: BranchResultsComponent,
+        data: {kind: 'dev'},
+    },
+    {
+        path: 'branches/:id/:tab',
+        component: BranchMgmtComponent,
     },
     {
         path: 'branches/:id/:kind/flows/new',

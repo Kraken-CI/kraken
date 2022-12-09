@@ -52,7 +52,7 @@ export class BranchResultsComponent implements OnInit, OnDestroy {
     ngOnInit() {
         this.branch = null
         this.branchId = parseInt(this.route.snapshot.paramMap.get('id'), 10)
-        this.kind = this.route.snapshot.paramMap.get('kind')
+        this.kind = this.route.snapshot.data.kind //this.route.snapshot.paramMap.get('kind')
         this.selectedStage = null
         this.stagesAvailable = [{ name: 'All' }]
 
@@ -74,7 +74,7 @@ export class BranchResultsComponent implements OnInit, OnDestroy {
         this.subs.add(
             this.route.paramMap.subscribe((params) => {
                 this.branchId = parseInt(params.get('id'), 10)
-                this.kind = params.get('kind')
+                // this.kind = params.get('kind') TODO: now this should be read from subscription to this.route.data
                 this.updateBreadcrumb()
                 this.start = 0
                 this.limit = 10

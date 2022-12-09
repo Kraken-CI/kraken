@@ -80,6 +80,7 @@ export class TabbedPageComponent
     prepareMenuItemRouterLink(label) {
         let suffix = label.toLowerCase()
         suffix = suffix.replace(/ /g, '-')
+        suffix = suffix.replace(/&/g, 'and')
         return this._baseLinkUrl + '/' + suffix
     }
 

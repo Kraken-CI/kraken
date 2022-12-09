@@ -240,10 +240,10 @@
   </div>
 </div>
 
-<p-tabView>
+<app-tabbed-page baseLinkUrl="/branches/{{ branchId }}" (tabChanged)="handleTabChange($event)">
 
   <!-- Stages TAB -->
-  <p-tabPanel header="Stages">
+  <app-tabbed-page-tab label="Stages">
     <div class="grid">
       <div class="col-3">
         <button type="button" (click)="newStage()" pButton icon="pi pi-plus" label="New Stage"
@@ -307,7 +307,7 @@
             </div>
           </div>
 
-          <p-tabView (onChange)="handleTabChange($event)">
+          <p-tabView (onChange)="handleSubTabChange($event)">
             <p-tabPanel header="Schema">
               <div style="height: calc(100vh - 520px); padding: 5px 0 10px 0;">
                 <ngx-codemirror
@@ -403,10 +403,10 @@
         No stages yet.
       </div>
     </div>
-  </p-tabPanel>
+  </app-tabbed-page-tab>
 
   <!-- Sequences TAB -->
-  <p-tabPanel header="Sequences">
+  <app-tabbed-page-tab label="Sequences">
     <table class="seqs-table">
       <tr>
         <th>Sequence Type</th>
@@ -425,7 +425,7 @@
         </td>
       </tr>
     </table>
-  </p-tabPanel>
+  </app-tabbed-page-tab>
 
 <!--
   <p-tabPanel header="Configs">
@@ -433,31 +433,38 @@
 -->
 
   <!-- Status Badge TAB -->
-  <p-tabPanel header="Status Badge">
-    <div style="margin: 10px;">
-      <div style="margin: 5px;">
-        <input type="text" pInputText [value]="getBadgeUrl(null)" [size]="getBadgeUrl('issues').length" style="font-family: monospace;" #badgeUrlEl>
-        <button type="button" pButton icon="pi pi-copy" class="p-button-outlined p-button-sm" (click)="copyBadgeUrl(badgeUrlEl)" style="margin: 0 3em 0 2em;"></button>
-        <img [src]="getBadgeUrl(null)">
-      </div>
+  <app-tabbed-page-tab label="Status Badge & CCTray">
+      <div style="margin: 10px;">
+          <h3>Badges</h3>
+          <div style="margin: 5px;">
+              <input type="text" pInputText [value]="getBadgeUrl(null)" [size]="getBadgeUrl('issues').length" style="font-family: monospace;" #badgeUrlEl>
+              <button type="button" pButton icon="pi pi-copy" class="p-button-outlined p-button-sm" (click)="copyBadgeUrl(badgeUrlEl)" style="margin: 0 3em 0 2em;"></button>
+              <img [src]="getBadgeUrl(null)">
+          </div>
 
-      <div style="margin: 5px;">
-        <input type="text" pInputText [value]="getBadgeUrl('tests')" [size]="getBadgeUrl('issues').length" style="font-family: monospace;" #badgeUrlEl>
-        <button type="button" pButton icon="pi pi-copy" class="p-button-outlined p-button-sm" (click)="copyBadgeUrl(badgeUrlEl)" style="margin: 0 3em 0 2em;"></button>
-        <img [src]="getBadgeUrl('tests')">
-      </div>
+          <div style="margin: 5px;">
+              <input type="text" pInputText [value]="getBadgeUrl('tests')" [size]="getBadgeUrl('issues').length" style="font-family: monospace;" #badgeUrlTestsEl>
+              <button type="button" pButton icon="pi pi-copy" class="p-button-outlined p-button-sm" (click)="copyBadgeUrl(badgeUrlTestsEl)" style="margin: 0 3em 0 2em;"></button>
+              <img [src]="getBadgeUrl('tests')">
+          </div>
 
-      <div style="margin: 5px;">
-        <input type="text" pInputText [value]="getBadgeUrl('issues')" [size]="getBadgeUrl('issues').length" style="font-family: monospace;" #badgeUrlEl>
-        <button type="button" pButton icon="pi pi-copy" class="p-button-outlined p-button-sm" (click)="copyBadgeUrl(badgeUrlEl)" style="margin: 0 3em 0 2em;"></button>
-        <img [src]="getBadgeUrl('issues')">
+          <div style="margin: 5px;">
+              <input type="text" pInputText [value]="getBadgeUrl('issues')" [size]="getBadgeUrl('issues').length" style="font-family: monospace;" #badgeUrlIssuesEl>
+              <button type="button" pButton icon="pi pi-copy" class="p-button-outlined p-button-sm" (click)="copyBadgeUrl(badgeUrlIssuesEl)" style="margin: 0 3em 0 2em;"></button>
+              <img [src]="getBadgeUrl('issues')">
+          </div>
+
+          <h3>CCTray</h3>
+          <div style="margin: 5px;">
+              <input type="text" pInputText [value]="getBadgeUrl('cctray')" [size]="getBadgeUrl('issues').length" style="font-family: monospace;" #badgeUrlCCTrayEl>
+              <button type="button" pButton icon="pi pi-copy" class="p-button-outlined p-button-sm" (click)="copyBadgeUrl(badgeUrlCCTrayEl)" style="margin: 0 3em 0 2em;"></button>
+          </div>
       </div>
-    </div>
-  </p-tabPanel>
+  </app-tabbed-page-tab>
 
   <!-- Stats & Charts TAB -->
-  <p-tabPanel header="Stats & Charts">
+  <app-tabbed-page-tab label="Stats & Charts">
       <app-branch-stats [branch_id]="branchId"></app-branch-stats>
-  </p-tabPanel>
+  </app-tabbed-page-tab>
 
-</p-tabView>
+</app-tabbed-page>

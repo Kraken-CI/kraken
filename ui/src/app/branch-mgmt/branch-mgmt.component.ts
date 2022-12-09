@@ -685,7 +685,11 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
         )
     }
 
-    handleTabChange(ev) {
+    handleTabChange(tabName) {
+        console.info(tabName)
+    }
+
+    handleSubTabChange(ev) {
         if (ev.index === 2) {
             this.subs.add(
                 this.managementService
@@ -703,6 +707,8 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
             return url + '/tests'
         } else if (what === 'issues') {
             return url + '/issues'
+        } else if (what === 'cctray') {
+            return url + '/cctray'
         }
         return url
     }
