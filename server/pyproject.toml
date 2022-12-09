@@ -20,8 +20,9 @@ classifiers = [
 
 packages = [
   { include = "kraken" },
-  { include = "kraken/version.py" },
 ]
+
+include = ["kraken/version.py"]
 
 [tool.poetry.dependencies]
 python = "^3.7"
