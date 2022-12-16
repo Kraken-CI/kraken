@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core'
 import { HttpClient } from '@angular/common/http'
 import { Router } from '@angular/router'
+
 import { BehaviorSubject, Observable } from 'rxjs'
+import { CookieService } from 'ngx-cookie-service'
 
 import { UsersService } from './backend/api/users.service'
 
@@ -16,17 +18,31 @@ export class AuthService {
     constructor(
         private http: HttpClient,
         private api: UsersService,
-        private router: Router
+        private router: Router,
+        private cookieService: CookieService
     ) {
         const session = localStorage.getItem('session')
         if (session) {
             this.session = JSON.parse(session)
+            this.cookieService.set('kk_session_token', this.session.token)
         } else {
             this.session = null
+        }
+        if (this.session === null) {
+            let token = this.cookieService.get('kk_session_token')
+            if (token) {
+                this.getSession(token)
+            }
         }
 
         this.currentSessionSubject = new BehaviorSubject(this.session)
         this.currentSession = this.currentSessionSubject.asObservable()
+    }
+
+    saveLocalSession() {
+        this.currentSessionSubject.next(this.session)
+        localStorage.setItem('session', JSON.stringify(this.session))
+        this.cookieService.set('kk_session_token', this.session.token)
     }
 
     login(user, password, returnUrl) {
@@ -45,11 +61,7 @@ export class AuthService {
                         return
                     }
 
-                    this.currentSessionSubject.next(this.session)
-                    localStorage.setItem(
-                        'session',
-                        JSON.stringify(this.session)
-                    )
+                    this.saveLocalSession()
                     // this.router.navigate([returnUrl])
                     observer.next(null)
                 },
@@ -95,8 +107,7 @@ export class AuthService {
         this.api.getSession(token).subscribe(
             (data) => {
                 this.session = data
-                this.currentSessionSubject.next(this.session)
-                localStorage.setItem('session', JSON.stringify(this.session))
+                this.saveLocalSession()
                 // this.router.navigate([returnUrl])
             },
             (err) => {
@@ -121,6 +132,7 @@ export class AuthService {
     deleteLocalSession() {
         this.session = null
         localStorage.removeItem('session')
+        this.cookieService.delete('kk_session_token')
         this.currentSessionSubject.next(null)
     }
 

@@ -342,7 +342,7 @@ def check(token_info, obj, act, msg):
     sub2 = str(user.id)
     obj2 = str(obj)
     act2 = str(act)
-    log.info('check access sub:%s obj:%s act:%s',
+    log.info('check access sub(user):%s obj:%s act:%s',
              sub2, obj2, act2)
 
     if user.details and not user.details.get('enabled', True):

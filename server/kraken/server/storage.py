@@ -24,6 +24,7 @@ from flask import abort, Response
 import minio
 
 from .models import Run, Flow
+from . import users
 from . import access
 from . import consts
 
@@ -73,7 +74,7 @@ class MinioDownloader:
         return self.send_bytes()
 
 
-def serve_artifact(store_type, flow_id, run_id, path, token_info=None):
+def serve_artifact(store_type, flow_id, run_id, path):
     log.info('path %s, %s, %s, %s', store_type, flow_id, run_id, path)
 
     if store_type not in ['public', 'report']:
@@ -96,6 +97,9 @@ def serve_artifact(store_type, flow_id, run_id, path, token_info=None):
         flow = run.flow
 
 
+    token_info = users.get_token_info_from_request()
+    if not token_info:
+        abort(401, "Missing Authorization header or kk_session_token cookie")
     access.check(token_info, flow.branch.project_id, 'view',
                  'only superadmin, project admin, project power user and project viewer roles can fetch artifacts')
 

@@ -1,7 +1,6 @@
 import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core'
 
 import { Subscription } from 'rxjs'
-import { CookieService } from 'ngx-cookie-service'
 
 import { Menubar } from 'primeng/menubar'
 import { MenuItem } from 'primeng/api'
@@ -51,8 +50,7 @@ export class AppComponent implements OnInit, OnDestroy {
         protected auth: AuthService,
         private settingsService: SettingsService,
         protected managementService: ManagementService,
-        private msgSrv: MessageService,
-        private cookieService: CookieService
+        private msgSrv: MessageService
     ) {
         this.session = null
         this.settings = this.initSettings
@@ -102,12 +100,6 @@ export class AppComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit() {
-        let token = this.cookieService.get('kk_session_token')
-        this.cookieService.delete('kk_session_token')
-        if (token) {
-            this.auth.getSession(token)
-        }
-
         this.subs.add(
             this.auth.currentSession.subscribe((session) => {
                 this.session = session

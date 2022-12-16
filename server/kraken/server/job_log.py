@@ -23,6 +23,7 @@ import clickhouse_driver
 
 from . import consts
 from . import access
+from . import users
 from .models import Job
 
 
@@ -64,11 +65,14 @@ class JobLogDownloader:
         return self.send_logs()
 
 
-def serve_job_log(job_id, token_info=None):
+def serve_job_log(job_id):
     job = Job.query.filter_by(id=job_id).one_or_none()
     if job is None:
         abort(404, "Job not found")
 
+    token_info = users.get_token_info_from_request()
+    if not token_info:
+        abort(401, "Missing Authorization header or kk_session_token cookie")
     access.check(token_info, job.run.flow.branch.project_id, 'view',
                  'only superadmin, project admin, project power user and project viewer roles can fetch job logs')
 

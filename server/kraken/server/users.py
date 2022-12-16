@@ -15,7 +15,7 @@
 import uuid
 import logging
 
-from flask import abort
+from flask import abort, request
 from passlib.hash import pbkdf2_sha256
 from werkzeug.exceptions import Unauthorized, BadRequest, NotFound, Forbidden
 from sqlalchemy.sql.expression import asc, desc
@@ -148,6 +148,18 @@ def check_auth_token(token):
         raise Unauthorized
     resp = dict(sub=us.user, session=us)
     return resp
+
+
+def get_token_info_from_request():
+    token = request.headers.get('Authorization', None)
+    if token:
+        token = token.replace('Bearer ', '')
+    else:
+        token = request.cookies.get('kk_session_token')
+    if not token:
+        return None
+    token_info = check_auth_token(token)
+    return token_info
 
 
 def change_password(user_id, body, token_info=None):
