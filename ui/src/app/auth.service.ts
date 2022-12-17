@@ -24,7 +24,7 @@ export class AuthService {
         const session = localStorage.getItem('session')
         if (session) {
             this.session = JSON.parse(session)
-            this.cookieService.set('kk_session_token', this.session.token)
+            this.cookieService.set('kk_session_token', this.session.token, {path: '/', expires: 1000})
         } else {
             this.session = null
         }
@@ -42,7 +42,7 @@ export class AuthService {
     saveLocalSession() {
         this.currentSessionSubject.next(this.session)
         localStorage.setItem('session', JSON.stringify(this.session))
-        this.cookieService.set('kk_session_token', this.session.token)
+        this.cookieService.set('kk_session_token', this.session.token, {path: '/', expires: 1000})
     }
 
     login(user, password, returnUrl) {
