@@ -11,7 +11,7 @@ RUN rm ./target/release/deps/clickhouse_proxy*
 RUN cargo build --release
 
 ##############################################################################################################
-FROM debian:bullseye-20221024-slim as clickhouse-proxy
+FROM debian:bullseye-slim as clickhouse-proxy
 WORKDIR /proxy
 COPY --from=builder /proxy/target/release/clickhouse-proxy /proxy
 CMD /proxy/clickhouse-proxy
