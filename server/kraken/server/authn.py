@@ -59,7 +59,13 @@ def authenticate_ldap(username, password):
 
     ldap_filter = search_filter % (ldap.filter.escape_filter_chars(username))
     attrs = ['mail']
-    user = conn.search_s(base_dn, ldap.SCOPE_SUBTREE, ldap_filter, attrs)[0]
+    result = conn.search_s(base_dn, ldap.SCOPE_SUBTREE, ldap_filter, attrs)
+    if not result:
+        conn.unbind_s()
+        log.info('ldap: user %s not found or search filter is not ok', username)
+        return None
+
+    user = result[0]
     conn.unbind_s()
 
     conn = ldap.initialize(ldap_server)
@@ -67,6 +73,7 @@ def authenticate_ldap(username, password):
     try:
         conn.simple_bind_s(user[0], password)
     except ldap.INVALID_CREDENTIALS:
+        log.info('ldap: wrong creds for user %s (%s)', username, user[0])
         return None
     finally:
         conn.unbind_s()
