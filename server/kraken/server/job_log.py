@@ -30,10 +30,13 @@ from .models import Job
 log = logging.getLogger(__name__)
 
 class JobLogDownloader:
-    def __init__(self, job_id):
+    def __init__(self, job_id, step_idx=None):
         self.job_id = job_id
-        self.query = "select message from logs where job = %s order by time asc, seq asc"
-        self.query %= job_id
+        self.step_idx = step_idx
+        self.query = 'select message from logs where job = %d ' % job_id
+        if self.step_idx is not None:
+            self.query += ' and step = %d ' % self.step_idx
+        self.query += 'order by time asc, seq asc'
 
         ch_url = os.environ.get('KRAKEN_CLICKHOUSE_URL', consts.DEFAULT_CLICKHOUSE_URL)
         o = urlparse(ch_url)
@@ -66,6 +69,7 @@ class JobLogDownloader:
 
 
 def serve_job_log(job_id):
+    job_id = int(job_id)
     job = Job.query.filter_by(id=job_id).one_or_none()
     if job is None:
         abort(404, "Job not found")
@@ -77,12 +81,37 @@ def serve_job_log(job_id):
                  'only superadmin, project admin, project power user and project viewer roles can fetch job logs')
 
     try:
-        jld = JobLogDownloader(job_id)
+        jld = JobLogDownloader(job_id, None)
     except OSError:
         abort(500, 'Cannot connect to storage service')
 
     log.info('serve_job_log %s', job)
     response = Response(jld.download(), mimetype='plain/text')
     path = 'job_log_%d.txt' % job.id
+    response.headers['Content-Disposition'] = 'attachment; filename=' + path
+    return response
+
+
+def serve_step_log(job_id, step_idx):
+    job_id = int(job_id)
+    step_idx = int(step_idx)
+    job = Job.query.filter_by(id=job_id).one_or_none()
+    if job is None:
+        abort(404, "Job not found")
+
+    token_info = users.get_token_info_from_request()
+    if not token_info:
+        abort(401, "Missing Authorization header or kk_session_token cookie")
+    access.check(token_info, job.run.flow.branch.project_id, 'view',
+                 'only superadmin, project admin, project power user and project viewer roles can fetch job logs')
+
+    try:
+        jld = JobLogDownloader(job_id, step_idx)
+    except OSError:
+        abort(500, 'Cannot connect to storage service')
+
+    log.info('serve_job_log %s', job)
+    response = Response(jld.download(), mimetype='plain/text')
+    path = 'step_log_%d_%d.txt' % (job_id, step_idx)
     response.headers['Content-Disposition'] = 'attachment; filename=' + path
     return response

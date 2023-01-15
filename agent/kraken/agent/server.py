@@ -161,6 +161,7 @@ class Server():
                    'step_idx': step_idx,
                    'result': result}
 
+        log.info('job %s step %s report %s', job_id, step_idx, result)
         response = _send_http_request(self.srv_addr, request)
 
         if 'cfg' in response:

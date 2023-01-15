@@ -253,8 +253,8 @@ def get_run_jobs(run_id, start=0, limit=10, include_covered=False, token_info=No
     q = q.offset(start).limit(limit)
     jobs = []
     for j in q.all():
-        j = j.get_json(mask_secrets=True)
-        jobs.append(j)
+        js = j.get_json(mask_secrets=True)
+        jobs.append(js)
     return {'items': jobs, 'total': total}, 200
 
 
@@ -327,7 +327,7 @@ def get_run(run_id, token_info=None):
     return run.get_json(), 200
 
 
-def  get_job_logs(job_id, start=0, limit=200, order=None, internals=False, filters=None, token_info=None):  # pylint: disable=unused-argument
+def get_job_logs(job_id, start=0, limit=200, order=None, internals=False, filters=None, token_info=None):  # pylint: disable=unused-argument
     if order not in [None, 'asc', 'desc']:
         abort(400, "incorrect order value: %s" % str(order))
 
@@ -364,6 +364,71 @@ def  get_job_logs(job_id, start=0, limit=200, order=None, internals=False, filte
     query = "select time,message,service,host,level,job,tool,step from logs where job = %%(job_id)d %s order by time %s, seq %s limit %%(start)d, %%(limit)d"
     query %= (internal_clause, order, order)
     params = dict(job_id=job_id, start=start, limit=limit)
+
+    rows = ch.execute(query, params)
+
+    logs = []
+    for r in rows:
+        entry = dict(time=r[0],
+                     message=r[1],
+                     service=r[2],
+                     host=r[3],
+                     level=r[4].lower()[:4],
+                     job=r[5],
+                     tool=r[6],
+                     step=r[7])
+        logs.append(entry)
+
+    return {'items': logs, 'total': total, 'job': job_json}, 200
+
+
+def get_job(job_id, token_info=None):
+    job = Job.query.filter_by(id=job_id).one_or_none()
+    if job is None:
+        abort(404, "Job not found")
+    access.check(token_info, job.run.stage.branch.project_id, 'view',
+                 'only superadmin, project admin, project power and project viewer user roles can get a job')
+
+    return job.get_json()
+
+
+def get_step_logs(job_id, step_idx, start=0, limit=200, order=None, internals=False, filters=None, token_info=None):  # pylint: disable=unused-argument
+    if order not in [None, 'asc', 'desc']:
+        abort(400, "incorrect order value: %s" % str(order))
+
+    if start < 0:
+        abort(400, "incorrect start value: %s" % str(start))
+
+    if limit < 0:
+        abort(400, "incorrect limit value: %s" % str(limit))
+
+    job = Job.query.filter_by(id=job_id).one_or_none()
+    if job is None:
+        abort(404, "Job not found")
+    access.check(token_info, job.run.stage.branch.project_id, 'view',
+                 'only superadmin, project admin, project power and project viewer user roles can get job logs')
+
+    job_json = job.get_json()
+
+    ch_url = os.environ.get('KRAKEN_CLICKHOUSE_URL', consts.DEFAULT_CLICKHOUSE_URL)
+    o = urlparse(ch_url)
+    ch = clickhouse_driver.Client(host=o.hostname)
+
+    internal_clause = ''
+    if not internals:
+        internal_clause = "and tool != '' and service = 'agent'"
+
+    query = "select count(*) from logs where job = %%(job_id)d and step = %%(step_idx)d %s" % internal_clause
+    params = dict(job_id=job_id, step_idx=step_idx)
+    resp = ch.execute(query, params)
+    total = resp[0][0]
+
+    if order is None:
+        order = 'asc'
+
+    query = "select time,message,service,host,level,job,tool,step from logs where job = %%(job_id)d and step = %%(step_idx)d %s order by time %s, seq %s limit %%(start)d, %%(limit)d"
+    query %= (internal_clause, order, order)
+    params = dict(job_id=job_id, step_idx=step_idx, start=start, limit=limit)
 
     rows = ch.execute(query, params)
 

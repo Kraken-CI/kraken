@@ -45,7 +45,12 @@ class SchemaCodeContext:
 def execute_schema_code(branch, schema_code, context=None):
     # TODO: use starlark-go for executing schema code
     # for now RestrictedPython is used
-    byte_code = compile_restricted(schema_code, '<inline>', 'exec')
+    try:
+        byte_code = compile_restricted(schema_code, '<inline>', 'exec')
+    except Exception as e:
+        log.exception('schema compilation exception')
+        msg = 'compilation error: ' + str(e)
+        raise SchemaError(msg) from e
 
     my_locals = {}
     my_globals = {'__builtins__': limited_builtins,
@@ -54,7 +59,12 @@ def execute_schema_code(branch, schema_code, context=None):
                   '_iter_unpack_sequence_': RestrictedPython.Guards.guarded_iter_unpack_sequence}
 
 
-    exec(byte_code, my_globals, my_locals)  # pylint: disable=exec-used
+    try:
+        exec(byte_code, my_globals, my_locals)  # pylint: disable=exec-used
+    except Exception as e:
+        log.exception('schema compilation exception')
+        msg = 'compilation error: ' + str(e)
+        raise SchemaError(msg) from e
 
     my_globals.update(my_locals)
     if context is None:
@@ -66,7 +76,12 @@ def execute_schema_code(branch, schema_code, context=None):
     my_globals['ctx'] = ctx
 
     my_locals2 = {}
-    exec('schema = stage(ctx)', my_globals, my_locals2)  # pylint: disable=exec-used
+    try:
+        exec('schema = stage(ctx)', my_globals, my_locals2)  # pylint: disable=exec-used
+    except Exception as e:
+        log.exception('schema compilation exception')
+        msg = 'compilation error: ' + str(e)
+        raise SchemaError(msg) from e
     schema = my_locals2['schema']
 
     # validate generated schema

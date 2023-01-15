@@ -222,9 +222,14 @@ async def _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeou
     done, _ = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
 
     for t in done:
-        if t.exception():
+        ex = None
+        try:
+            ex = t.exception()
+        except Exception as e:
+            ex = e
+        if ex:
             if not proc_coord.result:
-                proc_coord.result = {'status': 'error', 'reason': 'exception', 'msg': str(t.exception())}
+                proc_coord.result = {'status': 'error', 'reason': 'exception', 'msg': str(ex)}
 
     # stop internal http server if not stopped yet
     if tcp_server_task not in done:
@@ -296,6 +301,8 @@ def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
     tool_path = _get_tool(tools, tool_name, step)
 
     user = step.get('user', '')
+
+    rsp = srv.report_step_result(job_id, idx, {'status': 'in-progress'})
 
     step_file_path = _write_step_file(job_dir, step, idx)
 

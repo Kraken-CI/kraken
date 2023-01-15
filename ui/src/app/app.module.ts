@@ -102,7 +102,8 @@ import { Chart } from 'chart.js'
 import zoomPlugin from 'chartjs-plugin-zoom'
 import { ToolsPageComponent } from './tools-page/tools-page.component'
 import { UsersPageComponent } from './users-page/users-page.component'
-import { ChangePasswdDlgComponent } from './change-passwd-dlg/change-passwd-dlg.component'
+import { ChangePasswdDlgComponent } from './change-passwd-dlg/change-passwd-dlg.component';
+import { LogsPanelComponent } from './logs-panel/logs-panel.component'
 Chart.register(zoomPlugin)
 
 @NgModule({
@@ -138,6 +139,7 @@ Chart.register(zoomPlugin)
         ToolsPageComponent,
         UsersPageComponent,
         ChangePasswdDlgComponent,
+        LogsPanelComponent,
     ],
     imports: [
         BrowserModule,

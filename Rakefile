@@ -214,7 +214,9 @@ file './agent/venv/bin/kkagent' => './agent/venv/bin/python3' do
   end
 end
 
-task :run_agent => ['./agent/venv/bin/kkagent', :build_agent] do
+task :run_agent do  # => ['./agent/venv/bin/kkagent', :build_agent] do
+  sh "rm -f #{KK_AGENT_TGZ_PATH}"
+  Rake::Task["build_agent"].invoke
   sh 'cp server/kraken/server/consts.py agent/kraken/agent/'
   sh 'cp server/kraken/server/logs.py agent/kraken/agent/'
   sh 'rm -rf /tmp/kk-jobs/ /opt/kraken/*'
@@ -223,6 +225,7 @@ task :run_agent => ['./agent/venv/bin/kkagent', :build_agent] do
 end
 
 task :run_agent_in_docker do
+  sh "rm -f #{KK_AGENT_TGZ_PATH}"
   Rake::Task["build_agent"].invoke
   Dir.chdir('agent') do
     sh 'docker build -f docker-agent.txt -t kkagent .'

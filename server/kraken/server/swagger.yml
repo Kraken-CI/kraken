@@ -1491,6 +1491,32 @@ paths:
           description: Successfully created run
           content: {}
   /jobs/{job_id}:
+    get:
+      tags:
+      - Execution
+      summary: Get job details
+      operationId: get_job
+      parameters:
+      - name: job_id
+        in: path
+        description: ID of a job
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        200:
+          description: A job
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
     put:
       tags:
       - Execution
@@ -1544,6 +1570,66 @@ paths:
       operationId: get_job_logs
       parameters:
       - name: job_id
+        in: path
+        description: ID of pet to return
+        required: true
+        schema:
+          type: integer
+      - name: start
+        in: query
+        description: ID of pet to return
+        required: true
+        schema:
+          type: integer
+      - name: limit
+        in: query
+        description: ID of pet to return
+        required: true
+        schema:
+          type: integer
+      - name: order
+        in: query
+        description: ID of pet to return
+        schema:
+          type: string
+      - name: internals
+        in: query
+        description: ID of pet to return
+        schema:
+          type: boolean
+      - name: filters
+        in: query
+        description: ID of pet to return
+        schema:
+          type: string
+      responses:
+        200:
+          description: A paged array of logs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Logs'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /jobs/{job_id}/{step_idx}/logs:
+    get:
+      tags:
+      - Execution
+      summary: Get a step logs
+      description: Get a step logs
+      operationId: get_step_logs
+      parameters:
+      - name: job_id
+        in: path
+        description: ID of pet to return
+        required: true
+        schema:
+          type: integer
+      - name: step_idx
         in: path
         description: ID of pet to return
         required: true
