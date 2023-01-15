@@ -93,6 +93,11 @@
           <p-tabPanel header="Logs">
             <app-logs-panel [job]="job"></app-logs-panel>
           </p-tabPanel>
+          <!-- -->
+          <p-tabPanel header="Logs Old">
+            <app-log-box [jobId]="selectedJobId"></app-log-box>
+          </p-tabPanel>
+          <!-- -->
           <p-tabPanel header="Steps">
             <div *ngFor="let step of job.steps" style="margin-bottom: 10px;">
               <div style="font-size: 1.5em; font-weight: bold">{{ step.index + 1 }}. {{ step.name }}</div>

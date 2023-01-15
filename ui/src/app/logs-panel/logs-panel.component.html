@@ -1,0 +1,102 @@
+<div *ngIf="job && job.steps && stepsStates.length > 0" style="background-color: black; color: #ccc; height: calc(100vh - 300px); overflow-y: auto;">
+    <div *ngFor="let ss of stepsStates; let idx = index">
+        <ng-container *ngFor="let step of [stepsStates[idx].step]">
+        <div style="margin-bottom: 1px;"
+             [ngClass]="getStepHeadingClass(step)"
+             (click)="toggleStep(idx)">
+            <i class="mr-2 pi" [ngClass]="stepsStates[idx].expanded ? 'pi-angle-down' : 'pi-angle-right'"></i>
+            <i class="mr-3 text-sm"  [ngClass]="getStepStatusClass(step)"></i>
+            {{ idx + 1 }}.
+            {{ step.name }}
+        </div>
+        <ng-container *ngIf="ss.expanded">
+            <div class="mx-2 p-2 bg-gray-900">
+                <span class="pr-3">
+                    Status: {{ getStepStatus(step) }}
+                </span>
+                <ng-container *ngIf="step.result">
+                    <span *ngIf="step.result.duration >= 0" class="pr-3">
+                        Duration: {{ step.result.duration }}s
+                    </span>
+                    <ng-container *ngIf="step.result['reason']">
+                        <span class="pr-3">
+                            Reason: {{ step.result['reason'] }}
+                        </span>
+                        <span *ngIf="step.result['reason'] === 'step-timeout'">
+                            Timeout: {{ step.timeout || '60' }}s
+                        </span>
+                        <span *ngIf="step.result['reason'] !== 'step-timeout'">
+                            Message: <pre class="text-yellow-300 my-1">{{ step.result['msg'] }}</pre>
+                        </span>
+                    </ng-container>
+                </ng-container>
+            </div>
+            <div class="mx-5 flex">
+                <div class="p-1 m-1">
+                    {{ stepsStates[idx].start }}..{{ stepsStates[idx].end }} of {{ stepsStates[idx].total }} lines.
+                </div>
+                <div *ngIf="stepsStates[idx].start > 1"
+                     class="px-2 m-1 border-round-lg border-solid border-800 bg-gray-900 cursor-pointer
+                            transition-colors transition-duration-200 hover:bg-gray-800"
+                     (click)="loadPrevPage(idx)">load previous page</div>
+                <div *ngIf="stepsStates[idx].start > 1"
+                     class="px-2 m-1 border-round-lg border-solid border-800 bg-gray-900 cursor-pointer
+                            transition-colors transition-duration-200 hover:bg-gray-800"
+                     (click)="loadFirstPage(idx)">load the first page</div>
+                <div *ngIf="stepsStates[idx].total < 10000 && stepsStates[idx].logs.length < stepsStates[idx].total"
+                     class="p-1 m-1 border-round-lg border-solid border-800 bg-gray-900 cursor-pointer
+                            transition-colors transition-duration-200 hover:bg-gray-800"
+                     (click)="loadAllPages(idx)">load all</div>
+                <div class="p-1 m-1">
+                    <i class="pi pi-download mr-1"></i>
+                    <a [href]="'/bk/job_log/' + prvJob.id + '/' + idx" pTooltip="Download step logs"
+                       class="text-100">download log</a>
+                </div>
+            </div>
+            <div *ngIf="stepsStates[idx].logs && stepsStates[idx].logs.length > 0"
+                 class="py-1">
+                <div style="font-size: 12px; font-family: Menlo, DejaVu Sans Mono, Liberation Mono, Consolas, Ubuntu Mono, Courier New, andale mono, lucida console, monospace;">
+                    <div *ngFor="let l of stepsStates[idx].logs; let l_idx = index"
+                         class="flex">
+                        <div style="width: 3rem; color: #888; text-align: right; margin-right: 0.5rem; flex: none;">{{ stepsStates[idx].start + l_idx  }}</div>
+                        <div style="white-space: pre-wrap; overflow-x: auto; word-break: break-word; margin: 0;">{{ l.message }}</div>
+                    </div>
+                </div>
+            </div>
+            <div *ngIf="stepsStates[idx].end < stepsStates[idx].total" class="mb-1 flex">
+                <div style="width: 3rem; margin-right: 0.5rem;">
+                </div>
+                <div>
+                    ...
+                </div>
+            </div>
+            <div class="mx-5 my-1 flex">
+                <div class="p-1 m-1" *ngIf="stepsStates[idx].logs.length > 30">
+                    {{ stepsStates[idx].start }}..{{ stepsStates[idx].end }} of {{ stepsStates[idx].total }} lines.
+                </div>
+                <div *ngIf="stepsStates[idx].end < stepsStates[idx].total"
+                     class="p-1 m-1 border-round-lg border-solid border-800 bg-gray-900 cursor-pointer
+                            transition-colors transition-duration-200 hover:bg-gray-800"
+                     (click)="loadNextPage(idx, false)">load next page</div>
+                <div *ngIf="stepsStates[idx].end < stepsStates[idx].total"
+                     class="p-1 m-1 border-round-lg border-solid border-800 bg-gray-900 cursor-pointer
+                            transition-colors transition-duration-200 hover:bg-gray-800"
+                     (click)="loadLastPage(idx)">load the last page</div>
+                <div *ngIf="stepsStates[idx].total < 10000 && stepsStates[idx].logs.length < stepsStates[idx].total"
+                     class="p-1 m-1 border-round-lg border-solid border-800 bg-gray-900 cursor-pointer
+                            transition-colors transition-duration-200 hover:bg-gray-800"
+                     (click)="loadAllPages(idx)">load all</div>
+
+                <div *ngIf="stepsStates[idx].loading" class="p-1 m-1 flex">
+                    <div style="width: 3rem; margin-right: 0.5rem;">
+                    </div>
+                    <div>
+                        <i class="pi pi-spin pi-spinner"></i>
+                        loading...
+                    </div>
+                </div>
+            </div>
+        </ng-container>
+        </ng-container>
+    </div>
+</div>
