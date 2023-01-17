@@ -1,7 +1,4 @@
-FROM krakenci/srv-builder as builder
-
-# libsasl2-dev
-RUN apt-get update && apt-get install -y --no-install-recommends supervisor gcc python3-dev libldap-dev libsasl2-dev && rm -rf /var/lib/apt/lists/*
+FROM krakenci/srv-builder:202301171057 as builder
 
 # install python dependencies first
 COPY pyproject.toml poetry.lock /server/
@@ -19,7 +16,7 @@ RUN \
 
 
 ##############################################################################################################
-FROM krakenci/srv-base as controller
+FROM krakenci/srv-base:202301171056 as controller
 RUN apt-get update && apt-get install -y --no-install-recommends supervisor && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /venv /venv
 COPY supervisor.conf /etc/supervisor.conf
@@ -29,8 +26,8 @@ LABEL kkver=${kkver} kkname=server
 
 
 ##############################################################################################################
-FROM krakenci/srv-base as server
-RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates && rm -rf /var/lib/apt/lists/*
+FROM krakenci/srv-base:202301171056 as server
+RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
 WORKDIR /server
 COPY --from=builder /venv /venv
 COPY kkagent /server
@@ -42,8 +39,8 @@ LABEL kkver=${kkver} kkname=server
 
 
 ##############################################################################################################
-FROM krakenci/srv-base as rq
-RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates && rm -rf /var/lib/apt/lists/*
+FROM krakenci/srv-base:202301171056 as rq
+RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
 WORKDIR /server
 RUN groupadd user && useradd --create-home --home-dir /home/user -g user user
 USER user

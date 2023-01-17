@@ -1,12 +1,12 @@
-FROM krakenci/srv-base
+FROM krakenci/srv-base:202301171056
 
 ENV \
         PIP_DEFAULT_TIMEOUT=100 \
         PIP_DISABLE_PIP_VERSION_CHECK=1 \
         PIP_NO_CACHE_DIR=1 \
-        POETRY_VERSION=1.1.10
+        POETRY_VERSION=1.2.2
 
-RUN apt-get update && apt-get install -y --no-install-recommends python3-pip python3-venv && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends python3-pip python3-venv python3-dev gcc libldap-dev libsasl2-dev && rm -rf /var/lib/apt/lists/*
 RUN pip3 install poetry==$POETRY_VERSION
 RUN python3 -m venv /venv && /venv/bin/pip install -U pip
 

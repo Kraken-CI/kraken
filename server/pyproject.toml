@@ -61,6 +61,7 @@ kubernetes = "^20.13.0"
 casbin = "^1.17.1"
 python-ldap = "^3.4.3"
 Authlib = "^1.1.0"
+setuptools = "^66.0.0"  # required by apscheduler
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.2"

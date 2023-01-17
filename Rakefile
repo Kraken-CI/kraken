@@ -40,6 +40,9 @@ kk_ver = ENV['kk_ver'] || '0.0'
 ENV['KRAKEN_VERSION'] = kk_ver
 KRAKEN_VERSION_FILE = File.expand_path("kraken-version-#{kk_ver}.txt")
 
+now = Time.new
+kk_stamp = now.strftime('%Y%m%d%H%M')
+
 helm_dest = '.'
 if ENV['helm_dest']
   helm_dest = ENV['helm_dest']
@@ -483,15 +486,15 @@ end
 
 task :docker_srv_builder do
   Dir.chdir('server') do
-    sh 'docker build -f docker-builder.txt -t krakenci/srv-builder .'
-    sh 'docker push krakenci/srv-builder:latest'
+    sh "docker build -f docker-builder.txt -t krakenci/srv-builder:#{kk_stamp} ."
+    sh "docker push krakenci/srv-builder:#{kk_stamp}"
   end
 end
 
 task :docker_srv_base do
   Dir.chdir('server') do
-    sh 'docker build -f docker-base.txt -t krakenci/srv-base .'
-    sh 'docker push krakenci/srv-base:latest'
+    sh "docker build -f docker-base.txt -t krakenci/srv-base:#{kk_stamp} ."
+    sh "docker push krakenci/srv-base:#{kk_stamp}"
   end
 end
 
