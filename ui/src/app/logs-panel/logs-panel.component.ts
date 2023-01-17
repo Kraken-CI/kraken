@@ -119,7 +119,7 @@ export class LogsPanelComponent implements OnInit, OnDestroy, AfterViewInit {
         let start = 0
         let limit = stepLogsState.total
         this.subs.add(
-            this.executionService.getStepLogs(this.prvJob.id, stepIdx, start, limit, 'asc').subscribe(
+            this.executionService.getStepLogs(this.prvJob.id, stepIdx, start, limit, 'asc', this.logInternals).subscribe(
                 (data) => {
                     stepLogsState.logs = data.items
                     stepLogsState.total = data.total
@@ -139,7 +139,7 @@ export class LogsPanelComponent implements OnInit, OnDestroy, AfterViewInit {
         let start = 0
         let limit = 100
         this.subs.add(
-            this.executionService.getStepLogs(this.prvJob.id, stepIdx, start, limit, 'asc').subscribe(
+            this.executionService.getStepLogs(this.prvJob.id, stepIdx, start, limit, 'asc', this.logInternals).subscribe(
                 (data) => {
                     stepLogsState.logs = data.items
                     stepLogsState.total = data.total
@@ -163,7 +163,7 @@ export class LogsPanelComponent implements OnInit, OnDestroy, AfterViewInit {
             start = 0
         }
         this.subs.add(
-            this.executionService.getStepLogs(this.prvJob.id, stepIdx, start, limit, 'asc').subscribe(
+            this.executionService.getStepLogs(this.prvJob.id, stepIdx, start, limit, 'asc', this.logInternals).subscribe(
                 (data) => {
                     stepLogsState.logs = data.items.concat(stepLogsState.logs)
                     stepLogsState.total = data.total
@@ -182,7 +182,7 @@ export class LogsPanelComponent implements OnInit, OnDestroy, AfterViewInit {
         let start = stepLogsState.end
         let limit = 100
         this.subs.add(
-            this.executionService.getStepLogs(this.prvJob.id, stepIdx, start, limit, 'asc').subscribe(
+            this.executionService.getStepLogs(this.prvJob.id, stepIdx, start, limit, 'asc', this.logInternals).subscribe(
                 (data) => {
                     stepLogsState.logs = stepLogsState.logs.concat(data.items)
                     stepLogsState.total = data.total
@@ -203,7 +203,7 @@ export class LogsPanelComponent implements OnInit, OnDestroy, AfterViewInit {
         let stepLogsState = this.stepsStates[stepIdx]
         stepLogsState.loading = true
         this.subs.add(
-            this.executionService.getStepLogs(this.prvJob.id, stepIdx, 0, 100, 'desc').subscribe(
+            this.executionService.getStepLogs(this.prvJob.id, stepIdx, 0, 100, 'desc', this.logInternals).subscribe(
                 (data) => {
                     stepLogsState.logs = data.items.reverse()
                     stepLogsState.total = data.total
@@ -258,7 +258,7 @@ export class LogsPanelComponent implements OnInit, OnDestroy, AfterViewInit {
     getStepHeadingClass(step) {
         let stepLogsState = this.stepsStates[step.index]
 
-        let classes = 'flex sticky top-0 z-1 align-content-center p-2 cursor-pointer transition-colors transition-duration-200'
+        let classes = 'flex justify-content-between align-items-baseline sticky top-0 z-1 p-2 cursor-pointer transition-colors transition-duration-200'
 
         if (stepLogsState.expanded) {
             classes += ' font-semibold bg-gray-800 hover:bg-gray-700'
@@ -363,6 +363,12 @@ export class LogsPanelComponent implements OnInit, OnDestroy, AfterViewInit {
     toggleTimestamps(stepIdx) {
         event.stopPropagation()
         this.logTimestamps = !this.logTimestamps
+        this.loadLastPage(stepIdx)
+    }
+
+    toggleInternals(stepIdx) {
+        event.stopPropagation()
+        this.logInternals = !this.logInternals
         this.loadLastPage(stepIdx)
     }
 
