@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Input } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { Pipe, PipeTransform } from '@angular/core'
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser'
 
@@ -14,7 +14,9 @@ import { ExecutionService } from '../backend/api/execution.service'
   templateUrl: './logs-panel.component.html',
   styleUrls: ['./logs-panel.component.sass']
 })
-export class LogsPanelComponent implements OnInit, OnDestroy {
+export class LogsPanelComponent implements OnInit, OnDestroy, AfterViewInit {
+    @ViewChild('logPanel') logPanel: ElementRef
+    logPanelEl: any
 
     prvJob: any
     @Input()
@@ -43,6 +45,9 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
     timer: any = null
     lastLogChecksCount = 0
 
+    logInternals = false
+    logTimestamps = false
+
     private subs: Subscription = new Subscription()
 
     constructor(protected executionService: ExecutionService) {
@@ -50,6 +55,10 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         this.resetState()
+    }
+
+    ngAfterViewInit() {
+        // TODO this.logPanelEl = this.logPanel.nativeElement
     }
 
     resetState() {
@@ -249,7 +258,7 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
     getStepHeadingClass(step) {
         let stepLogsState = this.stepsStates[step.index]
 
-        let classes = 'flex align-content-center p-2 cursor-pointer transition-colors transition-duration-200'
+        let classes = 'flex sticky top-0 z-1 align-content-center p-2 cursor-pointer transition-colors transition-duration-200'
 
         if (stepLogsState.expanded) {
             classes += ' font-semibold bg-gray-800 hover:bg-gray-700'
@@ -306,7 +315,7 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
         let kv = {}
 
         for (const [key, value] of Object.entries(step)) {
-            if (['id', 'index', 'job_id', 'name', 'result', 'status',
+            if (['env', 'id', 'index', 'job_id', 'name', 'result', 'status',
                  'tool', 'tool_entry', 'tool_id', 'tool_location',
                  'tool_version'].includes(key)) {
                 continue
@@ -318,5 +327,51 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
             kv['script'] = t + '...'
         }
         return kv
+    }
+
+    prepareLogLine(stepState, line) {
+        const currTs = line.slice(0, 23)
+        const currTsObj = DateTime.fromFormat(
+            currTs,
+            'yyyy-MM-dd HH:mm:ss,SSS'
+        )
+        if (this.logTimestamps) {
+            // fix missing timestamps
+            if (currTsObj.isValid) {
+                stepState.prevTs = currTs
+            } else if (stepState.prevTs) {
+                line = stepState.prevTs + ' ' + line
+            }
+        } else {
+            // strip timestamps
+            if (currTsObj.isValid) {
+                line = line.slice(24)
+            }
+        }
+
+        // // turn ansi codes into spans with css colors
+        // const p = parse(l.message)
+        // const spans = []
+        // for (const el of p.spans) {
+        //     spans.push(`<span style="${el.css}">${el.text}</span>`)
+        // }
+        // l.message = spans.join('')
+
+        return line
+    }
+
+    toggleTimestamps(stepIdx) {
+        event.stopPropagation()
+        this.logTimestamps = !this.logTimestamps
+        this.loadLastPage(stepIdx)
+    }
+
+    scrollToStepBottom(event, idx) {
+        // this.logPanelEl.scroll({
+        //     top: this.logPanelEl.scrollHeight,
+        //     left: 0,
+        // })
+        event.stopPropagation()
+        console.info('bottom')
     }
 }

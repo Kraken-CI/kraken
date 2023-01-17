@@ -1,14 +1,25 @@
-<div *ngIf="job && job.steps && stepsStates.length > 0" style="background-color: black; color: #ccc; height: calc(100vh - 300px); overflow-y: auto;">
+<div *ngIf="job && job.steps && stepsStates.length > 0"
+     style="background-color: black; color: #ccc; height: calc(100vh - 300px); overflow-y: auto;"
+     #logPanel
+     >
     <div *ngFor="let ss of stepsStates; let idx = index">
         <ng-container *ngFor="let step of [stepsStates[idx].step]">
+        <!-- step heading -->
         <div style="margin-bottom: 1px;"
              [ngClass]="getStepHeadingClass(step)"
              (click)="toggleStep(idx)">
             <i class="mr-2 pi" [ngClass]="stepsStates[idx].expanded ? 'pi-angle-down' : 'pi-angle-right'"></i>
             <i class="mr-3 text-sm"  [ngClass]="getStepStatusClass(step)"></i>
-            {{ idx + 1 }}.
-            {{ step.name }}
+            <div>
+                {{ idx + 1 }}.
+                {{ step.name }}
+            </div>
+            <div *ngIf="ss.expanded"
+                class="px-1 ml-auto mr-0 my-0 border-round-lg border-1 border-solid border-800 bg-gray-900 cursor-pointer
+                        transition-colors transition-duration-200 hover:bg-gray-600 font-normal"
+                 (click)="toggleTimestamps(idx)">timestamps</div>
         </div>
+        <!-- expanded step content -->
         <ng-container *ngIf="ss.expanded">
             <!-- step status bar -->
             <div class="mx-2 p-2 bg-gray-900">
@@ -34,10 +45,10 @@
                     </ng-container>
                 </div>
                 <div class="flex flex-wrap">
-                    <div class="mr-4" style="white-space: nowrap;">
+                    <div class="mr-4 white-space-nowrap">
                         <span class="text-600">Tool:</span> {{ step.tool }}@{{ step.tool_version }}
                     </div>
-                    <div *ngFor="let it of getStepInfo(step) | keyvalue" class="mr-4" style="white-space: nowrap;">
+                    <div *ngFor="let it of getStepInfo(step) | keyvalue" class="mr-4 white-space-nowrap">
                         <span class="text-600">{{ it.key }}:</span> {{ it.value }}
                     </div>
                 </div>
@@ -75,12 +86,18 @@
             </div>
             <!-- step logs -->
             <div *ngIf="stepsStates[idx].logs && stepsStates[idx].logs.length > 0"
-                 class="py-1">
+                 class="py-1 relative">
+
+                <div class="px-2 mr-3 mt-2 border-round-lg border-1 border-solid border-800 bg-gray-900 cursor-pointer
+                            transition-colors transition-duration-200 hover:bg-gray-600 font-normal
+                            absolute right-0 top-0"
+                 (click)="scrollToStepBottom($event, idx)">bottom</div>
+
                 <div style="font-size: 12px; font-family: Menlo, DejaVu Sans Mono, Liberation Mono, Consolas, Ubuntu Mono, Courier New, andale mono, lucida console, monospace;">
                     <div *ngFor="let l of stepsStates[idx].logs; let l_idx = index"
                          class="flex">
                         <div style="width: 3rem; color: #888; text-align: right; margin-right: 0.5rem; flex: none;">{{ stepsStates[idx].start + l_idx  }}</div>
-                        <div style="white-space: pre-wrap; overflow-x: auto; word-break: break-word; margin: 0;">{{ l.message }}</div>
+                        <div style="white-space: pre-wrap; overflow-x: auto; word-break: break-word; margin: 0;">{{ prepareLogLine(stepsStates[idx], l.message) }}</div>
                     </div>
                 </div>
             </div>
