@@ -301,4 +301,22 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
                 return 'unknown'
         }
     }
+
+    getStepInfo(step) {
+        let kv = {}
+
+        for (const [key, value] of Object.entries(step)) {
+            if (['id', 'index', 'job_id', 'name', 'result', 'status',
+                 'tool', 'tool_entry', 'tool_id', 'tool_location',
+                 'tool_version'].includes(key)) {
+                continue
+            }
+            kv[key] = value
+        }
+        if (kv['script']) {
+            let t = kv['script'].trim().split(/\r?\n/)[0]
+            kv['script'] = t + '...'
+        }
+        return kv
+    }
 }
