@@ -9,6 +9,7 @@ venv
 /agent/kraken/agent/consts.py
 /agent/kraken/agent/logs.py
 /agent/kraken_agent.egg-info
+/agent/build/
 /agent/dist-agent/
 /agent/dist-tool/
 /agent/kkagent
