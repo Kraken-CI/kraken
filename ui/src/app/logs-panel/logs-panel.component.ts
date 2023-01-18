@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Input, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, ViewChild, ElementRef, ViewChildren, QueryList } from '@angular/core';
 import { Pipe, PipeTransform } from '@angular/core'
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser'
 
@@ -14,9 +14,9 @@ import { ExecutionService } from '../backend/api/execution.service'
   templateUrl: './logs-panel.component.html',
   styleUrls: ['./logs-panel.component.sass']
 })
-export class LogsPanelComponent implements OnInit, OnDestroy, AfterViewInit {
+export class LogsPanelComponent implements OnInit, OnDestroy {
     @ViewChild('logPanel') logPanel: ElementRef
-    logPanelEl: any
+    @ViewChildren('logStep') logSteps: QueryList<any>
 
     prvJob: any
     @Input()
@@ -54,10 +54,6 @@ export class LogsPanelComponent implements OnInit, OnDestroy, AfterViewInit {
 
     ngOnInit(): void {
         this.resetState()
-    }
-
-    ngAfterViewInit() {
-        // TODO this.logPanelEl = this.logPanel.nativeElement
     }
 
     resetState() {
@@ -372,11 +368,30 @@ export class LogsPanelComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     scrollToStepBottom(event, idx) {
-        // this.logPanelEl.scroll({
-        //     top: this.logPanelEl.scrollHeight,
-        //     left: 0,
-        // })
         event.stopPropagation()
         console.info('bottom')
+
+        if (!this.logPanel) {
+            console.info('no logPanel yet')
+            return
+        }
+        let logPanelEl = this.logPanel.nativeElement
+
+        let logStepEls = this.logSteps.toArray()
+        if (logStepEls.length === 0) {
+            return
+        }
+        let firstLogStepEl = logStepEls[idx].nativeElement
+        let currLogStepEl = logStepEls[idx].nativeElement
+
+        let scrollTo = currLogStepEl.offsetTop + currLogStepEl.offsetHeight - logPanelEl.offsetHeight - firstLogStepEl.offsetTop + 30
+        if (scrollTo < 0) {
+            scrollTo = 0
+        }
+
+        logPanelEl.scroll({
+            top: scrollTo,
+            left: 0,
+        })
     }
 }

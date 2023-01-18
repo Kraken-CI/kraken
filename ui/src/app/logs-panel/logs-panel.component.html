@@ -1,8 +1,7 @@
 <div *ngIf="job && job.steps && stepsStates.length > 0"
-     style="background-color: black; color: #ccc; height: calc(100vh - 300px); overflow-y: auto;"
      #logPanel
-     >
-    <div *ngFor="let ss of stepsStates; let idx = index">
+     style="background-color: black; color: #ccc; height: calc(100vh - 300px); overflow-y: auto;">
+    <div *ngFor="let ss of stepsStates; let idx = index" #logStep>
         <ng-container *ngFor="let step of [stepsStates[idx].step]">
         <!-- step heading -->
         <div style="margin-bottom: 1px;"
