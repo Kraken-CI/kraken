@@ -39,7 +39,6 @@ export class LogsPanelComponent implements OnInit, OnDestroy, AfterViewInit {
         return this.prvJob
     }
 
-    //job: any = null
     stepsStates: any = []
 
     timer: any = null
@@ -349,13 +348,13 @@ export class LogsPanelComponent implements OnInit, OnDestroy, AfterViewInit {
             }
         }
 
-        // // turn ansi codes into spans with css colors
-        // const p = parse(l.message)
-        // const spans = []
-        // for (const el of p.spans) {
-        //     spans.push(`<span style="${el.css}">${el.text}</span>`)
-        // }
-        // l.message = spans.join('')
+        // turn ansi codes into spans with css colors
+        const p = parse(line)
+        const spans = []
+        for (const el of p.spans) {
+            spans.push(`<span style="${el.css}">${el.text}</span>`)
+        }
+        line = spans.join('')
 
         return line
     }

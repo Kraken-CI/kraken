@@ -100,7 +100,9 @@
                          class="flex">
                         <div style="width: 3rem; color: #888; text-align: right; margin-right: 0.5rem; flex: none;">{{ stepsStates[idx].start + l_idx  }}</div>
                         <div *ngIf="logInternals" style="width: 4em; color: #888; text-align: right; margin-right: 0.5em; flex: none;">{{ l.service }}</div>
-                        <div style="white-space: pre-wrap; overflow-x: auto; word-break: break-word; margin: 0;">{{ prepareLogLine(stepsStates[idx], l.message) }}</div>
+                        <div style="white-space: pre-wrap; overflow-x: auto; word-break: break-word; margin: 0;"
+                             [innerHTML]="prepareLogLine(stepsStates[idx], l.message) | noSanitize">
+                        </div>
                     </div>
                 </div>
             </div>
