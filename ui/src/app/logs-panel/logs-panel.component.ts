@@ -1,4 +1,13 @@
-import { Component, OnInit, OnDestroy, Input, ViewChild, ElementRef, ViewChildren, QueryList } from '@angular/core';
+import {
+    Component,
+    OnInit,
+    OnDestroy,
+    Input,
+    ViewChild,
+    ElementRef,
+    ViewChildren,
+    QueryList,
+} from '@angular/core'
 import { Pipe, PipeTransform } from '@angular/core'
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser'
 
@@ -10,9 +19,9 @@ import { DateTime } from 'luxon'
 import { ExecutionService } from '../backend/api/execution.service'
 
 @Component({
-  selector: 'app-logs-panel',
-  templateUrl: './logs-panel.component.html',
-  styleUrls: ['./logs-panel.component.sass']
+    selector: 'app-logs-panel',
+    templateUrl: './logs-panel.component.html',
+    styleUrls: ['./logs-panel.component.sass'],
 })
 export class LogsPanelComponent implements OnInit, OnDestroy {
     @ViewChild('logPanel') logPanel: ElementRef
@@ -24,9 +33,7 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
         let prevJob = this.prvJob
         this.prvJob = job
 
-        if ((!prevJob && job) ||
-            (prevJob && !job) ||
-            (prevJob.id !== job.id)) {
+        if ((!prevJob && job) || (prevJob && !job) || prevJob.id !== job.id) {
             this.resetState()
             // TODO: maybe add some jobs states caching
         }
@@ -51,8 +58,7 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
 
     private subs: Subscription = new Subscription()
 
-    constructor(protected executionService: ExecutionService) {
-    }
+    constructor(protected executionService: ExecutionService) {}
 
     ngOnInit(): void {
         this.resetState()
@@ -85,7 +91,7 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
                     logs: [],
                     total: 0,
                     start: 0,
-                    end: 0
+                    end: 0,
                 })
             }
         } else {
@@ -107,7 +113,6 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
         if (stepLogsState.expanded) {
             this.loadLastPage(stepIdx)
         }
-
     }
 
     loadAllPages(stepIdx) {
@@ -116,17 +121,25 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
         let start = 0
         let limit = stepLogsState.total
         this.subs.add(
-            this.executionService.getStepLogs(this.prvJob.id, stepIdx, start, limit, 'asc', this.logInternals).subscribe(
-                (data) => {
-                    stepLogsState.logs = data.items
-                    stepLogsState.total = data.total
-                    stepLogsState.start = 1
-                    stepLogsState.end = limit
-                    stepLogsState.loading = false
-                },
-                (err) => {
-                }
-            )
+            this.executionService
+                .getStepLogs(
+                    this.prvJob.id,
+                    stepIdx,
+                    start,
+                    limit,
+                    'asc',
+                    this.logInternals
+                )
+                .subscribe(
+                    (data) => {
+                        stepLogsState.logs = data.items
+                        stepLogsState.total = data.total
+                        stepLogsState.start = 1
+                        stepLogsState.end = limit
+                        stepLogsState.loading = false
+                    },
+                    (err) => {}
+                )
         )
     }
 
@@ -136,17 +149,25 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
         let start = 0
         let limit = 100
         this.subs.add(
-            this.executionService.getStepLogs(this.prvJob.id, stepIdx, start, limit, 'asc', this.logInternals).subscribe(
-                (data) => {
-                    stepLogsState.logs = data.items
-                    stepLogsState.total = data.total
-                    stepLogsState.start = 1
-                    stepLogsState.end = limit
-                    stepLogsState.loading = false
-                },
-                (err) => {
-                }
-            )
+            this.executionService
+                .getStepLogs(
+                    this.prvJob.id,
+                    stepIdx,
+                    start,
+                    limit,
+                    'asc',
+                    this.logInternals
+                )
+                .subscribe(
+                    (data) => {
+                        stepLogsState.logs = data.items
+                        stepLogsState.total = data.total
+                        stepLogsState.start = 1
+                        stepLogsState.end = limit
+                        stepLogsState.loading = false
+                    },
+                    (err) => {}
+                )
         )
     }
 
@@ -160,16 +181,26 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
             start = 0
         }
         this.subs.add(
-            this.executionService.getStepLogs(this.prvJob.id, stepIdx, start, limit, 'asc', this.logInternals).subscribe(
-                (data) => {
-                    stepLogsState.logs = data.items.concat(stepLogsState.logs)
-                    stepLogsState.total = data.total
-                    stepLogsState.start = start + 1
-                    stepLogsState.loading = false
-                },
-                (err) => {
-                }
-            )
+            this.executionService
+                .getStepLogs(
+                    this.prvJob.id,
+                    stepIdx,
+                    start,
+                    limit,
+                    'asc',
+                    this.logInternals
+                )
+                .subscribe(
+                    (data) => {
+                        stepLogsState.logs = data.items.concat(
+                            stepLogsState.logs
+                        )
+                        stepLogsState.total = data.total
+                        stepLogsState.start = start + 1
+                        stepLogsState.loading = false
+                    },
+                    (err) => {}
+                )
         )
     }
 
@@ -179,20 +210,30 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
         let start = stepLogsState.end
         let limit = 100
         this.subs.add(
-            this.executionService.getStepLogs(this.prvJob.id, stepIdx, start, limit, 'asc', this.logInternals).subscribe(
-                (data) => {
-                    stepLogsState.logs = stepLogsState.logs.concat(data.items)
-                    stepLogsState.total = data.total
-                    stepLogsState.end += data.items.length
-                    stepLogsState.loading = false
+            this.executionService
+                .getStepLogs(
+                    this.prvJob.id,
+                    stepIdx,
+                    start,
+                    limit,
+                    'asc',
+                    this.logInternals
+                )
+                .subscribe(
+                    (data) => {
+                        stepLogsState.logs = stepLogsState.logs.concat(
+                            data.items
+                        )
+                        stepLogsState.total = data.total
+                        stepLogsState.end += data.items.length
+                        stepLogsState.loading = false
 
-                    if (carryOn) {
-                        this.continueLogLoadingIfNeeded(stepIdx)
-                    }
-                },
-                (err) => {
-                }
-            )
+                        if (carryOn) {
+                            this.continueLogLoadingIfNeeded(stepIdx)
+                        }
+                    },
+                    (err) => {}
+                )
         )
     }
 
@@ -200,19 +241,27 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
         let stepLogsState = this.stepsStates[stepIdx]
         stepLogsState.loading = true
         this.subs.add(
-            this.executionService.getStepLogs(this.prvJob.id, stepIdx, 0, 100, 'desc', this.logInternals).subscribe(
-                (data) => {
-                    stepLogsState.logs = data.items.reverse()
-                    stepLogsState.total = data.total
-                    stepLogsState.start = data.total - data.items.length + 1
-                    stepLogsState.end = data.total
-                    stepLogsState.loading = false
+            this.executionService
+                .getStepLogs(
+                    this.prvJob.id,
+                    stepIdx,
+                    0,
+                    100,
+                    'desc',
+                    this.logInternals
+                )
+                .subscribe(
+                    (data) => {
+                        stepLogsState.logs = data.items.reverse()
+                        stepLogsState.total = data.total
+                        stepLogsState.start = data.total - data.items.length + 1
+                        stepLogsState.end = data.total
+                        stepLogsState.loading = false
 
-                    this.continueLogLoadingIfNeeded(stepIdx)
-                },
-                (err) => {
-                }
-            )
+                        this.continueLogLoadingIfNeeded(stepIdx)
+                    },
+                    (err) => {}
+                )
         )
     }
 
@@ -233,7 +282,14 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
         } else {
             let waitTime = 3000
             let step = this.job.steps[stepIdx]
-            console.info('STEP idx:', stepIdx, 'status:', step.status, 'chk cnt:', this.lastLogChecksCount)
+            console.info(
+                'STEP idx:',
+                stepIdx,
+                'status:',
+                step.status,
+                'chk cnt:',
+                this.lastLogChecksCount
+            )
             if (step.status !== 1) {
                 this.lastLogChecksCount += 1
                 if (this.lastLogChecksCount === 4) {
@@ -259,7 +315,8 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
     getStepHeadingClass(step) {
         let stepLogsState = this.stepsStates[step.index]
 
-        let classes = 'flex justify-content-between align-items-baseline sticky top-0 z-1 p-2 cursor-pointer transition-colors transition-duration-200'
+        let classes =
+            'flex justify-content-between align-items-baseline sticky top-0 z-1 p-2 cursor-pointer transition-colors transition-duration-200'
 
         if (stepLogsState.expanded) {
             classes += ' font-semibold bg-gray-800 hover:bg-gray-700'
@@ -267,7 +324,8 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
             classes += ' font-normal bg-gray-900 hover:bg-gray-800'
         }
 
-        if (step.status === 1) { // in-progress
+        if (step.status === 1) {
+            // in-progress
             classes += ' step-heading-pulse'
         } else {
             if (stepLogsState.expanded) {
@@ -282,13 +340,13 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
 
     getStepStatusClass(step) {
         switch (step.status) {
-            case 0:  // not-started
+            case 0: // not-started
                 return 'pi pi-circle text-gray-600'
-            case 1:  // in-progress
+            case 1: // in-progress
                 return 'pi pi-spin pi-spinner text-blue-400'
-            case 2:  // done
+            case 2: // done
                 return 'pi pi-check-circle text-green-400'
-            case 3:  // error
+            case 3: // error
                 return 'pi pi-exclamation-circle text-red-400'
             default:
                 return 'pi pi-circle text-gray-600'
@@ -316,9 +374,22 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
         let kv = {}
 
         for (const [key, value] of Object.entries(step)) {
-            if (['env', 'id', 'index', 'job_id', 'name', 'result', 'status',
-                 'tool', 'tool_entry', 'tool_id', 'tool_location',
-                 'tool_version'].includes(key)) {
+            if (
+                [
+                    'env',
+                    'id',
+                    'index',
+                    'job_id',
+                    'name',
+                    'result',
+                    'status',
+                    'tool',
+                    'tool_entry',
+                    'tool_id',
+                    'tool_location',
+                    'tool_version',
+                ].includes(key)
+            ) {
                 continue
             }
             kv[key] = value
@@ -332,10 +403,7 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
 
     prepareLogLine(stepState, line) {
         const currTs = line.slice(0, 23)
-        const currTsObj = DateTime.fromFormat(
-            currTs,
-            'yyyy-MM-dd HH:mm:ss,SSS'
-        )
+        const currTsObj = DateTime.fromFormat(currTs, 'yyyy-MM-dd HH:mm:ss,SSS')
         if (this.logTimestamps) {
             // fix missing timestamps
             if (currTsObj.isValid) {
@@ -390,7 +458,12 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
         let firstLogStepEl = logStepEls[idx].nativeElement
         let currLogStepEl = logStepEls[idx].nativeElement
 
-        let scrollTo = currLogStepEl.offsetTop + currLogStepEl.offsetHeight - logPanelEl.offsetHeight - firstLogStepEl.offsetTop + 30
+        let scrollTo =
+            currLogStepEl.offsetTop +
+            currLogStepEl.offsetHeight -
+            logPanelEl.offsetHeight -
+            firstLogStepEl.offsetTop +
+            30
         if (scrollTo < 0) {
             scrollTo = 0
         }

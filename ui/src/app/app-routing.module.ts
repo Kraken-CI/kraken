@@ -37,12 +37,12 @@ const routes: Routes = [
     {
         path: 'branches/:id/ci',
         component: BranchResultsComponent,
-        data: {kind: 'ci'},
+        data: { kind: 'ci' },
     },
     {
         path: 'branches/:id/dev',
         component: BranchResultsComponent,
-        data: {kind: 'dev'},
+        data: { kind: 'dev' },
     },
     {
         path: 'branches/:id/:tab',
