@@ -98,33 +98,6 @@
             <app-log-box [jobId]="selectedJobId"></app-log-box>
           </p-tabPanel>
           <!-- -->
-          <p-tabPanel header="Steps">
-            <div *ngFor="let step of job.steps" style="margin-bottom: 10px;">
-              <div style="font-size: 1.5em; font-weight: bold">{{ step.index + 1 }}. {{ step.name }}</div>
-              <div>
-                  tool: {{ step.tool }}@{{ step.tool_version }}
-              </div>
-              <div>
-                {{ getStepInfo(step) }}
-              </div>
-              <div>
-                Status: <i style="vertical-align: baseline;" [ngClass]="getStepStatusClass(step)"></i> {{ getStepStatus(step) }}
-              </div>
-              <div *ngIf="step.result && step.result.duration >= 0">
-                Duration: {{ step.result.duration }}s
-              </div>
-              <div *ngIf="step.result && step.result['reason']">
-                Reason: {{ step.result['reason'] }}
-                <div *ngIf="step.result['reason'] === 'step-timeout'">
-                  Timeout: {{ step.timeout || '60' }}s
-                  <br>
-                </div>
-                <div *ngIf="step.result['reason'] !== 'step-timeout'">
-                  <pre>{{ step.result['msg'] }}</pre>
-                </div>
-              </div>
-            </div>
-          </p-tabPanel>
           <p-tabPanel header="Details">
             <table>
               <tr><td colspan="2" style="font-weight: bold; font-size: 1.2em;">Spec</td></tr>

@@ -501,38 +501,6 @@ export class RunResultsComponent implements OnInit, OnDestroy {
         }
     }
 
-    getStepStatus(step) {
-        switch (step.status) {
-            case null:
-                return 'not started'
-            case 0:
-                return 'not started'
-            case 1:
-                return 'in progress'
-            case 2:
-                return 'done'
-            case 3:
-                return 'error'
-            default:
-                return 'unknown'
-        }
-    }
-
-    getStepStatusClass(step) {
-        switch (step.status) {
-            case 0:
-                return 'not started'
-            case 1:
-                return 'pi pi-spin pi-spinner'
-            case 2:
-                return 'pi pi-check-circle step-status-green'
-            case 3:
-                return 'pi pi-exclamation-circle step-status-red'
-            default:
-                return ''
-        }
-    }
-
     coveredChange(jobsTable) {
         this.refreshJobs(jobsTable)
     }
@@ -627,19 +595,5 @@ export class RunResultsComponent implements OnInit, OnDestroy {
                 }
             )
         )
-    }
-
-    getStepInfo(step) {
-        switch (step.tool) {
-            case 'shell':
-                if (step.script) {
-                    let t = step.script.trim().split(/\r?\n/)[0]
-                    return 'script: ' + t + '...'
-                }
-                return 'cmd: ' + step.cmd
-            case 'git':
-                return 'checkout: ' + step.checkout
-        }
-        return ''
     }
 }
