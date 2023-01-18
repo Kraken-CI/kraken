@@ -47,6 +47,8 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
     logInternals = false
     logTimestamps = false
 
+    isNearBottom = false
+
     private subs: Subscription = new Subscription()
 
     constructor(protected executionService: ExecutionService) {
@@ -215,6 +217,10 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
     }
 
     continueLogLoadingIfNeeded(stepIdx) {
+        if (this.isNearBottom) {
+            this.scrollToBottom()
+        }
+
         let stepLogsState = this.stepsStates[stepIdx]
 
         if (!stepLogsState.expanded) {
@@ -391,6 +397,27 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
 
         logPanelEl.scroll({
             top: scrollTo,
+            left: 0,
+        })
+    }
+
+    isScrollNearBottom() {
+        let logPanelEl = this.logPanel.nativeElement
+        const threshold = 300
+        const position = logPanelEl.scrollTop + logPanelEl.offsetHeight
+        const height = logPanelEl.scrollHeight
+        return position > height - threshold
+    }
+
+    scrolled(event) {
+        this.isNearBottom = this.isScrollNearBottom()
+        console.info('this.isNearBottom', this.isNearBottom)
+    }
+
+    scrollToBottom() {
+        let logPanelEl = this.logPanel.nativeElement
+        logPanelEl.scroll({
+            top: logPanelEl.scrollHeight,
             left: 0,
         })
     }
