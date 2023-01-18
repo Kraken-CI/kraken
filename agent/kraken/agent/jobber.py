@@ -254,12 +254,15 @@ def _exec_tool_inner(kk_srv, exec_ctx, tool_path, command, cwd, timeout, user, s
 
     proc_coord = ProcCoord(kk_srv, command, job_id, idx)
     f = _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeout, user, step, step_file_path, cancel_event)
-    if hasattr(asyncio, 'run'):
-        asyncio.run(f)  # this is available since Python 3.7
-    else:
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(f)
-        loop.close()
+    try:
+        if hasattr(asyncio, 'run'):
+            asyncio.run(f)  # this is available since Python 3.7
+        else:
+            loop = asyncio.get_event_loop()
+            loop.run_until_complete(f)
+            loop.close()
+    except asyncio.CancelledError:
+        pass
     return proc_coord.result, proc_coord.is_canceled
 
 
