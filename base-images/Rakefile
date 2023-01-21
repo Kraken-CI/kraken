@@ -1,10 +1,11 @@
 images = {
-  'bld-kraken'    => ['bld-kraken:20221115'],
+  'bld-kraken'       => ['bld-kraken:20221115'],
+  'bld-kraken-22.04' => ['bld-kraken-22.04:20230121'],
 
   'centos'        => ['centos:8'],
   'fedora'        => ['fedora:33'],
   'ubuntu'        => ['ubuntu:20.04'],
-  'ubuntu-22.04'  => ['ubuntu:22.04'],
+  'ubuntu-22.04'  => ['ubuntu:22.04-20230121', 'ubuntu:22.04'],
 
   'clojure'       => ['clojure:1.11'],
   'crystal'       => ['crystal:1.4'],
@@ -22,7 +23,8 @@ images = {
   'openjdk'       => ['openjdk:11.0', 'openjdk:11', 'openjdk:latest'],
   'perl'          => ['perl:5.34'],
   'php'           => ['php:8.0'],
-  'python'        => ['python:3.8.5', 'python:3.8', 'python:3', 'python:latest'],
+  'python'        => ['python:3.8.5', 'python:3.8'],
+  'python-3.11'   => ['python:3.11.1', 'python:3.11', 'python:3', 'python:latest'],
   'ruby'          => ['ruby:3.1'],
   'rakudo'        => ['rakudo:2021.04'],
   'rust'          => ['rust:1.60'],

@@ -1,0 +1,14 @@
+FROM krakenci/ubuntu:22.04-20230121
+
+RUN apt update && \
+        apt install -y --no-install-recommends \
+          rake xz-utils openjdk-17-jre-headless \
+          apt-transport-https software-properties-common nodejs npm python3-venv libpq-dev gcc \
+          python3-dev libpython3-dev libldap-dev libsasl2-dev \
+          postgresql-client python3-pip gpg-agent && \
+        rm -rf /var/lib/apt/lists/*
+RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
+        add-apt-repository 'deb [arch=amd64] https://download.docker.com/linux/ubuntu jammy stable' && \
+        apt update && DEBIAN_FRONTEND=noninteractive apt-get install -y docker-ce-cli && \
+        rm -rf /var/lib/apt/lists/*
+RUN wget https://github.com/mikefarah/yq/releases/download/v4.30.8/yq_linux_amd64 && mv yq_linux_amd64 /usr/bin/yq && chmod a+x /usr/bin/yq
