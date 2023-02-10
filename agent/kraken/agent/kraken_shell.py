@@ -27,7 +27,7 @@ def run(step, **kwargs):  # pylint: disable=unused-argument
     # prepare script if needed
     if script:
         fh = tempfile.NamedTemporaryFile(mode='w', prefix='kk-shell-', suffix='.sh', delete=False)
-        fh.write('set -e\n')
+        fh.write('set -ex\n')
         fh.write(script)
         fname = fh.name
         fh.close()
