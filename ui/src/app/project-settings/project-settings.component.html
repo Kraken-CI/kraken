@@ -139,8 +139,23 @@
 
                 <!-- action buttons -->
                 <div class="flex justify-content-between">
-                    <p-button *ngIf="secretMode === 1" label="Add" icon="pi pi-plus" (onClick)="secretAdd()"></p-button>
-                    <p-button *ngIf="secretMode === 2" label="Save" icon="pi pi-check" (onClick)="secretSave()"></p-button>
+                    <div class="flex align-items-center">
+                        <p-button *ngIf="secretMode === 1" label="Add" icon="pi pi-plus" (onClick)="secretAdd()"></p-button>
+                        <p-button *ngIf="secretMode === 2" label="Save" icon="pi pi-check" (onClick)="secretSave()"></p-button>
+                        <div class="ml-4">
+                            Secret variable name(s):
+                        </div>
+                        <div class="monospace bg-gray-200 border-round-2 shadow-2 px-2 py-1 mx-2"
+                             *ngIf="secretForm.value.kind === 'simple'">#&#123;KK_SECRET_SIMPLE_{{ secretForm.value.name }}&#125;</div>
+
+                        <ng-container *ngIf="secretForm.value.kind === 'ssh-key'">
+                            <div class="monospace bg-gray-200 border-round-2 shadow-2 px-2 py-1 mx-2"
+                                 >#&#123;KK_SECRET_USER_{{ secretForm.value.name }}&#125;</div>
+                            <div>and</div>
+                            <div class="monospace bg-gray-200 border-round-2 shadow-2 px-2 py-1 mx-2"
+                                 >#&#123;KK_SECRET_KEY_{{ secretForm.value.name }}&#125;</div>
+                        </ng-container>
+                    </div>
 
                     <p-button *ngIf="secretMode === 2" label="Delete" icon="pi pi-trash" [style]="{'margin-left': '20px'}"
                               styleClass="p-button-danger p-button-outlined"

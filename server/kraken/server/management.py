@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import re
 import json
 import logging
 import datetime
@@ -372,6 +373,11 @@ def create_secret(project_id, body, token_info=None):
     if project is None:
         abort(400, "Project with id %s does not exist" % project_id)
 
+    name = body['name']
+    m = re.search(r'[A-Za-z0-9_]+', name)
+    if not m:
+        abort(400, 'Secret name can have only A-Z, a-z, 0-9 or _ characters')
+
     if body['kind'] == 'ssh-key':
         kind = consts.SECRET_KIND_SSH_KEY
         data = dict(username=body['username'],
@@ -382,7 +388,7 @@ def create_secret(project_id, body, token_info=None):
     else:
         abort(400, "Wrong data")
 
-    secret = Secret(project=project, name=body['name'], kind=kind, data=data)
+    secret = Secret(project=project, name=name, kind=kind, data=data)
     db.session.commit()
 
     return secret.get_json(), 201
@@ -397,8 +403,13 @@ def update_secret(secret_id, body, token_info=None):
                  'only superadmin and project admin roles can modify a secret')
 
     if 'name' in body:
+        name = body['name']
+        m = re.search(r'^[A-Za-z0-9_]+$', name)
+        if not m:
+            abort(400, 'Secret name can have only A-Z, a-z, 0-9 or _ characters')
+
         old_name = secret.name
-        secret.name = body['name']
+        secret.name = name
         log.info('changed name from %s to %s', old_name, secret.name)
 
     if secret.kind == consts.SECRET_KIND_SIMPLE:
