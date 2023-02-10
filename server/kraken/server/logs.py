@@ -97,7 +97,7 @@ class MaskingLogRecord(logging.LogRecord):
         self._secrets.append((secret, where))
         self._msg = None
 
-    def mask_secrets(self, msg):
+    def _mask_secrets(self, msg):
         if not self._secrets:
             return msg
 
@@ -108,6 +108,7 @@ class MaskingLogRecord(logging.LogRecord):
                 msg2 = msg[:-len(s)] + '******'
             else:  # middle
                 msg2 = msg.replace(s, '******')
+
             msg = msg2
 
         return msg
@@ -116,7 +117,7 @@ class MaskingLogRecord(logging.LogRecord):
         if self._msg:
             return self._msg
         msg = logging.LogRecord.getMessage(self)
-        msg = self.mask_secrets(msg)
+        msg = self._mask_secrets(msg)
         self._msg = msg
         return self._msg
 

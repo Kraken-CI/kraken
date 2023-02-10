@@ -13,7 +13,7 @@
 # limitations under the License.
 
 LOG_FMT = '%(asctime)s %(levelname)-4.4s p:%(process)5d %(module)8.8s:%(lineno)-5d %(message)s'
-TOOL_LOG_FMT = '%(asctime)s %(message)s'
+TOOL_LOG_FMT = '%(message)s'
 
 JOB_STATE_PREQUEUED = 1
 JOB_STATE_QUEUED = 2
