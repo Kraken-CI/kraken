@@ -161,6 +161,13 @@ async fn store_logs(rx: &mut Receiver<LogEntryOut>) -> Result<()> {
         db_version = 2;
     }
 
+    // migration to version 3
+    if db_version < 3 {
+        let cmd = r"ALTER TABLE logs MODIFY TTL toDateTime(time) + INTERVAL 6 MONTH";
+        client.query(cmd).execute().await?;
+        db_version = 3;
+    }
+
     // store latest version
     let insert_version = r"INSERT INTO db_schema_version (id, version) VALUES (1, ?)";
     client.query(insert_version).bind(db_version).execute().await?;
