@@ -12,13 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import datetime
-from unittest.mock import patch
 
-import pytest
-from hamcrest import assert_that, has_entries, matches_regexp, contains_exactly, instance_of
-
-from common import check_missing_tests_in_mod
+# from common import check_missing_tests_in_mod
 
 from kraken.server import logs
 
