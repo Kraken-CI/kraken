@@ -232,7 +232,11 @@ def _prepare_builtin_tools():
                 "shell_exe": {
                     "description": "An alternative path or command to shell executable (e.g.: zsh or /usr/bin/fish).",
                     "type": "string"
-                }
+                },
+                "ssh-key": {
+                    "description": "A name of a secret that holds SSH username and key.",
+                    "type": "string"
+                },
             }
         }
     }, {

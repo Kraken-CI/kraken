@@ -16,6 +16,7 @@ import os
 import tempfile
 
 from . import utils
+from . import sshkey
 
 
 def run(step, **kwargs):  # pylint: disable=unused-argument
@@ -50,6 +51,16 @@ def run(step, **kwargs):  # pylint: disable=unused-argument
     cwd = step.get('cwd', None)
     timeout = int(step.get('timeout', 60))
 
+    # start ssh-agent if needed
+    if 'ssh-key' in step:
+        # username = step['ssh-key']['username']
+        # url = '%s@%s' % (username, url)
+        key = step['ssh-key']['key']
+        ssh_agent = sshkey.SshAgent()
+        ssh_agent.add_key(key)
+    else:
+        ssh_agent = None
+
     # testing
     ignore_output = True
     if 'testing' in kwargs and kwargs['testing']:
@@ -64,6 +75,8 @@ def run(step, **kwargs):  # pylint: disable=unused-argument
     finally:
         if script:
             os.unlink(fname)
+        if ssh_agent is not None:
+            ssh_agent.shutdown()
 
     if 'testing' in kwargs and kwargs['testing']:
         ret, out = resp
