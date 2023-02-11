@@ -533,7 +533,14 @@ def update_stage(stage_id, body, token_info=None):
         if 'repo_branch' in body:
             stage.repo_branch = body['repo_branch']
         if 'repo_access_token' in body:
-            stage.repo_access_token = body['repo_access_token']
+            repo_access_token = body['repo_access_token']
+            secret = Secret.query.filter_by(project=stage.branch.project, name=repo_access_token).one_or_none()
+            if secret is None:
+                abort(400, "Secret '%s' for access token does not exist" % repo_access_token)
+            if secret.kind != consts.SECRET_KIND_SIMPLE:
+                abort(400, "Type of '%s' access token secret should be Simple Secret" % repo_access_token)
+            stage.repo_access_token = repo_access_token
+
         if 'schema_file' in body:
             stage.schema_file = body['schema_file']
         if 'repo_refresh_interval' in body:

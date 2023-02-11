@@ -18,13 +18,19 @@ import logging
 import tempfile
 import subprocess
 
+import furl
+
 from . import minioops
 
 log = logging.getLogger(__name__)
 
 
-def _run(cmd, check=True, cwd=None, capture_output=False, text=None):
-    log.info("execute '%s' in '%s'", cmd, cwd)
+def _run(cmd, check=True, cwd=None, capture_output=False, text=None, secret=None):
+    if secret:
+        cmd2 = cmd.replace(secret, '******')
+    else:
+        cmd2 = cmd
+    log.info("execute '%s' in '%s'", cmd2, cwd)
     p = subprocess.run(cmd, shell=True, check=check, cwd=cwd, capture_output=capture_output, text=text)
     return p
 
@@ -186,9 +192,17 @@ def get_schema_from_repo(repo_url, repo_branch, repo_access_token, schema_file, 
         # clone repo
         if not git_clone_params:
             git_clone_params = ''
+
+        if repo_access_token:
+            url = furl.furl(repo_url)
+            url.username = repo_access_token
+            repo_url = url.tostr()
+
         cmd = "git clone --depth 1 --single-branch --branch %s %s '%s' repo" % (repo_branch, git_clone_params, repo_url)
-        p = _run(cmd, check=False, cwd=tmpdir, capture_output=True, text=True)
+        p = _run(cmd, check=False, cwd=tmpdir, capture_output=True, text=True, secret=repo_access_token)
         if p.returncode != 0:
+            if repo_access_token:
+                cmd = cmd.replace(repo_access_token, '******')
             err = "command '%s' returned non-zero exit status %d\n" % (cmd, p.returncode)
             err += p.stdout.strip()[:140] + '\n'
             err += p.stderr.strip()[:140]

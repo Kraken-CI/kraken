@@ -29,7 +29,7 @@ import redis
 
 from ..models import db, Run, Job, TestCaseResult, Branch, Flow, Stage, Project, get_setting
 from ..models import AgentsGroup, Agent, System, TestCaseComment, Tool
-from ..models import RepoChanges
+from ..models import RepoChanges, Secret
 from ..schema import prepare_new_planner_triggers
 from ..schema import check_and_correct_stage_schema
 from ..cloud import cloud
@@ -943,7 +943,7 @@ def refresh_schema_repo(stage_id, complete_starting_run_id=None):
             log.error('got unknown stage: %s', stage_id)
             return
 
-        log.info('refresh schema repo for stage: %d, run: %d',
+        log.info('refresh schema repo for stage: %d, run: %s',
                  stage_id, complete_starting_run_id)
 
         planner_url = os.environ.get('KRAKEN_PLANNER_URL', consts.DEFAULT_PLANNER_URL)
@@ -957,7 +957,13 @@ def refresh_schema_repo(stage_id, complete_starting_run_id=None):
 
         try:
             # get schema from repo
-            schema_code, version = gitops.get_schema_from_repo(stage.repo_url, stage.repo_branch, stage.repo_access_token,
+            if stage.repo_access_token:
+                secret = Secret.query.filter_by(project=stage.branch.project, name=stage.repo_access_token).one()
+                repo_access_token = secret.data['secret']
+            else:
+                repo_access_token = None
+
+            schema_code, version = gitops.get_schema_from_repo(stage.repo_url, stage.repo_branch, repo_access_token,
                                                                stage.schema_file, stage.git_clone_params)
 
             # check schema
@@ -966,7 +972,7 @@ def refresh_schema_repo(stage_id, complete_starting_run_id=None):
             stage.repo_error = str(e)
             stage.repo_state = consts.REPO_STATE_ERROR
             db.session.commit()
-            log.exception('problem with schema, stage: %d, run: %d',
+            log.exception('problem with schema, stage: %d, run: %s',
                           stage_id, complete_starting_run_id)
             return
 
