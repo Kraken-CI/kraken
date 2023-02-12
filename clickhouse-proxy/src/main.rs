@@ -168,6 +168,13 @@ async fn store_logs(rx: &mut Receiver<LogEntryOut>) -> Result<()> {
         db_version = 3;
     }
 
+    // migration to version 4
+    if db_version < 4 {
+        let cmd = r"ALTER TABLE logs ADD COLUMN flow UInt64 AFTER level, ADD COLUMN run UInt64 AFTER level";
+        client.query(cmd).execute().await?;
+        db_version = 4;
+    }
+
     // store latest version
     let insert_version = r"INSERT INTO db_schema_version (id, version) VALUES (1, ?)";
     client.query(insert_version).bind(db_version).execute().await?;
