@@ -23,7 +23,6 @@ from urllib.parse import urlparse
 from flask import Flask
 from sqlalchemy.sql.expression import asc, desc, cast, or_
 from sqlalchemy import Integer, func
-import clickhouse_driver
 import redis
 
 from . import logs
@@ -37,6 +36,7 @@ from . import exec_utils
 from . import kkrq
 from . import utils
 from . import dbutils
+from . import chops
 
 log = logging.getLogger('watchdog')
 
@@ -458,9 +458,7 @@ def _check_agents():
 
 @_exc_handler_with_db_rollback
 def _check_for_errors_in_logs():
-    ch_url = os.environ.get('KRAKEN_CLICKHOUSE_URL', consts.DEFAULT_CLICKHOUSE_URL)
-    o = urlparse(ch_url)
-    ch = clickhouse_driver.Client(host=o.hostname)
+    ch = chops.get_clickhouse()
 
     now = utils.utcnow()
     start_date = now - datetime.timedelta(hours=1)

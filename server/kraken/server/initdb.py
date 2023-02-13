@@ -28,6 +28,7 @@ INITIAL_SETTINGS = {
         'server_url': '',
         'minio_addr': '',
         'clickhouse_addr': '',
+        'clickhouse_log_ttl': 6,
     },
     'notification': {
         'smtp_server': '',

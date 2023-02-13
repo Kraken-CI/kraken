@@ -1,28 +1,60 @@
 <app-tabbed-page baseLinkUrl="/settings" (tabChanged)="handleTabChange($event)">
     <app-tabbed-page-tab label="General">
-    <div style="max-width: 60em">
-        The addresses below are used when Kraken Agent is connecting to
-        Kraken Server remotelly from different network, ie. internal
-        address of Kraken Server e.g. from Docker Compose cannot be
-        used as it is unreachable. The same applies to Clickhouse for
-        collecting logs and Minio for storing artifacts.
-    </div>
+        <form [formGroup]="generalForm" class="p-component">
 
-      <!-- https://www.sanwebe.com/2014/08/css-html-forms-designs -->
-      <form [formGroup]="generalForm" class="form-style-2">
-        <label for="server_url"><span>Kraken Server URL</span>
-          <input type="text" class="input-field" name="server_url" pInputText formControlName="server_url" placeholder="ex: https://kraken.mycorp.com"/>
-        </label>
+            <h3>Addresses</h3>
+            <div style="max-width: 60em" class="ml-2 mb-3">
+                The addresses below are used when Kraken Agent is connecting to
+                Kraken Server remotelly from different network, ie. internal
+                address of Kraken Server e.g. from Docker Compose cannot be
+                used as it is unreachable. The same applies to Clickhouse for
+                collecting logs and MinIO for storing artifacts.
+            </div>
 
-        <label for="minio_addr"><span>MinIO / S3 Address</span> <!-- (storage for artifacts) (ip:port) -->
-          <input type="text" class="input-field" name="minio_addr" pInputText formControlName="minio_addr" placeholder="ex: 1.2.3.4:9999"/>
-        </label>
+            <div class="field grid">
+                <label for="server_url" class="col-fixed w-10rem">Kraken Server URL</label>
+                <i class="pi pi-question-circle mr-2 text-400 hover:text-600 transition-colors transition-duration-200 cursor-pointer"
+                   pTooltip="Kraken Server URL accessible from external Kraken Agents."></i>
+                <div class="col">
+                    <input pInputText type="text" id="server_url" formControlName="server_url" placeholder="ex: https://kraken.mycorp.com"
+                           class="text-base text-color surface-overlay p-2 border-1 border-solid surface-border border-round appearance-none outline-none focus:border-primary w-full">
+                </div>
+            </div>
 
-        <label for="clickhouse_addr"><span>ClickHouse Proxy Address</span> <!-- (storage for logs) (ip:port) -->
-          <input type="text" class="input-field" name="clickhouse_addr" pInputText formControlName="clickhouse_addr" placeholder="ex: 1.2.3.4:9001"/>
-        </label>
-      </form>
-  </app-tabbed-page-tab>
+            <div class="field grid"> <!-- (storage for artifacts) (ip:port) -->
+                <label for="minio_addr" class="col-fixed w-10rem">MinIO / S3 Address</label>
+                <i class="pi pi-question-circle mr-2 text-400 hover:text-600 transition-colors transition-duration-200 cursor-pointer"
+                   pTooltip="MinIO's IP address and port accessible from external Kraken Agents."></i>
+                <div class="col">
+                    <input pInputText type="text" id="minio_addr" formControlName="minio_addr" placeholder="ex: 1.2.3.4:9999"
+                           class="text-base text-color surface-overlay p-2 border-1 border-solid surface-border border-round appearance-none outline-none focus:border-primary w-full">
+                </div>
+            </div>
+
+            <div class="field grid"> <!-- (storage for logs) (ip:port) -->
+                <label for="clickhouse_addr" class="col-fixed w-10rem">ClickHouse Proxy Address</label>
+                <i class="pi pi-question-circle mr-2 text-400 hover:text-600 transition-colors transition-duration-200 cursor-pointer"
+                   pTooltip="Clickhouse Proxy's IP address and port accessible from external Kraken Agents."></i>
+                <div class="col">
+                    <input pInputText type="text" id="clickhouse_addr" formControlName="clickhouse_addr" placeholder="ex: 1.2.3.4:9001"
+                           class="text-base text-color surface-overlay p-2 border-1 border-solid surface-border border-round appearance-none outline-none focus:border-primary w-full">
+                </div>
+            </div>
+
+            <h3>Global Log Retention Policy</h3>
+
+            <div class="field grid">
+                <label for="clickhouse_log_ttl" class="col-fixed w-10rem">Logs TTL in Months</label>
+                <i class="pi pi-question-circle mr-2 text-400 hover:text-600 transition-colors transition-duration-200 cursor-pointer"
+                   pTooltip="Defines the number of months for how long all the logs (from Kraken Server and all Agents) will be kept in Clickhouse."></i>
+                <div class="col">
+                    <p-inputNumber inputId="clickhouse_log_ttl" formControlName="clickhouse_log_ttl" placeholder="ex: 3" mode="decimal" [min]="1" [max]="20">
+                    </p-inputNumber>
+                </div>
+            </div>
+
+        </form>
+    </app-tabbed-page-tab>
 
   <app-tabbed-page-tab label="Notifications">
       <!-- https://www.sanwebe.com/2014/08/css-html-forms-designs -->

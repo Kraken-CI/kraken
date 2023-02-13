@@ -26,7 +26,6 @@ from sqlalchemy.sql.expression import asc, desc, extract
 from sqlalchemy.orm import joinedload, aliased
 from sqlalchemy.sql import func, select
 import pytimeparse
-import clickhouse_driver
 import redis
 import boto3
 from azure.mgmt.subscription import SubscriptionClient
@@ -47,6 +46,7 @@ from . import minioops
 from . import schemaval
 from . import access
 from . import authn
+from . import chops
 
 
 log = logging.getLogger(__name__)
@@ -977,6 +977,14 @@ def update_settings(body, token_info=None):
                         continue
                     s.set_value(val)
 
+                    if name == 'clickhouse_log_ttl':
+                        ch = chops.get_clickhouse()
+                        #query = 'ALTER TABLE logs DELETE WHERE time < (now() - toIntervalMonth(%(months)s))'
+                        query = 'ALTER TABLE logs MODIFY TTL toDateTime(time) + toIntervalMonth(%(months)s)'
+                        params = {'months': int(val)}
+                        resp = ch.execute(query, params)
+                        log.info('set clickhouse_log_ttl to %s, resp: %s', val, resp)
+
     db.session.commit()
 
     settings = _get_settings()
@@ -999,7 +1007,7 @@ def get_diagnostics(token_info=None):
     }
 
     # check clickhouse
-    ch_url = os.environ.get('KRAKEN_CLICKHOUSE_URL', consts.DEFAULT_CLICKHOUSE_URL)
+    ch_url = chops.get_clickhouse_url()
     ch_open = srvcheck.is_service_open(ch_url)
     diags['clickhouse'] = {
         'name': 'ClickHouse',
@@ -1071,9 +1079,7 @@ def get_last_rq_jobs_names(token_info=None):
                  'only superadmin can get last rq job names')
 
     # get the last RQ jobs
-    ch_url = os.environ.get('KRAKEN_CLICKHOUSE_URL', consts.DEFAULT_CLICKHOUSE_URL)
-    o = urlparse(ch_url)
-    ch = clickhouse_driver.Client(host=o.hostname)
+    ch = chops.get_clickhouse()
 
     now = utils.utcnow()
     start_date = now - datetime.timedelta(hours=12111)
@@ -1095,9 +1101,7 @@ def get_services_logs(services, level=None, token_info=None):
     access.check(token_info, '', 'admin',
                  'only superadmin can get services logs')
 
-    ch_url = os.environ.get('KRAKEN_CLICKHOUSE_URL', consts.DEFAULT_CLICKHOUSE_URL)
-    o = urlparse(ch_url)
-    ch = clickhouse_driver.Client(host=o.hostname)
+    ch = chops.get_clickhouse()
 
     query = "select time,message,service,host,level,tool from logs "
     where = []

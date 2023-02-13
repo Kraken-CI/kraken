@@ -19,12 +19,12 @@ from urllib.parse import urlparse
 from threading import Thread, Event
 
 from flask import abort, Response
-import clickhouse_driver
 
 from . import consts
 from . import access
 from . import users
 from .models import Job
+from . import chops
 
 
 log = logging.getLogger(__name__)
@@ -38,9 +38,7 @@ class JobLogDownloader:
             self.query += ' and step = %d ' % self.step_idx
         self.query += 'order by time asc, seq asc'
 
-        ch_url = os.environ.get('KRAKEN_CLICKHOUSE_URL', consts.DEFAULT_CLICKHOUSE_URL)
-        o = urlparse(ch_url)
-        self.ch = clickhouse_driver.Client(host=o.hostname)
+        self.ch = chops.get_clickhouse()
 
         self.logs_queue = Queue()
         self.finished = Event()

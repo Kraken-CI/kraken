@@ -20,7 +20,6 @@ from urllib.parse import urljoin, urlparse
 from flask import abort
 from sqlalchemy.sql.expression import asc, desc
 from sqlalchemy.orm import joinedload
-import clickhouse_driver
 
 from . import consts
 from . import utils
@@ -29,6 +28,7 @@ from .models import Issue, Artifact
 from .schema import SchemaError
 from . import exec_utils
 from . import access
+from . import chops
 
 log = logging.getLogger(__name__)
 
@@ -345,9 +345,7 @@ def get_job_logs(job_id, start=0, limit=200, order=None, internals=False, filter
 
     job_json = job.get_json()
 
-    ch_url = os.environ.get('KRAKEN_CLICKHOUSE_URL', consts.DEFAULT_CLICKHOUSE_URL)
-    o = urlparse(ch_url)
-    ch = clickhouse_driver.Client(host=o.hostname)
+    ch = chops.get_clickhouse()
 
     internal_clause = ''
     if not internals:
@@ -410,9 +408,7 @@ def get_step_logs(job_id, step_idx, start=0, limit=200, order=None, internals=Fa
 
     job_json = job.get_json()
 
-    ch_url = os.environ.get('KRAKEN_CLICKHOUSE_URL', consts.DEFAULT_CLICKHOUSE_URL)
-    o = urlparse(ch_url)
-    ch = clickhouse_driver.Client(host=o.hostname)
+    ch = chops.get_clickhouse()
 
     internal_clause = ''
     if not internals:

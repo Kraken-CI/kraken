@@ -42,6 +42,7 @@ export class SettingsPageComponent implements OnInit, OnDestroy {
         server_url: new UntypedFormControl(''),
         minio_addr: new UntypedFormControl(''),
         clickhouse_addr: new UntypedFormControl(''),
+        clickhouse_log_ttl: new FormControl(''),
     })
 
     notificationForm = new UntypedFormGroup({
