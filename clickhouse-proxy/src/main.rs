@@ -36,12 +36,15 @@ struct LogEntryOut {
     path: String,
     lineno: u32,
     level: String,
+    branch: u64,
     flow: u64,
     run: u64,
     job: u64,
     tool: String,
     step: i8
 }
+
+const KRAKEN_VERSION: &str = env!("KRAKEN_VERSION");
 
 async fn read_and_parse_log(buf: [u8; 65536], len: usize, mut tx: Sender<LogEntryOut>) {
     let res = serde_json::from_slice(&buf[..len]);
@@ -72,6 +75,7 @@ async fn read_and_parse_log(buf: [u8; 65536], len: usize, mut tx: Sender<LogEntr
         path: le_in["path"].as_str().unwrap().to_string(),
         lineno: le_in["lineno"].as_i64().unwrap() as u32,
         level: le_in["level"].as_str().unwrap().to_string(),
+        branch: 0,
         flow: 0,
         run: 0,
         job: le_in.get("job").map_or(0, |v| v.as_u64().unwrap()),
@@ -101,6 +105,7 @@ async fn store_logs_batch(client: &Client, batch: &Vec<LogEntryOut>) -> Result<(
                 path: le.path.clone(),
                 lineno: le.lineno,
                 level: le.level.clone(),
+                branch: 0,
                 flow: 0,
                 run: 0,
                 job: le.job,
@@ -176,7 +181,7 @@ async fn store_logs(rx: &mut Receiver<LogEntryOut>) -> Result<()> {
 
     // migration to version 4
     if db_version < 4 {
-        let cmd = r"ALTER TABLE logs ADD COLUMN branch UInt64 AFTER level, flow UInt64 AFTER level, ADD COLUMN run UInt64 AFTER level";
+        let cmd = r"ALTER TABLE logs ADD COLUMN run UInt64 AFTER level, ADD COLUMN flow UInt64 AFTER level, ADD COLUMN branch UInt64 AFTER level";
         client.query(cmd).execute().await?;
         db_version = 4;
     }
@@ -228,7 +233,7 @@ async fn store_logs(rx: &mut Receiver<LogEntryOut>) -> Result<()> {
 
 #[tokio::main]
 async fn main() -> io::Result<()> {
-    println!("started clickhouse proxy");
+    println!("started clickhouse proxy, version {:?}", KRAKEN_VERSION);
 
     let ch_url = env::var("KRAKEN_CLICKHOUSE_URL");
     match ch_url {

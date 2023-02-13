@@ -8,7 +8,8 @@ COPY ./Cargo.toml ./Cargo.toml
 
 # build for release
 RUN rm ./target/release/deps/clickhouse_proxy*
-RUN cargo build --release
+ARG kkver=0.0
+RUN KRAKEN_VERSION=${kkver} cargo build --release
 
 ##############################################################################################################
 FROM debian:bullseye-20221024-slim as clickhouse-proxy
