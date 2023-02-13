@@ -18,7 +18,6 @@ import os
 import time
 import logging
 import datetime
-from urllib.parse import urlparse
 
 from flask import Flask
 from sqlalchemy.sql.expression import asc, desc, cast, or_

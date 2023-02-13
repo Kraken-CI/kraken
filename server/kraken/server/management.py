@@ -18,7 +18,6 @@ import json
 import logging
 import datetime
 import xmlrpc.client
-from urllib.parse import urlparse
 
 from flask import abort
 from sqlalchemy.orm.attributes import flag_modified
@@ -979,7 +978,7 @@ def update_settings(body, token_info=None):
 
                     if name == 'clickhouse_log_ttl':
                         ch = chops.get_clickhouse()
-                        #query = 'ALTER TABLE logs DELETE WHERE time < (now() - toIntervalMonth(%(months)s))'
+                        # query = 'ALTER TABLE logs DELETE WHERE time < (now() - toIntervalMonth(%(months)s))'
                         query = 'ALTER TABLE logs MODIFY TTL toDateTime(time) + toIntervalMonth(%(months)s)'
                         params = {'months': int(val)}
                         resp = ch.execute(query, params)

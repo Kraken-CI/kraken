@@ -12,15 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import logging
 from queue import Queue, Empty
-from urllib.parse import urlparse
 from threading import Thread, Event
 
 from flask import abort, Response
 
-from . import consts
 from . import access
 from . import users
 from .models import Job

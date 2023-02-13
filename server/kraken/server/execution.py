@@ -1,4 +1,4 @@
-# Copyright 2020-2022 The Kraken Authors
+# Copyright 2020-2023 The Kraken Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,10 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import time
 import logging
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin
 
 from flask import abort
 from sqlalchemy.sql.expression import asc, desc
