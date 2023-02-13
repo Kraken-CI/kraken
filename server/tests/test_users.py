@@ -47,6 +47,19 @@ def test_check_auth_token():
 
 
 @pytest.mark.db
+def test_get_token_info_from_request():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+
+        with app.test_request_context('/abc'):
+            token_info = users.get_token_info_from_request()
+        assert token_info is None
+
+
+@pytest.mark.db
 def test_users():
     app = create_app()
 

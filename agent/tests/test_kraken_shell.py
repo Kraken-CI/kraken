@@ -56,7 +56,7 @@ def test_run_script_ok():
 
     assert ret == 0
     assert msg == ''
-    assert out == 'AAA\nBBB\n'
+    assert out == '+ echo AAA\nAAA\n+ echo BBB\nBBB\n'
 
 
 def test_run_script_error():
@@ -68,7 +68,7 @@ def test_run_script_error():
 
     assert ret == 1
     assert msg == 'cmd exited with non-zero retcode: 1'
-    assert out == 'AAA\nBBB\n'
+    assert out == '+ echo AAA\nAAA\n+ echo BBB\nBBB\n+ false\n'
 
 
 def test_run_shell_sh():

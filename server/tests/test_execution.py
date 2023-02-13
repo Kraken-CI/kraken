@@ -368,6 +368,29 @@ def test_get_job_logs():
 
 
 @pytest.mark.db
+def test_get_step_logs():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        project = Project()
+        branch = Branch(project=project)
+        stage = Stage(branch=branch, schema={})
+        flow = Flow(branch=branch, kind=consts.FLOW_KIND_CI)
+        run = Run(stage=stage, flow=flow, reason='by me')
+        system = System()
+        agents_group = AgentsGroup()
+        job = Job(run=run, agents_group=agents_group, system=system)
+        db.session.commit()
+
+        with patch('clickhouse_driver.Client'):
+            execution.get_step_logs(job.id, 0, token_info=token_info)
+
+
+@pytest.mark.db
 def test_cancel_run():
     app = create_app()
 
