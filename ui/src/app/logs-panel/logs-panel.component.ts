@@ -267,7 +267,9 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
 
     continueLogLoadingIfNeeded(stepIdx) {
         if (this.isNearBottom) {
-            this.scrollToBottom()
+            setTimeout(() => {
+                this.scrollToBottom()
+            }, 300)
         }
 
         let stepLogsState = this.stepsStates[stepIdx]
@@ -484,7 +486,6 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
 
     scrolled(event) {
         this.isNearBottom = this.isScrollNearBottom()
-        console.info('this.isNearBottom', this.isNearBottom)
     }
 
     scrollToBottom() {
