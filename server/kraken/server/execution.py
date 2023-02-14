@@ -399,6 +399,7 @@ def get_step_logs(job_id, step_idx, start=0, limit=200, order=None, internals=Fa
     if limit < 0:
         abort(400, "incorrect limit value: %s" % str(limit))
 
+    log.info('before get job')
     job = Job.query.filter_by(id=job_id).one_or_none()
     if job is None:
         abort(404, "Job not found")
@@ -406,6 +407,7 @@ def get_step_logs(job_id, step_idx, start=0, limit=200, order=None, internals=Fa
                  'only superadmin, project admin, project power and project viewer user roles can get job logs')
 
     job_json = job.get_json()
+    log.info('after get job')
 
     ch = chops.get_clickhouse()
 
@@ -417,6 +419,7 @@ def get_step_logs(job_id, step_idx, start=0, limit=200, order=None, internals=Fa
     params = dict(job_id=job_id, step_idx=step_idx)
     resp = ch.execute(query, params)
     total = resp[0][0]
+    log.info('after get logs total')
 
     if order is None:
         order = 'asc'
@@ -426,6 +429,7 @@ def get_step_logs(job_id, step_idx, start=0, limit=200, order=None, internals=Fa
     params = dict(job_id=job_id, step_idx=step_idx, start=start, limit=limit)
 
     rows = ch.execute(query, params)
+    log.info('after get logs page')
 
     logs = []
     for r in rows:
@@ -438,6 +442,7 @@ def get_step_logs(job_id, step_idx, start=0, limit=200, order=None, internals=Fa
                      tool=r[6],
                      step=r[7])
         logs.append(entry)
+    log.info('after repacking logs')
 
     return {'items': logs, 'total': total, 'job': job_json}, 200
 
