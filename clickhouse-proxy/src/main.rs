@@ -186,6 +186,15 @@ async fn store_logs(rx: &mut Receiver<LogEntryOut>) -> Result<()> {
         db_version = 4;
     }
 
+    // migration to version 5
+    if db_version < 5 {
+        let cmd1 = r"ALTER TABLE logs ADD INDEX job_ix job TYPE set(100) GRANULARITY 2";
+        client.query(cmd1).execute().await?;
+        let cmd2 = r"ALTER TABLE logs MATERIALIZE INDEX job_ix";
+        client.query(cmd2).execute().await?;
+        db_version = 4;
+    }
+
     // store latest version
     let insert_version = r"INSERT INTO db_schema_version (id, version) VALUES (1, ?)";
     client.query(insert_version).bind(db_version).execute().await?;
