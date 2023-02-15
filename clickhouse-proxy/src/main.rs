@@ -192,7 +192,7 @@ async fn store_logs(rx: &mut Receiver<LogEntryOut>) -> Result<()> {
         client.query(cmd1).execute().await?;
         let cmd2 = r"ALTER TABLE logs MATERIALIZE INDEX job_ix";
         client.query(cmd2).execute().await?;
-        db_version = 4;
+        db_version = 5;
     }
 
     // store latest version
