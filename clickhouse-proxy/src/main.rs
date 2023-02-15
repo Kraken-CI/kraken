@@ -169,21 +169,21 @@ async fn store_logs(rx: &mut Receiver<LogEntryOut>) -> Result<()> {
     if db_version < 2 {
         let cmd = r"ALTER TABLE logs ADD COLUMN seq UInt16 AFTER time, MODIFY ORDER BY (time, seq)";
         client.query(cmd).execute().await?;
-        db_version = 2;
+        db_version += 1;
     }
 
     // migration to version 3
     if db_version < 3 {
         let cmd = r"ALTER TABLE logs MODIFY TTL toDateTime(time) + INTERVAL 6 MONTH";
         client.query(cmd).execute().await?;
-        db_version = 3;
+        db_version += 1;
     }
 
     // migration to version 4
     if db_version < 4 {
         let cmd = r"ALTER TABLE logs ADD COLUMN run UInt64 AFTER level, ADD COLUMN flow UInt64 AFTER level, ADD COLUMN branch UInt64 AFTER level";
         client.query(cmd).execute().await?;
-        db_version = 4;
+        db_version += 1;
     }
 
     // migration to version 5
@@ -192,7 +192,7 @@ async fn store_logs(rx: &mut Receiver<LogEntryOut>) -> Result<()> {
         client.query(cmd1).execute().await?;
         let cmd2 = r"ALTER TABLE logs MATERIALIZE INDEX job_ix";
         client.query(cmd2).execute().await?;
-        db_version = 5;
+        db_version += 1;
     }
 
     // store latest version
