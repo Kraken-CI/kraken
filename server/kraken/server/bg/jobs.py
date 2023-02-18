@@ -76,7 +76,7 @@ def _create_app(task_name):
 
 def _trigger_stages(run):
     """Trigger the following stages after just completed run_id stage."""
-    log.info('starting triggering stages after run %s', run.id)
+    log.info('starting triggering stages after run %s', run)
 
     # go through next stages and trigger them if needed
     curr_stage_name = run.stage.name
@@ -95,7 +95,7 @@ def _trigger_stages(run):
         if stage.enabled:
             exec_utils.start_run(stage, run.flow, reason=dict(reason='parent', run_id=run.id))
         else:
-            log.info('stage %s not started because it is disabled', stage.name)
+            log.info('stage %s not started because it is disabled', stage)
 
 
 def _prepare_flow_summary(flow):
@@ -169,14 +169,17 @@ def _prepare_flow_summary(flow):
 
 
 def analyze_run(run_id):
+    log.reset_ctx()
     app = _create_app('analyze_run_%d' % run_id)
 
     with app.app_context():
-        log.info('starting analysis of run %s', run_id)
         run = Run.query.filter_by(id=run_id).one_or_none()
         if run is None:
             log.error('got unknown run to analyze: %s', run_id)
             return
+
+        log.set_ctx(branch=run.flow.branch_id, flow_kind=run.flow.kind, flow=run.flow_id, run=run.id)
+        log.info('starting analysis of run %s', run)
 
         # calculate run stats
         run.tests_total = run.tests_passed = run.tests_not_run = 0
@@ -210,13 +213,13 @@ def analyze_run(run_id):
         # establish new state for flow
         flow = run.flow
         is_completed = True
-        log.info('check if flow %d is completed', flow.id)
+        log.info('check if flow %s is completed', flow)
         for r in flow.runs:
-            log.info('  run %d: state: %d', r.id, r.state)
+            log.info('  run %s: state: %d', r, r.state)
             if r.state == consts.RUN_STATE_IN_PROGRESS:
                 is_completed = False
                 break
-        log.info('flow %d: %s completed', flow.id, 'IS' if is_completed else 'NOT')
+        log.info('flow %s: %s completed', flow, 'IS' if is_completed else 'NOT')
 
         if is_completed:
             log.info('completed flow %s', flow)
@@ -450,6 +453,8 @@ def _analyze_results_history(run_id):
         log.error('got unknown run to analyze results history: %s', run_id)
         return
 
+    log.set_ctx(branch=run.flow.branch_id, flow_kind=run.flow.kind, flow=run.flow_id, run=run.id)
+
     log.info('starting results history analysis of run %s, flow %s [%s] ',
              run, run.flow, 'CI' if run.flow.kind == 0 else 'DEV')
 
@@ -521,6 +526,7 @@ def _analyze_results_history(run_id):
 
 
 def analyze_results_history(run_id):
+    log.reset_ctx()
     app = _create_app('analyze_results_history_%d' % run_id)
 
     with app.app_context():
@@ -528,27 +534,33 @@ def analyze_results_history(run_id):
 
 
 def notify_about_started_run(run_id):
+    log.reset_ctx()
     app = _create_app('notify_about_started_run_%d' % run_id)
 
     with app.app_context():
-        log.info('starting notification about started run %s', run_id)
         run = Run.query.filter_by(id=run_id).one_or_none()
         if run is None:
             log.error('got unknown run to notify: %s', run_id)
             return
+
+        log.set_ctx(branch=run.flow.branch_id, flow_kind=run.flow.kind, flow=run.flow_id, run=run.id)
+        log.info('starting notification about started run %s', run)
 
         notify.notify(run, 'start')
 
 
 def notify_about_completed_run(run_id):
+    log.reset_ctx()
     app = _create_app('notify_about_completed_run_%s' % run_id)
 
     with app.app_context():
-        log.info('starting notification about completed run %s', run_id)
         run = Run.query.filter_by(id=run_id).one_or_none()
         if run is None:
             log.error('got unknown run to notify: %s', run_id)
             return
+
+        log.set_ctx(branch=run.flow.branch_id, flow_kind=run.flow.kind, flow=run.flow_id, run=run.id)
+        log.info('starting notification about completed run %s', run)
 
         notify.notify(run, 'end')
 
@@ -651,6 +663,7 @@ def _estimate_timeout(job):
 
 
 def job_completed(job_id):
+    log.reset_ctx()
     try:
         app = _create_app('job_completed_%d' % job_id)
 
@@ -658,13 +671,13 @@ def job_completed(job_id):
 
             now = utils.utcnow()
 
-            log.info('completing job %s', job_id)
             job = Job.query.filter_by(id=job_id).one_or_none()
             if job is None:
                 log.error('got unknown job: %s', job_id)
                 return
 
-            log.set_ctx(job=job_id)
+            log.set_ctx(branch=job.run.flow.branch_id, flow_kind=job.run.flow.kind, flow=job.run.flow_id, run=job.run_id, job=job.id)
+            log.info('completing job %s', job)
 
             if job.state != consts.JOB_STATE_COMPLETED:
                 job.completed = now
@@ -701,10 +714,7 @@ def job_completed(job_id):
                 exec_utils.complete_run(run, now)
 
     except Exception:
-        log.set_ctx(job=None)
         raise
-
-    log.set_ctx(job=None)
 
 
 def _check_repo_commits(stage, flow_kind):
@@ -715,7 +725,7 @@ def _check_repo_commits(stage, flow_kind):
     # get prev run to get prev commit
     prev_run = dbutils.get_prev_run(stage.id, flow_kind)
 
-    log.info('looking for new commits for stage %s, prev run %s', stage.name, prev_run)
+    log.info('looking for new commits for stage %s, prev run %s', stage, prev_run)
 
     repo = triggers['repo']
     repos = []
@@ -752,14 +762,17 @@ def _check_repo_commits(stage, flow_kind):
 
 
 def trigger_run(stage_id, flow_kind=consts.FLOW_KIND_CI, reason=None):
+    log.reset_ctx()
     app = _create_app('trigger_run_%d' % stage_id)
 
     with app.app_context():
-        log.info('triggering run for stage %s, flow kind %d', stage_id, flow_kind)
         stage = Stage.query.filter_by(id=stage_id).one_or_none()
         if stage is None:
             log.error('got unknown stage: %s', stage_id)
             return
+
+        log.set_ctx(branch=stage.branch_id, flow_kind=flow_kind)
+        log.info('triggering run for stage %s, flow kind %d', stage, flow_kind)
 
         # if this stage does not have parent then start new flow
         new_flow = False
@@ -821,6 +834,8 @@ def trigger_run(stage_id, flow_kind=consts.FLOW_KIND_CI, reason=None):
         # commit new flow if created and repo changes if detected
         db.session.commit()
 
+        log.set_ctx(flow=flow.id)
+
         # create run for current stage
         if reason is None:
             reason = dict(reason='unknown')
@@ -828,14 +843,15 @@ def trigger_run(stage_id, flow_kind=consts.FLOW_KIND_CI, reason=None):
 
 
 def trigger_flow(project_id, trigger_data=None):
+    log.reset_ctx()
     app = _create_app('trigger_flow_%d' % project_id)
 
     with app.app_context():
-        log.info('triggering flow for project %s', project_id)
         project = Project.query.filter_by(id=project_id).one_or_none()
         if project is None:
             log.error('got unknown project: %s', project_id)
             return
+        log.info('triggering flow for project %s', project)
 
         if trigger_data['trigger'] in ['github-push', 'gitea-push', 'gitlab-Push Hook']:
             branch_name = trigger_data['ref'].split('/')[-1]
@@ -857,6 +873,8 @@ def trigger_flow(project_id, trigger_data=None):
         if branch is None:
             log.warning('cannot find branch by branch_name: %s', branch_name)
             return
+
+        log.set_ctx(branch=branch.id)
 
         q = Flow.query
         q = q.filter_by(branch=branch)
@@ -914,7 +932,7 @@ def trigger_flow(project_id, trigger_data=None):
                 # TODO: trigger new flow?
                 continue
             if not stage.enabled:
-                log.info('stage %s not started - disabled', stage.id)
+                log.info('stage %s not started - disabled', stage)
                 continue
             parent_name = stage.schema['parent']
             if parent_name != 'root':
@@ -935,6 +953,7 @@ def trigger_flow(project_id, trigger_data=None):
 
 
 def refresh_schema_repo(stage_id, complete_starting_run_id=None):
+    log.reset_ctx()
     app = _create_app('refresh_schema_repo_%d' % stage_id)
 
     with app.app_context():
@@ -943,8 +962,15 @@ def refresh_schema_repo(stage_id, complete_starting_run_id=None):
             log.error('got unknown stage: %s', stage_id)
             return
 
+        log.set_ctx(branch=stage.branch_id)
+        run = None
+        if complete_starting_run_id:
+            run = Run.query.filter_by(id=complete_starting_run_id).one_or_none()
+            if run is not None:
+                log.set_ctx(flow_kind=run.flow.kind, flow=run.flow_id, run=run.id)
+
         log.info('refresh schema repo for stage: %d, run: %s',
-                 stage_id, complete_starting_run_id)
+                 stage, run)
 
         planner_url = os.environ.get('KRAKEN_PLANNER_URL', consts.DEFAULT_PLANNER_URL)
         planner = xmlrpc.client.ServerProxy(planner_url, allow_none=True)
@@ -989,7 +1015,7 @@ def refresh_schema_repo(stage_id, complete_starting_run_id=None):
             stage.triggers = {}
         prepare_new_planner_triggers(stage.id, schema['triggers'], prev_triggers, stage.triggers)
         flag_modified(stage, 'triggers')
-        log.info('stage: %s, new schema: %s', stage.id, stage.schema)
+        log.info('stage: %s, new schema: %s', stage, stage.schema)
 
         # start schema refresh job
         try:
@@ -1007,6 +1033,7 @@ def refresh_schema_repo(stage_id, complete_starting_run_id=None):
 
 
 def spawn_new_agents(agents_group_id):
+    log.reset_ctx()
     app = _create_app('spawn_new_agents_%d' % agents_group_id)
 
     with app.app_context():
@@ -1085,6 +1112,7 @@ def spawn_new_agents(agents_group_id):
 
 
 def destroy_machine(agent_id):
+    log.reset_ctx()
     app = _create_app('destroy_machine_%s' % agent_id)
 
     with app.app_context():
@@ -1110,6 +1138,7 @@ def destroy_machine(agent_id):
 
 
 def load_remote_tool(tool_id):
+    log.reset_ctx()
     app = _create_app('load_remote_tool_%s' % tool_id)
 
     with app.app_context():
@@ -1158,14 +1187,14 @@ def load_remote_tool(tool_id):
                 tool = Tool(name=name, description=description, version=version, location=location, entry=entry, fields=fields)
                 db.session.flush()
             elif tool.version == version:
-                log.info('Tool id:%d name:%s from remote repo %s @ %s does not need to updated, the same version %s',
-                         tool.id, tool.name, tool.url, tool.tag, version)
+                log.info('Tool %s name:%s from remote repo %s @ %s does not need to updated, the same version %s',
+                         tool, tool.name, tool.url, tool.tag, version)
 
             # store tool
             toolutils.store_tool_in_minio(tf, tool)
             db.session.commit()
 
-            log.info('Stored tool id:%d name:%s from remote repo %s @ %s', tool.id, tool.name, tool.url, tool.tag)
+            log.info('Stored tool %s name:%s from remote repo %s @ %s', tool, tool.name, tool.url, tool.tag)
 
         finally:
             if tf:

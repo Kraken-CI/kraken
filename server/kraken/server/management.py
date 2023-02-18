@@ -1334,3 +1334,18 @@ def delete_tool(tool_id, token_info=None):
     db.session.commit()
 
     return {}, 200
+
+
+def update_branch_retention_policy(branch_id, body, token_info=None):
+    branch = Branch.query.filter_by(id=branch_id).one_or_none()
+    if branch is None:
+        abort(404, "Branch not found")
+
+    access.check(token_info, branch.project_id, 'pwrusr',
+                 'only superadmin, project admin and project power user roles can update branch retention policy')
+
+    branch.retention_policy = body
+    flag_modified(branch, 'retention_policy')
+    db.session.commit()
+
+    return branch.retention_policy, 200

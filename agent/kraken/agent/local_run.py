@@ -73,7 +73,6 @@ class LocalExecContext:
         with open(step_file_path) as f:
             data = f.read()
         step = json.loads(data)
-        log_ctx = dict(job=step['job_id'], step=step['index'], tool=step['tool'])
 
         self.proc_coord = proc_coord
         self.cmd = cmd
@@ -89,7 +88,7 @@ class LocalExecContext:
             start_new_session=True)
 
         try:
-            await self._async_pump_output(proc.stdout, log_ctx)
+            await self._async_pump_output(proc.stdout)
 
             if timeout:
                 await asyncio.wait([proc.wait(), self._async_monitor_proc(proc, timeout * 0.95)],
@@ -116,7 +115,7 @@ class LocalExecContext:
             log.exception('passing up')
             raise
 
-    async def _async_pump_output(self, stream, log_ctx):
+    async def _async_pump_output(self, stream):
         while True:
             try:
                 line = await stream.readline()
@@ -125,9 +124,7 @@ class LocalExecContext:
                 continue
             if line:
                 line = line.decode().rstrip()
-                log.set_ctx(**log_ctx)
                 log.info(line)
-                log.reset_ctx()
             else:
                 break
 

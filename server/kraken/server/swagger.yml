@@ -721,6 +721,32 @@ paths:
         201:
           description: Successfully created run
           content: {}
+  /branches/{branch_id}/retention_policy:
+    put:
+      tags:
+      - Management
+      summary: Update branch retention policy
+      description: Update branch retention policy
+      operationId: update_branch_retention_policy
+      parameters:
+      - name: branch_id
+        in: path
+        description: ID of branch
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        description: retention policy details
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RetentionPolicy'
+      responses:
+        201:
+          description: Successfully created run
+          content: {}
   /flows/{flow_id}:
     get:
       tags:
@@ -1713,6 +1739,85 @@ paths:
       - name: level
         in: query
         description: log level
+        schema:
+          type: string
+      responses:
+        200:
+          description: A paged array of logs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServicesLogs'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /logs:
+    get:
+      tags:
+      - Execution
+      summary: Get logs
+      description: Get logs
+      operationId: get_logs
+      parameters:
+      - name: branch_id
+        in: query
+        description: ID of branch
+        schema:
+          type: integer
+          format: int64
+      - name: flow_kind
+        in: query
+        description: Flow kind, 0 - CI, 1 - Dev
+        schema:
+          type: integer
+          format: int64
+      - name: flow_id
+        in: query
+        description: ID of flow
+        schema:
+          type: integer
+          format: int64
+      - name: run_id
+        in: query
+        description: ID of run
+        schema:
+          type: integer
+          format: int64
+      - name: job_id
+        in: query
+        description: ID of job
+        schema:
+          type: integer
+          format: int64
+      - name: step_idx
+        in: query
+        description: ID of pet to return
+        schema:
+          type: integer
+      - name: agent_id
+        in: query
+        description: ID of agent
+        schema:
+          type: integer
+          format: int64
+      - name: start
+        in: query
+        description: Start
+        required: true
+        schema:
+          type: integer
+      - name: limit
+        in: query
+        description: Limit
+        required: true
+        schema:
+          type: integer
+      - name: order
+        in: query
+        description: Order, desc or asc
         schema:
           type: string
       responses:
@@ -2844,6 +2949,8 @@ components:
         flows:
           type: object
           properties: {}
+        retention_policy:
+          $ref: '#/components/schemas/RetentionPolicy'
     BranchSequence:
       type: object
       properties:
@@ -2916,6 +3023,21 @@ components:
                 type: integer
                 format: int64
         # TODO: failures array
+    RetentionPolicy:
+      type: object
+      properties:
+        ci_logs:
+          type: integer
+          format: int64
+        dev_logs:
+          type: integer
+          format: int64
+        ci_artifacts:
+          type: integer
+          format: int64
+        dev_artifacts:
+          type: integer
+          format: int64
     Stage:
       required:
       - name

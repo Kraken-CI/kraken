@@ -26,6 +26,7 @@ import redis
 
 from . import logs
 from .models import db, Agent, AgentsGroup, Run, Job, get_setting
+from .models import Branch
 from .bg import jobs as bg_jobs
 from .cloud import cloud
 from . import consts
@@ -92,9 +93,12 @@ def _check_jobs_if_expired():
     canceled_count = 0
 
     for job in q.all():
+        log.set_ctx(branch=job.run.flow.branch_id, flow_kind=job.run.flow.kind, flow=job.run.flow_id, run=job.run.id, job=job.id)
+
         job_count += 1
         if not job.assigned:
             log.warning('job %s assigned but no assign time', job)
+            log.reset_ctx()
             continue
 
         timeout = job.timeout if job.timeout else consts.DEFAULT_JOB_TIMEOUT
@@ -104,6 +108,8 @@ def _check_jobs_if_expired():
             note = 'job expired after %ss' % timeout
             exec_utils.cancel_job(job, note, consts.JOB_CMPLT_SERVER_TIMEOUT)
             canceled_count += 1
+
+        log.reset_ctx()
 
     if job_count > 0:
         log.info('canceled jobs:%d / all:%d', canceled_count, job_count)
@@ -156,7 +162,10 @@ def _check_runs_timeout():
         if end_time > now:
             # no timeout yet
             continue
-        note = 'run %d timed out, deadline was: %s' % (run.id, str(end_time))
+
+        log.set_ctx(branch=run.flow.branch_id, flow_kind=run.flow.kind, flow=run.flow_id, run=run.id)
+
+        note = 'run %s timed out, deadline was: %s' % (run, str(end_time))
         log.info(note)
         run.note = note
 
@@ -170,6 +179,8 @@ def _check_runs_timeout():
         # if there is no pending jobs then complete run now
         if canceled_jobs_count == 0:
             exec_utils.complete_run(run, now)
+
+        log.reset_ctx()
 
 
 @_exc_handler_with_db_rollback
@@ -187,9 +198,14 @@ def _check_runs_missing_history_analysis():
     for run in q.all():
         if run.flow.branch_id in visited_branches:
             continue
+
+        log.set_ctx(branch=run.flow.branch_id, flow_kind=run.flow.kind, flow=run.flow_id, run=run.id)
+
         log.info('run with missing history %s', run)
         visited_branches.add(run.flow.branch_id)
         kkrq.enq_neck(bg_jobs.analyze_results_history, run.id)
+
+        log.reset_ctx()
 
 
 def _check_runs():
@@ -216,6 +232,8 @@ def _check_agents_keep_alive():
     q = q.filter(Agent.last_seen < five_mins_ago)
 
     for a in q.all():
+        log.reset_ctx()
+        log.set_ctx(agent=a.id)
         # in case of cloud machines check for 10mins, not 5mins
         ag = dbutils.find_cloud_assignment_group(a)
         if (ag and
@@ -261,18 +279,18 @@ def _destroy_and_delete_if_outdated(agent, depl, method):
         if last_job:
             dt = now - last_job.finished
             if dt >= max_idle_time:
-                log.info('agent:%d, timed out %s > %s - destroying it, last job %s',
-                         agent.id, dt, max_idle_time, last_job)
+                log.info('agent: %s, timed out %s > %s - destroying it, last job %s',
+                         agent, dt, max_idle_time, last_job)
                 destroy = True
             else:
-                log.info('agent:%d, not yet timed out %s < %s - skipped', agent.id, dt, max_idle_time)
+                log.info('agent: %s, not yet timed out %s < %s - skipped', agent, dt, max_idle_time)
         elif now - agent.created >= max_idle_time:
-            log.info('agent:%d, timed out %s - destroying it, created at %s vs now %s', agent.id, max_idle_time, agent.created, now)
+            log.info('agent: %s, timed out %s - destroying it, created at %s vs now %s', agent, max_idle_time, agent.created, now)
             destroy = True
         else:
-            log.info('agent:%d, no last job and not idle enough - skipped', agent.id)
+            log.info('agent: %s, no last job and not idle enough - skipped', agent)
     else:
-        log.info('agent:%d, destruction_after_time is 0 - skipped', agent.id)
+        log.info('agent: %s, destruction_after_time is 0 - skipped', agent)
 
     # check if number of executed jobs on VM is reached, then destroy VM
     if not destroy:
@@ -282,15 +300,15 @@ def _destroy_and_delete_if_outdated(agent, depl, method):
             q = q.filter(Job.finished > agent.created)
             jobs_num = q.count()
             if jobs_num >= max_jobs:
-                log.info('agent:%d, max jobs reached %d/%d', agent.id, jobs_num, max_jobs)
+                log.info('agent: %s, max jobs reached %d/%d', agent, jobs_num, max_jobs)
                 # TODO: remove it later, for debugging only
                 #for j in q.all():
                 #    log.info('  job: %s', j)
                 destroy = True
             else:
-                log.info('agent:%d, max jobs not reached yet %d/%d - skipped', agent.id, jobs_num, max_jobs)
+                log.info('agent: %s, max jobs not reached yet %d/%d - skipped', agent, jobs_num, max_jobs)
         else:
-            log.info('agent:%d, destruction_after_jobs is 0 - skipped', agent.id)
+            log.info('agent: %s, destruction_after_jobs is 0 - skipped', agent)
 
     # if machine mark for destruction then schedule it
     if destroy:
@@ -316,7 +334,7 @@ def _delete_if_missing_in_cloud(ag, agent):
 
     if not exists:
         dbutils.delete_agent(agent)
-        log.info('deleted dangling agent %d', agent.id)
+        log.info('deleted dangling agent %s', agent)
         return True
 
     return False
@@ -339,6 +357,9 @@ def _check_agents_to_destroy():
     dangling_count = 0
     all_count = 0
     for agent in q.all():
+        log.reset_ctx()
+        log.set_ctx(agent=agent.id)
+
         all_count += 1
         ag = dbutils.find_cloud_assignment_group(agent)
 
@@ -373,6 +394,8 @@ def _check_agents_to_destroy():
             if agent.job:
                 _cancel_job_and_unassign_agent(agent)
             continue
+
+    log.reset_ctx()
 
     if outdated_count > 0:
         log.info('all agents:%d, destroyed and deleted %d VM instances and agents',
@@ -418,8 +441,8 @@ def _check_machines_with_no_agent():
 
         if (instances + terminated_instances + assigned_instances +
             orphaned_instances + orphaned_terminated_instances > 0):
-            log.info('group:%d, instances:%d, already-terminated:%d, still-assigned:%d, orphaned:%d, terminated-orphaned:%d',
-                     ag.id,
+            log.info('group: %s, instances:%d, already-terminated:%d, still-assigned:%d, orphaned:%d, terminated-orphaned:%d',
+                     ag,
                      instances,
                      terminated_instances,
                      assigned_instances,
@@ -474,8 +497,41 @@ def _check_for_errors_in_logs():
     #log.info('updated errors count to %s', errors_count)
 
 
+@_exc_handler_with_db_rollback
+def _run_branch_retention_policy():
+    log.info('branches logs retention')
+    ch = chops.get_clickhouse()
+
+    q = Branch.query
+    q = q.filter_by(deleted=None)
+
+    for branch in q.all():
+        log.reset_ctx()
+        log.set_ctx(branch=branch.id)
+
+        if branch.retention_policy:
+            rp = branch.retention_policy
+            months = [rp['ci_logs'], rp['dev_logs']]
+        else:
+            months = [6, 3]
+
+        for flow_kind in [0, 1]:
+            query = "ALTER TABLE logs DELETE WHERE branch = %(branch_id)s AND flow_kind = %(flow_kind)s AND time < (now() - toIntervalMonth(%(months)s))"
+            params = dict(branch_id=branch.id,
+                          flow_kind=flow_kind,
+                          months=months[flow_kind])
+            resp = ch.execute(query, params)
+            log.info('DELETED LOGS %s', resp)
+            # TODO: trace number of deleted logs
+
+    log.reset_ctx()
+
+
 def _main_loop():
-    t0_log_errs = t0_jobs = t0_runs = t0_agents = time.time()
+    t0 = time.time()
+    t0_log_errs = t0_jobs = t0_runs = t0_agents = t0
+    t0_branch_retention_policy = t0
+
 
     while True:
         # check jobs every 5 seconds
@@ -501,6 +557,12 @@ def _main_loop():
         if dt > 30:
             _check_agents()
             t0_agents = time.time()
+
+        # run retention policy every 24 h
+        dt = time.time() - t0_branch_retention_policy
+        if dt > 60 * 60 * 24:
+            _run_branch_retention_policy()
+            t0_branch_retention_policy = time.time()
 
         time.sleep(1)
 

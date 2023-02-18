@@ -102,6 +102,8 @@ def _handle_get_job(agent):
                                     after=commits[0]['id'])]
 
     # attach storage info to job
+    job['branch_id'] = agent.job.run.flow.branch_id
+    job['flow_kind'] = agent.job.run.flow.kind
     job['flow_id'] = agent.job.run.flow_id
     job['run_id'] = agent.job.run_id
 
@@ -324,13 +326,13 @@ def destroy_machine_if_needed(agent, job):
                 q = q.filter(Job.finished.isnot(None))
                 q = q.filter(Job.finished > agent.created)
                 jobs_num = q.count()
-                log.info('JOB %s, num %d, max %d', job.id, jobs_num, max_jobs)
+                log.info('JOB %s, num %d, max %d', job, jobs_num, max_jobs)
                 if jobs_num >= max_jobs:
                     to_destroy = True
 
         # aws ecs fargate
         elif ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_AWS_ECS_FARGATE:
-            log.info('ECS FARGATE JOB %s - destroying task: %d', job.id, agent.id)
+            log.info('ECS FARGATE JOB %s - destroying task: %d', job, agent.id)
             to_destroy = True
 
         # azure vm
@@ -343,13 +345,13 @@ def destroy_machine_if_needed(agent, job):
                 q = q.filter(Job.finished.isnot(None))
                 q = q.filter(Job.finished > agent.created)
                 jobs_num = q.count()
-                log.info('JOB %s, num %d, max %d', job.id, jobs_num, max_jobs)
+                log.info('JOB %s, num %d, max %d', job, jobs_num, max_jobs)
                 if jobs_num >= max_jobs:
                     to_destroy = True
 
         # kubernetes
         elif ag.deployment['method'] == consts.AGENT_DEPLOYMENT_METHOD_K8S:
-            log.info('K8S JOB %s - destroying pod: %d', job.id, agent.id)
+            log.info('K8S JOB %s - destroying pod: %d', job, agent.id)
             to_destroy = True
 
     # schedule destruction if needed
@@ -543,9 +545,11 @@ def _handle_host_info(agent, req):  # pylint: disable=unused-argument
     agent.host_info = req['info']
     db.session.commit()
 
+    resp = dict(agent_id=agent.id)
+
     if sys:
         # agent has already identified system so it doesn't need to be created
-        return
+        return resp
 
     try:
         System(name=system, executor='local')
@@ -553,6 +557,8 @@ def _handle_host_info(agent, req):  # pylint: disable=unused-argument
     except IntegrityError as e:
         if not isinstance(e.orig, UniqueViolation):
             log.exception('IGNORED')
+
+    return resp
 
 
 def _handle_keep_alive(agent, req):  # pylint: disable=unused-argument
@@ -591,6 +597,7 @@ def _handle_unknown_agent(address, ip_address, agent):
 
 
 def _serve_agent_request():
+    log.reset_ctx()
     req = request.get_json()
     # log.info('request headers: %s', request.headers)
     # log.info('request remote_addr: %s', request.remote_addr)
@@ -632,8 +639,7 @@ def _serve_agent_request():
         response = _handle_dispatch_tests(agent, req)
 
     elif msg == consts.AGENT_MSG_HOST_INFO:
-        _handle_host_info(agent, req)
-        response = {}
+        response = _handle_host_info(agent, req)
 
     elif msg == consts.AGENT_MSG_KEEP_ALIVE:
         response = _handle_keep_alive(agent, req)

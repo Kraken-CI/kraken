@@ -46,6 +46,9 @@ def cancel_job(job, note, cmplt_status):
     from .bg import jobs as bg_jobs  # pylint: disable=import-outside-toplevel
     if job.state == consts.JOB_STATE_COMPLETED:
         return
+
+    log.set_ctx(job=job.id)
+
     job.completed = utils.utcnow()
     job.state = consts.JOB_STATE_COMPLETED
     job.completion_status = cmplt_status
@@ -95,7 +98,9 @@ def complete_starting_run(run_id):
     if run is None:
         raise Exception('run %d cannot be found' % run_id)
 
-    log.info('complete starting run: %d', run_id)
+    log.set_ctx(branch=run.flow.branch_id, flow_kind=run.flow.kind, flow=run.flow_id, run=run.id)
+
+    log.info('complete starting run: %s', run)
 
     # if this is already executed run then replay it, if this is new, fresh run then do everything from scratch
     if run.state == consts.RUN_STATE_REPLAY:
@@ -177,6 +182,8 @@ def start_run(stage, flow, reason, args=None, repo_data=None):
         run.state = consts.RUN_STATE_REPLAY
     db.session.commit()
 
+    log.set_ctx(run=run.id)
+
     if stage.schema_from_repo_enabled:
         from .bg import jobs as bg_jobs  # pylint: disable=import-outside-toplevel
         kkrq.enq_neck(bg_jobs.refresh_schema_repo, stage.id, run.id, ignore_args=[1])
@@ -208,9 +215,12 @@ def create_a_flow(branch, kind, body, trigger_data=None):
     # create flow instance
     flow = Flow(branch=branch, kind=kind, branch_name=branch_name, args=flow_args, trigger_data=trigger_data)
     db.session.commit()
-    log.info('created %s flow %d in branch %d',
+
+    log.set_ctx(flow_kind=flow.kind, flow=flow.id)
+
+    log.info('created %s flow %s in branch %s',
              'ci' if kind == 0 else 'dev',
-             flow.id, branch.id)
+             flow, branch)
 
     reason = dict(reason='manual')
 
@@ -221,7 +231,7 @@ def create_a_flow(branch, kind, body, trigger_data=None):
             continue
 
         if not stage.enabled:
-            log.info('stage %s not started - disabled', stage.id)
+            log.info('stage %s not started - disabled', stage)
             continue
 
         start_run(stage, flow, reason=reason, args=args.get(stage.name, {}))

@@ -281,7 +281,9 @@ class ClickhouseFormatter(logging.Formatter):
             'args', 'asctime', 'created', 'exc_info', 'exc_text', 'filename',
             'funcName', 'id', 'levelname', 'levelno', 'lineno', 'module',
             'msecs', 'msecs', 'message', 'msg', 'name', 'pathname', 'process',
-            'processName', 'relativeCreated', 'thread', 'threadName', 'extra')
+            'processName', 'relativeCreated', 'thread', 'threadName', 'extra',
+            # new to skip, not needed
+            '_msg', '_secrets', 'stack_info')
 
         easy_types = (str, bool, dict, float, int, list, type(None))
 
@@ -342,12 +344,12 @@ class ClickhouseFormatter(logging.Formatter):
         # Create message dict
         message = {
             '@timestamp': self.format_timestamp(record.created),
-            '@version': '1',
+            # '@version': '1',
             'message': msg,
             'host': self.host,
             'path': record.pathname,
             'lineno': record.lineno,
-            'tags': self.tags,
+            # 'tags': self.tags,
 
             # Extra Fields
             'level': record.levelname,
@@ -358,8 +360,9 @@ class ClickhouseFormatter(logging.Formatter):
         message.update(self.get_extra_fields(record))
 
         # If exception, add debug info
-        if record.exc_info:
-            message.update(self.get_debug_fields(record))
+        # TODO: for now skipped
+        # if record.exc_info:
+        #     message.update(self.get_debug_fields(record))
 
         return self.serialize(message)
 

@@ -116,6 +116,10 @@
                     <p-tabPanel header="Schema Code Dump" *ngIf="selectedNode.run && false">
                         {{ selectedNode.stage.schema_code }}
                     </p-tabPanel>
+
+                    <p-tabPanel header="Logs" *ngIf="selectedNode.run">
+                        <app-simple-logs-panel [runId]="selectedNode.run.id" [topOffset]="400"></app-simple-logs-panel>
+                    </p-tabPanel>
                 </p-tabView>
             </div>
         </div>
@@ -267,6 +271,11 @@
                 </div>
             </ng-template>
         </p-organizationChart>
+    </app-tabbed-page-tab>
+
+    <!-- 8. LOGS TAB -->
+    <app-tabbed-page-tab label="Logs">
+        <app-simple-logs-panel [flowId]="flowId" [topOffset]="300"></app-simple-logs-panel>
     </app-tabbed-page-tab>
 
 </app-tabbed-page>

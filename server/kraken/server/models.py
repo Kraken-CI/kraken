@@ -99,17 +99,28 @@ class Branch(db.Model, DatesMixin):
     stages = relationship("Stage", back_populates="branch", order_by="Stage.name")
     sequences = relationship("BranchSequence", back_populates="branch")
     comments = relationship("TestCaseComment", back_populates="branch")
+    retention_policy = Column(JSONB)
 
     #base_branch = relationship('BaseBranch', uselist=False, primaryjoin="or_(Branch.id==BaseBranch.ci_branch_id, Branch.id==BaseBranch.dev_branch_id)")
 
     def get_json(self, with_results=False, with_cfg=False, with_last_results=False):
+        if self.retention_policy:
+            retention_policy = self.retention_policy
+        else:
+            retention_policy = dict(ci_logs=6,
+                                    dev_logs=3,
+                                    ci_artifacts=6,
+                                    dev_artifacts=3)
+
         data = dict(id=self.id,
                     created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,
                     deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,
                     name=self.name,
                     project_id=self.project_id,
                     project_name=self.project.name,
-                    branch_name=self.branch_name)
+                    branch_name=self.branch_name,
+                    retention_policy=retention_policy)
+
         if with_results:
             data['ci_flows'] = [f.get_json() for f in self.ci_flows[:10]]
             data['dev_flows'] = [f.get_json() for f in self.dev_flows[:10]]
@@ -824,6 +835,9 @@ class Tool(db.Model, DatesMixin):
     tag = Column(UnicodeText)
     tool_file = Column(UnicodeText)
     UniqueConstraint(name, version, name='uq_tool_name_version')
+
+    def __repr__(self):
+        return "<Tool %s, '%s'>" % (self.id, self.name)
 
     def get_json(self, with_details=False):
         data = dict(id=self.id,

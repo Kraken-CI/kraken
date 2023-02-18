@@ -240,12 +240,9 @@ class DockerExecContext:
                 exit_code, cmd, str(cwd), str(user), t0, t1, timeout))
         return logs
 
-    async def _dkr_run(self, proc_coord, cmd, cwd, deadline, user, log_ctx=None):
+    async def _dkr_run(self, proc_coord, cmd, cwd, deadline, user):
         t0, t1, timeout = utils.get_times(deadline)
         log.info("cmd '%s' in '%s', now %s, deadline %s, time: %ds", cmd, cwd, t0, t1, timeout)
-
-        if log_ctx:
-            log.set_ctx(**log_ctx)
 
         exe = self.cntr.client.api.exec_create(self.cntr.id, cmd, workdir=cwd, user=user, environment=None)
         sock = self.cntr.client.api.exec_start(exe['Id'], socket=True)
@@ -318,9 +315,6 @@ class DockerExecContext:
         if logs_to_print:
             log.info(logs_to_print)
 
-        if log_ctx:
-            log.reset_ctx()
-
         if proc_coord and proc_coord.is_canceled:
             exit_code = 10001
             log.info('CANCELED')
@@ -382,19 +376,16 @@ class DockerExecContext:
         with open(step_file_path) as f:
             data = f.read()
         step = json.loads(data)
-        log_ctx = dict(job=step['job_id'], step=step['index'], tool=step['tool'])
 
         # run tool
         deadline = time.time() + timeout
         try:
-            await self._dkr_run(proc_coord, cmd, docker_cwd, deadline, user, log_ctx)
+            await self._dkr_run(proc_coord, cmd, docker_cwd, deadline, user)
         except Timeout:
             if proc_coord.result == {}:
                 t0, t1, timeout = utils.get_times(deadline)
                 log.info('job time expired, now: %s, deadline: %s', t0, t1)
                 proc_coord.result = {'status': 'error', 'reason': 'job-timeout'}
-
-        log.reset_ctx()
 
 
     async def async_run(self, proc_coord, tool_path, return_addr, step, step_file_path, command, cwd, timeout, user):  # pylint: disable=unused-argument

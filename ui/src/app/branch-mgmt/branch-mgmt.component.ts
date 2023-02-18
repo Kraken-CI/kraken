@@ -6,7 +6,7 @@ import {
     ChangeDetectorRef,
 } from '@angular/core'
 import { Router, ActivatedRoute } from '@angular/router'
-import { UntypedFormGroup, UntypedFormControl } from '@angular/forms'
+import { UntypedFormGroup, UntypedFormControl, FormGroup, FormControl, FormBuilder } from '@angular/forms'
 import { Title } from '@angular/platform-browser'
 
 import { Subscription } from 'rxjs'
@@ -17,7 +17,12 @@ import { ConfirmationService } from 'primeng/api'
 import { AuthService } from '../auth.service'
 import { ManagementService } from '../backend/api/management.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
-import { Branch } from '../backend/model/models'
+import { Branch, RetentionPolicy } from '../backend/model/models'
+
+export type IForm<T> = {
+    [K in keyof T]?: any;
+}
+
 
 @Component({
     selector: 'app-branch-mgmt',
@@ -96,6 +101,14 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
 
     sequences = []
 
+    retentionPolicyForm = this.fb.group({
+        ci_logs: [''],
+        dev_logs: [''],
+        ci_artifacts: [''],
+        dev_artifacts: [''],
+    } as IForm<RetentionPolicy>)
+
+
     private subs: Subscription = new Subscription()
 
     constructor(
@@ -107,7 +120,8 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
         private msgSrv: MessageService,
         private confirmationService: ConfirmationService,
         private titleService: Title,
-        private changeDetectorRef: ChangeDetectorRef
+        private changeDetectorRef: ChangeDetectorRef,
+        private fb: FormBuilder
     ) {}
 
     ngOnInit() {
@@ -208,6 +222,8 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
                     ) {
                         this.selectStage(branch.stages[0])
                     }
+
+                    this.retentionPolicyForm.setValue(branch.retention_policy)
 
                     const crumbs = [
                         {
@@ -822,5 +838,34 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
         document.body.removeChild(selBox)
 
         this.prepareStepDlgVisible = false
+    }
+
+    saveRetentionPolicy() {
+        console.info('RP', this.retentionPolicyForm.value)
+        this.subs.add(
+            this.managementService
+                .updateBranchRetentionPolicy(this.branchId, this.retentionPolicyForm.value as RetentionPolicy)
+                .subscribe(
+                    (rp) => {
+                        this.msgSrv.add({
+                            severity: 'success',
+                            summary: 'Branch retention policy update succeeded',
+                            detail: 'Branch retention policy update operation succeeded.',
+                        })
+                    },
+                    (err) => {
+                        let msg = err.statusText
+                        if (err.error && err.error.detail) {
+                            msg = err.error.detail
+                        }
+                        this.msgSrv.add({
+                            severity: 'error',
+                            summary: 'Branch retention policy update erred',
+                            detail: 'Branch retention policy update operation erred: ' + msg,
+                            life: 10000,
+                        })
+                    }
+                )
+        )
     }
 }

@@ -391,6 +391,23 @@ def test_get_step_logs():
 
 
 @pytest.mark.db
+def test_get_logs():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        project = Project()
+        branch = Branch(project=project)
+        db.session.commit()
+
+        with patch('clickhouse_driver.Client'):
+            execution.get_logs(branch_id=branch.id, token_info=token_info)
+
+
+@pytest.mark.db
 def test_cancel_run():
     app = create_app()
 

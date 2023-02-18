@@ -37,11 +37,13 @@ struct LogEntryOut {
     lineno: u32,
     level: String,
     branch: u64,
+    flow_kind: u8,
     flow: u64,
     run: u64,
     job: u64,
     tool: String,
-    step: i8
+    step: i8,
+    agent: u64,
 }
 
 const KRAKEN_VERSION: &str = env!("KRAKEN_VERSION");
@@ -75,12 +77,14 @@ async fn read_and_parse_log(buf: [u8; 65536], len: usize, mut tx: Sender<LogEntr
         path: le_in["path"].as_str().unwrap().to_string(),
         lineno: le_in["lineno"].as_i64().unwrap() as u32,
         level: le_in["level"].as_str().unwrap().to_string(),
-        branch: 0,
-        flow: 0,
-        run: 0,
+        branch: le_in.get("branch").map_or(0, |v| v.as_u64().unwrap()),
+        flow_kind: le_in.get("flow_kind").map_or(0, |v| v.as_u64().unwrap() as u8),
+        flow: le_in.get("flow").map_or(0, |v| v.as_u64().unwrap()),
+        run: le_in.get("run").map_or(0, |v| v.as_u64().unwrap()),
         job: le_in.get("job").map_or(0, |v| v.as_u64().unwrap()),
         tool: le_in.get("tool").map_or("".to_string(), |v| v.as_str().unwrap().to_string()),
         step: le_in.get("step").map_or(-1, |v| v.as_i64().unwrap() as i8),
+        agent: le_in.get("agent").map_or(0, |v| v.as_u64().unwrap()),
     };
 
     let res = tx.send(le_out).await;
@@ -105,12 +109,14 @@ async fn store_logs_batch(client: &Client, batch: &Vec<LogEntryOut>) -> Result<(
                 path: le.path.clone(),
                 lineno: le.lineno,
                 level: le.level.clone(),
-                branch: 0,
-                flow: 0,
-                run: 0,
+                branch: le.branch,
+                flow_kind: le.flow_kind,
+                flow: le.flow,
+                run: le.run,
                 job: le.job,
                 tool: le.tool.clone(),
                 step: le.step,
+                agent: le.agent,
             };
             // println!("msg {:?} {:?}", idx, le2.message);
             insert.write(&le2).await?;
@@ -195,11 +201,25 @@ async fn store_logs(rx: &mut Receiver<LogEntryOut>) -> Result<()> {
         db_version += 1;
     }
 
+    // migration to version 6
+    if db_version < 6 {
+        let cmd = r"ALTER TABLE logs ADD COLUMN flow_kind UInt8 AFTER branch";
+        client.query(cmd).execute().await?;
+        db_version += 1;
+    }
+
+    // migration to version 7
+    if db_version < 7 {
+        let cmd = r"ALTER TABLE logs ADD COLUMN agent UInt64 AFTER step";
+        client.query(cmd).execute().await?;
+        db_version += 1;
+    }
+
     // store latest version
     let insert_version = r"INSERT INTO db_schema_version (id, version) VALUES (1, ?)";
     client.query(insert_version).bind(db_version).execute().await?;
 
-    println!("logs table created in clickhouse");
+    println!("logs table created or updated in clickhouse, now db version {:?}", db_version);
     println!("waiting for logs to store");
 
     let mut batch = Vec::with_capacity(100);

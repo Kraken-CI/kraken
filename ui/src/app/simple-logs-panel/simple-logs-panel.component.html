@@ -1,0 +1,14 @@
+<p-button label="Refresh" icon="pi pi-refresh" (onClick)="loadLogs()" [loading]="loading"></p-button>
+
+<div style="width: 100%; height: calc(100vh - {{ topOffset }}px); font-family: monospace; font-size: 0.8em; color: #eee; background-color: #222; padding: 10px; overflow-y: scroll;">
+    <div *ngFor="let l of logs" style="display: flex;">
+        <div style="width: 12em;" class="log-cell"> {{ l.time | localtime }}</div>
+        <div style="width: 7em;" class="log-cell"> {{ l.host }}</div>
+        <div style="width: 7em;" class="log-cell"> {{ l.service }}</div>
+        <div style="width: 9em;" class="log-cell"> {{ l.tool }}</div>
+        <div style="width: 4em;" class="log-cell" [ngClass]="'level-' + l.level.slice(0, 4).toLowerCase()"> {{ l.level.slice(0, 4) }}</div>
+        <div style="white-space: pre-wrap; word-break: break-word;"
+             [innerHTML]="prepareLogLine(l.message) | noSanitize">
+        </div>
+    </div>
+</div>

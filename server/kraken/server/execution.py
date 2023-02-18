@@ -23,7 +23,7 @@ from sqlalchemy.orm import joinedload
 from . import consts
 from . import utils
 from .models import db, Branch, Flow, Run, Stage, Job, Step
-from .models import Issue, Artifact
+from .models import Issue, Artifact, Agent
 from .schema import SchemaError
 from . import exec_utils
 from . import access
@@ -38,6 +38,8 @@ def create_flow(branch_id, kind, body, token_info=None):
         abort(404, "Branch %s not found" % branch_id)
     access.check(token_info, branch.project_id, 'pwrusr',
                  'only superadmin, project admin and project power user roles can create a flow')
+
+    log.set_ctx(branch=branch.id)
 
     try:
         flow = exec_utils.create_a_flow(branch, kind, body)
@@ -71,14 +73,12 @@ def get_flows(branch_id, kind, start=0, limit=10, middle=None, token_info=None):
                   joinedload('runs'))
                   # joinedload('runs.artifacts_files'))
     if middle is None:
-        # log.info('A' * 120)
         total = q.count()
         q = q.order_by(desc(Flow.created))
         q = q.offset(start).limit(limit)
         for flow in q.all():
             flows.append(flow.get_json(with_project=False, with_branch=False, with_schema=False))
 
-        # log.info('B' * 120)
     else:
         q1 = q.filter(Flow.id >= middle)
         q1 = q1.order_by(asc(Flow.created))
@@ -150,6 +150,8 @@ def create_run(flow_id, body, token_info=None):
     if stage is None:
         abort(404, "Stage not found")
 
+    log.set_ctx(branch=flow.branch_id, flow_kind=flow.kind, flow=flow_id)
+
     run = exec_utils.start_run(stage, flow, reason=dict(reason='manual'), args=body.get('args', {}))
 
     # Serialize and return the newly created run in the response
@@ -163,6 +165,8 @@ def run_run_jobs(run_id, token_info=None):
         abort(404, "Run not found")
     access.check(token_info, run.stage.branch.project_id, 'pwrusr',
                  'only superadmin, project admin and project power roles can run jobs')
+
+    log.set_ctx(branch=run.flow.branch_id, flow_kind=run.flow.kind, flow=run.flow_id, run=run.id)
 
     if run.state == consts.RUN_STATE_MANUAL:
         replay = False
@@ -186,6 +190,8 @@ def job_rerun(job_id, token_info=None):
     access.check(token_info, job.run.stage.branch.project_id, 'pwrusr',
                  'only superadmin, project admin and project power roles can rerun a job')
 
+    log.set_ctx(branch=job.run.flow.branch_id, flow_kind=job.run.flow.kind, flow=job.run.flow_id, run=job.run.id)
+
     # TODO rerun
     job2 = Job(run=job.run, name=job.name, agents_group=job.agents_group, system=job.system, timeout=job.timeout)
 
@@ -207,8 +213,6 @@ def create_job(job, token_info=None):
         abort(404, "Run not found")
     access.check(token_info, run.stage.branch.project_id, 'pwrusr',
                  'only superadmin, project admin and project power roles can create a job')
-
-    log.info("job input: %s", job)
 
     # TODO
     # schema = JobSchema()
@@ -399,7 +403,6 @@ def get_step_logs(job_id, step_idx, start=0, limit=200, order=None, internals=Fa
     if limit < 0:
         abort(400, "incorrect limit value: %s" % str(limit))
 
-    log.info('before get job')
     job = Job.query.filter_by(id=job_id).one_or_none()
     if job is None:
         abort(404, "Job not found")
@@ -407,7 +410,6 @@ def get_step_logs(job_id, step_idx, start=0, limit=200, order=None, internals=Fa
                  'only superadmin, project admin, project power and project viewer user roles can get job logs')
 
     job_json = job.get_json()
-    log.info('after get job')
 
     ch = chops.get_clickhouse()
 
@@ -419,7 +421,6 @@ def get_step_logs(job_id, step_idx, start=0, limit=200, order=None, internals=Fa
     params = dict(job_id=job_id, step_idx=step_idx)
     resp = ch.execute(query, params)
     total = resp[0][0]
-    log.info('after get logs total')
 
     if order is None:
         order = 'asc'
@@ -429,7 +430,6 @@ def get_step_logs(job_id, step_idx, start=0, limit=200, order=None, internals=Fa
     params = dict(job_id=job_id, step_idx=step_idx, start=start, limit=limit)
 
     rows = ch.execute(query, params)
-    log.info('after get logs page')
 
     logs = []
     for r in rows:
@@ -442,9 +442,137 @@ def get_step_logs(job_id, step_idx, start=0, limit=200, order=None, internals=Fa
                      tool=r[6],
                      step=r[7])
         logs.append(entry)
-    log.info('after repacking logs')
 
     return {'items': logs, 'total': total, 'job': job_json}, 200
+
+
+def get_logs(branch_id=None, flow_kind=None, flow_id=None, run_id=None, job_id=None, step_idx=None,
+             agent_id=None,
+             start=0, limit=200, order=None, token_info=None):  # pylint: disable=unused-argument
+    if order not in [None, 'asc', 'desc']:
+        abort(400, "incorrect order value: %s" % str(order))
+
+    if start < 0:
+        abort(400, "incorrect start value: %s" % str(start))
+
+    if limit < 0:
+        abort(400, "incorrect limit value: %s" % str(limit))
+
+    if branch_id is None and flow_id is None and run_id is None and job_id is None and agent_id is None:
+        abort(400, "to query logs one of these fields need to be provided: branch_id, flow_id, run_id, job_id, agent_id")
+
+    if branch_id is None and flow_kind is not None:
+        abort(400, "if flow_kind is provided then branch_id must be provided as well")
+
+    if job_id is None and step_idx is not None:
+        abort(400, "if step_idx is provided then job_id must be provided as well")
+
+    if job_id is not None:
+        job = Job.query.filter_by(id=job_id).one_or_none()
+        if job is None:
+            abort(404, "Job not found")
+        access.check(token_info, job.run.stage.branch.project_id, 'view',
+                     'only superadmin, project admin, project power and project viewer user roles can get job logs')
+
+    elif run_id is not None:
+        run = Run.query.filter_by(id=run_id).one_or_none()
+        if run is None:
+            abort(404, "Run not found")
+        access.check(token_info, run.stage.branch.project_id, 'view',
+                     'only superadmin, project admin, project power and project viewer user roles can get run logs')
+
+    elif flow_id is not None:
+        flow = Flow.query.filter_by(id=flow_id).one_or_none()
+        if flow is None:
+            abort(404, "Flow not found")
+        access.check(token_info, flow.branch.project_id, 'view',
+                     'only superadmin, project admin, project power and project viewer user roles can get flow logs')
+
+    elif branch_id is not None:
+        branch = Branch.query.filter_by(id=branch_id).one_or_none()
+        if branch is None:
+            abort(404, "Branch not found")
+        access.check(token_info, branch.project_id, 'view',
+                     'only superadmin, project admin, project power and project viewer user roles can get branch logs')
+
+    if agent_id is not None:
+        agent = Agent.query.filter_by(id=agent_id).one_or_none()
+        if agent is None:
+            abort(404, "Agent not found")
+        access.check(token_info, '', 'admin',
+                     'only superadmin can get agent logs')
+
+    ch = chops.get_clickhouse()
+
+    # internal_clause = ''
+    # if not internals:
+    #     internal_clause = "and tool != '' and service = 'agent'"
+
+    # query = "select count(*) from logs where job = %%(job_id)d and step = %%(step_idx)d %s" % internal_clause
+    # params = dict(job_id=job_id, step_idx=step_idx)
+    # resp = ch.execute(query, params)
+    # total = resp[0][0]
+    total = 10000
+
+    if order is None:
+        order = 'asc'
+
+    query = "select time,message,service,host,level,job,tool,step from logs %s order by time %s, seq %s limit %%(start)d, %%(limit)d"
+    params = dict(start=start, limit=limit)
+
+    where_clauses = []
+    if branch_id is not None:
+        where_clauses.append('branch = %(branch_id)d')
+        params['branch_id'] = branch_id
+        if flow_kind is not None:
+            where_clauses.append('flow_kind = %(flow_kind)d')
+            params['flow_kind'] = flow_kind
+        where_clauses.append("service != 'agent'")
+        where_clauses.append("service != 'scheduler'")
+        where_clauses.append("service != 'watchdog'")
+    if flow_id is not None:
+        where_clauses.append('flow = %(flow_id)d')
+        params['flow_id'] = flow_id
+        where_clauses.append("service != 'agent'")
+        where_clauses.append("service != 'scheduler'")
+        where_clauses.append("service != 'watchdog'")
+    if run_id is not None:
+        where_clauses.append('run = %(run_id)d')
+        params['run_id'] = run_id
+        where_clauses.append("service != 'agent'")
+        where_clauses.append("service != 'scheduler'")
+        where_clauses.append("service != 'watchdog'")
+    if job_id is not None:
+        where_clauses.append('job = %(job_id)d')
+        params['job_id'] = job_id
+        if step_idx is not None:
+            where_clauses.append('step_idx = %(step_idx)d')
+            params['step_idx'] = step_idx
+    if agent_id is not None:
+        where_clauses.append('agent = %(agent_id)d')
+        params['agent_id'] = agent_id
+
+    where_clause = ''
+    if where_clauses:
+        where_clause = 'where ' + ' and '.join(where_clauses)
+
+    query %= (where_clause, order, order)
+
+    rows = ch.execute(query, params)
+
+    logs = []
+    for r in rows:
+        entry = dict(time=r[0],
+                     message=r[1],
+                     service=r[2],
+                     host=r[3],
+                     level=r[4].lower()[:4],
+                     job=r[5],
+                     tool=r[6],
+                     step=r[7])
+        logs.append(entry)
+
+    return {'items': logs, 'total': total}, 200
 
 
 def cancel_run(run_id, token_info=None):
@@ -458,12 +586,16 @@ def cancel_run(run_id, token_info=None):
     if run.state == consts.RUN_STATE_COMPLETED:
         return {}
 
+    log.set_ctx(branch=run.flow.branch_id, flow_kind=run.flow.kind, flow=run.flow_id, run=run.id)
+
     # cancel any pending job
     all_completed = True
     for job in run.jobs:
         if job.state != consts.JOB_STATE_COMPLETED:
+            log.set_ctx(job=job.id)
             exec_utils.cancel_job(job, 'canceled by user', consts.JOB_CMPLT_USER_CANCEL)
             all_completed = False
+        log.set_ctx(job=None)
 
     # if all jobs already completed or there is no jobs then complete run
     if all_completed:
@@ -482,6 +614,8 @@ def delete_job(job_id, token_info=None):
         abort(404, "Job not found")
     access.check(token_info, job.run.stage.branch.project_id, 'pwrusr',
                  'only superadmin, project admin and project power roles can cancel a job')
+
+    log.set_ctx(branch=job.run.flow.branch_id, flow_kind=job.run.flow.kind, flow=job.run.flow_id, run=job.run.id, job=job.id)
 
     exec_utils.cancel_job(job, 'canceled by user', consts.JOB_CMPLT_USER_CANCEL)
 

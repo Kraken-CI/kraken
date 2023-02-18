@@ -139,6 +139,8 @@ def run():
             break
         log.warning('agent is not authorized, sleeping for 10s')
         time.sleep(10)
+    agent_id = resp.get('agent_id', None)
+    log.set_ctx(agent=agent_id)
 
     one_job = config.get('one_job', False)
     if one_job:
@@ -156,7 +158,8 @@ def run():
                 update.update_agent(version)
 
             if job:
-                log.set_ctx(job=job['id'], run=job['run_id'])
+                log.set_ctx(job=job['id'], run=job['run_id'], flow=job['flow_id'],
+                            flow_kind=job['flow_kind'], branch=job['branch_id'])
 
                 _enable_masking_secrets_in_logs(job)
 
@@ -180,3 +183,4 @@ def run():
             log.exception('ignored exception in agent main loop')
             time.sleep(5)
         log.reset_ctx()
+        log.set_ctx(agent=agent_id)

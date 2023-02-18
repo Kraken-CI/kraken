@@ -405,6 +405,11 @@
     </div>
   </app-tabbed-page-tab>
 
+  <!-- Stats & Charts TAB -->
+  <app-tabbed-page-tab label="Stats & Charts">
+      <app-branch-stats [branch_id]="branchId"></app-branch-stats>
+  </app-tabbed-page-tab>
+
   <!-- Sequences TAB -->
   <app-tabbed-page-tab label="Sequences">
     <table class="seqs-table">
@@ -434,37 +439,62 @@
 
   <!-- Status Badge TAB -->
   <app-tabbed-page-tab label="Status Badge & CCTray">
-      <div style="margin: 10px;">
-          <h3>Badges</h3>
-          <div style="margin: 5px;">
-              <input type="text" pInputText [value]="getBadgeUrl(null)" [size]="getBadgeUrl('issues').length" style="font-family: monospace;" #badgeUrlEl>
-              <button type="button" pButton icon="pi pi-copy" class="p-button-outlined p-button-sm" (click)="copyBadgeUrl(badgeUrlEl)" style="margin: 0 3em 0 2em;"></button>
-              <img [src]="getBadgeUrl(null)">
-          </div>
+      <h3>Badges</h3>
+      <div class="m-1">
+          <input type="text" pInputText [value]="getBadgeUrl(null)" [size]="getBadgeUrl('issues').length" style="font-family: monospace;" #badgeUrlEl>
+          <button type="button" pButton icon="pi pi-copy" class="p-button-outlined p-button-sm ml-5 mr-6" (click)="copyBadgeUrl(badgeUrlEl)"></button>
+          <img [src]="getBadgeUrl(null)">
+      </div>
 
-          <div style="margin: 5px;">
-              <input type="text" pInputText [value]="getBadgeUrl('tests')" [size]="getBadgeUrl('issues').length" style="font-family: monospace;" #badgeUrlTestsEl>
-              <button type="button" pButton icon="pi pi-copy" class="p-button-outlined p-button-sm" (click)="copyBadgeUrl(badgeUrlTestsEl)" style="margin: 0 3em 0 2em;"></button>
-              <img [src]="getBadgeUrl('tests')">
-          </div>
+      <div class="m-1">
+          <input type="text" pInputText [value]="getBadgeUrl('tests')" [size]="getBadgeUrl('issues').length" style="font-family: monospace;" #badgeUrlTestsEl>
+          <button type="button" pButton icon="pi pi-copy" class="p-button-outlined p-button-sm ml-5 mr-6" (click)="copyBadgeUrl(badgeUrlTestsEl)"></button>
+          <img [src]="getBadgeUrl('tests')">
+      </div>
 
-          <div style="margin: 5px;">
-              <input type="text" pInputText [value]="getBadgeUrl('issues')" [size]="getBadgeUrl('issues').length" style="font-family: monospace;" #badgeUrlIssuesEl>
-              <button type="button" pButton icon="pi pi-copy" class="p-button-outlined p-button-sm" (click)="copyBadgeUrl(badgeUrlIssuesEl)" style="margin: 0 3em 0 2em;"></button>
-              <img [src]="getBadgeUrl('issues')">
-          </div>
+      <div class="m-1">
+          <input type="text" pInputText [value]="getBadgeUrl('issues')" [size]="getBadgeUrl('issues').length" style="font-family: monospace;" #badgeUrlIssuesEl>
+          <button type="button" pButton icon="pi pi-copy" class="p-button-outlined p-button-sm ml-5 mr-6" (click)="copyBadgeUrl(badgeUrlIssuesEl)"></button>
+          <img [src]="getBadgeUrl('issues')">
+      </div>
 
-          <h3>CCTray</h3>
-          <div style="margin: 5px;">
-              <input type="text" pInputText [value]="getBadgeUrl('cctray')" [size]="getBadgeUrl('issues').length" style="font-family: monospace;" #badgeUrlCCTrayEl>
-              <button type="button" pButton icon="pi pi-copy" class="p-button-outlined p-button-sm" (click)="copyBadgeUrl(badgeUrlCCTrayEl)" style="margin: 0 3em 0 2em;"></button>
-          </div>
+      <h3>CCTray</h3>
+      <div class="m-1">
+          <input type="text" pInputText [value]="getBadgeUrl('cctray')" [size]="getBadgeUrl('issues').length" style="font-family: monospace;" #badgeUrlCCTrayEl>
+          <button type="button" pButton icon="pi pi-copy" class="p-button-outlined p-button-sm ml-5 mr-6" (click)="copyBadgeUrl(badgeUrlCCTrayEl)"></button>
       </div>
   </app-tabbed-page-tab>
 
-  <!-- Stats & Charts TAB -->
-  <app-tabbed-page-tab label="Stats & Charts">
-      <app-branch-stats [branch_id]="branchId"></app-branch-stats>
+  <!-- Retention Policy -->
+  <app-tabbed-page-tab label="Retention Policy">
+      <form [formGroup]="retentionPolicyForm" class="mb-3">
+          <h3>Logs in Clickhouse</h3>
+          <div class="mx-2 my-1">
+              <span class="inline-block w-2rem">CI:</span>
+              <p-inputNumber inputId="ci_logs" formControlName="ci_logs" placeholder="ex: 6" mode="decimal" [min]="1" [max]="20">
+              </p-inputNumber>
+          </div>
+          <div class="mx-2 my-1">
+              <span class="inline-block w-2rem">Dev:</span>
+              <p-inputNumber inputId="dev_logs" formControlName="dev_logs" placeholder="ex: 3" mode="decimal" [min]="1" [max]="20">
+              </p-inputNumber>
+          </div>
+          <!--
+              <h3>Artifacts in MinIO/S3</h3>
+              <div class="mx-2 my-1">
+                  <span class="inline-block w-2rem">CI:</span> <input type="text" pInputText>
+              </div>
+              <div class="mx-2 my-1">
+                  <span class="inline-block w-2rem">Dev:</span> <input type="text" pInputText>
+              </div>
+              -->
+      </form>
+      <button type="button" pButton icon="pi pi-check" label="Save" (click)="saveRetentionPolicy()"></button>
+  </app-tabbed-page-tab>
+
+  <!-- Retention Policy -->
+  <app-tabbed-page-tab label="Logs">
+        <app-simple-logs-panel [branchId]="branchId" [topOffset]="280"></app-simple-logs-panel>
   </app-tabbed-page-tab>
 
 </app-tabbed-page>

@@ -56,12 +56,9 @@ class LxdExecContext:
         self.client = None
         self.lab_net = None
         self.cntr = None
-        self.log_ctx = None
         self.logs = []
 
     def _start(self, timeout):
-        log.set_ctx(job=self.job['id'])
-
         self.client = pylxd.Client()
 
         # prepare network for container
@@ -165,14 +162,7 @@ class LxdExecContext:
 
         self.logs.append(chunk)
 
-        if self.log_ctx:
-            log.set_ctx(**self.log_ctx)
-
         log.info(chunk.rstrip())
-
-        if self.log_ctx:
-            log.reset_ctx()
-            log.set_ctx(job=self.job['id'])
 
     def _async_run(self, cmd, deadline, cwd='/', env=None):
         logs, exit_code = asyncio.run(self._lxd_run(cmd, cwd, deadline, env))
@@ -241,7 +231,6 @@ class LxdExecContext:
         with open(step_file_path) as f:
             data = f.read()
         step = json.loads(data)
-        self.log_ctx = dict(job=step['job_id'], step=step['index'], tool=step['tool'])
 
         deadline = time.time() + timeout
         try:
@@ -250,8 +239,6 @@ class LxdExecContext:
             # TODO: it should be better handled but needs testing
             if proc_coord.result == {}:
                 proc_coord.result = {'status': 'error', 'reason': 'job-timeout'}
-
-        self.log_ctx = None
 
 
     async def async_run(self, proc_coord, tool_path, return_addr, step, step_file_path, command, cwd, timeout, user):  # pylint: disable=unused-argument
