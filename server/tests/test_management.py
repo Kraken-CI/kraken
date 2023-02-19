@@ -877,3 +877,25 @@ def test_delete_tool():
         db.session.commit()
 
         management.delete_tool(tool.id, token_info=token_info)
+
+
+@pytest.mark.db
+def test_update_branch_retention_policy():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        proj = Project(name='proj-1')
+        branch = Branch(name='br', project=proj)
+        db.session.commit()
+
+        rp1 = dict(ci_logs=1, dev_logs=2, ci_artifacts=3, dev_artifacts=4)
+
+        rp2, code = management.update_branch_retention_policy(branch.id, rp1, token_info=token_info)
+
+        assert code == 200
+        assert rp1 == rp2
+        assert branch.retention_policy == rp1

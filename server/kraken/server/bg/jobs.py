@@ -664,57 +664,53 @@ def _estimate_timeout(job):
 
 def job_completed(job_id):
     log.reset_ctx()
-    try:
-        app = _create_app('job_completed_%d' % job_id)
+    app = _create_app('job_completed_%d' % job_id)
 
-        with app.app_context():
+    with app.app_context():
 
-            now = utils.utcnow()
+        now = utils.utcnow()
 
-            job = Job.query.filter_by(id=job_id).one_or_none()
-            if job is None:
-                log.error('got unknown job: %s', job_id)
-                return
+        job = Job.query.filter_by(id=job_id).one_or_none()
+        if job is None:
+            log.error('got unknown job: %s', job_id)
+            return
 
-            log.set_ctx(branch=job.run.flow.branch_id, flow_kind=job.run.flow.kind, flow=job.run.flow_id, run=job.run_id, job=job.id)
-            log.info('completing job %s', job)
+        log.set_ctx(branch=job.run.flow.branch_id, flow_kind=job.run.flow.kind, flow=job.run.flow_id, run=job.run_id, job=job.id)
+        log.info('completing job %s', job)
 
-            if job.state != consts.JOB_STATE_COMPLETED:
-                job.completed = now
-                job.state = consts.JOB_STATE_COMPLETED
-                job.completion_status = consts.JOB_CMPLT_ALL_OK
-                log.info('checking steps')
-                for step in job.steps:
-                    log.info('%s: %s', step.index, consts.STEP_STATUS_NAME[step.status] if step.status in consts.STEP_STATUS_NAME else step.status)
-                    if step.status == consts.STEP_STATUS_ERROR:
-                        # set base cmplt status error
-                        job.completion_status = consts.JOB_CMPLT_AGENT_ERROR_RETURNED
-                        # set proper cmplt status based on reason
-                        if step.result and 'reason' in step.result:
-                            if step.result['reason'] == 'job-timeout':
-                                job.completion_status = consts.JOB_CMPLT_JOB_TIMEOUT
-                            if step.result['reason'] == 'step-timeout':
-                                job.completion_status = consts.JOB_CMPLT_STEP_TIMEOUT
-                            elif step.result['reason'] == 'exception':
-                                job.completion_status = consts.JOB_CMPLT_AGENT_EXCEPTION
-                        break
-                db.session.commit()
-
-                _estimate_timeout(job)
-
-            # establish new run state
-            run = job.run
-            is_completed = True
-            for j in run.jobs:
-                if j.state != consts.JOB_STATE_COMPLETED:
-                    is_completed = False
+        if job.state != consts.JOB_STATE_COMPLETED:
+            job.completed = now
+            job.state = consts.JOB_STATE_COMPLETED
+            job.completion_status = consts.JOB_CMPLT_ALL_OK
+            log.info('checking steps')
+            for step in job.steps:
+                log.info('%s: %s', step.index, consts.STEP_STATUS_NAME[step.status] if step.status in consts.STEP_STATUS_NAME else step.status)
+                if step.status == consts.STEP_STATUS_ERROR:
+                    # set base cmplt status error
+                    job.completion_status = consts.JOB_CMPLT_AGENT_ERROR_RETURNED
+                    # set proper cmplt status based on reason
+                    if step.result and 'reason' in step.result:
+                        if step.result['reason'] == 'job-timeout':
+                            job.completion_status = consts.JOB_CMPLT_JOB_TIMEOUT
+                        if step.result['reason'] == 'step-timeout':
+                            job.completion_status = consts.JOB_CMPLT_STEP_TIMEOUT
+                        elif step.result['reason'] == 'exception':
+                            job.completion_status = consts.JOB_CMPLT_AGENT_EXCEPTION
                     break
+            db.session.commit()
 
-            if is_completed:
-                exec_utils.complete_run(run, now)
+            _estimate_timeout(job)
 
-    except Exception:
-        raise
+        # establish new run state
+        run = job.run
+        is_completed = True
+        for j in run.jobs:
+            if j.state != consts.JOB_STATE_COMPLETED:
+                is_completed = False
+                break
+
+        if is_completed:
+            exec_utils.complete_run(run, now)
 
 
 def _check_repo_commits(stage, flow_kind):

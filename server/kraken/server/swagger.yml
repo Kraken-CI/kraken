@@ -744,9 +744,15 @@ paths:
             schema:
               $ref: '#/components/schemas/RetentionPolicy'
       responses:
-        201:
+        200:
           description: Successfully created run
           content: {}
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
   /flows/{flow_id}:
     get:
       tags:
