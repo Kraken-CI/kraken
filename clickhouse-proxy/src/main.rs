@@ -215,6 +215,18 @@ async fn store_logs(rx: &mut Receiver<LogEntryOut>) -> Result<()> {
         db_version += 1;
     }
 
+    // migration to version 8
+    if db_version < 8 {
+        let fields: [&str; 4] = ["branch", "flow", "run", "agent"];
+        for f in &fields {
+            let cmd1 = format!(r"ALTER TABLE logs ADD INDEX {f}_ix {f} TYPE set(100) GRANULARITY 2");
+            client.query(&cmd1).execute().await?;
+            let cmd2 = format!(r"ALTER TABLE logs MATERIALIZE INDEX {f}_ix");
+            client.query(&cmd2).execute().await?;
+        }
+        db_version += 1;
+    }
+
     // store latest version
     let insert_version = r"INSERT INTO db_schema_version (id, version) VALUES (1, ?)";
     client.query(insert_version).bind(db_version).execute().await?;
