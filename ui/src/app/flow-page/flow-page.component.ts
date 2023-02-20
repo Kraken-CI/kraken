@@ -219,6 +219,10 @@ export class FlowPageComponent implements OnInit, OnDestroy {
                 // collect args from runs
                 for (const run of this.flow.runs) {
                     sectionArgs = []
+                    if (!run.args) {
+                        console.warn('run does not have args', run)
+                        continue
+                    }
                     for (const a of Object.keys(run.args)) {
                         const param = this._getParamFromStage(run.stage_name, a)
                         let description = ''
