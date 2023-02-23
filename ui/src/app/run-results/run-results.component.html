@@ -89,8 +89,8 @@
           </div>
         </div>
 
-        <p-tabView styleClass="job-tabview">
-          <p-tabPanel header="Logs">
+        <p-tabView styleClass="job-tabview" (onChange)="handleJobTabChange($event)">
+          <p-tabPanel header="Steps Logs">
             <app-logs-panel [job]="job"></app-logs-panel>
           </p-tabPanel>
           <!-- TODEL
@@ -98,6 +98,13 @@
             <app-log-box [jobId]="selectedJobId"></app-log-box>
           </p-tabPanel>
           -->
+          <p-tabPanel header="Flat Logs">
+              <app-simple-logs-panel
+                  [visible]="flatLogsPanelVisible"
+                  [jobId]="job.id"
+                  [topOffset]="350"
+                  [initServices]="['server', 'rq', 'scheduler', 'watchdog', 'agent']"></app-simple-logs-panel>
+          </p-tabPanel>
           <p-tabPanel header="Details">
             <table>
               <tr><td colspan="2" style="font-weight: bold; font-size: 1.2em;">Spec</td></tr>

@@ -393,7 +393,7 @@ def get_job(job_id, token_info=None):
     return job.get_json()
 
 
-def get_step_logs(job_id, step_idx, start=0, limit=200, order=None, internals=False, filters=None, token_info=None):  # pylint: disable=unused-argument
+def get_step_logs(job_id, step_idx, start=0, limit=200, order=None, filters=None, token_info=None):  # pylint: disable=unused-argument
     if order not in [None, 'asc', 'desc']:
         abort(400, "incorrect order value: %s" % str(order))
 
@@ -447,7 +447,7 @@ def get_step_logs(job_id, step_idx, start=0, limit=200, order=None, internals=Fa
 
 
 def get_logs(branch_id=None, flow_kind=None, flow_id=None, run_id=None, job_id=None, step_idx=None,
-             agent_id=None,
+             agent_id=None, services=None, level=None,
              start=0, limit=200, order=None, token_info=None):  # pylint: disable=unused-argument
     if order not in [None, 'asc', 'desc']:
         abort(400, "incorrect order value: %s" % str(order))
@@ -459,7 +459,8 @@ def get_logs(branch_id=None, flow_kind=None, flow_id=None, run_id=None, job_id=N
         abort(400, "incorrect limit value: %s" % str(limit))
 
     if branch_id is None and flow_id is None and run_id is None and job_id is None and agent_id is None:
-        abort(400, "to query logs one of these fields need to be provided: branch_id, flow_id, run_id, job_id, agent_id")
+        access.check(token_info, '', 'admin',
+                     'only superadmin can get services logs')
 
     if branch_id is None and flow_kind is not None:
         abort(400, "if flow_kind is provided then branch_id must be provided as well")
@@ -527,21 +528,12 @@ def get_logs(branch_id=None, flow_kind=None, flow_id=None, run_id=None, job_id=N
         if flow_kind is not None:
             where_clauses.append('flow_kind = %(flow_kind)d')
             params['flow_kind'] = flow_kind
-        where_clauses.append("service != 'agent'")
-        where_clauses.append("service != 'scheduler'")
-        where_clauses.append("service != 'watchdog'")
     if flow_id is not None:
         where_clauses.append('flow = %(flow_id)d')
         params['flow_id'] = flow_id
-        where_clauses.append("service != 'agent'")
-        where_clauses.append("service != 'scheduler'")
-        where_clauses.append("service != 'watchdog'")
     if run_id is not None:
         where_clauses.append('run = %(run_id)d')
         params['run_id'] = run_id
-        where_clauses.append("service != 'agent'")
-        where_clauses.append("service != 'scheduler'")
-        where_clauses.append("service != 'watchdog'")
     if job_id is not None:
         where_clauses.append('job = %(job_id)d')
         params['job_id'] = job_id
@@ -552,11 +544,39 @@ def get_logs(branch_id=None, flow_kind=None, flow_id=None, run_id=None, job_id=N
         where_clauses.append('agent = %(agent_id)d')
         params['agent_id'] = agent_id
 
-    where_clause = ''
-    if where_clauses:
-        where_clause = 'where ' + ' and '.join(where_clauses)
+    where_services = []
+    if services:
+        for idx, s in enumerate(services):
+            param = 'service%d' % idx
+            if '/' in s:
+                s, t = s.split('/')
+                tparam = 'tool%d' % idx
+                where_services.append("(service = %%(%s)s and tool = %%(%s)s)" % (param, tparam))
+                params[param] = s
+                params[tparam] = t
+            else:
+                where_services.append("service = %%(%s)s" % param)
+                params[param] = s
+        where = " or ".join(where_services)
+        where = "(" + where + ") "
+        where_clauses.append(where)
+
+    if level:
+        level = level.upper()
+        if level == 'ERROR':
+            lq = "level = 'ERROR'"
+        elif level == 'WARNING':
+            lq = "level in ('WARNING', 'ERROR')"
+        else:
+            lq = "level in ('INFO', 'WARNING', 'ERROR')"
+        where_clauses.append(lq)
+
+    where_clause = 'where ' + ' and '.join(where_clauses)
 
     query %= (where_clause, order, order)
+
+    log.info('CH query %s', query)
+    log.info('CH params %s', params)
 
     rows = ch.execute(query, params)
 

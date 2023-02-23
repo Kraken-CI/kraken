@@ -1684,11 +1684,6 @@ paths:
         description: ID of pet to return
         schema:
           type: string
-      - name: internals
-        in: query
-        description: ID of pet to return
-        schema:
-          type: boolean
       - name: filters
         in: query
         description: ID of pet to return
@@ -1809,6 +1804,18 @@ paths:
         schema:
           type: integer
           format: int64
+      - name: services
+        in: query
+        description: List of services
+        schema:
+          type: array
+          items:
+            type: string
+      - name: level
+        in: query
+        description: log level
+        schema:
+          type: string
       - name: start
         in: query
         description: Start

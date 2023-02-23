@@ -15,22 +15,11 @@ import { ManagementService } from '../backend/api/management.service'
 })
 export class DiagsPageComponent implements OnInit, OnDestroy {
     data: any = { rq: {} }
-    logServices: any = []
-    logServicesSelected: string[] = []
-    servicesLogs: any = []
-    servicesLogsAreLoading = false
-
-    // services logs filtering
-    logLevels: any[]
-    logLevel: any
-
-    rqJobs: any[]
-    rqJob: any = 'all'
-    rqCurrentJobs: any[]
-    rqFinishedJobs: any[]
-    rqFailedJobs: any[]
 
     private subs: Subscription = new Subscription()
+
+    logsPanelVisible = false
+    logLevel = 'info'
 
     constructor(
         private route: ActivatedRoute,
@@ -39,29 +28,6 @@ export class DiagsPageComponent implements OnInit, OnDestroy {
         protected managementService: ManagementService,
         private titleService: Title
     ) {
-        this.logServices = [
-            { name: 'server', value: 'server' },
-            { name: 'server/api', value: 'server/api' },
-            { name: 'server/backend', value: 'server/backend' },
-            { name: 'server/webhooks', value: 'server/webhooks' },
-            { name: 'server/artifacts', value: 'server/artifacts' },
-            { name: 'server/install', value: 'server/install' },
-            { name: 'server/job-log', value: 'server/job-log' },
-            { name: 'server/badge', value: 'server/badge' },
-            { name: 'server/other', value: 'server/other' },
-            { name: 'rq', value: 'rq' },
-            { name: 'scheduler', value: 'scheduler' },
-            { name: 'planner', value: 'planner' },
-            { name: 'watchdog', value: 'watchdog' },
-        ]
-
-        this.logLevels = [
-            { label: 'Info', value: 'info' },
-            { label: 'Warning', value: 'warning' },
-            { label: 'Error', value: 'error' },
-        ]
-
-        this.rqJobs = [{ label: '-- all --', value: 'all' }]
     }
 
     ngOnInit() {
@@ -81,15 +47,13 @@ export class DiagsPageComponent implements OnInit, OnDestroy {
                 (params) => {
                     const tab = this.route.snapshot.paramMap.get('tab')
                     if (tab === 'logs') {
-                        this.loadLastRQJobsNames()
-
+                        this.logsPanelVisible = true
                         const level = params.get('level')
                         if (
                             ['info', 'warning', 'error'].includes(level) &&
-                            this.logLevel !== level
+                                this.logLevel !== level
                         ) {
                             this.logLevel = level
-                            this.loadServicesLogs()
                         }
                     }
                 },
@@ -104,17 +68,6 @@ export class DiagsPageComponent implements OnInit, OnDestroy {
         this.subs.unsubscribe()
     }
 
-    loadLastRQJobsNames() {
-        this.subs.add(
-            this.managementService.getLastRqJobsNames().subscribe((data) => {
-                this.rqJobs = [{ label: '-- all --', value: 'all' }]
-                for (const t of data.items) {
-                    this.rqJobs.push({ label: t.name, value: t.name })
-                }
-            })
-        )
-    }
-
     loadDiagsData() {
         this.subs.add(
             this.managementService.getDiagnostics().subscribe((data) => {
@@ -123,49 +76,13 @@ export class DiagsPageComponent implements OnInit, OnDestroy {
         )
     }
 
-    loadServicesLogs() {
-        if (!this.auth.hasPermission(null, 'admin')) {
-            return
-        }
-        this.servicesLogsAreLoading = true
-
-        let services = ['all']
-        if (this.logServicesSelected.length > 0) {
-            if (this.rqJob && this.rqJob !== 'all') {
-                services = []
-                for (let s of this.logServicesSelected) {
-                    if (s === 'rq') {
-                        s = 'rq/' + this.rqJob
-                    }
-                    services.push(s)
-                }
-            } else {
-                services = this.logServicesSelected
-            }
-        }
-
-        this.subs.add(
-            this.managementService
-                .getServicesLogs(services, this.logLevel)
-                .subscribe((data) => {
-                    this.servicesLogs = data.items
-                    this.servicesLogsAreLoading = false
-                })
-        )
-    }
 
     handleTabChange(tabName) {
         if (tabName === 'overview') {
             this.loadDiagsData()
+            this.logsPanelVisible = false
         } else if (tabName === 'logs') {
-            this.loadServicesLogs()
+            this.logsPanelVisible = true
         }
-    }
-
-    isRQSelected() {
-        if (this.logServicesSelected.includes('rq')) {
-            return true
-        }
-        return false
     }
 }

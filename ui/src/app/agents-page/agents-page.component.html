@@ -111,7 +111,7 @@
 
 <!-- Single agent tab -->
 <div *ngIf="activeTabIdx !== 0" class="p-component">
-    <p-tabView>
+    <p-tabView (onChange)="handleAgentTabChange($event)">
         <p-tabPanel header="Overview">
             <div class="grid">
                 <div class="col-4">
@@ -279,7 +279,10 @@
         </p-tabPanel>
 
         <p-tabPanel header="Logs">
-            <app-simple-logs-panel [agentId]="agentTab.agent.id" [topOffset]="300"></app-simple-logs-panel>
+            <app-simple-logs-panel
+                [visible]="logsPanelVisible"
+                [agentId]="agentTab.agent.id"
+                [topOffset]="300"></app-simple-logs-panel>
         </p-tabPanel>
     </p-tabView>
 

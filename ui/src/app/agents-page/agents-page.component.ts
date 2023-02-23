@@ -44,6 +44,8 @@ export class AgentsPageComponent implements OnInit, OnDestroy {
     totalAgentJobs = 0
     loadingAgentJobs = false
 
+    logsPanelVisible = false
+
     private subs: Subscription = new Subscription()
 
     constructor(
@@ -333,4 +335,13 @@ export class AgentsPageComponent implements OnInit, OnDestroy {
                 })
         )
     }
+
+    handleAgentTabChange(ev) {
+        if (ev.index === 2) {
+            this.logsPanelVisible = true
+        } else {
+            this.logsPanelVisible = false
+        }
+    }
+
 }

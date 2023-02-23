@@ -60,7 +60,7 @@ def _send_http_request(url, data):
         except urllib.error.URLError as e:
             # pylint: disable=no-member
             if e.__context__ and e.__context__.errno in connection_errors:
-                log.warning('connection problem to %s: %s, trying one more time in 5s', url, str(e))
+                log.warning('url connection problem to %s: %s, trying one more time in 5s', url, str(e))
                 time.sleep(5)
             else:
                 raise

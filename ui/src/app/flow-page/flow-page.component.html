@@ -1,4 +1,4 @@
-<app-tabbed-page baseLinkUrl="/flows/{{ flowId }}">
+<app-tabbed-page baseLinkUrl="/flows/{{ flowId }}" (tabChanged)="handleTabChange($event)">
     <ng-template pTemplate="header">
         <div style="display: flex; align-items: center;">
             <div style="font-size: 2.5em; font-weight: bold; width: 10em;">
@@ -41,7 +41,7 @@
                     </span>
                     <b>{{ selectedNode.stage.name }}</b>
                 </div>
-                <p-tabView>
+                <p-tabView (onChange)="handleRunTabChange($event)">
                     <p-tabPanel header="Overview">
                         <div *ngIf="selectedNode.run" style="display: flex;">
                             <!-- created -->
@@ -118,7 +118,11 @@
                     </p-tabPanel>
 
                     <p-tabPanel header="Logs" *ngIf="selectedNode.run">
-                        <app-simple-logs-panel [runId]="selectedNode.run.id" [topOffset]="400"></app-simple-logs-panel>
+                        <app-simple-logs-panel
+                            [visible]="runLogsPanelVisible"
+                            [runId]="selectedNode.run.id"
+                            [topOffset]="400"
+                            [initServices]="['server', 'rq', 'scheduler', 'watchdog']"></app-simple-logs-panel>
                     </p-tabPanel>
                 </p-tabView>
             </div>
@@ -275,7 +279,11 @@
 
     <!-- 8. LOGS TAB -->
     <app-tabbed-page-tab label="Logs">
-        <app-simple-logs-panel [flowId]="flowId" [topOffset]="300"></app-simple-logs-panel>
+        <app-simple-logs-panel
+            [visible]="logsPanelVisible"
+            [flowId]="flowId"
+            [topOffset]="300"
+            [initServices]="['server', 'rq', 'scheduler', 'watchdog']"></app-simple-logs-panel>
     </app-tabbed-page-tab>
 
 </app-tabbed-page>

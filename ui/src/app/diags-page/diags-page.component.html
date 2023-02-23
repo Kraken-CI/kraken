@@ -60,40 +60,9 @@
   </app-tabbed-page-tab>
 
   <app-tabbed-page-tab label="Logs">
-    <div style="display: flex;">
-      <p-selectButton [options]="logServices" [(ngModel)]="logServicesSelected" multiple="multiple" optionLabel="name" optionValue="value" (onChange)="loadServicesLogs()"></p-selectButton>
-      <p-button label="Refresh" icon="pi pi-refresh" (onClick)="loadServicesLogs()" [style]="{'margin-left': '30px'}" [loading]="servicesLogsAreLoading"></p-button>
-    </div>
-
-    <div style="display: flex; margin: 6px 0 0 6px;">
-      <div class="field grid">
-        <label for="log-level" class="col-fixed" style="width:100px">Log Level</label>
-        <div class="col">
-          <p-dropdown id="log-level"  [options]="logLevels" [(ngModel)]="logLevel" (onChange)="loadServicesLogs()"></p-dropdown>
-        </div>
-      </div>
-
-      <div *ngIf="isRQSelected()" class="field grid" style="margin-left: 3em;">
-        <label for="rq-jobs" class="col-fixed" style="width: 9em;">Backgroud Tasks</label>
-        <div class="col">
-          <div class="p-inputgroup">
-            <p-dropdown id="rq-jobs"  [options]="rqJobs" [(ngModel)]="rqJob" (onChange)="loadServicesLogs()" [panelStyle]="{'min-width': '20em'}" scrollHeight='calc(100vh - 340px)'></p-dropdown>
-            <button type="button" pButton pRipple icon="pi pi-refresh" styleClass="p-button-warn" (click)="loadLastRQJobsNames()"></button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div style="height: calc(100vh - 24em); width: 100%; font-family: monospace; font-size: 0.8em; color: #eee; background-color: #222; padding: 10px; overflow-y: scroll;">
-      <div *ngFor="let l of servicesLogs" style="display: flex;">
-        <div style="width: 12em;" class="log-cell"> {{ l.time | localtime }}</div>
-        <div style="width: 7em;" class="log-cell"> {{ l.host }}</div>
-        <div style="width: 7em;" class="log-cell"> {{ l.service }}</div>
-        <div style="width: 9em;" class="log-cell"> {{ l.tool }}</div>
-        <div style="width: 4em;" class="log-cell" [ngClass]="'level-' + l.level.slice(0, 4).toLowerCase()"> {{ l.level.slice(0, 4) }}</div>
-        <div style="white-space: pre-wrap; word-break: break-word;">{{ l.message }}</div>
-      </div>
-    </div>
+      <app-simple-logs-panel
+          [visible]="logsPanelVisible"
+          [topOffset]="250"
+          [logLevel]="logLevel"></app-simple-logs-panel>
   </app-tabbed-page-tab>
-
 </app-tabbed-page>

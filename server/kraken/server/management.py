@@ -1082,7 +1082,7 @@ def get_last_rq_jobs_names(token_info=None):
 
     now = utils.utcnow()
     start_date = now - datetime.timedelta(hours=12111)
-    query = "select max(time) as mt, tool, count(*) from logs "
+    query = "select min(time) as mt, tool, count(*) from logs "
     query += "where service = 'rq' and tool != '' "
     query += "group by tool "
     query += "having mt > %(start_date)s "

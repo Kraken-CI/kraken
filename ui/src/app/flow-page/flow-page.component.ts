@@ -47,8 +47,9 @@ export class FlowPageComponent implements OnInit, OnDestroy {
         run: null,
         selected: false,
     }
-    repoUrl = 'awe'
-    diffUrl = 'dafsd'
+
+    logsPanelVisible = false
+    runLogsPanelVisible = false
 
     private subs: Subscription = new Subscription()
 
@@ -434,5 +435,21 @@ export class FlowPageComponent implements OnInit, OnDestroy {
             return true
         }
         return false
+    }
+
+    handleTabChange(tabName) {
+        if (tabName === 'logs') {
+            this.logsPanelVisible = true
+        } else {
+            this.logsPanelVisible = false
+        }
+    }
+
+    handleRunTabChange(ev) {
+        if (ev.index === 2) {
+            this.runLogsPanelVisible = true
+        } else {
+            this.runLogsPanelVisible = false
+        }
     }
 }

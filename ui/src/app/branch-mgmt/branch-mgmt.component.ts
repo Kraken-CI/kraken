@@ -108,6 +108,7 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
         dev_artifacts: [''],
     } as IForm<RetentionPolicy>)
 
+    logsPanelVisible = false
 
     private subs: Subscription = new Subscription()
 
@@ -702,7 +703,11 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
     }
 
     handleTabChange(tabName) {
-        console.info(tabName)
+        if (tabName === 'logs') {
+            this.logsPanelVisible = true
+        } else {
+            this.logsPanelVisible = false
+        }
     }
 
     handleSubTabChange(ev) {

@@ -1,37 +1,111 @@
-import { Component, OnInit, OnDestroy, Input } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, OnChanges, SimpleChanges } from '@angular/core';
 
+import { MessageService } from 'primeng/api'
 import { Subscription } from 'rxjs'
 import { parse } from 'ansicolor'
 
+import { ManagementService } from '../backend/api/management.service'
 import { ExecutionService } from '../backend/api/execution.service'
+import { showErrorBox } from '../utils'
 
 @Component({
-  selector: 'app-simple-logs-panel',
-  templateUrl: './simple-logs-panel.component.html',
-  styleUrls: ['./simple-logs-panel.component.sass']
+    selector: 'app-simple-logs-panel',
+    templateUrl: './simple-logs-panel.component.html',
+    styleUrls: ['./simple-logs-panel.component.sass'],
 })
-export class SimpleLogsPanelComponent implements OnInit, OnDestroy {
+export class SimpleLogsPanelComponent implements OnInit, OnDestroy, OnChanges {
+    @Input() visible: boolean
+    @Input() logLevel: string
     @Input() topOffset: number = 0
     @Input() branchId: number
     @Input() flowId: number
     @Input() runId: number
     @Input() jobId: number
     @Input() agentId: number
+    @Input() initServices: string[] = []
 
     private subs: Subscription = new Subscription()
+
+    _visible = false
+
+    services: any = []
+    selectedServices: any = []
+
+    logLevels: any[]
+    selectedlogLevel: any
+
+    rqJobs: any[]
+    rqJob: any = 'all'
 
     logs: any = []
     loading = false
 
-    constructor(protected executionService: ExecutionService) { }
+    constructor(
+        protected managementService: ManagementService,
+        protected executionService: ExecutionService,
+        private msgSrv: MessageService,
+    ) {
+        this.services = [
+            { name: 'agent', value: 'agent' },
+            { name: 'server', value: 'server' },
+            { name: 'server/api', value: 'server/api' },
+            { name: 'server/backend', value: 'server/backend' },
+            { name: 'server/webhooks', value: 'server/webhooks' },
+            { name: 'server/artifacts', value: 'server/artifacts' },
+            { name: 'server/install', value: 'server/install' },
+            { name: 'server/job-log', value: 'server/job-log' },
+            { name: 'server/badge', value: 'server/badge' },
+            { name: 'server/other', value: 'server/other' },
+            { name: 'rq', value: 'rq' },
+            { name: 'scheduler', value: 'scheduler' },
+            { name: 'planner', value: 'planner' },
+            { name: 'watchdog', value: 'watchdog' },
+        ]
+
+        this.logLevels = [
+            { label: 'Info', value: 'info' },
+            { label: 'Warning', value: 'warning' },
+            { label: 'Error', value: 'error' },
+        ]
+    }
 
     ngOnInit(): void {
-        this.loadLogs()
     }
 
     ngOnDestroy() {
         this.subs.unsubscribe()
         //this.resetLogging()
+    }
+
+    ngOnChanges(changes: SimpleChanges) {
+        let reload = false
+        if (changes?.logLevel?.currentValue) {
+            this.selectedlogLevel = changes.logLevel.currentValue
+            reload = true
+        }
+        if (changes?.visible?.currentValue) {
+            this._visible = changes.visible.currentValue
+            reload = true
+        }
+        if (this.selectedServices.length === 0 && changes?.initServices?.currentValue) {
+            this.selectedServices = this.initServices.map(svc => ({name: svc, value: svc}))
+        }
+
+        if (this._visible && reload) {
+            this.loadLogs()
+            this.loadLastRQJobsNames()
+        }
+    }
+
+    loadLastRQJobsNames() {
+        this.subs.add(
+            this.managementService.getLastRqJobsNames().subscribe((data) => {
+                this.rqJobs = [{ label: '-- all --', value: 'all' }]
+                for (const t of data.items) {
+                    this.rqJobs.push({ label: t.name, value: t.name, time: t.time })
+                }
+            })
+        )
     }
 
     loadLogs() {
@@ -44,19 +118,38 @@ export class SimpleLogsPanelComponent implements OnInit, OnDestroy {
         let jobId = this.jobId
         let stepIdx
         let agentId = this.agentId
+        let services = this.selectedServices.map(svc => svc.value)
+        let level = this.selectedlogLevel ? this.selectedlogLevel : 'info'
         let order = 'desc'
+
+        if (services.length > 0 && this.rqJob && this.rqJob !== 'all') {
+            let services2 = []
+            for (let s of services) {
+                if (s === 'rq') {
+                    s = 'rq/' + this.rqJob
+                }
+                services2.push(s)
+            }
+            services = services2
+        }
+
 
         this.loading = true
         this.subs.add(
             this.executionService
-                .getLogs(start, limit, branchId, flowKind, flowId, runId, jobId, stepIdx, agentId, order)
+                .getLogs(start, limit, branchId, flowKind, flowId, runId, jobId, stepIdx, agentId, services, level, order)
                 .subscribe(
                     (data) => {
-                        this.logs = data.items
+                        this.logs = data.items.reverse()
                         this.loading = false
                     },
                     (err) => {
                         this.loading = false
+                        showErrorBox(
+                            this.msgSrv,
+                            err,
+                            'Getting branch flows erred'
+                        )
                     }
                 )
         )

@@ -51,7 +51,6 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
     timer: any = null
     lastLogChecksCount = 0
 
-    logInternals = false
     logTimestamps = false
 
     isNearBottom = false
@@ -127,8 +126,7 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
                     stepIdx,
                     start,
                     limit,
-                    'asc',
-                    this.logInternals
+                    'asc'
                 )
                 .subscribe(
                     (data) => {
@@ -155,8 +153,7 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
                     stepIdx,
                     start,
                     limit,
-                    'asc',
-                    this.logInternals
+                    'asc'
                 )
                 .subscribe(
                     (data) => {
@@ -187,8 +184,7 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
                     stepIdx,
                     start,
                     limit,
-                    'asc',
-                    this.logInternals
+                    'asc'
                 )
                 .subscribe(
                     (data) => {
@@ -216,8 +212,7 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
                     stepIdx,
                     start,
                     limit,
-                    'asc',
-                    this.logInternals
+                    'asc'
                 )
                 .subscribe(
                     (data) => {
@@ -247,8 +242,7 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
                     stepIdx,
                     0,
                     100,
-                    'desc',
-                    this.logInternals
+                    'desc'
                 )
                 .subscribe(
                     (data) => {
@@ -439,7 +433,6 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
 
     toggleInternals(stepIdx) {
         event.stopPropagation()
-        this.logInternals = !this.logInternals
         this.loadLastPage(stepIdx)
     }
 

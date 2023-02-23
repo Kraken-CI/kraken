@@ -32,6 +32,8 @@ export class RunResultsComponent implements OnInit, OnDestroy {
     refreshTimer: any = null
     refreshing = false
 
+    flatLogsPanelVisible = false
+
     // jobs
     jobs: Job[]
     totalJobs = 0
@@ -595,5 +597,13 @@ export class RunResultsComponent implements OnInit, OnDestroy {
                 }
             )
         )
+    }
+
+    handleJobTabChange(ev) {
+        if (ev.index === 1) {
+            this.flatLogsPanelVisible = true
+        } else {
+            this.flatLogsPanelVisible = false
+        }
     }
 }

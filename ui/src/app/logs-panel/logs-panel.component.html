@@ -16,18 +16,11 @@
                     {{ step.name }}
                 </div>
             </div>
-            <div class="flex align-items-baseline gap-1">
-                <div *ngIf="ss.expanded"
-                     class="px-1 ml-auto mr-0 my-0 border-round-lg border-solid border-1 border-800 bg-gray-900 cursor-pointer
-                            transition-colors transition-duration-200 hover:bg-gray-600 font-normal"
-                     [ngClass]="logTimestamps ? 'font-bold' : ''"
-                     (click)="toggleTimestamps(idx)">timestamps: {{ logTimestamps ? 'on' : 'off' }}</div>
-                <div *ngIf="ss.expanded"
-                     class="px-1 ml-auto mr-0 my-0 border-round-lg border-solid border-1 border-800 bg-gray-900 cursor-pointer
-                            transition-colors transition-duration-200 hover:bg-gray-600 font-normal"
-                     [ngClass]="logInternals ? 'font-bold' : ''"
-                     (click)="toggleInternals(idx)">internals: {{ logInternals ? 'on' : 'off' }}</div>
-            </div>
+            <div *ngIf="ss.expanded"
+                 class="px-1 ml-auto mr-0 my-0 border-round-lg border-solid border-1 border-800 bg-gray-900 cursor-pointer
+                        transition-colors transition-duration-200 hover:bg-gray-600 font-normal"
+                 [ngClass]="logTimestamps ? 'font-bold' : ''"
+                 (click)="toggleTimestamps(idx)">timestamps: {{ logTimestamps ? 'on' : 'off' }}</div>
         </div>
         <!-- expanded step content -->
         <ng-container *ngIf="ss.expanded">
@@ -99,7 +92,6 @@
                     <div *ngFor="let l of stepsStates[idx].logs; let l_idx = index"
                          class="flex">
                         <div style="width: 3rem; color: #888; text-align: right; margin-right: 0.5rem; flex: none;">{{ stepsStates[idx].start + l_idx  }}</div>
-                        <div *ngIf="logInternals" style="width: 4em; color: #888; text-align: right; margin-right: 0.5em; flex: none;">{{ l.service }}</div>
                         <div style="white-space: pre-wrap; overflow-x: auto; word-break: break-word; margin: 0;"
                              [innerHTML]="prepareLogLine(stepsStates[idx], l.message) | noSanitize">
                         </div>

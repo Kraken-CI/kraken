@@ -1,4 +1,48 @@
-<p-button label="Refresh" icon="pi pi-refresh" (onClick)="loadLogs()" [loading]="loading"></p-button>
+<div class="flex gap-3 mb-2">
+    <p-multiSelect
+        [options]="services"
+        optionLabel="name"
+        [(ngModel)]="selectedServices"
+        placeholder="Filter by services"
+        display="chip"
+        [showHeader]="false"
+        [style]="{width: '30em'}"
+        [panelStyle]="{width:'30em'}"
+        scrollHeight="40em"
+        [maxSelectedLabels]="20"></p-multiSelect>
+
+    <div>
+        <p-dropdown
+            [options]="rqJobs"
+            [(ngModel)]="rqJob"
+            [panelStyle]="{'min-width': '40em'}"
+            scrollHeight='calc(100vh - 300px)'>
+            <ng-template let-job pTemplate="item">
+                <div class="flex">
+                    <div style="width: 25em;">{{ job.label }}</div>
+                    <div style="width: 15em;" class="text-500">{{ job.time ? (job.time | localtime) : '' }}</div>
+                </div>
+            </ng-template>
+        </p-dropdown>
+        <button
+            type="button" pButton pRipple icon="pi pi-refresh"
+            styleClass="p-button-warn"
+            (click)="loadLastRQJobsNames()"></button>
+    </div>
+
+    <p-dropdown
+        [options]="logLevels"
+        [(ngModel)]="selectedlogLevel"
+        placeholder="Level"
+        [style]="{minWidth: '8em'}"
+        [panelStyle]="{minWidth:'8em'}"></p-dropdown>
+
+    <p-button
+        label="Refresh"
+        icon="pi pi-refresh"
+        (onClick)="loadLogs()"
+        [loading]="loading"></p-button>
+</div>
 
 <div style="width: 100%; height: calc(100vh - {{ topOffset }}px); font-family: monospace; font-size: 0.8em; color: #eee; background-color: #222; padding: 10px; overflow-y: scroll;">
     <div *ngFor="let l of logs" style="display: flex;">
