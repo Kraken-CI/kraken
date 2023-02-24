@@ -413,11 +413,7 @@ def get_step_logs(job_id, step_idx, start=0, limit=200, order=None, filters=None
 
     ch = chops.get_clickhouse()
 
-    internal_clause = ''
-    if not internals:
-        internal_clause = "and tool != '' and service = 'agent'"
-
-    query = "select count(*) from logs where job = %%(job_id)d and step = %%(step_idx)d %s" % internal_clause
+    query = "select count(*) from logs where job = %%(job_id)d and step = %%(step_idx)d"
     params = dict(job_id=job_id, step_idx=step_idx)
     resp = ch.execute(query, params)
     total = resp[0][0]
@@ -425,8 +421,8 @@ def get_step_logs(job_id, step_idx, start=0, limit=200, order=None, filters=None
     if order is None:
         order = 'asc'
 
-    query = "select time,message,service,host,level,job,tool,step from logs where job = %%(job_id)d and step = %%(step_idx)d %s order by time %s, seq %s limit %%(start)d, %%(limit)d"
-    query %= (internal_clause, order, order)
+    query = "select time,message,service,host,level,job,tool,step from logs where job = %%(job_id)d and step = %%(step_idx)d order by time %s, seq %s limit %%(start)d, %%(limit)d"
+    query %= (order, order)
     params = dict(job_id=job_id, step_idx=step_idx, start=start, limit=limit)
 
     rows = ch.execute(query, params)
