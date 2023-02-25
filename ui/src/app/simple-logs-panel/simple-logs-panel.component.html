@@ -40,17 +40,52 @@
     <p-button
         label="Refresh"
         icon="pi pi-refresh"
-        (onClick)="loadLogs()"
+        (onClick)="loadLogs('last')"
         [loading]="loading"></p-button>
 </div>
 
-<div style="width: 100%; height: calc(100vh - {{ topOffset }}px); font-family: monospace; font-size: 0.8em; color: #eee; background-color: #222; padding: 10px; overflow-y: scroll;">
+<p-tieredMenu #menu [popup]="true" [model]="menuItems"></p-tieredMenu>
+
+<div style="width: 100%; height: calc(100vh - {{ topOffset }}px); font-family: monospace; font-size: {{ textSize }}em; color: #eee; background-color: #222; padding: 10px; overflow-y: scroll;"
+     class="relative">
+    <div class="mt-3 mr-3 absolute right-0 top-0 flex gap-1 flex-column align-items-end">
+        <div class="flex gap-1">
+            <div class="px-2 py-1 border-round-lg border-solid border-1 border-800 bg-gray-900 cursor-pointer
+                        transition-colors transition-duration-200 hover:bg-gray-600 font-normal"
+                 pTooltip="First page"
+                 (click)="loadLogs('first')"><i class="pi pi-angle-double-left"></i></div>
+
+            <div class="px-2 py-1 border-round-lg border-solid border-1 border-800 bg-gray-900 cursor-pointer
+                        transition-colors transition-duration-200 hover:bg-gray-600 font-normal"
+                 pTooltip="Previous page"
+                 (click)="loadLogs('prev')"><i class="pi pi-angle-left"></i></div>
+
+            <div class="px-2 py-1 border-round-lg border-solid border-1 border-800 bg-gray-900 cursor-pointer
+                        transition-colors transition-duration-200 hover:bg-gray-600 font-normal"
+                 pTooltip="Next page"
+                 (click)="loadLogs('next')"><i class="pi pi-angle-right"></i></div>
+
+            <div class="px-2 py-1 border-round-lg border-solid border-1 border-800 bg-gray-900 cursor-pointer
+                        transition-colors transition-duration-200 hover:bg-gray-600 font-normal"
+                 pTooltip="Last page"
+                 (click)="loadLogs('last')"><i class="pi pi-angle-double-right"></i></div>
+
+            <div class="px-2 py-1 border-round-lg border-solid border-1 border-800 bg-gray-900 cursor-pointer
+                        transition-colors transition-duration-200 hover:bg-gray-600 font-normal"
+                 (click)="menu.toggle($event)"><i class="pi pi-cog"></i></div>
+        </div>
+        <div class="mr-1 mt-1">
+            {{ logsBegin }}..{{ logsEnd }} of {{ logsTotal }}
+        </div>
+    </div>
+
     <div *ngFor="let l of logs" style="display: flex;">
-        <div style="width: 12em;" class="log-cell"> {{ l.time | localtime }}</div>
-        <div style="width: 7em;" class="log-cell"> {{ l.host }}</div>
-        <div style="width: 7em;" class="log-cell"> {{ l.service }}</div>
-        <div style="width: 9em;" class="log-cell"> {{ l.tool }}</div>
-        <div style="width: 4em;" class="log-cell" [ngClass]="'level-' + l.level.slice(0, 4).toLowerCase()"> {{ l.level.slice(0, 4) }}</div>
+        <div style="width: 12em;" class="log-cell" *ngIf="columns[0]"> {{ l.time | localtime }}</div>
+        <div style="width: 7em;" class="log-cell" *ngIf="columns[1]"> {{ l.host }}</div>
+        <div style="width: 7em;" class="log-cell" *ngIf="columns[2]"> {{ l.service }}</div>
+        <div style="width: 9em;" class="log-cell" *ngIf="columns[3]"> {{ l.tool }}</div>
+        <div style="width: 4em;" class="log-cell"  *ngIf="columns[4]"
+             [ngClass]="'level-' + l.level.slice(0, 4).toLowerCase()"> {{ l.level.slice(0, 4) }}</div>
         <div style="white-space: pre-wrap; word-break: break-word;"
              [innerHTML]="prepareLogLine(l.message) | noSanitize">
         </div>

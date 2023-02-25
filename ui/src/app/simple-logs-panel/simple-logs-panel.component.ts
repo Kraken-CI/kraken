@@ -1,8 +1,10 @@
 import { Component, OnInit, OnDestroy, Input, OnChanges, SimpleChanges } from '@angular/core';
 
-import { MessageService } from 'primeng/api'
 import { Subscription } from 'rxjs'
 import { parse } from 'ansicolor'
+
+import { MessageService } from 'primeng/api'
+import { MenuItem } from 'primeng/api';
 
 import { ManagementService } from '../backend/api/management.service'
 import { ExecutionService } from '../backend/api/execution.service'
@@ -38,7 +40,15 @@ export class SimpleLogsPanelComponent implements OnInit, OnDestroy, OnChanges {
     rqJob: any = 'all'
 
     logs: any = []
+    logsBegin = 0
+    logsEnd = 0
+    logsTotal = 0
     loading = false
+
+    menuItems: MenuItem[];
+
+    textSize = 0.8
+    columns = [true, true, true, true, true]
 
     constructor(
         protected managementService: ManagementService,
@@ -67,6 +77,78 @@ export class SimpleLogsPanelComponent implements OnInit, OnDestroy, OnChanges {
             { label: 'Warning', value: 'warning' },
             { label: 'Error', value: 'error' },
         ]
+
+        this.menuItems = [{
+            label: 'Text Size',
+            items: [{
+                label: 'Bigger',
+                icon: 'pi pi-plus-circle',
+                command: () => {
+                    this.textSize += 0.1
+                }
+            }, {
+                label: 'Smaller',
+                icon: 'pi pi-minus-circle',
+                command: () => {
+                    if (this.textSize > 0) {
+                        this.textSize -= 0.1
+                    }
+                }
+            }, {
+                label: 'Reset',
+                icon: 'pi pi-circle',
+                command: () => {
+                    this.textSize = 0.8
+                }
+            }]
+        }, {
+            label: 'Columns',
+            items: [{
+                label: 'Timestamp',
+                icon: 'pi pi-circle-fill',
+                command: (ev) => {
+                    this.toggleColumn(ev.item.state.idx)
+                },
+                state: {idx: 0}
+            }, {
+                label: 'Host',
+                icon: 'pi pi-circle-fill',
+                command: (ev) => {
+                    this.toggleColumn(ev.item.state.idx)
+                },
+                state: {idx: 1}
+            }, {
+                label: 'Service',
+                icon: 'pi pi-circle-fill',
+                command: (ev) => {
+                    this.toggleColumn(ev.item.state.idx)
+                },
+                state: {idx: 2}
+            }, {
+                label: 'Tool',
+                icon: 'pi pi-circle-fill',
+                command: (ev) => {
+                    this.toggleColumn(ev.item.state.idx)
+                },
+                state: {idx: 3}
+            }, {
+                label: 'Level',
+                icon: 'pi pi-circle-fill',
+                command: (ev) => {
+                    this.toggleColumn(ev.item.state.idx)
+                },
+                state: {idx: 4}
+            }]
+        }]
+    }
+
+    toggleColumn(colIdx) {
+        this.columns[colIdx] = !this.columns[colIdx]
+        if (this.columns[colIdx]) {
+            this.menuItems[1].items[colIdx].icon = 'pi pi-circle-fill'
+        } else {
+            this.menuItems[1].items[colIdx].icon = 'pi pi-circle'
+        }
     }
 
     ngOnInit(): void {
@@ -92,7 +174,7 @@ export class SimpleLogsPanelComponent implements OnInit, OnDestroy, OnChanges {
         }
 
         if (this._visible && reload) {
-            this.loadLogs()
+            this.loadLogs('last')
             this.loadLastRQJobsNames()
         }
     }
@@ -108,9 +190,7 @@ export class SimpleLogsPanelComponent implements OnInit, OnDestroy, OnChanges {
         )
     }
 
-    loadLogs() {
-        let start = 0
-        let limit = 100
+    loadLogs(what) {
         let branchId = this.branchId
         let flowKind
         let flowId = this.flowId
@@ -120,7 +200,9 @@ export class SimpleLogsPanelComponent implements OnInit, OnDestroy, OnChanges {
         let agentId = this.agentId
         let services = this.selectedServices.map(svc => svc.value)
         let level = this.selectedlogLevel ? this.selectedlogLevel : 'info'
-        let order = 'desc'
+        let start
+        let limit = 100
+        let order = 'asc'
 
         if (services.length > 0 && this.rqJob && this.rqJob !== 'all') {
             let services2 = []
@@ -133,6 +215,29 @@ export class SimpleLogsPanelComponent implements OnInit, OnDestroy, OnChanges {
             services = services2
         }
 
+        if (this.logsBegin === 0 && what === 'prev') {
+            return
+        }
+
+        switch (what) {
+        case 'first':
+            start = 0
+            break
+        case 'prev':
+            start = this.logsBegin - 100
+            if (start < 0) {
+                start = 0
+                limit = this.logsBegin
+            }
+            break
+        case 'next':
+            start = this.logsEnd
+            break
+        case 'last':
+            start = 0
+            order = 'desc'
+            break
+        }
 
         this.loading = true
         this.subs.add(
@@ -140,7 +245,22 @@ export class SimpleLogsPanelComponent implements OnInit, OnDestroy, OnChanges {
                 .getLogs(start, limit, branchId, flowKind, flowId, runId, jobId, stepIdx, agentId, services, level, order)
                 .subscribe(
                     (data) => {
-                        this.logs = data.items.reverse()
+                        if (what === 'first') {
+                            this.logs = data.items
+                            this.logsBegin = 0
+                            this.logsEnd = this.logs.length
+                        } else if (what === 'prev') {
+                            this.logs = data.items.concat(this.logs)
+                            this.logsBegin -= data.items.length
+                        } else if (what === 'next') {
+                            this.logs = this.logs.concat(data.items)
+                            this.logsEnd += data.items.length
+                        } else if (what === 'last') {
+                            this.logs = data.items.reverse()
+                            this.logsBegin = data.total - this.logs.length
+                            this.logsEnd = data.total
+                        }
+                        this.logsTotal = data.total
                         this.loading = false
                     },
                     (err) => {

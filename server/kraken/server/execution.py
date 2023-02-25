@@ -413,7 +413,7 @@ def get_step_logs(job_id, step_idx, start=0, limit=200, order=None, filters=None
 
     ch = chops.get_clickhouse()
 
-    query = "select count(*) from logs where job = %%(job_id)d and step = %%(step_idx)d"
+    query = "select count(*) from logs where job = %(job_id)d and step = %(step_idx)d"
     params = dict(job_id=job_id, step_idx=step_idx)
     resp = ch.execute(query, params)
     total = resp[0][0]
@@ -501,20 +501,9 @@ def get_logs(branch_id=None, flow_kind=None, flow_id=None, run_id=None, job_id=N
 
     ch = chops.get_clickhouse()
 
-    # internal_clause = ''
-    # if not internals:
-    #     internal_clause = "and tool != '' and service = 'agent'"
-
-    # query = "select count(*) from logs where job = %%(job_id)d and step = %%(step_idx)d %s" % internal_clause
-    # params = dict(job_id=job_id, step_idx=step_idx)
-    # resp = ch.execute(query, params)
-    # total = resp[0][0]
-    total = 10000
-
     if order is None:
         order = 'asc'
 
-    query = "select time,message,service,host,level,job,tool,step from logs %s order by time %s, seq %s limit %%(start)d, %%(limit)d"
     params = dict(start=start, limit=limit)
 
     where_clauses = []
@@ -569,11 +558,16 @@ def get_logs(branch_id=None, flow_kind=None, flow_id=None, run_id=None, job_id=N
 
     where_clause = 'where ' + ' and '.join(where_clauses)
 
-    query %= (where_clause, order, order)
+    # get total first
+    total_query = "select count(*) from logs %s" % where_clause
+    resp = ch.execute(total_query, params)
+    total = resp[0][0]
 
+    # get logs now
+    query = "select time,message,service,host,level,job,tool,step from logs %s order by time %s, seq %s limit %%(start)d, %%(limit)d"
+    query %= (where_clause, order, order)
     log.info('CH query %s', query)
     log.info('CH params %s', params)
-
     rows = ch.execute(query, params)
 
     logs = []
