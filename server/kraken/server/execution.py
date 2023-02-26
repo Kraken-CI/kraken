@@ -413,7 +413,7 @@ def get_step_logs(job_id, step_idx, start=0, limit=200, order=None, filters=None
 
     ch = chops.get_clickhouse()
 
-    query = "select count(*) from logs where job = %(job_id)d and step = %(step_idx)d"
+    query = "SELECT count(*) FROM logs WHERE job = %(job_id)d AND step = %(step_idx)d"
     params = dict(job_id=job_id, step_idx=step_idx)
     resp = ch.execute(query, params)
     total = resp[0][0]
@@ -421,7 +421,9 @@ def get_step_logs(job_id, step_idx, start=0, limit=200, order=None, filters=None
     if order is None:
         order = 'asc'
 
-    query = "select time,message,service,host,level,job,tool,step from logs where job = %%(job_id)d and step = %%(step_idx)d order by time %s, seq %s limit %%(start)d, %%(limit)d"
+    query = "SELECT time,message,service,host,level,job,tool,step "
+    query += " FROM logs WHERE job = %%(job_id)d AND step = %%(step_idx)d "
+    query += " ORDER BY time %s, seq %s LIMIT %%(start)d, %%(limit)d"
     query %= (order, order)
     params = dict(job_id=job_id, step_idx=step_idx, start=start, limit=limit)
 
@@ -559,12 +561,13 @@ def get_logs(branch_id=None, flow_kind=None, flow_id=None, run_id=None, job_id=N
     where_clause = 'where ' + ' and '.join(where_clauses)
 
     # get total first
-    total_query = "select count(*) from logs %s" % where_clause
+    total_query = "SELECT count(*) FROM logs %s" % where_clause
     resp = ch.execute(total_query, params)
     total = resp[0][0]
 
     # get logs now
-    query = "select time,message,service,host,level,job,tool,step from logs %s order by time %s, seq %s limit %%(start)d, %%(limit)d"
+    query = "SELECT time,message,service,host,path,lineno,level,branch,flow_kind,flow,run,job,tool,step,agent "
+    query += " FROM logs %s ORDER BY time %s, seq %s LIMIT %%(start)d, %%(limit)d"
     query %= (where_clause, order, order)
     log.info('CH query %s', query)
     log.info('CH params %s', params)
@@ -576,10 +579,17 @@ def get_logs(branch_id=None, flow_kind=None, flow_id=None, run_id=None, job_id=N
                      message=r[1],
                      service=r[2],
                      host=r[3],
-                     level=r[4].lower()[:4],
-                     job=r[5],
-                     tool=r[6],
-                     step=r[7])
+                     path=r[4],
+                     lineno=r[5],
+                     level=r[6].lower()[:4],
+                     branch=r[7],
+                     flow_kind=r[8],
+                     flow=r[9],
+                     run=r[10],
+                     job=r[11],
+                     tool=r[12],
+                     step=r[13],
+                     agent=r[14])
         logs.append(entry)
 
     return {'items': logs, 'total': total}, 200

@@ -48,7 +48,9 @@ export class SimpleLogsPanelComponent implements OnInit, OnDestroy, OnChanges {
     menuItems: MenuItem[];
 
     textSize = 0.8
-    columns = [true, true, true, true, true]
+    columns = [true, true, false, true, true,
+               false, false, false, false, false,
+               false, false, true]
 
     constructor(
         protected managementService: ManagementService,
@@ -103,43 +105,21 @@ export class SimpleLogsPanelComponent implements OnInit, OnDestroy, OnChanges {
             }]
         }, {
             label: 'Columns',
-            items: [{
-                label: 'Timestamp',
-                icon: 'pi pi-circle-fill',
-                command: (ev) => {
-                    this.toggleColumn(ev.item.state.idx)
-                },
-                state: {idx: 0}
-            }, {
-                label: 'Host',
-                icon: 'pi pi-circle-fill',
-                command: (ev) => {
-                    this.toggleColumn(ev.item.state.idx)
-                },
-                state: {idx: 1}
-            }, {
-                label: 'Service',
-                icon: 'pi pi-circle-fill',
-                command: (ev) => {
-                    this.toggleColumn(ev.item.state.idx)
-                },
-                state: {idx: 2}
-            }, {
-                label: 'Tool',
-                icon: 'pi pi-circle-fill',
-                command: (ev) => {
-                    this.toggleColumn(ev.item.state.idx)
-                },
-                state: {idx: 3}
-            }, {
-                label: 'Level',
-                icon: 'pi pi-circle-fill',
-                command: (ev) => {
-                    this.toggleColumn(ev.item.state.idx)
-                },
-                state: {idx: 4}
-            }]
+            items: []
         }]
+
+        let cols = ['Timestamp', 'Host', 'Path:LineNo', 'Service', 'Tool', 'Step',
+                    'Branch', 'Flow Kind', 'Flow', 'Run', 'Job', 'Agent', 'Level']
+        for (let i = 0; i < cols.length; i++) {
+            this.menuItems[1].items.push({
+                label: cols[i],
+                icon: this.columns[i] ? 'pi pi-circle-fill' : 'pi pi-circle',
+                command: (ev) => {
+                    this.toggleColumn(ev.item.state.idx)
+                },
+                state: {idx: i}
+            })
+        }
     }
 
     toggleColumn(colIdx) {

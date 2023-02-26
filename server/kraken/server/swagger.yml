@@ -2809,9 +2809,27 @@ components:
           type: string
         host:
           type: string
+        path:
+          type: string
+        lineno:
+          type: string
         level:
           type: string
+        branch:
+          type: string
+        flow_kind:
+          type: string
+        flow:
+          type: string
+        run:
+          type: string
+        job:
+          type: string
         tool:
+          type: string
+        step:
+          type: string
+        agent:
           type: string
     ServicesLogs:
       type: object
