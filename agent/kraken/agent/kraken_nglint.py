@@ -81,7 +81,6 @@ def run_analysis(step, report_issue=None):
             filepath = file_issues['filePath']
 
         for issue in file_issues['messages']:
-            log.info('%s:%s  %s', filepath, issue['startPosition']['line'], issue['failure'])
             if issue['severity'] == 2:
                 severity = 'error'
             elif issue['severity'] == 1:
