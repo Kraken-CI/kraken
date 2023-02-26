@@ -74,7 +74,8 @@ def run_analysis(step, report_issue=None):
 
 
     result = json.loads(out)
-    for issue in result:
+    for idx, issue in enumerate(result):
+        log.info('issue %d: %s', idx, issue)
         if repo_parent:
             filepath = issue['name'].replace(repo_parent, '')
         else:
