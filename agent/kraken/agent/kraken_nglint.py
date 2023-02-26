@@ -74,23 +74,30 @@ def run_analysis(step, report_issue=None):
 
 
     result = json.loads(out)
-    for idx, issue in enumerate(result):
-        log.info('issue %d: %s', idx, issue)
+    for file_issues in result:
         if repo_parent:
-            filepath = issue['name'].replace(repo_parent, '')
+            filepath = file_issues['filePath'].replace(repo_parent, '')
         else:
-            filepath = issue['name']
+            filepath = file_issues['filePath']
 
-        log.info('%s:%s  %s', filepath, issue['startPosition']['line'], issue['failure'])
-        issue2 = dict(path=filepath,
-                      line=issue['startPosition']['line'],
-                      column=issue['startPosition']['character'],
-                      message=issue['failure'],
-                      symbol=issue['ruleName'],
-                      type=issue['ruleSeverity'].lower())
-        if git_url:
-            issue2['url'] = '%s/%s#L%s' % (git_url, filepath, issue['startPosition']['line'])
-        report_issue(issue2)
+        for issue in file_issues['messages']:
+            log.info('%s:%s  %s', filepath, issue['startPosition']['line'], issue['failure'])
+            if issue['severity'] == 2:
+                severity = 'error'
+            elif issue['severity'] == 1:
+                severity = 'warning'
+            else:
+                severity = 'other'
+            line = issue['line']
+            issue2 = dict(path=filepath,
+                          line=line,
+                          column=issue['column'],
+                          message=issue['message'],
+                          symbol=issue['messageId'],
+                          type=severity)
+            if git_url:
+                issue2['url'] = '%s/%s#L%s' % (git_url, filepath, line)
+            report_issue(issue2)
 
     return 0, ''
 
