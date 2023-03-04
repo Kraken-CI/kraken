@@ -4,9 +4,6 @@ import pulumi_aws as aws
 import json
 
 
-KK_VER = '0.894'
-
-
 def kk_service(cluster, role, prv_dns_ns, vpc_subnets, secgrp, loggrp, name, image, cntr_count, port, proto='tcp', env=None, web_listener=None, target_group=None):
     if env is None:
         env = []
@@ -98,7 +95,8 @@ def kk_image(svc, ver):
 
 
 def main():
-    kk_ver = KK_VER
+    config = pulumi.Config()
+    kk_ver = config.require('kk_ver')
 
     # Create an ECS cluster to run a container-based service.
     cluster = aws.ecs.Cluster('kraken-ci-21')

@@ -6,7 +6,7 @@ NODE_VER = 'v16.13.1'
 OPENAPI_GENERATOR_VER = '5.3.0'
 HELM_VER = 'v3.7.2'
 DOCKER_COMPOSE_VER = '2.2.2'
-PULUMI_VER = 'v3.26.1'
+PULUMI_VER = 'v3.55.0'  # 'v3.26.1'
 
 # Check host OS
 UNAME=`uname -s`
@@ -685,6 +685,7 @@ task :pulumi_init => PULUMI do
     sh "#{PULUMI} login --local"
     sh "PULUMI_CONFIG_PASSPHRASE= #{PULUMI} stack init aws-ecs --secrets-provider passphrase"
     sh "PULUMI_CONFIG_PASSPHRASE= #{PULUMI} config set aws:region ca-central-1"
+    sh "PULUMI_CONFIG_PASSPHRASE= #{PULUMI} config set kk_ver #{kk_ver}"
   end
 end
 

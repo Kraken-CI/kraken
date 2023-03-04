@@ -35,33 +35,33 @@ class Session:
         url = self.base_url + url
         headers = self._initial_headers()
         resp = requests.request("GET", url, params=kwargs, headers=headers)
-        print('GET:', resp.json())
         if exp_status is None:
             assert resp.status_code == 200
         else:
             assert resp.status_code == exp_status
+        print('GET:', resp.json())
         return resp
 
     def post(self, url, payload=None, exp_status=None):
         url = self.base_url + url
         headers = self._initial_headers()
         resp = requests.request("POST", url, json=payload, headers=headers)
-        print('POST:', resp.json())
         if exp_status is None:
             assert resp.status_code in [200, 201]
         else:
             assert resp.status_code == exp_status
+        print('POST:', resp.json())
         return resp
 
     def patch(self, url, payload=None, exp_status=None):
         url = self.base_url + url
         headers = self._initial_headers()
         resp = requests.request("PATCH", url, json=payload, headers=headers)
-        print('PATCH:', resp.json())
         if exp_status is None:
             assert resp.status_code in [200, 201]
         else:
             assert resp.status_code == exp_status
+        print('PATCH:', resp.json())
         return resp
 
     def login(self, user='admin', password='admin'):
