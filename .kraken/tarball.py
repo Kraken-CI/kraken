@@ -1,4 +1,6 @@
 def stage(ctx):
+    kk_ver = "0.#{KK_FLOW_SEQ}"
+
     return {
         "parent": "root",
         "triggers": {
@@ -6,7 +8,7 @@ def stage(ctx):
         },
         "parameters": [],
         "configs": [],
-        "flow_label": "0.#{KK_FLOW_SEQ}",
+        "flow_label": kk_ver,
         "jobs": [{
             "name": "tarball",
             "steps": [{

@@ -1,4 +1,6 @@
 def stage(ctx):
+    kk_ver = "0.#{KK_FLOW_SEQ}"
+
     return {
         "parent": "Build",
         "triggers": {
@@ -21,12 +23,12 @@ def stage(ctx):
                 "action": "download",
                 "public": True,
                 "source": [
-                    "kraken-docker-compose-0.#{KK_FLOW_SEQ}.yaml",
-                    "server/dist/krakenci_server-0.#{KK_FLOW_SEQ}.tar.gz",
-                    "agent/krakenci_agent-0.#{KK_FLOW_SEQ}.tar.gz",
-                    "client/dist/krakenci_client-0.#{KK_FLOW_SEQ}.tar.gz",
-                    "ui/dist/krakenci_ui-0.#{KK_FLOW_SEQ}.tar.gz",
-                    "clickhouse-proxy-0.#{KK_FLOW_SEQ}.tar.gz",
+                    "kraken-docker-compose-%s.yaml" % kk_ver,
+                    "server/dist/krakenci_server-%s.tar.gz" % kk_ver,
+                    "agent/krakenci_agent-%s.tar.gz" % kk_ver,
+                    "client/dist/krakenci_client-%s.tar.gz" % kk_ver,
+                    "ui/dist/krakenci_ui-%s.tar.gz" % kk_ver,
+                    "clickhouse-proxy-%s.tar.gz" % kk_ver,
                 ],
                 "cwd": "kraken"
             }, {
@@ -38,7 +40,7 @@ def stage(ctx):
                 "cwd": "kraken",
                 "timeout": 300,
                 "env": {
-                    "kk_ver": "0.#{KK_FLOW_SEQ}",
+                    "kk_ver": kk_ver,
                     "PYPI_PASSWORD": "#{KK_SECRET_SIMPLE_pypi_password}"
                 }
             }, {
@@ -69,17 +71,17 @@ def stage(ctx):
                 "cmd": "gcloud auth activate-service-account lab-kraken-ci@kraken-261806.iam.gserviceaccount.com --project=kraken-261806 --key-file=/tmp/key.json"
             }, {
                 "tool": "shell",
-                "cmd": "rake kk_ver=0.#{KK_FLOW_SEQ} mark_images_as_published",
+                "cmd": "rake kk_ver=%s mark_images_as_published" % kk_ver,
                 "cwd": "kraken",
                 "timeout": 120
             }, {
                 "tool": "shell",
-                "cmd": "rake kk_ver=0.#{KK_FLOW_SEQ} helm_dest=../helm-repo/charts helm_release",
+                "cmd": "rake kk_ver=%s helm_dest=../helm-repo/charts helm_release" % kk_ver,
                 "cwd": "kraken",
                 "timeout": 120
             }, {
                 "tool": "shell",
-                "cmd": "rake kk_ver=0.#{KK_FLOW_SEQ} github_release",
+                "cmd": "rake kk_ver=%s github_release" % kk_ver,
                 "cwd": "kraken",
                 "env": {
                     "GITHUB_TOKEN": "#{KK_SECRET_SIMPLE_github_token}"

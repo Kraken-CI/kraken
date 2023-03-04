@@ -1,4 +1,6 @@
 def stage(ctx):
+    kk_ver = "0.#{KK_FLOW_SEQ}"
+
     steps = [{
             "tool": "artifacts",
             "action": "download",
@@ -22,7 +24,7 @@ def stage(ctx):
             "cwd": "kraken",
             "timeout": 1200,
             "env": {
-                "kk_ver": "0.#{KK_FLOW_SEQ}",
+                "kk_ver": kk_ver,
             }
         }]
 
@@ -36,7 +38,7 @@ def stage(ctx):
         "cwd": "kraken",
         "timeout": 1500,
         "env": {
-            "kk_ver": "0.#{KK_FLOW_SEQ}",
+            "kk_ver": kk_ver,
         }
     })
 
@@ -51,13 +53,13 @@ def stage(ctx):
         steps.append({
             "tool": "artifacts",
             "source": [
-                "kraken-docker-compose-0.#{KK_FLOW_SEQ}.yaml",
+                "kraken-docker-compose-%s.yaml" % kk_ver,
                 ".env",
-                "server/dist/krakenci_server-0.#{KK_FLOW_SEQ}.tar.gz",
-                "agent/krakenci_agent-0.#{KK_FLOW_SEQ}.tar.gz",
-                "client/dist/krakenci_client-0.#{KK_FLOW_SEQ}.tar.gz",
-                "ui/dist/krakenci_ui-0.#{KK_FLOW_SEQ}.tar.gz",
-                "clickhouse-proxy-0.#{KK_FLOW_SEQ}.tar.gz",
+                "server/dist/krakenci_server-%s.tar.gz" % kk_ver,
+                "agent/krakenci_agent-%s.tar.gz" % kk_ver,
+                "client/dist/krakenci_client-%s.tar.gz" % kk_ver,
+                "ui/dist/krakenci_ui-%s.tar.gz" % kk_ver,
+                "clickhouse-proxy-%s.tar.gz" % kk_ver,
             ],
             "cwd": "kraken",
             "public": True

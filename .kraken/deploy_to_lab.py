@@ -1,4 +1,6 @@
 def stage(ctx):
+    kk_ver = "0.#{KK_FLOW_SEQ}"
+
     return {
         "parent": "Build",
         "triggers": {
@@ -19,7 +21,7 @@ def stage(ctx):
                 "tool": "artifacts",
                 "action": "download",
                 "public": True,
-                "source": "kraken-docker-compose-0.#{KK_FLOW_SEQ}.yaml",
+                "source": "kraken-docker-compose-%s.yaml" % kk_ver,
                 "cwd": "kraken"
             }, {
                 "tool": "shell",
@@ -34,7 +36,7 @@ def stage(ctx):
                 }
             }, {
                 "tool": "shell",
-                "cmd": "rake kk_ver=0.#{KK_FLOW_SEQ} deploy_lab",
+                "cmd": "rake kk_ver=%s deploy_lab" % kk_ver,
                 "cwd": "kraken",
                 "env": {
                     "host": "#{KK_SECRET_SIMPLE_deploy_host}"
