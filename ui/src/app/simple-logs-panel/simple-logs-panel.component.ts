@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, OnDestroy, Input, OnChanges, SimpleChanges } from '@angular/core';
 
 import { Subscription } from 'rxjs'
 import { parse } from 'ansicolor'
@@ -15,7 +15,7 @@ import { showErrorBox } from '../utils'
     templateUrl: './simple-logs-panel.component.html',
     styleUrls: ['./simple-logs-panel.component.sass'],
 })
-export class SimpleLogsPanelComponent implements OnInit, OnDestroy, OnChanges {
+export class SimpleLogsPanelComponent implements OnDestroy, OnChanges {
     @Input() visible: boolean
     @Input() logLevel: string
     @Input() topOffset: number = 0
@@ -131,9 +131,6 @@ export class SimpleLogsPanelComponent implements OnInit, OnDestroy, OnChanges {
         } else {
             this.menuItems[1].items[colIdx].icon = 'pi pi-circle'
         }
-    }
-
-    ngOnInit(): void {
     }
 
     ngOnDestroy() {
