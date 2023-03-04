@@ -28,7 +28,10 @@ def stage(ctx):
                 "tool": "shell",
                 "cmd": "rake pulumi_init",
                 "cwd": "kraken",
-                "timeout": 120
+                "timeout": 120,
+                "env": {
+                    "kk_ver": "0.#{KK_FLOW_SEQ}",
+                }
             }, {
                 "tool": "shell",
                 "cmd": "rake run_systests",
