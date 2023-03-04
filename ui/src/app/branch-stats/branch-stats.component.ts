@@ -13,7 +13,7 @@ import { ManagementService } from '../backend/api/management.service'
     styleUrls: ['./branch-stats.component.sass'],
 })
 export class BranchStatsComponent implements OnInit, OnDestroy {
-    @Input() branch_id: number
+    @Input() branchId: number
 
     stats: any = null
 
@@ -30,7 +30,7 @@ export class BranchStatsComponent implements OnInit, OnDestroy {
     ngOnInit(): void {
         this.subs.add(
             this.managementService
-                .getBranchStats(this.branch_id)
+                .getBranchStats(this.branchId)
                 .subscribe((data) => {
                     this.stats = data
 

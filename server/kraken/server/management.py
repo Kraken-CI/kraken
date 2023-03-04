@@ -279,6 +279,32 @@ def get_branch_sequences(branch_id, token_info=None):
     return {'items': seqs, 'total': len(seqs)}, 200
 
 
+def update_branch_sequence(seq_id, body, token_info=None):
+    seq = BranchSequence.query.filter_by(id=seq_id).one_or_none()
+    if seq is None:
+        abort(404, "Branch sequence not found")
+
+    access.check(token_info, seq.branch.project_id, 'pwrusr',
+                 'only superadmin, project admin and project power user roles can get branch sequences')
+
+    value = body.get('value', None)
+    if value is None:
+        abort(400, "Missing value")
+
+    try:
+        value = int(value)
+    except Exception:
+        abort(400, "Incorrect value")
+
+    if value < -1:
+        abort(400, "Incorrect negative value")
+
+    seq.value = value
+    db.session.commit()
+
+    return seq.get_json(), 200
+
+
 def move_branch(branch_id, body, token_info=None):
     branch = Branch.query.filter_by(id=branch_id).one_or_none()
     if branch is None:

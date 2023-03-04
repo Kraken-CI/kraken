@@ -407,29 +407,12 @@
 
   <!-- Stats & Charts TAB -->
   <app-tabbed-page-tab label="Stats & Charts">
-      <app-branch-stats [branch_id]="branchId"></app-branch-stats>
+      <app-branch-stats [branchId]="branchId"></app-branch-stats>
   </app-tabbed-page-tab>
 
   <!-- Sequences TAB -->
   <app-tabbed-page-tab label="Sequences">
-    <table class="seqs-table">
-      <tr>
-        <th>Sequence Type</th>
-        <th>Stage</th>
-        <th>Value</th>
-      </tr>
-      <tr *ngFor="let s of sequences">
-        <td style="text-align: right;">
-          {{ getSeqTypeName(s) }}
-        </td>
-        <td>
-          {{ s.stage_name ? s.stage_name : ''  }}
-        </td>
-        <td style="text-align: right;">
-          {{ s.value }}
-        </td>
-      </tr>
-    </table>
+      <app-sequences-panel [branchId]="branchId"></app-sequences-panel>
   </app-tabbed-page-tab>
 
 <!--

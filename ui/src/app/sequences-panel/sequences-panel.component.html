@@ -1,0 +1,40 @@
+<!-- change branch names dialog -->
+<p-dialog header="Change sequence value" [(visible)]="changeSeqDlgVisible" [style]="{width: '30rem'}">
+    <div class="field grid" *ngIf="selectedSeq">
+        <label for="sequenceVal" class="col-fixed" style="width: 10rem;">New Value</label>
+        <div class="col">
+            <p-inputNumber inputId="sequenceVal" [(ngModel)]="selectedSeq.value" mode="decimal" [min]="-1">
+            </p-inputNumber>
+        </div>
+    </div>
+
+    <p-footer>
+        <button type="button" (click)="cancelChangeSeqValue()" pButton icon="pi pi-times" label="Cancel" class="p-button-outlined p-button-secondary"></button>
+        <button type="button" (click)="changeSeqValue()" pButton icon="pi pi-check" label="Set"></button>
+    </p-footer>
+</p-dialog>
+
+<div>
+    <table class="seqs-table">
+      <tr>
+        <th>Sequence Type</th>
+        <th>Stage</th>
+        <th>Value</th>
+        <th>Change</th>
+      </tr>
+      <tr *ngFor="let s of sequences">
+        <td style="text-align: right;">
+          {{ getSeqTypeName(s) }}
+        </td>
+        <td>
+          {{ s.stage_name ? s.stage_name : ''  }}
+        </td>
+        <td style="text-align: right;">
+          {{ s.value }}
+        </td>
+        <td>
+            <button pButton type="button" icon="pi pi-pencil" class="p-button-sm" (click)="showSeqChangeDlg(s)"></button>
+        </td>
+      </tr>
+    </table>
+</div>

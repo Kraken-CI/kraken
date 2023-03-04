@@ -556,6 +556,43 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
+  /sequences/{seq_id}:
+    put:
+      tags:
+      - Management
+      summary: Set branch sequence value
+      operationId: update_branch_sequence
+      parameters:
+      - name: seq_id
+        in: path
+        description: ID of sequence
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        description: Value
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                value:
+                  type: integer
+                  format: int64
+      responses:
+        200:
+          description: An array of branch sequences
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BranchSequence'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
   /branches/{branch_id}/stats:
     get:
       tags:

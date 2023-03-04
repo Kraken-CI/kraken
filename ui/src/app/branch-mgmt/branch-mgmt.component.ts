@@ -99,8 +99,6 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
         git_clone_params: new UntypedFormControl(''),
     })
 
-    sequences = []
-
     retentionPolicyForm = this.fb.group({
         ci_logs: [''],
         dev_logs: [''],
@@ -239,14 +237,6 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
                         },
                     ]
                     this.breadcrumbService.setCrumbs(crumbs)
-                })
-        )
-
-        this.subs.add(
-            this.managementService
-                .getBranchSequences(this.branchId)
-                .subscribe((data) => {
-                    this.sequences = data.items
                 })
         )
     }
@@ -601,24 +591,6 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
                     }
                 )
         )
-    }
-
-    getSeqTypeName(seq) {
-        switch (seq.kind) {
-            case 0:
-                return 'flow'
-            case 1:
-                return 'CI flow'
-            case 2:
-                return 'DEV flow'
-            case 3:
-                return 'run'
-            case 4:
-                return 'CI run'
-            case 5:
-                return 'DEV run'
-        }
-        return 'unknown'
     }
 
     deleteBranch() {
