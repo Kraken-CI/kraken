@@ -46,9 +46,11 @@
 
 <p-tieredMenu #menu [popup]="true" [model]="menuItems"></p-tieredMenu>
 
-<div style="width: 100%; height: calc(100vh - {{ topOffset }}px); font-family: monospace; font-size: {{ textSize }}em; color: #eee; background-color: #222; padding: 10px; overflow-y: scroll;"
-     class="relative">
-    <div class="mt-3 mr-3 absolute right-0 top-0 flex gap-1 flex-column align-items-end">
+<div style="width: 100%; height: calc(100vh - {{ topOffset }}px); font-family: monospace; font-size: {{ textSize }}em; color: #eee;"
+     class="relative bg-gray-900 py-2 pl-2">
+
+    <div class="py-2 pl-2 pr-1 mr-2 absolute z-2 right-0 flex gap-1 flex-column align-items-end bg-gray-900"
+         style="transition:top 0.5s ease; {{ stickySide }}">
         <div class="flex gap-1">
             <div class="px-2 py-1 border-round-lg border-solid border-1 border-800 bg-gray-900 cursor-pointer
                         transition-colors transition-duration-200 hover:bg-gray-600 font-normal"
@@ -79,23 +81,26 @@
         </div>
     </div>
 
-    <div *ngFor="let l of logs" style="display: flex;">
-        <div style="width: 12em;" class="log-cell" *ngIf="columns[0]"> {{ l.time | localtime }}</div>
-        <div style="width: 7em;" class="log-cell" *ngIf="columns[1]"> {{ l.host }}</div>
-        <div style="width: 7em;" class="log-cell" *ngIf="columns[2]" pTooltip="{{ l.path }}:{{ l.lineno }}"> {{ l.path }}:{{ l.lineno }}</div>
-        <div style="width: 7em;" class="log-cell" *ngIf="columns[3]"> {{ l.service }}</div>
-        <div style="width: 9em;" class="log-cell" *ngIf="columns[4]"> {{ l.tool }}</div>
-        <div style="width: 4em;" class="log-cell" *ngIf="columns[5]"> {{ l.step }}</div>
-        <div style="width: 4em;" class="log-cell" *ngIf="columns[6]"> {{ l.branch }}</div>
-        <div style="width: 4em;" class="log-cell" *ngIf="columns[7]"> {{ l.flow_kind }}</div>
-        <div style="width: 4em;" class="log-cell" *ngIf="columns[8]"> {{ l.flow }}</div>
-        <div style="width: 4em;" class="log-cell" *ngIf="columns[9]"> {{ l.run }}</div>
-        <div style="width: 4em;" class="log-cell" *ngIf="columns[10]"> {{ l.job }}</div>
-        <div style="width: 4em;" class="log-cell" *ngIf="columns[11]"> {{ l.agent }}</div>
-        <div style="width: 4em;" class="log-cell"  *ngIf="columns[12]"
-             [ngClass]="'level-' + l.level.slice(0, 4).toLowerCase()"> {{ l.level.slice(0, 4) }}</div>
-        <div style="white-space: pre-wrap; word-break: break-word;"
-             [innerHTML]="prepareLogLine(l.message) | noSanitize">
+    <div style="overflow-y: scroll; height: calc(100vh - {{ topOffset }}px - 1rem);"
+         (scroll)="scrolled($event)">
+        <div *ngFor="let l of logs" style="display: flex;">
+            <div style="width: 12em;" class="log-cell" *ngIf="columns[0]"> {{ l.time | localtime }}</div>
+            <div style="width: 7em;" class="log-cell" *ngIf="columns[1]"> {{ l.host }}</div>
+            <div style="width: 7em;" class="log-cell" *ngIf="columns[2]" pTooltip="{{ l.path }}:{{ l.lineno }}"> {{ l.path }}:{{ l.lineno }}</div>
+            <div style="width: 7em;" class="log-cell" *ngIf="columns[3]"> {{ l.service }}</div>
+            <div style="width: 9em;" class="log-cell" *ngIf="columns[4]"> {{ l.tool }}</div>
+            <div style="width: 4em;" class="log-cell" *ngIf="columns[5]"> {{ l.step }}</div>
+            <div style="width: 4em;" class="log-cell" *ngIf="columns[6]"> {{ l.branch }}</div>
+            <div style="width: 4em;" class="log-cell" *ngIf="columns[7]"> {{ l.flow_kind }}</div>
+            <div style="width: 4em;" class="log-cell" *ngIf="columns[8]"> {{ l.flow }}</div>
+            <div style="width: 4em;" class="log-cell" *ngIf="columns[9]"> {{ l.run }}</div>
+            <div style="width: 4em;" class="log-cell" *ngIf="columns[10]"> {{ l.job }}</div>
+            <div style="width: 4em;" class="log-cell" *ngIf="columns[11]"> {{ l.agent }}</div>
+            <div style="width: 4em;" class="log-cell"  *ngIf="columns[12]"
+                 [ngClass]="'level-' + l.level.slice(0, 4).toLowerCase()"> {{ l.level.slice(0, 4) }}</div>
+            <div style="white-space: pre-wrap; word-break: break-word;"
+                 [innerHTML]="prepareLogLine(l.message) | noSanitize">
+            </div>
         </div>
     </div>
 </div>

@@ -52,6 +52,8 @@ export class SimpleLogsPanelComponent implements OnInit, OnDestroy, OnChanges {
                false, false, false, false, false,
                false, false, true]
 
+    stickySide = 'top: calc(100% - 5.5rem);'
+
     constructor(
         protected managementService: ManagementService,
         protected executionService: ExecutionService,
@@ -294,5 +296,14 @@ export class SimpleLogsPanelComponent implements OnInit, OnDestroy, OnChanges {
         msg = spans.join('')
 
         return msg
+    }
+
+    scrolled(event) {
+        const percent = event.target.scrollTop /  (event.target.scrollHeight - event.target.clientHeight)
+        if (percent < 0.5) {
+            this.stickySide = 'top: calc(100% - 5.5rem);'
+        } else {
+            this.stickySide = 'top: 0;'
+        }
     }
 }
