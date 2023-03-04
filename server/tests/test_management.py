@@ -22,6 +22,7 @@ import werkzeug.exceptions
 
 from kraken.server import consts, initdb, utils, access
 from kraken.server.models import db, Project, Branch, Flow, Secret, Stage, AgentsGroup, Agent, Tool
+from kraken.server.models import BranchSequence
 
 from common import create_app, prepare_user, check_missing_tests_in_mod
 
@@ -189,9 +190,35 @@ def test_get_branch_sequences():
 
         proj = Project(name='proj-1')
         branch = Branch(name='br', project=proj)
+        seq = BranchSequence(branch=branch)
         db.session.commit()
 
-        management.get_branch_sequences(branch.id, token_info=token_info)
+        resp, code = management.get_branch_sequences(branch.id, token_info=token_info)
+        assert code == 200
+        assert resp['total'] == 1
+        assert len(resp['items']) == 1
+        s = resp['items'][0]
+        assert s['branch_id'] == branch.id
+        assert s['value'] == 0
+
+
+@pytest.mark.db
+def test_update_branch_sequence():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        proj = Project(name='proj-1')
+        branch = Branch(name='br', project=proj)
+        seq = BranchSequence(branch=branch, value=10)
+        db.session.commit()
+
+        resp, code = management.update_branch_sequence(seq.id, {'value': 20}, token_info=token_info)
+        assert code == 200
+        assert resp['value'] == 20
 
 
 @pytest.mark.db
