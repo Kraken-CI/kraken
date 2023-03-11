@@ -67,6 +67,7 @@ class Project(db.Model, DatesMixin):
     secrets = relationship("Secret", back_populates="project", order_by="Secret.name")
     agents_groups = relationship("AgentsGroup", back_populates="project")
     webhooks = Column(JSONB)
+    user_data = Column(JSONB, default={})
 
     def get_json(self, with_results=False, with_last_results=False):
         branches = [b.get_json(with_results=with_results, with_last_results=with_last_results) for b in self.branches if b.deleted is None]
@@ -100,6 +101,9 @@ class Branch(db.Model, DatesMixin):
     sequences = relationship("BranchSequence", back_populates="branch")
     comments = relationship("TestCaseComment", back_populates="branch")
     retention_policy = Column(JSONB)
+    user_data = Column(JSONB, default={})
+    user_data_ci = Column(JSONB, default={})
+    user_data_dev = Column(JSONB, default={})
 
     #base_branch = relationship('BaseBranch', uselist=False, primaryjoin="or_(Branch.id==BaseBranch.ci_branch_id, Branch.id==BaseBranch.dev_branch_id)")
 
@@ -328,6 +332,7 @@ class Flow(db.Model, DatesMixin):
     artifacts_files = relationship('Artifact', back_populates="flow")
     comments = relationship("TestCaseComment", back_populates="last_flow")
     summary = Column(JSONB, default={})
+    user_data = Column(JSONB, default={})
 
     Index('ix_flows_branch_id_kind', branch_id, kind)
 

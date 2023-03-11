@@ -450,17 +450,25 @@
 
   <!-- Retention Policy -->
   <app-tabbed-page-tab label="Retention Policy">
-      <form [formGroup]="retentionPolicyForm" class="mb-3">
+      <form [formGroup]="retentionPolicyForm" class="mb-3 p-component">
           <h3>Logs in Clickhouse</h3>
-          <div class="mx-2 my-1">
-              <span class="inline-block w-2rem">CI:</span>
-              <p-inputNumber inputId="ci_logs" formControlName="ci_logs" placeholder="ex: 6" mode="decimal" [min]="1" [max]="20">
-              </p-inputNumber>
+          <div class="field grid">
+              <label for="ci_logs" class="col-fixed w-12rem">CI Logs TTL in Months</label>
+              <i class="pi pi-question-circle mr-2 text-400 hover:text-600 transition-colors transition-duration-200 cursor-pointer"
+                 pTooltip="Defines the number of months for how long CI related logs of this branch (from Kraken Server and all Agents) will be kept in Clickhouse."></i>
+              <div class="col">
+                  <p-inputNumber inputId="ci_logs" formControlName="ci_logs" placeholder="ex: 6" mode="decimal" [min]="1" [max]="20">
+                  </p-inputNumber>
+              </div>
           </div>
-          <div class="mx-2 my-1">
-              <span class="inline-block w-2rem">Dev:</span>
-              <p-inputNumber inputId="dev_logs" formControlName="dev_logs" placeholder="ex: 3" mode="decimal" [min]="1" [max]="20">
-              </p-inputNumber>
+          <div class="field grid">
+              <label for="dev_logs" class="col-fixed w-12rem">Dev Logs TTL in Months</label>
+              <i class="pi pi-question-circle mr-2 text-400 hover:text-600 transition-colors transition-duration-200 cursor-pointer"
+                 pTooltip="Defines the number of months for how long Dev related logs of this branch (from Kraken Server and all Agents) will be kept in Clickhouse."></i>
+              <div class="col">
+                  <p-inputNumber inputId="dev_logs" formControlName="dev_logs" placeholder="ex: 3" mode="decimal" [min]="1" [max]="20">
+                  </p-inputNumber>
+              </div>
           </div>
           <!--
               <h3>Artifacts in MinIO/S3</h3>
@@ -475,7 +483,13 @@
       <button type="button" pButton icon="pi pi-check" label="Save" (click)="saveRetentionPolicy()"></button>
   </app-tabbed-page-tab>
 
-  <!-- Retention Policy -->
+  <!-- User Data -->
+  <app-tabbed-page-tab label="User Data">
+      <app-user-data-panel
+          [branchId]="branchId"></app-user-data-panel>
+  </app-tabbed-page-tab>
+
+  <!-- Logs -->
   <app-tabbed-page-tab label="Logs">
       <app-simple-logs-panel
           [visible]="logsPanelVisible"

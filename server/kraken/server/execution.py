@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import time
+import json
 import logging
 from urllib.parse import urljoin
 
@@ -22,7 +23,7 @@ from sqlalchemy.orm import joinedload
 
 from . import consts
 from . import utils
-from .models import db, Branch, Flow, Run, Stage, Job, Step
+from .models import db, Project, Branch, Flow, Run, Stage, Job, Step
 from .models import Issue, Artifact, Agent
 from .schema import SchemaError
 from . import exec_utils
@@ -654,3 +655,30 @@ def get_agent_jobs(agent_id, start=0, limit=10, token_info=None):
     for j in q.all():
         jobs.append(j.get_json())
     return {'items': jobs, 'total': total}, 200
+
+
+def get_user_data(scope, entity_id, token_info=None):
+    if scope == 'flow':
+        flow = Flow.query.filter_by(id=entity_id).one_or_none()
+        data = flow.user_data
+        project_id = flow.branch.project_id
+    elif scope.startswith('branch'):
+        branch = Branch.query.filter_by(id=entity_id).one_or_none()
+        if scope == 'branch-ci':
+            data = branch.user_data_ci
+        elif scope == 'branch-dev':
+            data = branch.user_data_dev
+        elif scope == 'branch':
+            data = branch.user_data
+        project_id = branch.project_id
+    elif scope == 'project':
+        project = Project.query.filter_by(id=entity_id).one_or_none()
+        data = project.user_data
+        project_id = project.id
+
+    access.check(token_info, project_id, 'view',
+                 'only superadmin, project admin, project power and project viewer user roles can get branch logs')
+
+    resp = dict(data=json.dumps(data, indent=4))
+
+    return resp, 200

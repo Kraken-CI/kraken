@@ -24,6 +24,7 @@ setup(
             'gotest = kraken.agent.kraken_gotest',
             'junit_collect = kraken.agent.kraken_junit_collect',
             'values_collect = kraken.agent.kraken_values_collect',
+            'data = kraken.agent.kraken_data',
         ]
     },
 )

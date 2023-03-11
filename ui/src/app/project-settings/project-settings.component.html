@@ -201,4 +201,11 @@
 
         <p-button label="Save" icon="pi pi-check" (onClick)="saveWebhooks()"></p-button>
     </p-tabPanel>
+
+    <!-- User Data -->
+    <p-tabPanel header="User Data">
+        <app-user-data-panel
+            [projectId]="projectId"></app-user-data-panel>
+    </p-tabPanel>
+
 </p-tabView>

@@ -2483,6 +2483,35 @@ paths:
         201:
           description: Successfully created group
           content: {}
+  /user_data:
+    get:
+      tags:
+      - Execution
+      summary: Get user data.
+      description: Get user data.
+      operationId: get_user_data
+      parameters:
+      - name: scope
+        in: query
+        description: Scope of user data
+        schema:
+          type: string
+      - name: entity_id
+        in: query
+        description: Entity ID
+        schema:
+          type: integer
+          format: int32
+      responses:
+        200:
+          description: Successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
 
 
 components:

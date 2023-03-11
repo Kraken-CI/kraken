@@ -277,7 +277,13 @@
         </p-organizationChart>
     </app-tabbed-page-tab>
 
-    <!-- 8. LOGS TAB -->
+    <!-- 8. USER DATA TAB -->
+    <app-tabbed-page-tab label="User Data">
+        <app-user-data-panel
+            [flowId]="flowId"></app-user-data-panel>
+    </app-tabbed-page-tab>
+
+    <!-- 9. LOGS TAB -->
     <app-tabbed-page-tab label="Logs">
         <app-simple-logs-panel
             [visible]="logsPanelVisible"

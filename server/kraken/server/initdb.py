@@ -536,6 +536,52 @@ def _prepare_builtin_tools():
                 }
             }
         }
+    }, {
+        "name": "data",
+        "description": "A tool that allows for storing (setting and updating) JSON data server-side.",
+        "location": "",
+        "entry": "",
+        "version": "1",
+        "parameters": {
+            "properties": {
+                "file": {
+                    "description": "A file with data with JSON format in case of `set` and `jsonpatch` operations and JQ expression in case of `jq` operation.",
+                    "type": "string"
+                },
+                "cwd": {
+                    "description": "A current working directory where the step is executed.",
+                    "default": ".",
+                    "type": "string"
+                },
+                "value": {
+                    "description": "The sama data as in file field but provided directly. Alternative to file field.",
+                    "default": "",
+                    "type": "string"
+                },
+                "operation": {
+                    "description":
+                        "A operation that should be performed. `set` sets data, `jq` executes JQ expression on server-side data,"
+                        " `jsonpatch` patches server-side data, `get` retrieve data from server in JSON format.",
+                    "default": "set",
+                    "type": "string",
+                    "enum": ["set", "jq", "jsonpatch", "get"]
+                },
+                "json_pointer": {
+                    "description": "A JSON pointer that indicates data (see RFC 6901). If `.` then whole data is taken, if key name is provided then data under this key is taken.",
+                    "default": "/",
+                    "type": "string"
+                },
+                "scope": {
+                    "description":
+                       "A scope of data: `flow` - data attached to a flow, `branch-ci` - data attached to a branch but related with CI flows,"
+                       " `branch-dev` - data attached to a branch but related with CI flows, `branch` - data attached to a branch,"
+                       " `project` - data attached to a project",
+                    "default": "flow",
+                    "type": "string",
+                    "enum": ["flow", "branch-ci", "branch-dev", "branch", "project"]
+                }
+            }
+        }
     }]
     for td in tool_defs:
         tool = Tool.query.filter_by(name=td['name'], version=td['version']).one_or_none()

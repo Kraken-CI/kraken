@@ -105,7 +105,8 @@ import { UsersPageComponent } from './users-page/users-page.component'
 import { ChangePasswdDlgComponent } from './change-passwd-dlg/change-passwd-dlg.component'
 import { LogsPanelComponent } from './logs-panel/logs-panel.component';
 import { SimpleLogsPanelComponent } from './simple-logs-panel/simple-logs-panel.component';
-import { SequencesPanelComponent } from './sequences-panel/sequences-panel.component'
+import { SequencesPanelComponent } from './sequences-panel/sequences-panel.component';
+import { UserDataPanelComponent } from './user-data-panel/user-data-panel.component'
 Chart.register(zoomPlugin)
 
 @NgModule({
@@ -144,6 +145,7 @@ Chart.register(zoomPlugin)
         LogsPanelComponent,
         SimpleLogsPanelComponent,
         SequencesPanelComponent,
+        UserDataPanelComponent,
     ],
     imports: [
         BrowserModule,

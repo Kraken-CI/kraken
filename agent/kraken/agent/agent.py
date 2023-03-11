@@ -163,7 +163,7 @@ def run():
 
                 _enable_masking_secrets_in_logs(job)
 
-            log.info('received job: %s', str(job)[:200])
+            log.info('>>>>>> received job: %s', str(job)[:200])
 
             if job:
                 _dispatch_job(srv, job)

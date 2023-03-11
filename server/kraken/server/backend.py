@@ -34,6 +34,7 @@ from .. import version
 from . import kkrq
 from . import utils
 from . import dbutils
+from . import datastore
 
 log = logging.getLogger(__name__)
 
@@ -310,7 +311,12 @@ def _store_artifacts(job, step):
     log.info('reporting %s artifacts took %ss', len(step.result['artifacts']), (t1 - t0))
 
 
-def destroy_machine_if_needed(agent, job):
+def _handle_data(job, step, result):
+    data = result['data']
+    return datastore.handle_data(job, step, data)
+
+
+def _destroy_machine_if_needed(agent, job):
     to_destroy = False
 
     # check if cloud machine should be destroyed now
@@ -411,9 +417,13 @@ def _handle_step_result(agent, req):
     if 'issues' in result:
         _store_issues(job, result)
 
-    # store issues
+    # store artifacts
     if 'artifacts' in result:
         _store_artifacts(job, step)
+
+    # set, update or get data
+    if 'data' in result:
+        _handle_data(job, step, result)
 
     # check if all steps are done so job is finised
     job_finished = True
@@ -433,7 +443,7 @@ def _handle_step_result(agent, req):
         job.finished = utils.utcnow()
         agent.job = None
 
-        destroy_machine_if_needed(agent, job)
+        _destroy_machine_if_needed(agent, job)
 
         db.session.commit()
         kkrq.enq(bg_jobs.job_completed, job.id)

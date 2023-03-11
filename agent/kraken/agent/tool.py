@@ -94,6 +94,18 @@ class ArtifactsCollector():
         self.last_reported = datetime.datetime.now()
 
 
+class DataCollector():
+    def __init__(self, sock):
+        self.sock = sock
+
+    def report_data(self, data):
+        self.sock.send_json({'status': 'done',
+                             'data': data})
+
+    def flush(self):
+        pass
+
+
 def execute(sock, module, command, step_file_path):
     try:
         logging.basicConfig(format=consts.TOOL_LOG_FMT, level=logging.INFO)
@@ -146,6 +158,11 @@ def execute(sock, module, command, step_file_path):
             report_artifact_cb = artifacts_collector.report_artifact
             ret, msg = tool.run_artifacts(step, report_artifact=report_artifact_cb)
             artifacts_collector.flush()
+
+        elif command == 'run_data':
+            data_collector = DataCollector(sock)
+            report_data_cb = data_collector.report_data
+            ret, msg = tool.run_data(step, report_data=report_data_cb)
 
         elif command == 'run':
             ret, msg = tool.run(step)

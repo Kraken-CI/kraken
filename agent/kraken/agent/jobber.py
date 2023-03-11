@@ -29,6 +29,7 @@ from . import local_run
 from . import docker_run
 from . import lxd_run
 from . import utils
+from . import consts
 
 log = logging.getLogger(__name__)
 
@@ -150,7 +151,7 @@ class RequestHandler():
             data['duration'] = round(time.time() - self.proc_coord.start_time + 0.5)
             self.proc_coord.result = data
 
-            if self.proc_coord.command in ['run_tests', 'run_analysis', 'run_artifacts']:
+            if self.proc_coord.command in ['run_tests', 'run_analysis', 'run_artifacts', 'run_data']:
                 # report partial results
                 srv = self.proc_coord.kk_srv
                 rsp = srv.report_step_result(self.proc_coord.job_id,
@@ -329,7 +330,8 @@ def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
     if ('run' not in available_commands and
         'run_tests' not in available_commands and
         'run_analysis' not in available_commands and
-        'run_artifacts' not in available_commands):
+        'run_artifacts' not in available_commands and
+        'run_data' not in available_commands):
         raise Exception('missing run and run_tests in available commands: %s' % available_commands)
 
     if 'collect_tests' in available_commands and ('tests' not in step or step['tests'] is None or len(step['tests']) == 0):
@@ -364,47 +366,20 @@ def _run_step(srv, exec_ctx, job_dir, job_id, idx, step, tools, deadline):
         step['tests'] = response['tests']
         _write_step_file(job_dir, step, idx)
 
-    if 'run_tests' in available_commands:
-        timeout = deadline - time.time()
-        if timeout <= 0:
-            log.info('timout expired %s', deadline)
-            result = {'status': 'error', 'reason': 'job-timeout'}
-            srv.report_step_result(job_id, idx, result)
-            return result['status'], cancel, bg_step
-        result, cancel = _exec_tool(srv, exec_ctx, tool_path, 'run_tests', job_dir, timeout, user, step, step_file_path, job_id, idx)
-        log.info('result for run_tests: %s', str(result)[:200])
-        # do not srv.report_step_result, it was already done in RequestHandler.async_handle_request
-        if cancel:
-            log.info('canceling job')
-            return 'cancel', cancel, bg_step
-
-    if 'run_analysis' in available_commands:
-        timeout = deadline - time.time()
-        if timeout <= 0:
-            log.info('timout expired %s', deadline)
-            result = {'status': 'error', 'reason': 'job-timeout'}
-            srv.report_step_result(job_id, idx, result)
-            return result['status'], cancel, bg_step
-        result, cancel = _exec_tool(srv, exec_ctx, tool_path, 'run_analysis', job_dir, timeout, user, step, step_file_path, job_id, idx)
-        log.info('result for run_analysis: %s', str(result)[:200])
-        # do not srv.report_step_result, it was already done in RequestHandler.async_handle_request
-        if cancel:
-            log.info('canceling job')
-            return 'cancel', cancel, bg_step
-
-    if 'run_artifacts' in available_commands:
-        timeout = deadline - time.time()
-        if timeout <= 0:
-            log.info('timout expired %s', deadline)
-            result = {'status': 'error', 'reason': 'job-timeout'}
-            srv.report_step_result(job_id, idx, result)
-            return result['status'], cancel, bg_step
-        result, cancel = _exec_tool(srv, exec_ctx, tool_path, 'run_artifacts', job_dir, timeout, user, step, step_file_path, job_id, idx)
-        log.info('result for run_artifacts: %s', str(result)[:200])
-        # do not srv.report_step_result, it was already done in RequestHandler.async_handle_request
-        if cancel:
-            log.info('canceling job')
-            return 'cancel', cancel, bg_step
+    for run_cmd in ['run_tests', 'run_analysis', 'run_artifacts', 'run_data']:
+        if run_cmd in available_commands:
+            timeout = deadline - time.time()
+            if timeout <= 0:
+                log.info('timout expired %s', deadline)
+                result = {'status': 'error', 'reason': 'job-timeout'}
+                srv.report_step_result(job_id, idx, result)
+                return result['status'], cancel, bg_step
+            result, cancel = _exec_tool(srv, exec_ctx, tool_path, run_cmd, job_dir, timeout, user, step, step_file_path, job_id, idx)
+            log.info('result for %s: %s', run_cmd, str(result)[:200])
+            # do not srv.report_step_result, it was already done in RequestHandler.async_handle_request
+            if cancel:
+                log.info('canceling job')
+                return 'cancel', cancel, bg_step
 
     if 'run' in available_commands:
         timeout = deadline - time.time()
@@ -484,7 +459,7 @@ def run(srv, job):
         bg_steps = []
         last_status = None
         for idx, step in enumerate(job['steps']):
-            if step['status'] == 2:
+            if step['status'] == consts.STEP_STATUS_DONE:
                 continue
             log.set_ctx(step=idx)
 

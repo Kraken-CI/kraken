@@ -521,7 +521,7 @@ def _run_branch_retention_policy():
                           flow_kind=flow_kind,
                           months=months[flow_kind])
             resp = ch.execute(query, params)
-            log.info('DELETED LOGS %s', resp)
+            log.info('deleted logs %s', resp)
             # TODO: trace number of deleted logs
 
     log.reset_ctx()
