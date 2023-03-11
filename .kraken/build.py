@@ -1,5 +1,5 @@
 def stage(ctx):
-    kk_ver = "1.#{KK_FLOW_SEQ}"
+    kk_ver = "1.1.#{KK_FLOW_SEQ}"
 
     steps = [{
             "tool": "artifacts",
