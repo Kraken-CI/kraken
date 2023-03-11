@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import logging
 from unittest.mock import patch
 
@@ -463,3 +464,42 @@ def test_get_agent_jobs():
         db.session.commit()
 
         execution.get_agent_jobs(agent.id, token_info=token_info)
+
+
+@pytest.mark.db
+def test_get_user_data():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        project = Project(user_data={'a': 1})
+        branch = Branch(project=project,
+                        user_data={'b': 2},
+                        user_data_ci={'c': 3},
+                        user_data_dev={'d': 4})
+        stage = Stage(branch=branch, schema={})
+        flow = Flow(branch=branch, kind=consts.FLOW_KIND_CI, user_data={'e': 5})
+        db.session.commit()
+
+        resp, code = execution.get_user_data('project', project.id, token_info=token_info)
+        assert code == 200
+        assert json.loads(resp['data']) == {'a': 1}
+
+        resp, code = execution.get_user_data('branch', branch.id, token_info=token_info)
+        assert code == 200
+        assert json.loads(resp['data']) == {'b': 2}
+
+        resp, code = execution.get_user_data('branch-ci', branch.id, token_info=token_info)
+        assert code == 200
+        assert json.loads(resp['data']) == {'c': 3}
+
+        resp, code = execution.get_user_data('branch-dev', branch.id, token_info=token_info)
+        assert code == 200
+        assert json.loads(resp['data']) == {'d': 4}
+
+        resp, code = execution.get_user_data('flow', flow.id, token_info=token_info)
+        assert code == 200
+        assert json.loads(resp['data']) == {'e': 5}
