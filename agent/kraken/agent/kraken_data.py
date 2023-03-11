@@ -13,10 +13,8 @@
 # limitations under the License.
 
 import os
-import json
 import logging
 
-from . import utils
 from . import tool
 
 log = logging.getLogger(__name__)

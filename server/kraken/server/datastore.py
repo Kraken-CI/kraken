@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import json
 import logging
 
@@ -36,7 +35,7 @@ def handle_data(job, step, data):
     if value:
         data = value
 
-    log.info('handle_data %s %s %s type %s, value %s', job, step, data)
+    log.info('handle_data %s %s %s', job, step, data)
 
     # get proper db entity and field according indicated scope
     if scope == 'project':
