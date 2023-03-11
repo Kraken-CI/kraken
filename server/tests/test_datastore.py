@@ -14,11 +14,11 @@
 
 import pytest
 
-from kraken.server import initdb, access, consts
-from kraken.server.models import db, Run, Stage, Flow, Branch, Project, TestCaseResult, TestCase, Tool, System, AgentsGroup, Job
+from kraken.server import initdb, consts
+from kraken.server.models import db, Run, Stage, Flow, Branch, Project, Tool, System, AgentsGroup, Job
 from kraken.server.models import Step
 
-from common import create_app, prepare_user, check_missing_tests_in_mod
+from common import create_app, check_missing_tests_in_mod
 
 from kraken.server import datastore
 

@@ -480,7 +480,6 @@ def test_get_user_data():
                         user_data={'b': 2},
                         user_data_ci={'c': 3},
                         user_data_dev={'d': 4})
-        stage = Stage(branch=branch, schema={})
         flow = Flow(branch=branch, kind=consts.FLOW_KIND_CI, user_data={'e': 5})
         db.session.commit()
 
