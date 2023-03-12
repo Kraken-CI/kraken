@@ -165,8 +165,8 @@ def create_app():
 
     # install webhooks
     webhooks_bp = webhooks.create_blueprint()
-    app.register_blueprint(webhooks_bp, url_prefix='/webhooks')
-    app.register_blueprint(webhooks_bp, url_prefix='/bk/webhooks')
+    app.register_blueprint(webhooks_bp, url_prefix='/webhooks', name='webhooks1')
+    app.register_blueprint(webhooks_bp, url_prefix='/bk/webhooks', name='webhooks2')
 
     # branch status badge
     app.add_url_rule("/branch-badge/<branch_id>", view_func=badge.get_branch_badge, methods=['GET'], defaults={'what': None})

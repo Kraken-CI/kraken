@@ -19,8 +19,7 @@ depends_on = None
 def upgrade():
     op.add_column('runs', sa.Column('reason', postgresql.JSONB(astext_type=sa.Text()), nullable=True))
 
-    conn = op.get_bind()
-    conn.execute("""UPDATE runs SET reason = '{"reason": "manual"}'::jsonb""")
+    op.execute("""UPDATE runs SET reason = '{"reason": "manual"}'::jsonb""")
 
     op.alter_column('runs', 'reason', nullable=False)
 

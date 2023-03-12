@@ -41,7 +41,8 @@ def create_app():
 
     # initialize SqlAlchemy
     db.init_app(app)
-    db.create_all(app=app)
+    with app.app_context():
+        db.create_all()
 
     # set KRAKEN_DB_URL that is needed e.g. in jobs.py
     os.environ['KRAKEN_DB_URL'] = db_url

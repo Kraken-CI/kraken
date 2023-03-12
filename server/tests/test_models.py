@@ -44,7 +44,8 @@ def test_create_db_at_once():
 
     # initialize SqlAlchemy
     db.init_app(app)
-    db.create_all(app=app)
+    with app.app_context():
+        db.create_all()
 
     o = urlparse(db_url)
     env = os.environ.copy()
@@ -79,7 +80,6 @@ def test_compare_create_db():
     os.environ['KRAKEN_DB_URL'] = db_url
 
     engine = create_engine(db_url)
-    conn = engine.connect()
     meta = MetaData()
 
     # prepare initial schema crafted by hand
@@ -266,7 +266,8 @@ def test_compare_create_db():
     meta.create_all(engine)
 
     ins = alembic_version_tbl.insert().values(version_num='0731897c862e')  # this is first migration
-    conn.execute(ins)
+    with engine.begin() as conn:
+        conn.execute(ins)
 
     migrations.main()
 

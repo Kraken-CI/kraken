@@ -50,7 +50,8 @@ def main():
 
     if db_version is None:
         # create tables in db
-        models.db.create_all(app=app)
+        with app.app_context():
+            models.db.create_all()
 
         # stamp the alembic version of db schema in db
         alembic_args.extend(['stamp', 'head'])

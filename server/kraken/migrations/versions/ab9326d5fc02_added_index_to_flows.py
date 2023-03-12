@@ -29,20 +29,18 @@ INDEXES = [
 
 
 def upgrade():
-    conn = op.get_bind()
     for name, table, columns in INDEXES:
         print('creating index %s' % name)
         cmd = "CREATE INDEX IF NOT EXISTS %s ON %s (%s);" % (name, table, columns)
-        conn.execute(cmd)
+        op.execute(cmd)
         #op.create_index(name, table, columns)
     print('migration completed')
 
 
 def downgrade():
-    conn = op.get_bind()
     for name, _, _ in INDEXES:
         print('dropping index %s' % name)
         cmd = "DROP INDEX IF EXISTS %s;" % name
-        conn.execute(cmd)
+        op.execute(cmd)
         #op.drop_index(name, table_name=table)
     print('migration completed')

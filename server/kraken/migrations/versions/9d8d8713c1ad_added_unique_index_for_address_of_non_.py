@@ -15,8 +15,7 @@ depends_on = None
 
 
 def upgrade():
-    conn = op.get_bind()
-    conn.execute("CREATE UNIQUE INDEX ix_agents_address_not_deleted ON agents (address) WHERE deleted is NULL;")
+    op.execute("CREATE UNIQUE INDEX ix_agents_address_not_deleted ON agents (address) WHERE deleted is NULL;")
 
 
 def downgrade():

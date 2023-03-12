@@ -32,6 +32,9 @@ def handle_data(job, step, data):
     ptr = step.fields.get('json_pointer', '/')
     value = step.fields.get('value', None)
 
+    if operation not in ['set', 'jq', 'jsonpatch']:
+        raise Exception('incorrect operation %s, should be one of set, jq, jsonpatch' % operation)
+
     if value:
         data = value
 

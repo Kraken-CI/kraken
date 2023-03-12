@@ -16,8 +16,7 @@ depends_on = None
 
 
 def upgrade():
-    conn = op.get_bind()
-    conn.execute("UPDATE stages SET enabled = TRUE")
+    op.execute("UPDATE stages SET enabled = TRUE")
 
 
 def downgrade():

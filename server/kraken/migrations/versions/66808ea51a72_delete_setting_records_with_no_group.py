@@ -15,8 +15,7 @@ depends_on = None
 
 
 def upgrade():
-    conn = op.get_bind()
-    conn.execute("DELETE FROM settings where settings.group = NULL;")
+    op.execute("DELETE FROM settings where settings.group = NULL;")
 
 def downgrade():
     pass

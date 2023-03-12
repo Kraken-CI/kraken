@@ -26,10 +26,10 @@ include = ["kraken/version.py"]
 
 [tool.poetry.dependencies]
 python = "^3.7"
-connexion = "^2.13.1"
-MarkupSafe = "2.0.1"  # 2.1 is broken that is used by Jinja2 by connextion
-Flask = "^1.1.4" # 2.0.1
-Flask-SQLAlchemy = "^2.5.1"
+connexion = "^2.14.2"
+MarkupSafe = "2.1.2"
+Flask = "^2.2.3"
+Flask-SQLAlchemy = "^3.0.3"
 psycopg2-binary = "^2.9.1"
 redis = "^3.5.3"
 requests = "^2.26.0"

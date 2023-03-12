@@ -27,32 +27,30 @@ INDEXES = [
 
 
 def upgrade():
-    conn = op.get_bind()
     for name, table, columns in INDEXES:
         if name.startswith('uq'):
             uq = ' UNIQUE '
             cmd = 'ALTER TABLE %s ADD CONSTRAINT %s UNIQUE (%s)' % (table, name, columns)
             with op.get_context().autocommit_block():
                 try:
-                    conn.execute(cmd)
+                    op.execute(cmd)
                 except Exception:
                     pass
         else:
             uq = ''
         cmd = "CREATE %s INDEX IF NOT EXISTS %s ON public.%s USING btree (%s);" % (uq, name, table, columns)
         print(cmd)
-        conn.execute(cmd)
+        op.execute(cmd)
     print('migration completed')
 
 
 def downgrade():
-    conn = op.get_bind()
     for name, table, _ in INDEXES:
         if name.startswith('uq'):
             cmd = 'ALTER TABLE %s DROP CONSTRAINT %s' % (table, name)
-            conn.execute(cmd)
+            op.execute(cmd)
         print('dropping index %s' % name)
         cmd = "DROP INDEX IF EXISTS %s;" % name
-        conn.execute(cmd)
+        op.execute(cmd)
         #op.drop_index(name, table_name=table)
     print('migration completed')

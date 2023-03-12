@@ -15,6 +15,7 @@
 import os
 
 import sqlalchemy
+from sqlalchemy import text
 
 from kraken.server.models import db
 
@@ -25,27 +26,24 @@ def create_empty_db(db_name, drop_exisiting=False):
     engine = sqlalchemy.create_engine(db_root_url + db_name, echo=False)
     db_exists = False
     try:
-        connection = engine.connect()
-        connection.execute('select 1')
-        connection.close()
+        with engine.begin() as connection:
+            connection.execute(text('select 1'))
         db_exists = True
     except Exception:
         pass
 
     engine = sqlalchemy.create_engine(db_root_url, echo=False)
-    connection = engine.connect()
 
-    if db_exists and drop_exisiting:
-        connection.execute("commit;")
-        connection.execute("DROP DATABASE %s;" % db_name)
-        db_exists = False
+    with engine.begin() as connection:
+        if db_exists and drop_exisiting:
+            connection.execute(text("commit;"))
+            connection.execute(text("DROP DATABASE %s;" % db_name))
+            db_exists = False
 
-    # create db if missing
-    if not db_exists:
-        connection.execute("commit;")
-        connection.execute("CREATE DATABASE %s;" % db_name)
-
-    connection.close()
+        # create db if missing
+        if not db_exists:
+            connection.execute(text("commit;"))
+            connection.execute(text("CREATE DATABASE %s;" % db_name))
 
     return db_root_url, db_exists
 
@@ -53,10 +51,11 @@ def create_empty_db(db_name, drop_exisiting=False):
 def clear_db_postresql(connection):
     for table in db.metadata.tables.keys():
         try:
-            connection.execute('ALTER TABLE "%s" DISABLE TRIGGER ALL;' % table)
-            connection.execute('DELETE FROM "%s";' % table)
-            connection.execute('ALTER TABLE "%s" ENABLE TRIGGER ALL;' % table)
+            connection.execute(text('ALTER TABLE "%s" DISABLE TRIGGER ALL;' % table))
+            connection.execute(text('DELETE FROM "%s";' % table))
+            connection.execute(text('ALTER TABLE "%s" ENABLE TRIGGER ALL;' % table))
         except Exception as e:
+            connection.execute(text('ROLLBACK'))
             if not "doesn't exist" in str(e) and not 'does not exist' in str(e):
                 raise
 
@@ -78,7 +77,8 @@ def prepare_db(db_name=None):
     if db_exists:
         # delete all rows from all tables
         engine = sqlalchemy.create_engine(real_db_url, echo=False)
-        clear_db_postresql(engine)
+        with engine.begin() as connection:
+            clear_db_postresql(connection)
 
     # db.prepare_indexes(engine)
     return real_db_url

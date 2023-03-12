@@ -23,8 +23,7 @@ def upgrade():
                existing_nullable=True)
     op.create_unique_constraint('uq_tool_name_version', 'tools', ['name', 'version'])
 
-    conn = op.get_bind()
-    conn.execute("UPDATE tools SET version = '1'")
+    op.execute("UPDATE tools SET version = '1'")
 
 
 def downgrade():
