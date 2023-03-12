@@ -22,7 +22,7 @@ from email.mime.multipart import MIMEMultipart
 import requests
 
 from .models import get_setting
-from .schema import prepare_secrets, substitute_vars
+from .schema import prepare_secrets, substitute_vars, prepare_context
 
 
 log = logging.getLogger(__name__)
@@ -250,8 +250,9 @@ def notify(run, event):
     # prepare secrets to pass them to substitute in notifications definitions
     args = prepare_secrets(run)
     args.update(run.args)
+    ctx = prepare_context(run, args)
     # log.info('notification1 %s', notification)
-    notification, _ = substitute_vars(notification, args)
+    notification, _ = substitute_vars(notification, args, ctx)
     # log.info('notification2 %s', notification)
 
     # slack

@@ -19,7 +19,7 @@ from sqlalchemy.sql.expression import desc
 
 from . import consts
 from .models import db, BranchSequence, Flow, Run, Job, Step, AgentsGroup, Tool, Agent, AgentAssignment, System
-from .schema import check_and_correct_stage_schema, prepare_secrets, substitute_vars, substitute_val
+from .schema import check_and_correct_stage_schema, prepare_secrets, substitute_vars, substitute_val, prepare_context
 from . import dbutils
 from . import kkrq
 from . import utils
@@ -128,7 +128,8 @@ def complete_starting_run(run_id):
             if label_pattern:
                 lbl_vals[lbl_field] = label_pattern
         if lbl_vals:
-            lbl_vals, _ = substitute_vars(lbl_vals, run_args)
+            ctx = prepare_context(run, run_args)
+            lbl_vals, _ = substitute_vars(lbl_vals, run_args, ctx)
             if run.flow.label is None:
                 run.flow.label = lbl_vals.get('flow_label', None)
 
@@ -316,6 +317,8 @@ def trigger_jobs(run, replay=False):
     agents_needed = set()
     created_systems = {}
 
+    run_ctx = prepare_context(run, run_args)
+
     # trigger new jobs based on jobs defined in stage schema
     all_started_erred = True
     now = utils.utcnow()
@@ -339,7 +342,7 @@ def trigger_jobs(run, replay=False):
         envs = j['environments']
         for env in envs:
             # get agents group
-            ag_name, _ = substitute_val(env['agents_group'], run.args)
+            ag_name, _ = substitute_val(env['agents_group'], run.args, run_ctx)
             q = AgentsGroup.query
             q = q.filter_by(project=run.stage.branch.project, name=ag_name)
             agents_group = q.one_or_none()
@@ -360,9 +363,9 @@ def trigger_jobs(run, replay=False):
                 agents_count[agents_group.name] = cnt
 
             if not isinstance(env['system'], list):
-                systems = [substitute_val(env['system'], run.args)[0]]
+                systems = [substitute_val(env['system'], run.args, run_ctx)[0]]
             else:
-                systems = [substitute_val(s, run.args)[0] for s in env['system']]
+                systems = [substitute_val(s, run.args, run_ctx)[0] for s in env['system']]
 
             for system_name in systems:
                 # prepare system and executor
@@ -415,9 +418,12 @@ def trigger_jobs(run, replay=False):
                         args = secrets.copy()
                         if run.args:
                             args.update(run.args)
-                        fields, fields_masked = substitute_vars(s, args)
+                        step = Step(job=job, index=idx, tool=tools[idx])
+                        step_ctx = prepare_context(step, run_args)
+                        fields, fields_masked = substitute_vars(s, args, step_ctx)
                         del fields['tool']
-                        Step(job=job, index=idx, tool=tools[idx], fields=fields, fields_masked=fields_masked)
+                        step.fields = fields
+                        step.fields_masked = fields_masked
 
                 # if this is rerun/replay then mark prev jobs as covered
                 if replay:

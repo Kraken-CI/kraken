@@ -69,18 +69,24 @@ class Project(db.Model, DatesMixin):
     webhooks = Column(JSONB)
     user_data = Column(JSONB, default={})
 
-    def get_json(self, with_results=False, with_last_results=False):
-        branches = [b.get_json(with_results=with_results, with_last_results=with_last_results) for b in self.branches if b.deleted is None]
-        branches.sort(key=lambda b: b['name'])
-        return dict(id=self.id,
+    def get_json(self, with_branches=True, with_results=False, with_last_results=False, with_user_data=False):
+        data = dict(id=self.id,
                     created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,
                     deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,
                     name=self.name,
                     description=self.description,
-                    branches=branches,
                     secrets=[s.get_json() for s in self.secrets if s.deleted is None],
                     webhooks=self.webhooks if self.webhooks else {})
 
+        if with_branches:
+            branches = [b.get_json(with_results=with_results, with_last_results=with_last_results) for b in self.branches if b.deleted is None]
+            branches.sort(key=lambda b: b['name'])
+            data['branches'] = branches
+
+        if with_user_data:
+            data['data'] = self.user_data
+
+        return data
 
 class Branch(db.Model, DatesMixin):
     __tablename__ = "branches"
@@ -107,7 +113,7 @@ class Branch(db.Model, DatesMixin):
 
     #base_branch = relationship('BaseBranch', uselist=False, primaryjoin="or_(Branch.id==BaseBranch.ci_branch_id, Branch.id==BaseBranch.dev_branch_id)")
 
-    def get_json(self, with_results=False, with_cfg=False, with_last_results=False):
+    def get_json(self, with_results=False, with_cfg=False, with_last_results=False, with_user_data=False):
         if self.retention_policy:
             retention_policy = self.retention_policy
         else:
@@ -151,6 +157,12 @@ class Branch(db.Model, DatesMixin):
 
         if with_cfg:
             data['stages'] = [s.get_json() for s in self.stages if s.deleted is None]
+
+        if with_user_data:
+            data['data'] = self.user_data
+            data['data_ci'] = self.user_data_ci
+            data['data_dev'] = self.user_data_dev
+
         return data
 
 Index('ix_branches_name_project_id_not_deleted', Branch.name, Branch.project_id, postgresql_where=Branch.deleted.is_(None), unique=True)
@@ -339,7 +351,7 @@ class Flow(db.Model, DatesMixin):
     def get_label(self):
         return self.label if self.label else ("%d." % self.id)
 
-    def get_json(self, with_project=True, with_branch=True, with_schema=True):
+    def get_json(self, with_project=True, with_branch=True, with_schema=True, with_user_data=False):
         if self.state == consts.FLOW_STATE_COMPLETED:
             duration = self.finished - self.created
         else:
@@ -374,6 +386,9 @@ class Flow(db.Model, DatesMixin):
         if with_branch:
             data['branch_id'] = self.branch_id
             data['base_branch_name'] = self.branch.name
+
+        if with_user_data:
+            data['data'] = self.user_data
 
         return data
 
@@ -525,7 +540,7 @@ class Step(db.Model, DatesMixin):
     fields_masked = Column(JSONB, nullable=True)
     # services
 
-    def get_json(self, mask_secrets=False):
+    def get_json(self, with_fields=True, mask_secrets=False):
         data = dict(id=self.id,
                     index=self.index,
                     tool=self.tool.name,
@@ -537,26 +552,27 @@ class Step(db.Model, DatesMixin):
                     status=self.status,
                     result=self.result)
 
-        if mask_secrets and self.fields_masked:
-            fields = self.fields_masked
-        else:
-            fields = self.fields
+        if with_fields:
+            if mask_secrets and self.fields_masked:
+                fields = self.fields_masked
+            else:
+                fields = self.fields
 
-        name = self.tool.name
-        if 'name' in fields:
-            name = fields['name']
-        elif self.tool.name == 'shell':
-            if 'script' in fields and fields['script']:
-                name = fields['script'].strip().splitlines()[0] + '...'
-            elif 'cmd' in fields and fields['cmd']:
-                name = fields['cmd']
-        elif self.tool.name == 'git':
-            name = 'checkout: ' + fields['checkout']
+            name = self.tool.name
+            if 'name' in fields:
+                name = fields['name']
+            elif self.tool.name == 'shell':
+                if 'script' in fields and fields['script']:
+                    name = fields['script'].strip().splitlines()[0] + '...'
+                elif 'cmd' in fields and fields['cmd']:
+                    name = fields['cmd']
+            elif self.tool.name == 'git':
+                name = 'checkout: ' + fields['checkout']
 
-        data['name'] = name
+            data['name'] = name
 
-        for f, v in fields.items():
-            data[f] = v
+            for f, v in fields.items():
+                data[f] = v
 
         return data
 
@@ -589,7 +605,7 @@ class Job(db.Model, DatesMixin):
     results = relationship('TestCaseResult', back_populates="job")
     issues = relationship('Issue', back_populates="job")
 
-    def get_json(self, mask_secrets=False):
+    def get_json(self, with_steps=True, mask_secrets=False):
         if self.started:
             if self.finished:
                 duration = self.finished - self.started
@@ -599,12 +615,7 @@ class Job(db.Model, DatesMixin):
         else:
             duration = ''
 
-        steps = []
-        for s in sorted(self.steps, key=lambda s: s.index):
-            s = s.get_json(mask_secrets=mask_secrets)
-            steps.append(s)
-
-        return dict(id=self.id,
+        data = dict(id=self.id,
                     created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,
                     deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,
                     started=self.started.strftime("%Y-%m-%dT%H:%M:%SZ") if self.started else None,
@@ -626,8 +637,17 @@ class Job(db.Model, DatesMixin):
                     agents_group_id=self.agents_group_id,
                     agents_group_name=self.agents_group.name,
                     agent_id=self.agent_used_id if self.agent_used else 0,
-                    agent_name=self.agent_used.name if self.agent_used else '',
-                    steps=steps)
+                    agent_name=self.agent_used.name if self.agent_used else '')
+
+        if with_steps:
+            steps = []
+            for s in sorted(self.steps, key=lambda s: s.index):
+                s = s.get_json(mask_secrets=mask_secrets)
+                steps.append(s)
+            data['steps'] = steps
+
+        return data
+
 
     def __repr__(self):
         txt = 'Job %s, state:%s' % (self.id, consts.JOB_STATES_NAME[self.state])

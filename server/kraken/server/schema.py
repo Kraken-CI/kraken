@@ -22,10 +22,11 @@ import dateutil.parser
 import RestrictedPython
 from RestrictedPython import compile_restricted
 from RestrictedPython import limited_builtins
+from jinja2.sandbox import SandboxedEnvironment
 
 from . import consts
 from . import schemaval
-from .models import Secret
+from .models import Secret, Step, Run
 
 
 log = logging.getLogger(__name__)
@@ -196,20 +197,21 @@ def prepare_secrets(run):
     return secrets
 
 
-def substitute_val(val, args):
+def substitute_val(val, args, ctx):
     if isinstance(val, dict):
-        return substitute_vars(val, args)
+        return substitute_vars(val, args, ctx)
     if isinstance(val, list):
         list2 = []
         list2_masked = []
         for e in val:
-            e2, e2_masked = substitute_val(e, args)
+            e2, e2_masked = substitute_val(e, args, ctx)
             list2.append(e2)
             list2_masked.append(e2_masked)
         return list2, list2_masked
     if not isinstance(val, str):
         return val, val
 
+    # old way of interpolating vars in fields
     val_masked = val
     secret_present = False
     for var in re.findall(r'#{[A-Za-z0-9_ ]+}', val):
@@ -225,19 +227,47 @@ def substitute_val(val, args):
             else:
                 val_masked = val_masked.replace(var, arg_val)
 
+    # new way of exposing context in fields
+    env = SandboxedEnvironment()
+    for var in re.findall(r'#{[A-Za-z0-9_\. ]+}', val):
+        expr = var[2:-1]
+        tpl = env.from_string("{{ %s }}" % expr)
+        new_str = tpl.render(**ctx)
+        val = val.replace(var, new_str)
+
     if secret_present:
         return val, val_masked
     return val, val
 
 
-def substitute_vars(fields, args):
+def substitute_vars(fields, args, ctx):
     new_fields = {}
     new_fields_masked = {}
     for f, val in fields.items():
-        val, val_masked = substitute_val(val, args)
+        val, val_masked = substitute_val(val, args, ctx)
         new_fields[f] = val
         new_fields_masked[f] = val_masked
     return new_fields, new_fields_masked
+
+
+def prepare_context(entity, args):
+    if isinstance(entity, Step):
+        step = entity
+        run = step.job.run
+    elif isinstance(entity, Run):
+        step = None
+        run = entity
+    ctx = {}
+    ctx['project'] = run.flow.branch.project.get_json(with_branches=False, with_user_data=True)
+    ctx['branch'] = run.flow.branch.get_json(with_user_data=True)
+    ctx['flow'] = run.flow.get_json(with_project=False, with_branch=False, with_schema=False, with_user_data=True)
+    ctx['stage'] = run.stage.get_json(with_schema=False)
+    ctx['run'] = run.get_json(with_project=False, with_branch=False, with_artifacts=False)
+    if step:
+        ctx['job'] = step.job.get_json(with_steps=False)
+        ctx['step'] = step.get_json(with_fields=False)
+    ctx['args'] = args
+    return ctx
 
 
 def prepare_new_planner_triggers(stage_id, new_triggers, prev_triggers, triggers):
