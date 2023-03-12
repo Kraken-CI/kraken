@@ -317,7 +317,7 @@ def trigger_jobs(run, replay=False):
     agents_needed = set()
     created_systems = {}
 
-    run_ctx = prepare_context(run, run_args)
+    run_ctx = prepare_context(run, run.args)
 
     # trigger new jobs based on jobs defined in stage schema
     all_started_erred = True
@@ -419,7 +419,7 @@ def trigger_jobs(run, replay=False):
                         if run.args:
                             args.update(run.args)
                         step = Step(job=job, index=idx, tool=tools[idx])
-                        step_ctx = prepare_context(step, run_args)
+                        step_ctx = prepare_context(step, args)
                         fields, fields_masked = substitute_vars(s, args, step_ctx)
                         del fields['tool']
                         step.fields = fields
