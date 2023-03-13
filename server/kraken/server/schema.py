@@ -260,9 +260,10 @@ def prepare_context(entity, args):
     ctx = {}
     ctx['project'] = run.flow.branch.project.get_json(with_branches=False, with_user_data=True)
     ctx['branch'] = run.flow.branch.get_json(with_user_data=True)
-    ctx['flow'] = run.flow.get_json(with_project=False, with_branch=False, with_schema=False, with_user_data=True)
+    ctx['flow'] = run.flow.get_json(with_project=False, with_branch=False, with_schema=False, with_user_data=True,
+                                    with_stages=False, with_runs=False)
     ctx['stage'] = run.stage.get_json(with_schema=False)
-    ctx['run'] = run.get_json(with_project=False, with_branch=False, with_artifacts=False)
+    ctx['run'] = run.get_json(with_project=False, with_branch=False, with_artifacts=False, with_counts=False)
     if step:
         ctx['job'] = step.job.get_json(with_steps=False)
         ctx['step'] = step.get_json(with_fields=False)

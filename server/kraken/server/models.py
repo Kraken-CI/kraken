@@ -351,7 +351,7 @@ class Flow(db.Model, DatesMixin):
     def get_label(self):
         return self.label if self.label else ("%d." % self.id)
 
-    def get_json(self, with_project=True, with_branch=True, with_schema=True, with_user_data=False):
+    def get_json(self, with_project=True, with_branch=True, with_schema=True, with_user_data=False, with_stages=True, with_runs=True):
         if self.state == consts.FLOW_STATE_COMPLETED:
             duration = self.finished - self.created
         else:
@@ -371,13 +371,19 @@ class Flow(db.Model, DatesMixin):
                     duration=duration_to_txt(duration),
                     branch_name=self.branch_name,
                     args=self.args,
-                    stages=[s.get_json(with_schema=with_schema) for s in self.branch.stages if s.deleted is None],
-                    runs=[r.get_json(with_project=False, with_branch=False, with_artifacts=False) for r in self.runs],
                     trigger=trigger,
                     artifacts=self.artifacts)
 
         infix = 'f/%d' % self.id
         data['report_entries'] = _get_report_entries(self.artifacts, infix)
+
+        if with_stages:
+            stages = [s.get_json(with_schema=with_schema) for s in self.branch.stages if s.deleted is None]
+            data['stages'] = stages
+
+        if with_runs:
+            runs = [r.get_json(with_project=False, with_branch=False, with_artifacts=False) for r in self.runs]
+            data['runs'] = runs
 
         if with_project:
             data['project_id'] = self.branch.project_id
@@ -433,12 +439,13 @@ class Run(db.Model, DatesMixin):
     repo_data = relationship('RepoChanges')
     processed_at = Column(DateTime(timezone=True))    # time when results analysis completed
 
-    def get_json(self, with_project=True, with_branch=True, with_artifacts=True):
+    def get_json(self, with_project=True, with_branch=True, with_artifacts=True, with_counts=True):
         jobs_processing = 0
         jobs_executing = 0
         jobs_waiting = 0
         jobs_error = 0
         jobs_total = 0
+        duration = ''
 
         if self.state == consts.RUN_STATE_PROCESSED:
             jobs_total = self.jobs_total
@@ -452,7 +459,10 @@ class Run(db.Model, DatesMixin):
                 duration = utils.utcnow() - begin
             else:
                 duration = self.finished - begin
-        else:
+
+            duration = duration_to_txt(duration)
+
+        elif with_counts:
             non_covered_jobs = Job.query.filter_by(run=self).filter_by(covered=False).all()
             jobs_total = len(non_covered_jobs)
             jobs_completed = 0
@@ -477,6 +487,8 @@ class Run(db.Model, DatesMixin):
             else:
                 duration = utils.utcnow() - self.created
 
+            duration = duration_to_txt(duration)
+
         data = dict(id=self.id,
                     label=self.label,
                     created=self.created.strftime("%Y-%m-%dT%H:%M:%SZ") if self.created else None,
@@ -484,7 +496,7 @@ class Run(db.Model, DatesMixin):
                     started=self.started.strftime("%Y-%m-%dT%H:%M:%SZ") if self.started else None,
                     finished=self.finished.strftime("%Y-%m-%dT%H:%M:%SZ") if self.finished else None,
                     processed_at=self.processed_at.strftime("%Y-%m-%dT%H:%M:%SZ") if self.processed_at else None,
-                    duration=duration_to_txt(duration),
+                    duration=duration,
                     state=consts.RUN_STATES_NAME[self.state],
                     stage_name=self.stage.name,
                     stage_id=self.stage_id,
