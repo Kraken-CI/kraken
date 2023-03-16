@@ -364,6 +364,8 @@ def get_branch_stats(branch_id, token_info=None):
             q2 = q.filter(Flow.finished.is_not(None))
             q2 = q2.with_entities(func.avg(extract('epoch', Flow.finished) - extract('epoch', Flow.created)).label('average'))
             secs = q2.filter(Flow.created >= month_ago).all()[0][0]
+            if secs is None:
+                secs = 0
             dur = datetime.timedelta(seconds=secs)
             rsp['avg_duration_last_month'] = duration_to_txt(dur)
             if rsp['flows_last_week'] > 0:
