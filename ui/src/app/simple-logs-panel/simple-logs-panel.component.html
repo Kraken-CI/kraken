@@ -88,7 +88,7 @@
             <div style="width: 7em;" class="log-cell" *ngIf="columns[1]"> {{ l.host }}</div>
             <div style="width: 7em;" class="log-cell" *ngIf="columns[2]" pTooltip="{{ l.path }}:{{ l.lineno }}"> {{ l.path }}:{{ l.lineno }}</div>
             <div style="width: 7em;" class="log-cell" *ngIf="columns[3]"> {{ l.service }}</div>
-            <div style="width: 9em;" class="log-cell" *ngIf="columns[4]"> {{ l.tool }}</div>
+            <div style="width: 9em;" class="log-cell" *ngIf="columns[4]" pTooltip="{{ l.tool }}"> {{ l.tool }}</div>
             <div style="width: 4em;" class="log-cell" *ngIf="columns[5]"> {{ l.step }}</div>
             <div style="width: 4em;" class="log-cell" *ngIf="columns[6]"> {{ l.branch }}</div>
             <div style="width: 4em;" class="log-cell" *ngIf="columns[7]"> {{ l.flow_kind }}</div>

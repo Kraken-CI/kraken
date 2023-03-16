@@ -31,7 +31,7 @@ from ..models import db, Run, Job, TestCaseResult, Branch, Flow, Stage, Project,
 from ..models import AgentsGroup, Agent, System, TestCaseComment, Tool
 from ..models import RepoChanges, Secret
 from ..schema import prepare_new_planner_triggers
-from ..schema import check_and_correct_stage_schema
+from ..schema import check_and_correct_stage_schema, prepare_context
 from ..cloud import cloud
 from .. import exec_utils  # pylint: disable=cyclic-import
 from .. import consts
@@ -989,7 +989,8 @@ def refresh_schema_repo(stage_id, complete_starting_run_id=None):
                                                                stage.schema_file, stage.git_clone_params)
 
             # check schema
-            schema_code, schema = check_and_correct_stage_schema(stage.branch, stage.name, schema_code)
+            ctx = prepare_context(stage, stage.get_default_args())
+            schema_code, schema = check_and_correct_stage_schema(stage.branch, stage.name, schema_code, ctx)
         except Exception as e:
             stage.repo_error = str(e)
             stage.repo_state = consts.REPO_STATE_ERROR

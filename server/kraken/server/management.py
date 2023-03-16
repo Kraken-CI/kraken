@@ -1,4 +1,4 @@
-# Copyright 2020-2022 The Kraken Authors
+# Copyright 2020-2023 The Kraken Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ from .models import db, Branch, Stage, Agent, AgentsGroup, Secret, AgentAssignme
 from .models import Project, BranchSequence, System, Flow, duration_to_txt
 from .models import Tool
 from .schema import check_and_correct_stage_schema, SchemaError, execute_schema_code
-from .schema import prepare_new_planner_triggers
+from .schema import prepare_new_planner_triggers, prepare_context
 from .cloud import aws, azure, k8s
 from ..version import version as server_version
 from . import toolutils
@@ -479,8 +479,9 @@ def create_stage(branch_id, body, token_info=None):
     if 'schema_code' in body:
         schema_code = body['schema_code']
 
+    ctx = prepare_context(branch, {})
     try:
-        schema_code, schema = check_and_correct_stage_schema(branch, body['name'], schema_code)
+        schema_code, schema = check_and_correct_stage_schema(branch, body['name'], schema_code, ctx)
     except SchemaError as e:
         abort(400, str(e))
 
@@ -531,8 +532,9 @@ def update_stage(stage_id, body, token_info=None):
 
     if 'schema_code' in body:
         prev_triggers = stage.schema['triggers']
+        ctx = prepare_context(stage, stage.get_default_args())
         try:
-            schema_code, schema = check_and_correct_stage_schema(stage.branch, body['name'], body['schema_code'])
+            schema_code, schema = check_and_correct_stage_schema(stage.branch, body['name'], body['schema_code'], ctx)
         except SchemaError as e:
             abort(400, str(e))
         stage.schema = schema

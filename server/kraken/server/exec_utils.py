@@ -240,20 +240,9 @@ def create_a_flow(branch, kind, body, trigger_data=None):
     return flow
 
 
-def _setup_schema_context(run):
-    ctx = {
-        'is_ci': run.flow.kind == 0,
-        'is_dev': run.flow.kind == 1,
-        'run_label': run.label,
-        'flow_label': run.flow.label,
-    }
-    return ctx
-
-
 def _reeval_schema(run):
-    context = _setup_schema_context(run)
-
-    schema_code, schema = check_and_correct_stage_schema(run.stage.branch, run.stage.name, run.stage.schema_code, context)
+    ctx = prepare_context(run, run.args)
+    schema_code, schema = check_and_correct_stage_schema(run.stage.branch, run.stage.name, run.stage.schema_code, ctx)
 
     run.stage.schema = schema
     run.stage.schema_code = schema_code
@@ -418,7 +407,7 @@ def trigger_jobs(run, replay=False):
                         args = secrets.copy()
                         if run.args:
                             args.update(run.args)
-                        step = Step(job=job, index=idx, tool=tools[idx])
+                        step = Step(job=job, index=idx, tool=tools[idx], fields={}, fields_masked={})
                         step_ctx = prepare_context(step, args)
                         fields, fields_masked = substitute_vars(s, args, step_ctx)
                         del fields['tool']

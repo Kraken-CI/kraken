@@ -17,6 +17,7 @@ import re
 import logging
 import xmlrpc.client
 
+import addict
 import pytimeparse
 import dateutil.parser
 import RestrictedPython
@@ -26,7 +27,7 @@ from jinja2.sandbox import SandboxedEnvironment
 
 from . import consts
 from . import schemaval
-from .models import Secret, Step, Run
+from .models import Secret, Step, Run, Stage, Branch
 
 
 log = logging.getLogger(__name__)
@@ -36,11 +37,8 @@ class SchemaError(Exception):
     pass
 
 
-class SchemaCodeContext:
-    def __init__(self, branch_name, context):
-        self.branch_name = branch_name
-        for k, v in context.items():
-            setattr(self, k, v)
+class SchemaCodeContext(addict.Dict):
+    pass
 
 
 def execute_schema_code(branch, schema_code, context=None):
@@ -57,7 +55,8 @@ def execute_schema_code(branch, schema_code, context=None):
     my_globals = {'__builtins__': limited_builtins,
                   '_getattr_': RestrictedPython.Guards.safer_getattr,
                   '_getiter_': RestrictedPython.Eval.default_guarded_getiter,
-                  '_iter_unpack_sequence_': RestrictedPython.Guards.guarded_iter_unpack_sequence}
+                  '_iter_unpack_sequence_': RestrictedPython.Guards.guarded_iter_unpack_sequence,
+                  'log': log}
 
 
     try:
@@ -68,12 +67,7 @@ def execute_schema_code(branch, schema_code, context=None):
         raise SchemaError(msg) from e
 
     my_globals.update(my_locals)
-    if context is None:
-        context = {
-            'is_ci': True,
-            'is_dev': False,
-        }
-    ctx = SchemaCodeContext(branch.name, context)
+    ctx = SchemaCodeContext(context)
     my_globals['ctx'] = ctx
 
     my_locals2 = {}
@@ -254,20 +248,46 @@ def prepare_context(entity, args):
     if isinstance(entity, Step):
         step = entity
         run = step.job.run
+        stage = run.stage
+        branch = stage.branch
     elif isinstance(entity, Run):
         step = None
         run = entity
+        stage = run.stage
+        branch = stage.branch
+    elif isinstance(entity, Stage):
+        step = None
+        run = None
+        stage = entity
+        branch = stage.branch
+    elif isinstance(entity, Branch):
+        step = None
+        run = None
+        stage = None
+        branch = entity
+
     ctx = {}
-    ctx['project'] = run.flow.branch.project.get_json(with_branches=False, with_user_data=True)
-    ctx['branch'] = run.flow.branch.get_json(with_user_data=True)
-    ctx['flow'] = run.flow.get_json(with_project=False, with_branch=False, with_schema=False, with_user_data=True,
-                                    with_stages=False, with_runs=False)
-    ctx['stage'] = run.stage.get_json(with_schema=False)
-    ctx['run'] = run.get_json(with_project=False, with_branch=False, with_artifacts=False, with_counts=False)
+    ctx['args'] = args
+    ctx['project'] = branch.project.get_json(with_branches=False, with_user_data=True)
+    ctx['branch'] = branch.get_json(with_user_data=True)
+    ctx['branch_name'] = branch.name
+
+    if stage:
+        ctx['stage'] = stage.get_json(with_schema=False)
+
+    if run:
+        ctx['flow'] = run.flow.get_json(with_project=False, with_branch=False, with_schema=False, with_user_data=True,
+                                        with_stages=False, with_runs=False)
+        ctx['run'] = run.get_json(with_project=False, with_branch=False, with_artifacts=False, with_counts=False)
+        ctx['is_ci'] = run.flow.kind == consts.FLOW_KIND_CI
+        ctx['is_dev'] = run.flow.kind == consts.FLOW_KIND_DEV
+        ctx['run_label'] = run.label
+        ctx['flow_label'] = run.flow.label
+
     if step:
         ctx['job'] = step.job.get_json(with_steps=False)
         ctx['step'] = step.get_json(with_fields=False)
-    ctx['args'] = args
+
     return ctx
 
 
