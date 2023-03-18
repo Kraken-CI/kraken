@@ -162,6 +162,8 @@ def create_app():
     connex_app.add_url_rule("/bk/job_log/<job_id>", view_func=job_log.serve_job_log, methods=['GET'])
     connex_app.add_url_rule("/job_log/<job_id>/<step_idx>", view_func=job_log.serve_step_log, methods=['GET'])
     connex_app.add_url_rule("/bk/job_log/<job_id>/<step_idx>", view_func=job_log.serve_step_log, methods=['GET'])
+    connex_app.add_url_rule("/any_log", view_func=job_log.serve_any_log, methods=['GET'])
+    connex_app.add_url_rule("/bk/any_log", view_func=job_log.serve_any_log, methods=['GET'])
 
     # install webhooks
     webhooks_bp = webhooks.create_blueprint()

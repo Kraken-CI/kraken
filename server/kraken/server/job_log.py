@@ -1,4 +1,4 @@
-# Copyright 2020-2021 The Kraken Authors
+# Copyright 2020-2023 The Kraken Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,34 +16,31 @@ import logging
 from queue import Queue, Empty
 from threading import Thread, Event
 
-from flask import abort, Response
-
+from flask import request, abort, Response
 from . import access
 from . import users
 from .models import Job
 from . import chops
+from . import utils
 
 
 log = logging.getLogger(__name__)
 
-class JobLogDownloader:
-    def __init__(self, job_id, step_idx=None):
-        self.job_id = job_id
-        self.step_idx = step_idx
-        self.query = 'select message from logs where job = %d ' % job_id
-        if self.step_idx is not None:
-            self.query += ' and step = %d ' % self.step_idx
-        self.query += 'order by time asc, seq asc'
-
+class LogDownloader:
+    def __init__(self, columns, query, params=None):
+        self.columns = columns
+        self.query = query
+        self.params = params
         self.ch = chops.get_clickhouse()
-
         self.logs_queue = Queue()
         self.finished = Event()
         self.worker = None
 
     def get_logs(self):
-        for l in self.ch.execute_iter(self.query, {'max_block_size': 100000}):
-            self.logs_queue.put(l[0] + '\n')
+        self.logs_queue.put(self.columns + '\n')
+        for line_items in self.ch.execute_iter(self.query, self.params, settings={'max_block_size': 100000}):
+            line = ' '.join([str(i) for i in line_items])
+            self.logs_queue.put(line + '\n')
 
         self.logs_queue.join()  # wait for all blocks in the queue to be marked as processed
         self.finished.set()  # mark streaming as finished
@@ -75,8 +72,11 @@ def serve_job_log(job_id):
     access.check(token_info, job.run.flow.branch.project_id, 'view',
                  'only superadmin, project admin, project power user and project viewer roles can fetch job logs')
 
+    query = 'SELECT message FROM logs WHERE job = %d ' % job_id
+    query += 'ORDER BY time ASC, seq ASC'
+
     try:
-        jld = JobLogDownloader(job_id, None)
+        jld = LogDownloader('message', query)
     except OSError:
         abort(500, 'Cannot connect to storage service')
 
@@ -100,13 +100,51 @@ def serve_step_log(job_id, step_idx):
     access.check(token_info, job.run.flow.branch.project_id, 'view',
                  'only superadmin, project admin, project power user and project viewer roles can fetch job logs')
 
+    query = 'SELECT message FROM logs WHERE job = %d ' % job_id
+    query += ' AND step = %d ' % step_idx
+    query += 'ORDER BY time ASC, seq ASC'
+
     try:
-        jld = JobLogDownloader(job_id, step_idx)
+        jld = LogDownloader('message', query)
     except OSError:
         abort(500, 'Cannot connect to storage service')
 
     log.info('serve_job_log %s', job)
     response = Response(jld.download(), mimetype='plain/text')
     path = 'step_log_%d_%d.txt' % (job_id, step_idx)
+    response.headers['Content-Disposition'] = 'attachment; filename=' + path
+    return response
+
+
+def serve_any_log():
+    token_info = users.get_token_info_from_request()
+    branch_id = request.args.get('branch_id', default=None, type=int)
+    flow_kind = request.args.get('flow_kind', default=None, type=int)
+    flow_id = request.args.get('flow_id', default=None, type=int)
+    run_id = request.args.get('run_id', default=None, type=int)
+    job_id = request.args.get('job_id', default=None, type=int)
+    step_idx = request.args.get('step_id', default=None, type=int)
+    agent_id = request.args.get('agent_id', default=None, type=int)
+    services = request.args.getlist('services')
+    level = request.args.get('level', default=None, type=int)
+
+    columns, where_clause, params = chops.prepare_logs_query(
+        branch_id, flow_kind, flow_id, run_id, job_id, step_idx,
+        agent_id, services, level, token_info)
+
+    query = f'SELECT {columns} FROM logs {where_clause} '
+    query += 'ORDER BY time ASC, seq ASC'
+
+    log.info('log query: %s', query)
+
+    try:
+        jld = LogDownloader(columns, query, params)
+    except OSError:
+        abort(500, 'Cannot connect to storage service')
+
+    # log.info('kraken_log %s', job)
+    response = Response(jld.download(), mimetype='plain/text')
+    now = utils.utcnow().strftime("%Y_%m_%d_%H_%M_%S")
+    path = 'kraken_log_%s.txt' % now
     response.headers['Content-Disposition'] = 'attachment; filename=' + path
     return response

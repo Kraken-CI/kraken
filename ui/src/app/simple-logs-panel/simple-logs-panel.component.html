@@ -1,47 +1,54 @@
-<div class="flex gap-3 mb-2">
-    <p-multiSelect
-        [options]="services"
-        optionLabel="name"
-        [(ngModel)]="selectedServices"
-        placeholder="Filter by services"
-        display="chip"
-        [showHeader]="false"
-        [style]="{width: '30em'}"
-        [panelStyle]="{width:'30em'}"
-        scrollHeight="40em"
-        [maxSelectedLabels]="20"></p-multiSelect>
+<div class="flex mb-2 justify-content-between">
+    <div class="flex gap-3 mb-2">
+        <p-multiSelect
+            [options]="services"
+            optionLabel="name"
+            [(ngModel)]="selectedServices"
+            placeholder="Filter by services"
+            display="chip"
+            [showHeader]="false"
+            [style]="{width: '30em'}"
+            [panelStyle]="{width:'30em'}"
+            scrollHeight="40em"
+            [maxSelectedLabels]="20"></p-multiSelect>
 
-    <div>
+        <div>
+            <p-dropdown
+                [options]="rqJobs"
+                [(ngModel)]="rqJob"
+                [panelStyle]="{'min-width': '40em'}"
+                scrollHeight='calc(100vh - 300px)'>
+                <ng-template let-job pTemplate="item">
+                    <div class="flex">
+                        <div style="width: 25em;">{{ job.label }}</div>
+                        <div style="width: 15em;" class="text-500">{{ job.time ? (job.time | localtime) : '' }}</div>
+                    </div>
+                </ng-template>
+            </p-dropdown>
+            <button
+                type="button" pButton pRipple icon="pi pi-refresh"
+                styleClass="p-button-warn"
+                (click)="loadLastRQJobsNames()"></button>
+        </div>
+
         <p-dropdown
-            [options]="rqJobs"
-            [(ngModel)]="rqJob"
-            [panelStyle]="{'min-width': '40em'}"
-            scrollHeight='calc(100vh - 300px)'>
-            <ng-template let-job pTemplate="item">
-                <div class="flex">
-                    <div style="width: 25em;">{{ job.label }}</div>
-                    <div style="width: 15em;" class="text-500">{{ job.time ? (job.time | localtime) : '' }}</div>
-                </div>
-            </ng-template>
-        </p-dropdown>
-        <button
-            type="button" pButton pRipple icon="pi pi-refresh"
-            styleClass="p-button-warn"
-            (click)="loadLastRQJobsNames()"></button>
+            [options]="logLevels"
+            [(ngModel)]="selectedlogLevel"
+            placeholder="Level"
+            [style]="{minWidth: '8em'}"
+            [panelStyle]="{minWidth:'8em'}"></p-dropdown>
+
+        <p-button
+            label="Refresh"
+            icon="pi pi-refresh"
+            (onClick)="loadLogs('last')"
+            [loading]="loading"></p-button>
     </div>
-
-    <p-dropdown
-        [options]="logLevels"
-        [(ngModel)]="selectedlogLevel"
-        placeholder="Level"
-        [style]="{minWidth: '8em'}"
-        [panelStyle]="{minWidth:'8em'}"></p-dropdown>
-
-    <p-button
-        label="Refresh"
-        icon="pi pi-refresh"
-        (onClick)="loadLogs('last')"
-        [loading]="loading"></p-button>
+    <div>
+        <p-button
+            icon="pi pi-bars"
+            (onClick)="menu.toggle($event)"></p-button>
+    </div>
 </div>
 
 <p-tieredMenu #menu [popup]="true" [model]="menuItems"></p-tieredMenu>
@@ -71,10 +78,6 @@
                         transition-colors transition-duration-200 hover:bg-gray-600 font-normal"
                  pTooltip="Last page"
                  (click)="loadLogs('last')"><i class="pi pi-angle-double-right"></i></div>
-
-            <div class="px-2 py-1 border-round-lg border-solid border-1 border-800 bg-gray-900 cursor-pointer
-                        transition-colors transition-duration-200 hover:bg-gray-600 font-normal"
-                 (click)="menu.toggle($event)"><i class="pi pi-cog"></i></div>
         </div>
         <div class="mr-1 mt-1">
             {{ logsBegin }}..{{ logsEnd }} of {{ logsTotal }}

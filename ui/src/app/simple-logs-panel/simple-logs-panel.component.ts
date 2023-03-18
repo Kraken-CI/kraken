@@ -108,6 +108,10 @@ export class SimpleLogsPanelComponent implements OnDestroy, OnChanges {
         }, {
             label: 'Columns',
             items: []
+        }, {
+            label: 'Download',
+            icon: 'pi pi-download',
+            url: '/bk/any_log'
         }]
 
         let cols = ['Timestamp', 'Host', 'Path:LineNo', 'Service', 'Tool', 'Step',
@@ -169,6 +173,37 @@ export class SimpleLogsPanelComponent implements OnDestroy, OnChanges {
         )
     }
 
+    setLogDownloadsLink(branchId, flowId, runId, jobId, agentId, services, level) {
+        let link = '/bk/any_log?'
+        let params = []
+        if (branchId) {
+            params.push('branch_id=' + branchId)
+        }
+        if (flowId) {
+            params.push('flow_id=' + flowId)
+        }
+        if (runId) {
+            params.push('run_id=' + runId)
+        }
+        if (jobId) {
+            params.push('job_id=' + jobId)
+        }
+        if (agentId) {
+            params.push('agent_id=' + agentId)
+        }
+        if (services) {
+            for (const s of services) {
+                params.push('services=' + s)
+            }
+        }
+        if (level) {
+            params.push('level=' + level)
+        }
+        link += params.join('&')
+
+        this.menuItems[2].url = link
+    }
+
     loadLogs(what) {
         let branchId = this.branchId
         let flowKind
@@ -217,6 +252,8 @@ export class SimpleLogsPanelComponent implements OnDestroy, OnChanges {
             order = 'desc'
             break
         }
+
+        this.setLogDownloadsLink(branchId, flowId, runId, jobId, agentId, services, level)
 
         this.loading = true
         this.subs.add(

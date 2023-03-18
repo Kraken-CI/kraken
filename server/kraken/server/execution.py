@@ -448,118 +448,26 @@ def get_step_logs(job_id, step_idx, start=0, limit=200, order=None, filters=None
 def get_logs(branch_id=None, flow_kind=None, flow_id=None, run_id=None, job_id=None, step_idx=None,
              agent_id=None, services=None, level=None,
              start=0, limit=200, order=None, token_info=None):  # pylint: disable=unused-argument
-    if order not in [None, 'asc', 'desc']:
-        abort(400, "incorrect order value: %s" % str(order))
-
     if start < 0:
         abort(400, "incorrect start value: %s" % str(start))
 
     if limit < 0:
         abort(400, "incorrect limit value: %s" % str(limit))
 
-    if branch_id is None and flow_id is None and run_id is None and job_id is None and agent_id is None:
-        access.check(token_info, '', 'admin',
-                     'only superadmin can get services logs')
-
-    if branch_id is None and flow_kind is not None:
-        abort(400, "if flow_kind is provided then branch_id must be provided as well")
-
-    if job_id is None and step_idx is not None:
-        abort(400, "if step_idx is provided then job_id must be provided as well")
-
-    if job_id is not None:
-        job = Job.query.filter_by(id=job_id).one_or_none()
-        if job is None:
-            abort(404, "Job not found")
-        access.check(token_info, job.run.stage.branch.project_id, 'view',
-                     'only superadmin, project admin, project power and project viewer user roles can get job logs')
-
-    elif run_id is not None:
-        run = Run.query.filter_by(id=run_id).one_or_none()
-        if run is None:
-            abort(404, "Run not found")
-        access.check(token_info, run.stage.branch.project_id, 'view',
-                     'only superadmin, project admin, project power and project viewer user roles can get run logs')
-
-    elif flow_id is not None:
-        flow = Flow.query.filter_by(id=flow_id).one_or_none()
-        if flow is None:
-            abort(404, "Flow not found")
-        access.check(token_info, flow.branch.project_id, 'view',
-                     'only superadmin, project admin, project power and project viewer user roles can get flow logs')
-
-    elif branch_id is not None:
-        branch = Branch.query.filter_by(id=branch_id).one_or_none()
-        if branch is None:
-            abort(404, "Branch not found")
-        access.check(token_info, branch.project_id, 'view',
-                     'only superadmin, project admin, project power and project viewer user roles can get branch logs')
-
-    if agent_id is not None:
-        agent = Agent.query.filter_by(id=agent_id).one_or_none()
-        if agent is None:
-            abort(404, "Agent not found")
-        access.check(token_info, '', 'admin',
-                     'only superadmin can get agent logs')
-
-    ch = chops.get_clickhouse()
+    if order not in [None, 'asc', 'desc']:
+        abort(400, "incorrect order value: %s" % str(order))
 
     if order is None:
         order = 'asc'
 
-    params = dict(start=start, limit=limit)
+    _, where_clause, params = chops.prepare_logs_query(
+        branch_id, flow_kind, flow_id, run_id, job_id, step_idx,
+        agent_id, services, level, token_info)
 
-    where_clauses = []
-    if branch_id is not None:
-        where_clauses.append('branch = %(branch_id)d')
-        params['branch_id'] = branch_id
-        if flow_kind is not None:
-            where_clauses.append('flow_kind = %(flow_kind)d')
-            params['flow_kind'] = flow_kind
-    if flow_id is not None:
-        where_clauses.append('flow = %(flow_id)d')
-        params['flow_id'] = flow_id
-    if run_id is not None:
-        where_clauses.append('run = %(run_id)d')
-        params['run_id'] = run_id
-    if job_id is not None:
-        where_clauses.append('job = %(job_id)d')
-        params['job_id'] = job_id
-        if step_idx is not None:
-            where_clauses.append('step_idx = %(step_idx)d')
-            params['step_idx'] = step_idx
-    if agent_id is not None:
-        where_clauses.append('agent = %(agent_id)d')
-        params['agent_id'] = agent_id
+    params['start'] = start
+    params['limit'] = limit
 
-    where_services = []
-    if services:
-        for idx, s in enumerate(services):
-            param = 'service%d' % idx
-            if '/' in s:
-                s, t = s.split('/')
-                tparam = 'tool%d' % idx
-                where_services.append("(service = %%(%s)s and tool = %%(%s)s)" % (param, tparam))
-                params[param] = s
-                params[tparam] = t
-            else:
-                where_services.append("service = %%(%s)s" % param)
-                params[param] = s
-        where = " or ".join(where_services)
-        where = "(" + where + ") "
-        where_clauses.append(where)
-
-    if level:
-        level = level.upper()
-        if level == 'ERROR':
-            lq = "level = 'ERROR'"
-        elif level == 'WARNING':
-            lq = "level in ('WARNING', 'ERROR')"
-        else:
-            lq = "level in ('INFO', 'WARNING', 'ERROR')"
-        where_clauses.append(lq)
-
-    where_clause = 'where ' + ' and '.join(where_clauses)
+    ch = chops.get_clickhouse()
 
     # get total first
     total_query = "SELECT count(*) FROM logs %s" % where_clause
@@ -568,8 +476,7 @@ def get_logs(branch_id=None, flow_kind=None, flow_id=None, run_id=None, job_id=N
 
     # get logs now
     query = "SELECT time,message,service,host,path,lineno,level,branch,flow_kind,flow,run,job,tool,step,agent "
-    query += " FROM logs %s ORDER BY time %s, seq %s LIMIT %%(start)d, %%(limit)d"
-    query %= (where_clause, order, order)
+    query += f" FROM logs {where_clause} ORDER BY time {order}, seq {order} LIMIT %(start)d, %(limit)d"
     log.info('CH query %s', query)
     log.info('CH params %s', params)
     rows = ch.execute(query, params)
