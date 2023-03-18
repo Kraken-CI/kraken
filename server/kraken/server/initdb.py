@@ -666,14 +666,15 @@ def prepare_initial_data():
             }]
         }]
     }'''
+    ctx = prepare_context(branch, {})
     if stage is None:
         stage = Stage(name='Tests', description="This is a stage of tests.", branch=branch,
-                      schema_code=schema_code, schema=execute_schema_code(branch, schema_code))
+                      schema_code=schema_code, schema=execute_schema_code(schema_code, ctx))
         db.session.commit()
         print("   created Stage record 'Tests'")
     else:
         stage.schema_code = schema_code
-        stage.schema = execute_schema_code(branch, schema_code)
+        stage.schema = execute_schema_code(schema_code, ctx)
         db.session.commit()
 
 

@@ -24,7 +24,7 @@ from sqlalchemy.orm import joinedload
 from . import consts
 from . import utils
 from .models import db, Project, Branch, Flow, Run, Stage, Job, Step
-from .models import Issue, Artifact, Agent
+from .models import Issue, Artifact
 from .schema import SchemaError
 from . import exec_utils
 from . import access

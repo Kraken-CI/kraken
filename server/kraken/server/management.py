@@ -629,7 +629,8 @@ def get_stage_schema_as_json(stage_id, body, token_info=None):
                  'only superadmin, project admin, project power user and project viewer roles can get a stage')
 
     try:
-        schema = execute_schema_code(stage.branch, schema_code['schema_code'])
+        ctx = prepare_context(stage.branch, {})
+        schema = execute_schema_code(schema_code['schema_code'], ctx)
     except Exception as e:
         return dict(stage_id=stage_id, error=str(e)), 200
 

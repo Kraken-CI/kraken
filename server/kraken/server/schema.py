@@ -41,7 +41,7 @@ class SchemaCodeContext(addict.Dict):
     pass
 
 
-def execute_schema_code(branch, schema_code, context=None):
+def execute_schema_code(schema_code, context=None):
     # TODO: use starlark-go for executing schema code
     # for now RestrictedPython is used
     try:
@@ -114,7 +114,7 @@ def check_and_correct_stage_schema(branch, stage_name, schema_code, context=None
 
     # execute schema code
     try:
-        schema = execute_schema_code(branch, schema_code, context)
+        schema = execute_schema_code(schema_code, context)
     except SchemaError:
         raise
     except Exception:
