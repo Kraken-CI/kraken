@@ -561,7 +561,7 @@ def update_stage(stage_id, body, token_info=None):
             stage.repo_url = body['repo_url']
         if 'repo_branch' in body:
             stage.repo_branch = body['repo_branch']
-        if 'repo_access_token' in body:
+        if 'repo_access_token' in body and body['repo_access_token']:
             repo_access_token = body['repo_access_token']
             secret = Secret.query.filter_by(project=stage.branch.project, name=repo_access_token).one_or_none()
             if secret is None:
