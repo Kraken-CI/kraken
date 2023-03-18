@@ -282,148 +282,158 @@ def _establish_timeout_for_job(j, run, system, agents_group):
 def trigger_jobs(run, replay=False):
     log.info('triggering jobs for run %s', run)
 
-    # reevaluate schema code
-    _reeval_schema(run)
+    try:
 
-    schema = run.stage.schema
+        # reevaluate schema code
+        _reeval_schema(run)
 
-    # find any prev jobs that will be covered by jobs triggered here in this function
-    if replay:
-        covered_jobs = _find_covered_jobs(run)
+        schema = run.stage.schema
 
-    # prepare secrets to pass them to substitute in steps
-    secrets = prepare_secrets(run)
+        # find any prev jobs that will be covered by jobs triggered here in this function
+        if replay:
+            covered_jobs = _find_covered_jobs(run)
 
-    # prepare missing group
-    missing_agents_group = AgentsGroup.query.filter_by(name='missing').one_or_none()
-    if missing_agents_group is None:
-        missing_agents_group = AgentsGroup(name='missing')
-        db.session.commit()
+        # prepare secrets to pass them to substitute in steps
+        secrets = prepare_secrets(run)
 
-    # count how many agents are in each group, if there is 0 for given job then return an error
-    agents_count = {}
+        # prepare missing group
+        missing_agents_group = AgentsGroup.query.filter_by(name='missing').one_or_none()
+        if missing_agents_group is None:
+            missing_agents_group = AgentsGroup(name='missing')
+            db.session.commit()
 
-    agents_needed = set()
-    created_systems = {}
+        # count how many agents are in each group, if there is 0 for given job then return an error
+        agents_count = {}
 
-    run_ctx = prepare_context(run, run.args)
+        agents_needed = set()
+        created_systems = {}
 
-    # trigger new jobs based on jobs defined in stage schema
-    all_started_erred = True
-    now = utils.utcnow()
-    for j in schema['jobs']:
-        # check tools in steps
-        tools = []
-        tool_not_found = None
-        for idx, s in enumerate(j['steps']):
-            if '@' in s['tool']:
-                name, ver = s['tool'].split('@')
-                tool = Tool.query.filter_by(name=name, version=ver).one_or_none()
-            else:
-                tool = Tool.query.filter_by(name=s['tool']).order_by(desc(Tool.created)).first()
-            if tool is None:
-                tool_not_found = s['tool']
-                break
-            tools.append(tool)
-        if tool_not_found is not None:
-            log.warning('cannot find tool %s', tool_not_found)
+        run_ctx = prepare_context(run, run.args)
 
-        envs = j['environments']
-        for env in envs:
-            # get agents group
-            ag_name, _ = substitute_val(env['agents_group'], run.args, run_ctx)
-            q = AgentsGroup.query
-            q = q.filter_by(project=run.stage.branch.project, name=ag_name)
-            agents_group = q.one_or_none()
-
-            if agents_group is None:
-                agents_group = AgentsGroup.query.filter_by(name=ag_name).one_or_none()
-                if agents_group is None:
-                    log.warning("cannot find agents group '%s'", ag_name)
-
-            # get count of agents in the group
-            if agents_group is not None and agents_group.name not in agents_count:
-                q = AgentAssignment.query.filter_by(agents_group=agents_group)
-                q = q.join('agent')
-                q = q.filter(Agent.disabled.is_(False))
-                q = q.filter(Agent.authorized.is_(True))
-                cnt = q.count()
-                #log.info("agents group '%s' count is %d", agents_group.name, cnt)
-                agents_count[agents_group.name] = cnt
-
-            if not isinstance(env['system'], list):
-                systems = [substitute_val(env['system'], run.args, run_ctx)[0]]
-            else:
-                systems = [substitute_val(s, run.args, run_ctx)[0] for s in env['system']]
-
-            for system_name in systems:
-                # prepare system and executor
-                if 'executor' in env:
-                    executor = env['executor'].lower()
+        # trigger new jobs based on jobs defined in stage schema
+        all_started_erred = True
+        now = utils.utcnow()
+        for j in schema['jobs']:
+            # check tools in steps
+            tools = []
+            tool_not_found = None
+            for idx, s in enumerate(j['steps']):
+                if '@' in s['tool']:
+                    name, ver = s['tool'].split('@')
+                    tool = Tool.query.filter_by(name=name, version=ver).one_or_none()
                 else:
-                    executor = 'local'
-                system = System.query.filter_by(name=system_name, executor=executor).one_or_none()
-                sys_key = (system_name, executor)
-                if system is None:
-                    system = created_systems.get(sys_key, None)
-                if system is None:
-                    system = System(name=system_name, executor=executor)
-                    db.session.flush()
-                    # this is to avoid doing flush for the same system
-                    created_systems[sys_key] = system
+                    tool = Tool.query.filter_by(name=s['tool']).order_by(desc(Tool.created)).first()
+                if tool is None:
+                    tool_not_found = s['tool']
+                    break
+                tools.append(tool)
+            if tool_not_found is not None:
+                log.warning('cannot find tool %s', tool_not_found)
 
-                # get timeout
-                timeout = _establish_timeout_for_job(j, run, system, agents_group)
+            envs = j['environments']
+            for env in envs:
+                # get agents group
+                ag_name, _ = substitute_val(env['agents_group'], run.args, run_ctx)
+                q = AgentsGroup.query
+                q = q.filter_by(project=run.stage.branch.project, name=ag_name)
+                agents_group = q.one_or_none()
 
-                # create job
-                job = Job(run=run, name=j['name'], agents_group=agents_group, system=system, timeout=timeout)
-
-                erred_job = False
-                if tool_not_found:
-                    job.state = consts.JOB_STATE_COMPLETED
-                    job.completion_status = consts.JOB_CMPLT_MISSING_TOOL_IN_DB
-                    job.notes = "cannot find tool '%s' in database" % tool_not_found
-                    erred_job = True
                 if agents_group is None:
-                    job.agents_group = missing_agents_group
-                    if job.state != consts.JOB_STATE_COMPLETED:
+                    agents_group = AgentsGroup.query.filter_by(name=ag_name).one_or_none()
+                    if agents_group is None:
+                        log.warning("cannot find agents group '%s'", ag_name)
+
+                # get count of agents in the group
+                if agents_group is not None and agents_group.name not in agents_count:
+                    q = AgentAssignment.query.filter_by(agents_group=agents_group)
+                    q = q.join('agent')
+                    q = q.filter(Agent.disabled.is_(False))
+                    q = q.filter(Agent.authorized.is_(True))
+                    cnt = q.count()
+                    #log.info("agents group '%s' count is %d", agents_group.name, cnt)
+                    agents_count[agents_group.name] = cnt
+
+                if not isinstance(env['system'], list):
+                    systems = [substitute_val(env['system'], run.args, run_ctx)[0]]
+                else:
+                    systems = [substitute_val(s, run.args, run_ctx)[0] for s in env['system']]
+
+                for system_name in systems:
+                    # prepare system and executor
+                    if 'executor' in env:
+                        executor = env['executor'].lower()
+                    else:
+                        executor = 'local'
+                    system = System.query.filter_by(name=system_name, executor=executor).one_or_none()
+                    sys_key = (system_name, executor)
+                    if system is None:
+                        system = created_systems.get(sys_key, None)
+                    if system is None:
+                        system = System(name=system_name, executor=executor)
+                        db.session.flush()
+                        # this is to avoid doing flush for the same system
+                        created_systems[sys_key] = system
+
+                    # get timeout
+                    timeout = _establish_timeout_for_job(j, run, system, agents_group)
+
+                    # create job
+                    job = Job(run=run, name=j['name'], agents_group=agents_group, system=system, timeout=timeout)
+
+                    erred_job = False
+                    if tool_not_found:
                         job.state = consts.JOB_STATE_COMPLETED
-                        job.completion_status = consts.JOB_CMPLT_MISSING_AGENTS_GROUP
-                        job.notes = "cannot find agents group '%s' in database" % ag_name
-                    erred_job = True
-                elif agents_group.deployment and agents_group.deployment['method'] > 0:
-                    agents_needed.add(agents_group.id)
-                elif agents_count[agents_group.name] == 0:
-                    if job.state != consts.JOB_STATE_COMPLETED:
-                        job.state = consts.JOB_STATE_COMPLETED
-                        job.completion_status = consts.JOB_CMPLT_NO_AGENTS
-                        job.notes = "there are no agents in group '%s' - add some agents" % agents_group.name
-                    erred_job = True
+                        job.completion_status = consts.JOB_CMPLT_MISSING_TOOL_IN_DB
+                        job.notes = "cannot find tool '%s' in database" % tool_not_found
+                        erred_job = True
+                    if agents_group is None:
+                        job.agents_group = missing_agents_group
+                        if job.state != consts.JOB_STATE_COMPLETED:
+                            job.state = consts.JOB_STATE_COMPLETED
+                            job.completion_status = consts.JOB_CMPLT_MISSING_AGENTS_GROUP
+                            job.notes = "cannot find agents group '%s' in database" % ag_name
+                        erred_job = True
+                    elif agents_group.deployment and agents_group.deployment['method'] > 0:
+                        agents_needed.add(agents_group.id)
+                    elif agents_count[agents_group.name] == 0:
+                        if job.state != consts.JOB_STATE_COMPLETED:
+                            job.state = consts.JOB_STATE_COMPLETED
+                            job.completion_status = consts.JOB_CMPLT_NO_AGENTS
+                            job.notes = "there are no agents in group '%s' - add some agents" % agents_group.name
+                        erred_job = True
 
-                if not erred_job:
-                    all_started_erred = False
-                    # substitute vars in steps
-                    for idx, s in enumerate(j['steps']):
-                        args = secrets.copy()
-                        if run.args:
-                            args.update(run.args)
-                        step = Step(job=job, index=idx, tool=tools[idx], fields={}, fields_masked={})
-                        step_ctx = prepare_context(step, args)
-                        fields, fields_masked = substitute_vars(s, args, step_ctx)
-                        del fields['tool']
-                        step.fields = fields
-                        step.fields_masked = fields_masked
+                    if not erred_job:
+                        all_started_erred = False
+                        # substitute vars in steps
+                        for idx, s in enumerate(j['steps']):
+                            args = secrets.copy()
+                            if run.args:
+                                args.update(run.args)
+                            step = Step(job=job, index=idx, tool=tools[idx], fields={}, fields_masked={})
+                            step_ctx = prepare_context(step, args)
+                            fields, fields_masked = substitute_vars(s, args, step_ctx)
+                            del fields['tool']
+                            step.fields = fields
+                            step.fields_masked = fields_masked
 
-                # if this is rerun/replay then mark prev jobs as covered
-                if replay:
-                    key = '%s-%s' % (j['name'], agents_group.id)
-                    if key in covered_jobs:
-                        for cj in covered_jobs[key]:
-                            cj.covered = True
-                            # TODO: we should cancel these jobs if they are still running
+                    # if this is rerun/replay then mark prev jobs as covered
+                    if replay:
+                        key = '%s-%s' % (j['name'], agents_group.id)
+                        if key in covered_jobs:
+                            for cj in covered_jobs[key]:
+                                cj.covered = True
+                                # TODO: we should cancel these jobs if they are still running
 
-                db.session.commit()
-                log.info('created job %s', job.get_json(mask_secrets=True))
+                    db.session.commit()
+                    log.info('created job %s', job.get_json(mask_secrets=True))
+
+    except Exception as ex:
+        log.exception('Problem with starting jobs')
+        now = utils.utcnow()
+        run.started = now
+        run.note = "Triggering run's jobs failed: %s" % str(ex)
+        complete_run(run, now)
+        return
 
     run.started = now
     run.state = consts.RUN_STATE_IN_PROGRESS  # need to be set in case of replay

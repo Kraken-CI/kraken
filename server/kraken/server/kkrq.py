@@ -80,12 +80,12 @@ def get_jobs():
 
 
 # TODO: it does not work because rq always traces the exception
-# def _exception_handler(job, exc_type, exc_value, traceback):  # pylint: disable=unused-argument
-#     ignore_excs = ['ix_agents_address']
-#     for ex in ignore_excs:
-#         if ex in str(exc_value) or ex in str(traceback):
-#             return
-#     log.exception('IGNORED')
+def _exception_handler(job, exc_type, exc_value, traceback):  # pylint: disable=unused-argument
+    ignore_excs = ['ix_agents_address']
+    for ex in ignore_excs:
+        if ex in str(exc_value) or ex in str(traceback):
+            return
+    log.exception('IGNORED')
 
 
 def main():
@@ -118,7 +118,7 @@ def main():
         sentry_url = get_setting('monitoring', 'sentry_dsn')
         logs.setup_sentry(sentry_url)
 
-    worker = rq.Worker('kq', connection=rds)  # , exception_handlers=[_exception_handler])  TODO: see above
+    worker = rq.Worker('kq', connection=rds, exception_handlers=[_exception_handler])
     worker.work(with_scheduler=True)
 
 
