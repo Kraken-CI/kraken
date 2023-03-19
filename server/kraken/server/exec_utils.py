@@ -61,20 +61,20 @@ def cancel_job(job, note, cmplt_status):
 
 def _increment_sequences(branch, stage, kind):
     if stage is None:
-        if kind == 0:  # CI
+        if kind == consts.FLOW_KIND_CI:
             seq1_kind = consts.BRANCH_SEQ_FLOW
             seq1_name = 'KK_FLOW_SEQ'
             seq2_kind = consts.BRANCH_SEQ_CI_FLOW
         else:
             seq1_kind = consts.BRANCH_SEQ_FLOW
             seq1_name = 'KK_FLOW_SEQ'
-            seq2_kind = consts.BRANCH_SEQ_CI_FLOW
+            seq2_kind = consts.BRANCH_SEQ_DEV_FLOW
         seq2_name = 'KK_CI_DEV_FLOW_SEQ'
     else:
-        if kind == 0:  # CI
+        if kind == consts.FLOW_KIND_CI:
             seq1_kind = consts.BRANCH_SEQ_RUN
             seq1_name = 'KK_RUN_SEQ'
-            seq2_kind = consts.BRANCH_SEQ_DEV_RUN
+            seq2_kind = consts.BRANCH_SEQ_CI_RUN
         else:
             seq1_kind = consts.BRANCH_SEQ_RUN
             seq1_name = 'KK_RUN_SEQ'
@@ -90,7 +90,9 @@ def _increment_sequences(branch, stage, kind):
     vals = {}
     vals[seq1_name] = str(seq1.value)
     vals[seq2_name] = str(seq2.value)
-    return vals
+
+    vals2 = {'own': seq1.value, 'shared': seq2.value}
+    return vals, vals2
 
 
 def complete_starting_run(run_id):
@@ -118,8 +120,9 @@ def complete_starting_run(run_id):
             run_args.update(run.args)
 
         # increment sequences
-        seq_vals = _increment_sequences(run.flow.branch, run.stage, run.flow.kind)
+        seq_vals, seq_vals2 = _increment_sequences(run.flow.branch, run.stage, run.flow.kind)
         run_args.update(seq_vals)
+        run.seq = seq_vals2
 
         # prepare flow label if needed
         lbl_vals = {}
@@ -207,14 +210,15 @@ def create_a_flow(branch, kind, body, trigger_data=None):
         del flow_args['BRANCH']
 
     # increment sequences
-    seq_vals = _increment_sequences(branch, None, kind)
+    seq_vals, seq_vals2 = _increment_sequences(branch, None, kind)
     flow_args.update(seq_vals)
 
     flow_args['KK_FLOW_TYPE'] = 'CI' if kind == 0 else 'DEV'
     flow_args['KK_BRANCH'] = branch_name if branch_name else 'master'
 
     # create flow instance
-    flow = Flow(branch=branch, kind=kind, branch_name=branch_name, args=flow_args, trigger_data=trigger_data)
+    flow = Flow(branch=branch, kind=kind, branch_name=branch_name, args=flow_args, trigger_data=trigger_data,
+                seq=seq_vals2)
     db.session.commit()
 
     log.set_ctx(flow_kind=flow.kind, flow=flow.id)

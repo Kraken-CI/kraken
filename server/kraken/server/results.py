@@ -124,14 +124,14 @@ def get_result_history(test_case_result_id, start=0, limit=10, token_info=None):
     q = q.filter_by(system=tcr.job.system)
     q = q.join('job', 'run', 'flow', 'branch')
     q = q.filter(Branch.id == tcr.job.run.flow.branch_id)
-    q = q.filter(Flow.kind == 0)  # CI
+    q = q.filter(Flow.kind == consts.FLOW_KIND_CI)
     q = q.filter(Flow.created <= tcr.job.run.flow.created)
     q = q.order_by(desc(Flow.created))
 
     total = q.count()
     q = q.offset(start).limit(limit)
     results = []
-    if tcr.job.run.flow.kind == 1:  # DEV
+    if tcr.job.run.flow.kind == consts.FLOW_KIND_DEV:
         results.append(tcr.get_json(with_extra=True))
     for tcr in q.all():
         results.append(tcr.get_json(with_extra=True))

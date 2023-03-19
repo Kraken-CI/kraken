@@ -248,7 +248,7 @@ def _analyze_ci_test_case_result(job, job_tcr):
     q = q.filter_by(system=job.system)
     q = q.join('job', 'run', 'flow', 'branch')
     q = q.filter(Branch.id == job.run.flow.branch_id)
-    q = q.filter(Flow.kind == 0)  # CI
+    q = q.filter(Flow.kind == consts.FLOW_KIND_CI)
     q = q.filter(Flow.created < job.run.flow.created)
     q = q.order_by(desc(Flow.created))
     q = q.limit(10)
@@ -381,7 +381,7 @@ def _analyze_job_results_history(job):
     for job_tcr in q.all():
         t0 = time.time()
         # analyze history
-        if job.run.flow.kind == consts.FLOW_KIND_CI:  # CI
+        if job.run.flow.kind == consts.FLOW_KIND_CI:
             _analyze_ci_test_case_result(job, job_tcr)
         else:  # DEV
             _analyze_dev_test_case_result(job, job_tcr)
@@ -413,7 +413,7 @@ def _analyze_job_issues_history(job):
     q = q.filter_by(stage=job.run.stage)
     q = q.join('run', 'flow')
     q = q.filter(Flow.created < job.run.flow.created)
-    q = q.filter(Flow.kind == 0)  # CI
+    q = q.filter(Flow.kind == consts.FLOW_KIND_CI)
     q = q.order_by(desc(Flow.created))
     prev_job = q.first()
     if prev_job is None:

@@ -560,14 +560,14 @@ def _prepare_builtin_tools():
                 },
                 "operation": {
                     "description":
-                        "A operation that should be performed. `set` sets data, `jq` executes JQ expression on server-side data,"
+                        "An operation that should be performed. `set` sets data, `jq` executes JQ expression on server-side data,"
                         " `jsonpatch` patches server-side data, `get` retrieve data from server in JSON format.",
                     "default": "set",
                     "type": "string",
                     "enum": ["set", "jq", "jsonpatch", "get"]
                 },
                 "json_pointer": {
-                    "description": "A JSON pointer that indicates data (see RFC 6901). If `.` then whole data is taken, if key name is provided then data under this key is taken.",
+                    "description": "A JSON pointer that indicates data (see RFC 6901). If `/` then whole data is taken, if key name is provided then data under this key is taken.",
                     "default": "/",
                     "type": "string"
                 },

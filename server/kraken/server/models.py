@@ -345,6 +345,7 @@ class Flow(db.Model, DatesMixin):
     comments = relationship("TestCaseComment", back_populates="last_flow")
     summary = Column(JSONB, default={})
     user_data = Column(JSONB, default={})
+    seq = Column(JSONB, default={})
 
     Index('ix_flows_branch_id_kind', branch_id, kind)
 
@@ -367,12 +368,13 @@ class Flow(db.Model, DatesMixin):
                     finished=self.finished.strftime("%Y-%m-%dT%H:%M:%SZ") if self.finished else None,
                     deleted=self.deleted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.deleted else None,
                     state=consts.FLOW_STATES_NAME[self.state],
-                    kind='ci' if self.kind == 0 else 'dev',
+                    kind='ci' if self.kind == consts.FLOW_KIND_CI else 'dev',
                     duration=duration_to_txt(duration),
                     branch_name=self.branch_name,
                     args=self.args,
                     trigger=trigger,
-                    artifacts=self.artifacts)
+                    artifacts=self.artifacts,
+                    seq=self.seq)
 
         infix = 'f/%d' % self.id
         data['report_entries'] = _get_report_entries(self.artifacts, infix)
@@ -438,6 +440,7 @@ class Run(db.Model, DatesMixin):
     repo_data_id = Column(Integer, ForeignKey('repo_changes.id'))
     repo_data = relationship('RepoChanges')
     processed_at = Column(DateTime(timezone=True))    # time when results analysis completed
+    seq = Column(JSONB, default={})
 
     def get_json(self, with_project=True, with_branch=True, with_artifacts=True, with_counts=True):
         jobs_processing = 0
@@ -501,7 +504,7 @@ class Run(db.Model, DatesMixin):
                     stage_name=self.stage.name,
                     stage_id=self.stage_id,
                     flow_id=self.flow_id,
-                    flow_kind='ci' if self.flow.kind == 0 else 'dev',
+                    flow_kind='ci' if self.flow.kind == consts.FLOW_KIND_CI else 'dev',
                     flow_label=self.flow.get_label(),
                     args=self.args,
                     jobs_total=jobs_total,
@@ -520,7 +523,8 @@ class Run(db.Model, DatesMixin):
                     fix_cnt=self.fix_cnt,
                     repo_data=self.repo_data.data if self.repo_data else None,
                     reason=self.reason['reason'],
-                    note=self.note)
+                    note=self.note,
+                    seq=self.seq)
 
         if with_project:
             data['project_id'] = self.flow.branch.project_id
@@ -736,7 +740,7 @@ class TestCaseResult(db.Model):
             data['branch_id'] = self.job.run.flow.branch_id
             data['branch_name'] = self.job.run.flow.branch.name
             data['flow_id'] = self.job.run.flow_id
-            data['flow_kind'] = 'ci' if self.job.run.flow.kind == 0 else 'dev'
+            data['flow_kind'] = 'ci' if self.job.run.flow.kind == consts.FLOW_KIND_CI else 'dev'
             data['flow_label'] = self.job.run.flow.get_label()
             created_at = self.job.run.flow.created
             data['flow_created_at'] = created_at.strftime("%Y-%m-%dT%H:%M:%SZ") if created_at else None
