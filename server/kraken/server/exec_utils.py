@@ -91,7 +91,7 @@ def _increment_sequences(branch, stage, kind):
     vals[seq1_name] = str(seq1.value)
     vals[seq2_name] = str(seq2.value)
 
-    vals2 = {'own': seq1.value, 'shared': seq2.value}
+    vals2 = {'shared': seq1.value, 'own': seq2.value}
     return vals, vals2
 
 
@@ -199,9 +199,9 @@ def start_run(stage, flow, reason, args=None, repo_data=None):
 
 def create_a_flow(branch, kind, body, trigger_data=None):
     if kind == 'dev':
-        kind = 1
+        kind = consts.FLOW_KIND_DEV
     else:
-        kind = 0
+        kind = consts.FLOW_KIND_CI
 
     args = body.get('args', {})
     flow_args = args.get('Common', {})
@@ -213,8 +213,9 @@ def create_a_flow(branch, kind, body, trigger_data=None):
     seq_vals, seq_vals2 = _increment_sequences(branch, None, kind)
     flow_args.update(seq_vals)
 
-    flow_args['KK_FLOW_TYPE'] = 'CI' if kind == 0 else 'DEV'
+    flow_args['KK_FLOW_TYPE'] = 'CI' if kind == consts.FLOW_KIND_CI else 'DEV'
     flow_args['KK_BRANCH'] = branch_name if branch_name else 'master'
+    flow_args['branch'] = flow_args['KK_BRANCH']
 
     # create flow instance
     flow = Flow(branch=branch, kind=kind, branch_name=branch_name, args=flow_args, trigger_data=trigger_data,
