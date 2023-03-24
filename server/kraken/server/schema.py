@@ -224,10 +224,17 @@ def substitute_val(val, args, ctx):
     # new way of exposing context in fields
     env = SandboxedEnvironment()
     for var in re.findall(r'#{[A-Za-z0-9_\. ]+}', val):
-        expr = var[2:-1]
+        expr = var[2:-1].strip()
+
         tpl = env.from_string("{{ %s }}" % expr)
         new_str = tpl.render(**ctx)
         val = val.replace(var, new_str)
+
+        if expr.startswith('secrets.'):
+            secret_present = True
+            val_masked = val_masked.replace(var, '******')
+        else:
+            val_masked = val_masked.replace(var, new_str)
 
     if secret_present:
         return val, val_masked
@@ -271,6 +278,19 @@ def prepare_context(entity, args):
     ctx['project'] = branch.project.get_json(with_branches=False, with_user_data=True)
     ctx['branch'] = branch.get_json(with_user_data=True)
     ctx['branch_name'] = branch.name
+
+    ctx['secrets'] = {}
+    for s in branch.project.secrets:
+        if s.deleted:
+            continue
+        if s.kind == consts.SECRET_KIND_SSH_KEY:
+            ctx['secrets'][s.name] = {
+                'user': s.data['username'],
+                'key': s.data['key'],
+                'password': s.data['key']
+            }
+        elif s.kind == consts.SECRET_KIND_SIMPLE:
+            ctx['secrets'][s.name] = s.data['secret']
 
     if stage:
         ctx['stage'] = stage.get_json(with_schema=False)
