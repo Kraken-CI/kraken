@@ -483,10 +483,13 @@
       <button type="button" pButton icon="pi pi-check" label="Save" (click)="saveRetentionPolicy()"></button>
   </app-tabbed-page-tab>
 
-  <!-- User Data -->
-  <app-tabbed-page-tab label="User Data">
+  <!-- Data -->
+  <app-tabbed-page-tab label="Data">
+      <h3>User Data</h3>
       <app-user-data-panel
           [branchId]="branchId"></app-user-data-panel>
+        <h3>Branch Data</h3>
+        <pre>{{ branchData }}</pre>
   </app-tabbed-page-tab>
 
   <!-- Logs -->

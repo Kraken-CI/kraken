@@ -43,10 +43,10 @@
             <th style="width: 120px;">Job Name</th>
             <th style="width: 100px;">State</th>
             <th style="width: 100px;">Completion Status</th>
-            <th style="width: 15%;">System</th>
-            <th style="width: 10%;">Config</th>
+            <th style="width: 20%;">System</th>
+<!--            <th style="width: 10%;">Config</th>-->
             <th style="width: 10%; overflow-x: hidden; text-overflow: ellipsis;">Agent Group</th>
-            <th style="width: 15%; overflow-x: hidden; text-overflow: ellipsis;">Agent</th>
+            <th style="width: 20%; overflow-x: hidden; text-overflow: ellipsis;">Agent</th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-job>
@@ -57,7 +57,7 @@
               <i style="vertical-align: bottom; font-size: 1.4em;" [ngClass]="getJobStatusClass(job)"></i> {{getJobStatus(job)}}
             </td>
             <td style="overflow-wrap: anywhere;">{{ job.system }}</td>
-            <td>default</td>
+<!--            <td>default</td>-->
             <td><a routerLink="/agents-groups/{{ job.agents_group_id }}">{{ job.agents_group_name }}</a></td>
             <td><a routerLink="/agents/{{ job.agent_id }}">{{ job.agent_name }}</a></td>
           </tr>

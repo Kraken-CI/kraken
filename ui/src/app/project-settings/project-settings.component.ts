@@ -9,6 +9,7 @@ import { MessageService } from 'primeng/api'
 import { ConfirmationService } from 'primeng/api'
 
 import { AuthService } from '../auth.service'
+import { pick } from '../utils'
 import { BreadcrumbsService } from '../breadcrumbs.service'
 import { ManagementService } from '../backend/api/management.service'
 
@@ -29,6 +30,7 @@ export class ProjectSettingsComponent implements OnInit, OnDestroy {
             gitlab_enabled: false,
         },
     }
+    projectData = ''
 
     newBranchDlgVisible = false
     branchDisplayName = ''
@@ -102,12 +104,18 @@ export class ProjectSettingsComponent implements OnInit, OnDestroy {
         this.subs.unsubscribe()
     }
 
+    prepareProjectDataStr() {
+        const data = pick(this.project, 'id', 'created', 'name', 'description')
+        this.projectData = JSON.stringify(data, null, 4);
+    }
+
     refresh() {
         this.subs.add(
             this.managementService
                 .getProject(this.projectId, true)
                 .subscribe((project) => {
                     this.project = project
+                    this.prepareProjectDataStr()
                     this.titleService.setTitle(
                         'Kraken - Project Settings ' + this.project.name
                     )

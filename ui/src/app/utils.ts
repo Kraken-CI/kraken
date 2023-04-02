@@ -56,3 +56,11 @@ export function showErrorBox(msgSrv, err, summary) {
         life: 10000,
     })
 }
+
+export function pick<T extends {}, K extends keyof T>(obj: T, ...keys: K[]) {
+  return Object.fromEntries(
+    keys
+    .filter(key => key in obj)
+    .map(key => [key, obj[key]])
+  )
+}

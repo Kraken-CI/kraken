@@ -9,7 +9,7 @@ import { MenuItem } from 'primeng/api'
 import { MessageService } from 'primeng/api'
 
 import { AuthService } from '../auth.service'
-import { humanBytes } from '../utils'
+import { humanBytes, pick } from '../utils'
 import { ManagementService } from '../backend/api/management.service'
 import { ExecutionService } from '../backend/api/execution.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
@@ -23,6 +23,7 @@ export class FlowPageComponent implements OnInit, OnDestroy {
     projectId = 0
     flowId = 0
     flow = null
+    flowData = ''
     runs: any[]
     runsTree: TreeNode[]
     flatTree: any[]
@@ -167,6 +168,11 @@ export class FlowPageComponent implements OnInit, OnDestroy {
         }
     }
 
+    prepareFlowDataStr() {
+        const data = pick(this.flow, 'id', 'created', 'kind', 'trigger', 'seq', 'data')
+        this.flowData = JSON.stringify(data, null, 4);
+    }
+
     refresh() {
         if (this.refreshing) {
             return
@@ -180,6 +186,7 @@ export class FlowPageComponent implements OnInit, OnDestroy {
 
                 this.projectId = flow.project_id
                 this.flow = flow
+                this.prepareFlowDataStr()
                 const crumbs = [
                     {
                         label: 'Projects',

@@ -202,10 +202,13 @@
         <p-button label="Save" icon="pi pi-check" (onClick)="saveWebhooks()"></p-button>
     </p-tabPanel>
 
-    <!-- User Data -->
-    <p-tabPanel header="User Data">
+    <!-- Data -->
+    <p-tabPanel header="Data">
+      <h3>User Data</h3>
         <app-user-data-panel
             [projectId]="projectId"></app-user-data-panel>
+        <h3>Branch Data</h3>
+        <pre>{{ projectData }}</pre>
     </p-tabPanel>
 
 </p-tabView>

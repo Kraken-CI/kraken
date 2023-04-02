@@ -15,6 +15,7 @@ import { MessageService } from 'primeng/api'
 import { ConfirmationService } from 'primeng/api'
 
 import { AuthService } from '../auth.service'
+import { pick } from '../utils'
 import { ManagementService } from '../backend/api/management.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
 import { Branch, RetentionPolicy } from '../backend/model/models'
@@ -38,6 +39,7 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
         branch_name: 'noname',
         stages: [],
     }
+    branchData = ''
 
     newBranchDisplayName: string
     newBranchRepoName: string
@@ -193,6 +195,11 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
         this.subs.unsubscribe()
     }
 
+    prepareBranchDataStr() {
+        const data = pick(this.branch, 'id', 'created', 'name', 'branch_name', 'retention_policy')
+        this.branchData = JSON.stringify(data, null, 4);
+    }
+
     refresh() {
         this.subs.add(
             this.managementService
@@ -203,6 +210,8 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
                         'Kraken - Branch Management - ' + branch.name
                     )
                     this.branch = branch
+                    this.prepareBranchDataStr()
+
                     this.stage = null // reset selected stage
                     if (this.stageName !== '') {
                         // this is a finish of adding new stage ie. select newly created stage
