@@ -2512,6 +2512,23 @@ paths:
                 properties:
                   data:
                     type: string
+  /rq/queue:
+    post:
+      tags:
+      - Management
+      summary: Create new entry in RQ
+      description: Create new entry in RQ
+      operationId: create_rq_entry
+      requestBody:
+        description: RQ Entry
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RQEntry'
+      responses:
+        201:
+          description: Successfully created group
+          content: {}
 
 
 components:
@@ -3382,6 +3399,13 @@ components:
           type: integer
           format: int64
         name:
+          type: string
+    RQEntry:
+      type: object
+      properties:
+        func_name:
+          type: string
+        args:
           type: string
     ServerVersion:
       type: object

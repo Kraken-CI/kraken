@@ -926,3 +926,24 @@ def test_update_branch_retention_policy():
         assert code == 200
         assert rp1 == rp2
         assert branch.retention_policy == rp1
+
+
+@pytest.mark.db
+def test_create_rq_entry():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+
+        body = dict(func_name='analyze_results_history', args='4553')
+
+        with patch('kraken.server.kkrq.enq_neck') as enq_neck:
+            _, code = management.create_rq_entry(body, token_info=token_info)
+
+            assert code == 201
+
+            from kraken.server.bg import jobs as bg_jobs  # pylint: disable=import-outside-toplevel
+            enq_neck.assert_called_with(bg_jobs.analyze_results_history, 4553)

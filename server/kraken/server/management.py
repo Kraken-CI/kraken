@@ -1182,6 +1182,33 @@ def get_services_logs(services, level=None, token_info=None):
     return {'items': logs, 'total': len(logs)}, 200
 
 
+def create_rq_entry(body, token_info=None):
+    access.check(token_info, '', 'admin',
+                 'only superadmin can create RQ entry')
+
+    func_name = body['func_name']
+    args = body['args']
+
+    from .bg import jobs as bg_jobs  # pylint: disable=import-outside-toplevel
+    func = getattr(bg_jobs, func_name, None)
+    if func is None:
+        abort(400, 'Unknown function %s' % func_name)
+
+    args = args.split(',')
+    args = [a.strip() for a in args]
+    args2 = []
+    for a in args:
+        try:
+            a = int(a)
+        except Exception:
+            pass
+        args2.append(a)
+
+    kkrq.enq_neck(func, *args2)
+
+    return {}, 201
+
+
 def get_live_data():
     redis_addr = os.environ.get('KRAKEN_REDIS_ADDR', consts.DEFAULT_REDIS_ADDR)
     redis_host, redis_port = utils.split_host_port(redis_addr, 6379)

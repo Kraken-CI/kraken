@@ -11,49 +11,6 @@
           <ng-template pTemplate="subtitle">
             {{ s.value.address }}
           </ng-template>
-
-          <div *ngIf="s.key === 'rq'">
-            <b>Scheduled Jobs:</b>
-            <div *ngFor="let t of s.value.scheduled_jobs">
-                {{ t.created_at | localtime }} {{ t.description }}
-            </div>
-            <div *ngIf="!s.value.scheduled_jobs || s.value.scheduled_jobs.length === 0">
-              no scheduled jobs
-            </div>
-
-            <b>Current Jobs:</b>
-            <div *ngFor="let t of s.value.current_jobs">
-                {{ t.created_at | localtime }} {{ t.description }}
-            </div>
-            <div *ngIf="!s.value.current_jobs || s.value.current_jobs.length === 0">
-              no current jobs
-            </div>
-
-            <b>Failed Jobs:</b>
-            <div *ngFor="let t of s.value.failed_jobs">
-                {{ t.ended_at | localtime }} {{ t.description }}
-            </div>
-            <div *ngIf="!s.value.failed_jobs || s.value.failed_jobs.length === 0">
-              no failed jobs
-            </div>
-
-            <b>Finished Jobs:</b>
-            <div *ngFor="let t of s.value.finished_jobs">
-                {{ t.ended_at | localtime }} {{ t.description }}
-            </div>
-            <div *ngIf="!s.value.finished_jobs || s.value.finished_jobs.length === 0">
-              no finished jobs
-            </div>
-
-            <b>Deferred Jobs:</b>
-            <div *ngFor="let t of s.value.deferred_jobs">
-                {{ t.started_at | localtime }} {{ t.description }}
-            </div>
-            <div *ngIf="!s.value.deferred_jobs || s.value.deferred_jobs.length === 0">
-              no deferred jobs
-            </div>
-          </div>
-
         </p-card>
       </div>
     </div>
@@ -64,5 +21,68 @@
           [visible]="logsPanelVisible"
           [topOffset]="250"
           [logLevel]="logLevel"></app-simple-logs-panel>
+  </app-tabbed-page-tab>
+
+  <app-tabbed-page-tab label="RQ">
+      <div class="grid">
+          <div *ngIf="data.rq" class="col">
+              <b>Scheduled Jobs:</b>
+              <div *ngFor="let t of data.rq.scheduled_jobs">
+                  {{ t.created_at | localtime }} {{ t.description }}
+              </div>
+              <div *ngIf="!data.rq.scheduled_jobs || data.rq.scheduled_jobs.length === 0">
+                  no scheduled jobs
+              </div>
+
+              <b>Current Jobs:</b>
+              <div *ngFor="let t of data.rq.current_jobs">
+                  {{ t.created_at | localtime }} {{ t.description }}
+              </div>
+              <div *ngIf="!data.rq.current_jobs || data.rq.current_jobs.length === 0">
+                  no current jobs
+              </div>
+
+              <b>Failed Jobs:</b>
+              <div *ngFor="let t of data.rq.failed_jobs">
+                  {{ t.ended_at | localtime }} {{ t.description }}
+              </div>
+              <div *ngIf="!data.rq.failed_jobs || data.rq.failed_jobs.length === 0">
+                  no failed jobs
+              </div>
+
+              <b>Finished Jobs:</b>
+              <div *ngFor="let t of data.rq.finished_jobs">
+                  {{ t.ended_at | localtime }} {{ t.description }}
+              </div>
+              <div *ngIf="!data.rq.finished_jobs || data.rq.finished_jobs.length === 0">
+                  no finished jobs
+              </div>
+
+              <b>Deferred Jobs:</b>
+              <div *ngFor="let t of data.rq.deferred_jobs">
+                  {{ t.started_at | localtime }} {{ t.description }}
+              </div>
+              <div *ngIf="!data.rq.deferred_jobs || data.rq.deferred_jobs.length === 0">
+                  no deferred jobs
+              </div>
+          </div>
+          <div *ngIf="data.rq" class="col">
+              <div class="field grid">
+                  <label for="rqFuncName" class="col-fixed" style="width: 8rem;">Function Name</label>
+                  <div class="col">
+                      <input id="rqFuncName" type="text" [(ngModel)]="rqFuncName" pInputText>
+                  </div>
+              </div>
+
+              <div class="field grid">
+                  <label for="rqFuncArgs" class="col-fixed" style="width: 8rem;">Arguments</label>
+                  <div class="col">
+                      <input id="rqFuncArgs" type="text" [(ngModel)]="rqFuncArgs" pInputText>
+                  </div>
+              </div>
+
+              <p-button label="Submit" icon="pi pi-send" (onClick)="submitRQFunc()"></p-button>
+          </div>
+      </div>
   </app-tabbed-page-tab>
 </app-tabbed-page>
