@@ -1190,8 +1190,8 @@ def create_rq_entry(body, token_info=None):
     args = body['args']
 
     from .bg import jobs as bg_jobs  # pylint: disable=import-outside-toplevel
-    func = getattr(bg_jobs, func_name, None)
-    if func is None:
+    func_ptr = getattr(bg_jobs, func_name, None)
+    if func_ptr is None:
         abort(400, 'Unknown function %s' % func_name)
 
     args = args.split(',')
@@ -1204,7 +1204,7 @@ def create_rq_entry(body, token_info=None):
             pass
         args2.append(a)
 
-    kkrq.enq_neck(func, *args2)
+    kkrq.enq_neck(func_ptr, *args2)
 
     return {}, 201
 
