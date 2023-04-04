@@ -937,7 +937,6 @@ def test_create_rq_entry():
         access.init()
         _, token_info = prepare_user()
 
-
         body = dict(func_name='analyze_results_history', args='4553')
 
         with patch('kraken.server.kkrq.enq_neck') as enq_neck:

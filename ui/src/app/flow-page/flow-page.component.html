@@ -88,6 +88,11 @@
                                 </div>
                                 <div *ngIf="selectedNode.run.state !== 'processed'">
                                     not yet
+                                    <span *ngIf="selectedNode.run.finished">
+                                        <br>
+                                        <p-button icon="pi pi-arrow-right" label="Force Processing"
+                                                  (onClick)="forceRunAnalysis()" styleClass="p-button-danger p-button-outlined p-button-sm"></p-button>
+                                    </span>
                                 </div>
                             </div>
                         </div>

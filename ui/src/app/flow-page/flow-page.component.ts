@@ -9,7 +9,7 @@ import { MenuItem } from 'primeng/api'
 import { MessageService } from 'primeng/api'
 
 import { AuthService } from '../auth.service'
-import { humanBytes, pick } from '../utils'
+import { humanBytes, showErrorBox, pick } from '../utils'
 import { ManagementService } from '../backend/api/management.service'
 import { ExecutionService } from '../backend/api/execution.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
@@ -458,5 +458,26 @@ export class FlowPageComponent implements OnInit, OnDestroy {
         } else {
             this.runLogsPanelVisible = false
         }
+    }
+
+    forceRunAnalysis() {
+        this.subs.add(
+            this.executionService.forceRunAnalysis(this.selectedNode.run.id).subscribe(
+                (data) => {
+                    this.msgSrv.add({
+                        severity: 'success',
+                        summary: 'Forcing run processing succeeded.',
+                        detail: 'Forcing run processing succeeded.',
+                    })
+                },
+                (err) => {
+                    showErrorBox(
+                        this.msgSrv,
+                        err,
+                        'Forcing run processing erred'
+                    )
+                }
+            )
+        )
     }
 }

@@ -502,3 +502,28 @@ def test_get_user_data():
         resp, code = execution.get_user_data('flow', flow.id, token_info=token_info)
         assert code == 200
         assert json.loads(resp['data']) == {'e': 5}
+
+
+@pytest.mark.db
+def test_force_run_analysis():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        project = Project()
+        branch = Branch(project=project)
+        stage = Stage(branch=branch, schema={})
+        flow = Flow(branch=branch, kind=consts.FLOW_KIND_CI)
+        run = Run(stage=stage, flow=flow, reason={'reason': 'by me'})
+        db.session.commit()
+
+        with patch('kraken.server.kkrq.enq_neck') as enq_neck:
+            _, code = execution.force_run_analysis(run.id, token_info=token_info)
+
+            assert code == 200
+
+            from kraken.server.bg import jobs as bg_jobs  # pylint: disable=import-outside-toplevel
+            enq_neck.assert_called_with(bg_jobs.analyze_run, run.id)

@@ -1419,6 +1419,32 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
+    post:
+      tags:
+      - Execution
+      summary: Start manual run or replay existing run ie. start again same jobs
+      operationId: force_run_analysis
+      parameters:
+      - name: run_id
+        in: path
+        description: ID of pet to return
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        200:
+          description: A paged array of runs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Run'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
     delete:
       tags:
       - Execution

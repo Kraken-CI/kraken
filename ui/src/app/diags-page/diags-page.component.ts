@@ -89,6 +89,9 @@ export class DiagsPageComponent implements OnInit, OnDestroy {
             this.logsPanelVisible = false
         } else if (tabName === 'logs') {
             this.logsPanelVisible = true
+        } else if (tabName === 'rq') {
+            this.loadDiagsData()
+            this.logsPanelVisible = false
         }
     }
 
@@ -115,5 +118,15 @@ export class DiagsPageComponent implements OnInit, OnDestroy {
                 }
             )
         )
+    }
+
+    copyRQFunc(funcDescr) {
+        console.info(funcDescr)
+        let [fname, fargs] = funcDescr.split('(')
+        fname = fname.split('.').pop()
+        fargs = fargs.slice(0, -1)
+
+        this.rqFuncName = fname
+        this.rqFuncArgs = fargs
     }
 }

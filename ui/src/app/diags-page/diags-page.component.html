@@ -29,6 +29,7 @@
               <b>Scheduled Jobs:</b>
               <div *ngFor="let t of data.rq.scheduled_jobs">
                   {{ t.created_at | localtime }} {{ t.description }}
+                  <p-button icon="pi pi-arrow-right" (onClick)="copyRQFunc(t.description)" styleClass="p-button-outlined p-button-sm"></p-button>
               </div>
               <div *ngIf="!data.rq.scheduled_jobs || data.rq.scheduled_jobs.length === 0">
                   no scheduled jobs
@@ -37,6 +38,7 @@
               <b>Current Jobs:</b>
               <div *ngFor="let t of data.rq.current_jobs">
                   {{ t.created_at | localtime }} {{ t.description }}
+                  <p-button icon="pi pi-arrow-right" (onClick)="copyRQFunc(t.description)" styleClass="p-button-outlined p-button-sm"></p-button>
               </div>
               <div *ngIf="!data.rq.current_jobs || data.rq.current_jobs.length === 0">
                   no current jobs
@@ -45,6 +47,7 @@
               <b>Failed Jobs:</b>
               <div *ngFor="let t of data.rq.failed_jobs">
                   {{ t.ended_at | localtime }} {{ t.description }}
+                  <p-button icon="pi pi-arrow-right" (onClick)="copyRQFunc(t.description)" styleClass="p-button-outlined p-button-sm"></p-button>
               </div>
               <div *ngIf="!data.rq.failed_jobs || data.rq.failed_jobs.length === 0">
                   no failed jobs
@@ -53,6 +56,7 @@
               <b>Finished Jobs:</b>
               <div *ngFor="let t of data.rq.finished_jobs">
                   {{ t.ended_at | localtime }} {{ t.description }}
+                  <p-button icon="pi pi-arrow-right" (onClick)="copyRQFunc(t.description)" styleClass="p-button-outlined p-button-sm"></p-button>
               </div>
               <div *ngIf="!data.rq.finished_jobs || data.rq.finished_jobs.length === 0">
                   no finished jobs
@@ -61,6 +65,7 @@
               <b>Deferred Jobs:</b>
               <div *ngFor="let t of data.rq.deferred_jobs">
                   {{ t.started_at | localtime }} {{ t.description }}
+                  <p-button icon="pi pi-arrow-right" (onClick)="copyRQFunc(t.description)" styleClass="p-button-outlined p-button-sm"></p-button>
               </div>
               <div *ngIf="!data.rq.deferred_jobs || data.rq.deferred_jobs.length === 0">
                   no deferred jobs

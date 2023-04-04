@@ -22,6 +22,7 @@ from sqlalchemy.sql.expression import asc, desc
 from sqlalchemy.orm import joinedload
 
 from . import consts
+from . import kkrq
 from . import utils
 from .models import db, Project, Branch, Flow, Run, Stage, Job, Step
 from .models import Issue, Artifact
@@ -178,6 +179,25 @@ def run_run_jobs(run_id, token_info=None):
         exec_utils.trigger_jobs(run, replay=replay)
     except SchemaError as e:
         abort(400, str(e))
+
+    data = run.get_json()
+
+    return data, 200
+
+
+def force_run_analysis(run_id, token_info=None):
+    run = Run.query.filter_by(id=run_id).one_or_none()
+    if run is None:
+        abort(404, "Run not found")
+    access.check(token_info, run.stage.branch.project_id, 'pwrusr',
+                 'only superadmin, project admin and project power roles can run jobs')
+
+    log.set_ctx(branch=run.flow.branch_id, flow_kind=run.flow.kind, flow=run.flow_id, run=run.id)
+
+    log.info('force analysis of run %s', run)
+
+    from .bg import jobs as bg_jobs  # pylint: disable=import-outside-toplevel
+    kkrq.enq_neck(bg_jobs.analyze_run, run.id)
 
     data = run.get_json()
 
