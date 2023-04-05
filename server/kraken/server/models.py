@@ -349,6 +349,12 @@ class Flow(db.Model, DatesMixin):
 
     Index('ix_flows_branch_id_kind', branch_id, kind)
 
+    def __repr__(self):
+        return "<Flow %s, label %s, kind %s, state %s>" % (self.id,
+                                                           self.get_label(),
+                                                           consts.FLOW_KINDS_NAME.get(self.kind, 'unknown %d' % self.kind),
+                                                           consts.FLOW_STATES_NAME.get(self.state, 'unknown %d' % self.state))
+
     def get_label(self):
         return self.label if self.label else ("%d." % self.id)
 
@@ -441,6 +447,9 @@ class Run(db.Model, DatesMixin):
     repo_data = relationship('RepoChanges')
     processed_at = Column(DateTime(timezone=True))    # time when results analysis completed
     seq = Column(JSONB, default={})
+
+    def __repr__(self):
+        return "<Run %s, state %s>" % (self.id, consts.RUN_STATES_NAME.get(self.state, 'unknown %d' % self.state))
 
     def get_json(self, with_project=True, with_branch=True, with_artifacts=True, with_counts=True):
         jobs_processing = 0
