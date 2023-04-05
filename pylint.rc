@@ -320,6 +320,7 @@ good-names=a,
            h,
            i,
            j,
+           js,
            k,
            l,
            lt,
@@ -566,7 +567,7 @@ min-similarity-lines=4
 [DESIGN]
 
 # Maximum number of arguments for function / method.
-max-args=12
+max-args=16
 
 # Maximum number of attributes for a class (see R0902).
 max-attributes=10
