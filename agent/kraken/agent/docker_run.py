@@ -124,11 +124,9 @@ class DockerExecContext:
         self.cntr.put_archive('/', archive)
 
         deadline = time.time() + timeout
-        logs = self._async_run('cat /etc/os-release', deadline)
-        m = re.search('^ID="?(.*?)"?$', logs, re.M)
+        distro_logs = self._async_run('cat /etc/os-release', deadline)
+        m = re.search('^ID="?(.*?)"?$', distro_logs, re.M)
         distro = m.group(1).lower()
-        #m = re.search('^VERSION_ID="(.*)"$', logs, re.M)
-        #version = m.group(1)
         self._async_run("ls -al %s" % dkr_sock, deadline)
         if distro in ['debian', 'ubuntu']:
             self._async_run('apt-get update', deadline)
@@ -147,12 +145,24 @@ class DockerExecContext:
             if os.path.exists(dkr_sock):
                 dkr_gid = self._async_run("stat -c '%%g' %s" % dkr_sock, deadline)
                 self._async_run("addgroup --gid %d docker" % int(dkr_gid.strip()), deadline)
-        elif distro in ['centos', 'fedora', 'rocky']:
-            pkgs = ('openssh-clients ca-certificates sudo git unzip zip gnupg curl wget make net-tools ' +
-                    'python3 python3-pytest python3-virtualenv python3-setuptools')
+        elif distro in ['centos', 'fedora', 'rocky', 'almalinux']:
+            pkgs = ('openssh-clients ca-certificates sudo git unzip zip gnupg wget make net-tools ' +
+                    'python3 python3-pytest python3-setuptools')
+
+            m = re.search('^VERSION_ID="?(.*?)"?$', distro_logs, re.M)
+            version = m.group(1)
+
             if distro == 'fedora':
-                pkgs += ' python3-docker'
+                pkgs += ' python3-docker python3-virtualenv curl'
+            elif distro in ['rocky', 'almalinux'] and version.startswith('9'):
+                self._async_run("dnf install -y 'dnf-command(config-manager)'", deadline)
+                self._async_run('dnf config-manager --set-enabled crb', deadline)
+                pkgs += ' python3-pip'
+            else:
+                pkgs += ' python3-virtualenv curl'
+
             self._async_run('yum install -y ' + pkgs, deadline)
+
             if distro in ['centos', 'rocky']:
                 self._async_run('python3 -m pip install docker-py', deadline)
             try:
@@ -163,6 +173,9 @@ class DockerExecContext:
             if os.path.exists(dkr_sock):
                 dkr_gid = self._async_run("stat -c '%%g' %s" % dkr_sock, deadline)
                 self._async_run("groupadd --gid %d docker" % int(dkr_gid.strip()), deadline)
+        else:
+            raise Exception('unsupported distro %s' % distro)
+
         if os.path.exists(dkr_sock):
             self._async_run('usermod -G docker kraken', deadline)
 
