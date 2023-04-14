@@ -54,7 +54,7 @@
 
                       <div class="col-3 pb-1">
                           <div class="text-2xl font-medium">
-                              <b><a routerLink="/flows/{{ flow.id }}">{{ flow.id }}</a>.</b>
+                              <b><a routerLink="/flows/{{ flow.id }}">{{ flow.label }}</a></b>
                           </div>
                           <div class="text-xs font-light">
                               <a routerLink="/flows/{{ flow.id }}" style="color: var(--kk-color);">{{ flow.created | localtime:'yyyy-LL-dd HH:mm' }}</a>
