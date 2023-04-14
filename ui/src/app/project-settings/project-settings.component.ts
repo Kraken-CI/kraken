@@ -106,6 +106,7 @@ export class ProjectSettingsComponent implements OnInit, OnDestroy {
 
     prepareProjectDataStr() {
         const data = pick(this.project, 'id', 'created', 'name', 'description')
+        data['data'] = '<see above>'
         this.projectData = JSON.stringify(data, null, 4);
     }
 

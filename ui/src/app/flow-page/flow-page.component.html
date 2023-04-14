@@ -32,6 +32,7 @@
                 </div>
             </div>
             <div class="col-7">
+                <!-- RUN INFO -->
                 <div style="font-size: 2em; margin: -10px 0 0 20px;">
                     <span *ngIf="selectedNode.run">
                         Run <b>{{ selectedNode.run.label || (selectedNode.run.id + '.') }}</b> of stage
@@ -42,6 +43,7 @@
                     <b>{{ selectedNode.stage.name }}</b>
                 </div>
                 <p-tabView (onChange)="handleRunTabChange($event)">
+                    <!-- Run Overview -->
                     <p-tabPanel header="Overview">
                         <div *ngIf="selectedNode.run" style="display: flex;">
                             <!-- created -->
@@ -106,22 +108,32 @@
                         </div>
                     </p-tabPanel>
 
+                    <!-- Run Arguments -->
                     <p-tabPanel header="Arguments" *ngIf="selectedNode.run">
                         <div *ngFor="let arg of selectedNode.run.args | keyvalue" style="margin-bottom: 10px;">
                             {{ arg.key }}: {{ arg.value }}
                         </div>
                     </p-tabPanel>
 
+                    <!-- Run Repo Changes -->
                     <p-tabPanel header="Repo Changes" *ngIf="selectedNode.run && selectedNode.run.repo_data">
                         <div *ngFor="let r of selectedNode.run.repo_data">
                             <app-repo-changes [changes]="r" [showFiles]="true"></app-repo-changes>
                         </div>
                     </p-tabPanel>
 
+                    <!-- Run Schema Code Dump: TODO it shows the latest code for old runs so not good -->
                     <p-tabPanel header="Schema Code Dump" *ngIf="selectedNode.run && false">
-                        {{ selectedNode.stage.schema_code }}
+                        <pre>{{ selectedNode.stage.schema_code }}</pre>
                     </p-tabPanel>
 
+                    <!-- Run Data -->
+                    <p-tabPanel header="Data" *ngIf="selectedNode.run">
+                        <h3>Run Data</h3>
+                        <pre>{{ selectedNode.run.runData }}</pre>
+                    </p-tabPanel>
+
+                    <!-- Run Logs -->
                     <p-tabPanel header="Logs" *ngIf="selectedNode.run">
                         <app-simple-logs-panel
                             [visible]="runLogsPanelVisible"
@@ -150,43 +162,14 @@
         </ng-container>
     </app-tabbed-page-tab>
 
-    <!-- 3. ARGUMENTS TAB -->
-    <app-tabbed-page-tab label="Arguments">
-        <div *ngFor="let section of args" style="margin-bottom: 10px;">
-            <span style="font-size: 1.2rem; font-weight: bold;">{{section.name}}</span>
-            <table>
-                <tr>
-                    <th style="width: 20rem;"></th>
-                    <th style="width: 20rem;"></th>
-                </tr>
-
-                <tr *ngFor="let a of section.args">
-                    <td style="text-align: right; padding-right: 10px;">
-                        {{a.name}}
-                        <br>
-                        <span style="font-size: 0.8rem; font-weight: 100;">
-                            {{a.description}}
-                            <span *ngIf="a.default">
-                                <br>Default value is {{a.default}}.
-                            </span>
-                        </span>
-                    </td>
-                    <td>
-                        {{a.value}}
-                    </td>
-                </tr>
-            </table>
-        </div>
-    </app-tabbed-page-tab>
-
-    <!-- 4. REPO CHANGES TAB -->
+    <!-- 3. REPO CHANGES TAB -->
     <app-tabbed-page-tab label="Repo Changes" [visible]="hasFlowCommits()">
         <ng-container *ngIf="hasFlowCommits()">
             <app-repo-changes [changes]="flow.trigger"></app-repo-changes>
         </ng-container>
     </app-tabbed-page-tab>
 
-    <!-- 5. ARTIFACTS TAB -->
+    <!-- 4. ARTIFACTS TAB -->
     <app-tabbed-page-tab label="Artifacts" [visible]="hasFlowArtifacts()">
         <ng-container *ngIf="flow && flow.artifacts.public && flow.artifacts.public.count > 0">
             <h3>Public</h3>
@@ -238,7 +221,7 @@
         </ng-container>
     </app-tabbed-page-tab>
 
-    <!-- 6. REPORTS TAB -->
+    <!-- 5. REPORTS TAB -->
     <app-tabbed-page-tab label="Reports" [visible]="hasFlowReports()">
         <ng-container *ngIf="hasFlowReports()">
             <div *ngFor="let rep of flow.report_entries">
@@ -247,7 +230,7 @@
         </ng-container>
     </app-tabbed-page-tab>
 
-    <!-- 7. STAGES CHART TAB -->
+    <!-- 6. STAGES CHART TAB -->
     <app-tabbed-page-tab label="Stages Chart">
         <p-menu #nodeMenu [popup]="true" [model]="nodeMenuItems"></p-menu>
         <p-organizationChart [value]="runsTree">
@@ -280,6 +263,35 @@
                 </div>
             </ng-template>
         </p-organizationChart>
+    </app-tabbed-page-tab>
+
+    <!-- 7. ARGUMENTS TAB -->
+    <app-tabbed-page-tab label="Arguments">
+        <div *ngFor="let section of args" style="margin-bottom: 10px;">
+            <span style="font-size: 1.2rem; font-weight: bold;">{{section.name}}</span>
+            <table>
+                <tr>
+                    <th style="width: 20rem;"></th>
+                    <th style="width: 20rem;"></th>
+                </tr>
+
+                <tr *ngFor="let a of section.args">
+                    <td style="text-align: right; padding-right: 10px;">
+                        {{a.name}}
+                        <br>
+                        <span style="font-size: 0.8rem; font-weight: 100;">
+                            {{a.description}}
+                            <span *ngIf="a.default">
+                                <br>Default value is {{a.default}}.
+                            </span>
+                        </span>
+                    </td>
+                    <td>
+                        {{a.value}}
+                    </td>
+                </tr>
+            </table>
+        </div>
     </app-tabbed-page-tab>
 
     <!-- 8. DATA TAB -->

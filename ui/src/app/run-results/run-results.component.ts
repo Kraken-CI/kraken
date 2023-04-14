@@ -12,6 +12,7 @@ import { ExecutionService } from '../backend/api/execution.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
 import { Job, Run } from '../backend/model/models'
 import { TcrTableComponent } from '../tcr-table/tcr-table.component'
+import { pick } from '../utils'
 
 @Component({
     selector: 'app-run-results',
@@ -42,6 +43,7 @@ export class RunResultsComponent implements OnInit, OnDestroy {
 
     job: Job
     selectedJobId = 0
+    jobData = ''
 
     // results
     @ViewChild('tcrTable') tcrTable: TcrTableComponent
@@ -276,6 +278,11 @@ export class RunResultsComponent implements OnInit, OnDestroy {
         )
     }
 
+    prepareJobDataStr() {
+        const data = pick(this.job, 'id', 'created', 'name')
+        this.jobData = JSON.stringify(data, null, 4);
+    }
+
     loadJobsLazy(event) {
         this.loadingJobs = true
         this.subs.add(
@@ -311,6 +318,7 @@ export class RunResultsComponent implements OnInit, OnDestroy {
                             this.job = this.jobs[0]
                             this.selectedJobId = this.job.id
                         }
+                        this.prepareJobDataStr()
                     }
 
                     this.loadingJobs = false

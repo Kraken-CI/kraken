@@ -90,6 +90,7 @@
         </div>
 
         <p-tabView styleClass="job-tabview" (onChange)="handleJobTabChange($event)">
+          <!-- job step logs -->
           <p-tabPanel header="Steps Logs">
             <app-logs-panel [job]="job"></app-logs-panel>
           </p-tabPanel>
@@ -98,6 +99,7 @@
             <app-log-box [jobId]="selectedJobId"></app-log-box>
           </p-tabPanel>
           -->
+          <!-- job flat logs -->
           <p-tabPanel header="Flat Logs">
               <app-simple-logs-panel
                   [visible]="flatLogsPanelVisible"
@@ -105,6 +107,8 @@
                   [topOffset]="350"
                   [initServices]="['server', 'rq', 'scheduler', 'watchdog', 'agent']"></app-simple-logs-panel>
           </p-tabPanel>
+
+          <!-- job details -->
           <p-tabPanel header="Details">
             <table>
               <tr><td colspan="2" style="font-weight: bold; font-size: 1.2em;">Spec</td></tr>
@@ -125,6 +129,12 @@
               <tr><td>Completed:</td><td>{{ job.completed ? (job.completed | localtime) : '' }}</td><tr>
               <tr><td>Duration (start -> finish):</td><td>{{ job.duration }}</td><tr>
             </table>
+          </p-tabPanel>
+
+          <!-- job data -->
+          <p-tabPanel header="Data">
+              <h3>Job Data</h3>
+              <pre>{{ jobData }}</pre>
           </p-tabPanel>
         </p-tabView>
 

@@ -40,6 +40,7 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
         stages: [],
     }
     branchData = ''
+    stageData = ''
 
     newBranchDisplayName: string
     newBranchRepoName: string
@@ -197,6 +198,9 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
 
     prepareBranchDataStr() {
         const data = pick(this.branch, 'id', 'created', 'name', 'branch_name', 'retention_policy')
+        data['data'] = '<see above>'
+        data['data_ci'] = '<see above>'
+        data['data_dev'] = '<see above>'
         this.branchData = JSON.stringify(data, null, 4);
     }
 
@@ -250,12 +254,19 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
         )
     }
 
+    prepareStageDataStr() {
+        const data = pick(this.stage, 'id', 'created', 'name', 'description')
+        this.stageData = JSON.stringify(data, null, 4);
+    }
+
     selectStage(stage) {
         if (this.stage) {
             this.stage.selectedClass = ''
         }
         this.stage = stage
         this.stage.selectedClass = 'selectedClass'
+
+        this.prepareStageDataStr()
 
         const val = {
             repo_url: stage.repo_url,

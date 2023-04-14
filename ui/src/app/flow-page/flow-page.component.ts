@@ -151,7 +151,7 @@ export class FlowPageComponent implements OnInit, OnDestroy {
         if (node.data.run || node.data.stage) {
             let selected = false
             if (this.selectedNode.stage.id === null) {
-                this.selectedNode = node.data
+                this.selectRunNode(node.data)
                 selected = true
             }
             this.flatTree.push({
@@ -168,8 +168,21 @@ export class FlowPageComponent implements OnInit, OnDestroy {
         }
     }
 
+    prepareRunDataStr(run) {
+        const data = pick(run, 'id', 'created', 'seq')
+        run.runData = JSON.stringify(data, null, 4);
+    }
+
+    selectRunNode(data) {
+        if (!data.run.runData) {
+            this.prepareRunDataStr(data.run)
+        }
+        this.selectedNode = data
+    }
+
     prepareFlowDataStr() {
         const data = pick(this.flow, 'id', 'created', 'kind', 'trigger', 'seq', 'data')
+        data['data'] = '<see above>'
         this.flowData = JSON.stringify(data, null, 4);
     }
 
@@ -401,7 +414,7 @@ export class FlowPageComponent implements OnInit, OnDestroy {
         for (const node of this.flatTree) {
             if (node.stage.id === stageId) {
                 node.selected = true
-                this.selectedNode = node
+                this.selectRunNode(node)
             } else {
                 node.selected = false
             }
