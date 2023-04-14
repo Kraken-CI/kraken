@@ -44,7 +44,7 @@
           </div>
 
           <div class="grid">
-            <div class="col-6" *ngFor="let flows of getFlows(branch)">
+            <div class="col-6 pl-4" *ngFor="let flows of getFlows(branch)">
               <b style="width: 100px; display: inline-block; font-size: 1.4em; margin: 0 0 10px 2px;">
                 <a routerLink="/branches/{{ branch.id }}/{{ flows.name.toLowerCase() }}">{{ flows.name }} flows</a>
               </b>
