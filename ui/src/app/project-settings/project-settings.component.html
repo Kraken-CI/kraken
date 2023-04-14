@@ -49,20 +49,35 @@
                 <a routerLink="/branches/{{ branch.id }}/{{ flows.name.toLowerCase() }}">{{ flows.name }} flows</a>
               </b>
               {{ flows.flows.length === 0 ? 'no flows yet' : '' }}
-              <table *ngIf="flows.flows.length > 0" >
-                <tr *ngFor="let flow of flows.flows" style="padding: 3px 6px;">
-                  <td style="vertical-align: top; width: 3em;"><b><a routerLink="/flows/{{ flow.id }}">{{ flow.id }}</a>.</b></td>
-                  <td style="vertical-align: top;"><a routerLink="/flows/{{ flow.id }}" style="color: var(--kk-color);">{{ flow.created | localtime:'yyyy-LL-dd HH:mm' }}</a></td>
-                  <td style="vertical-align: top;">
-                    <span *ngIf="flow.tests_total > 0"
-                          [ngStyle]="{'border-radius': '4px', 'background-color': flow.tests_color, 'padding': '1px 3px', 'margin-right': '2px'}">{{ flow.tests_pass_ratio }}%&nbsp;pass</span>
-                    <span *ngIf="flow.fix_cnt > 0" style="border-radius: 4px; background-color: var(--greenish1); padding: 1px 3px; margin-right: 2px;">{{ flow.fix_cnt }}&nbsp;fixes</span>
-                    <span *ngIf="flow.regr_cnt > 0" style="border-radius: 4px; background-color: var(--redish1); padding: 1px 3px; margin-right: 2px;">{{ flow.regr_cnt }}&nbsp;regrs</span>
-                    <span *ngIf="flow.issues_new > 0" style="border-radius: 4px; background-color: var(--redish1); padding: 1px 3px; margin-right: 2px;">{{ flow.issues_new }}&nbsp;new&nbsp;issues</span>
-                    <a routerLink="/flows/{{ flow. id }}/results-charts"><i *ngIf="flow.tests_total > 0" class="pi pi-chart-line" style="padding-left: 1em;" ></i></a>
-                  </td>
-                </tr>
-              </table>
+              <div class="grid grid-nogutter" *ngIf="flows.flows.length > 0" >
+                  <ng-container *ngFor="let flow of flows.flows">
+
+                      <div class="col-3 pb-1">
+                          <div class="text-2xl font-medium">
+                              <b><a routerLink="/flows/{{ flow.id }}">{{ flow.id }}</a>.</b>
+                          </div>
+                          <div class="text-xs font-light">
+                              <a routerLink="/flows/{{ flow.id }}" style="color: var(--kk-color);">{{ flow.created | localtime:'yyyy-LL-dd HH:mm' }}</a>
+                          </div>
+                      </div>
+                      <div class="col-9 py-1">
+                          <div *ngIf="flow.tests_total > 0">
+                              <span [ngStyle]="{'border-radius': '4px', 'background-color': flow.tests_color, 'padding': '1px 3px', 'margin-right': '2px'}">{{ flow.tests_pass_ratio }}%&nbsp;pass</span>
+                              <span *ngIf="flow.fix_cnt > 0"
+                                    style="border-radius: 4px; background-color: var(--greenish1); padding: 1px 3px; margin-right: 2px;">{{ flow.fix_cnt }}&nbsp;fixes</span>
+                              <span *ngIf="flow.regr_cnt > 0"
+                                    style="border-radius: 4px; background-color: var(--redish1); padding: 1px 3px; margin-right: 2px;">{{ flow.regr_cnt }}&nbsp;regrs</span>
+                              <span *ngIf="flow.issues_new > 0"
+                                    style="border-radius: 4px; background-color: var(--redish1); padding: 1px 3px; margin-right: 2px;">{{ flow.issues_new }}&nbsp;new&nbsp;issues</span>
+                              <a routerLink="/flows/{{ flow. id }}/results-charts"><i class="pi pi-chart-line" style="padding-left: 1em;" ></i></a>
+                          </div>
+                          <div *ngIf="flow.jobs_total > 0">
+                              {{ flow.jobs_error }} / {{ flow.jobs_total }}
+                               <span [ngClass]="flow.jobs_error > 0 ? 'text-red-500' : 'text-500'">jobs erred</span>
+                          </div>
+                      </div>
+                  </ng-container>
+              </div>
             </div>
           </div>
         </div>

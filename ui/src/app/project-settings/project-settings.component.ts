@@ -154,12 +154,16 @@ export class ProjectSettingsComponent implements OnInit, OnDestroy {
         flow.fix_cnt = 0
         flow.regr_cnt = 0
         flow.issues_new = 0
+        flow.jobs_total = 0
+        flow.jobs_error = 0
         for (const run of flow.runs) {
             flow.tests_total += run.tests_total
             flow.tests_passed += run.tests_passed
             flow.fix_cnt += run.fix_cnt
             flow.regr_cnt += run.regr_cnt
             flow.issues_new += run.issues_new
+            flow.jobs_total += run.jobs_total
+            flow.jobs_error += run.jobs_error
         }
         if (flow.tests_total > 0) {
             flow.tests_pass_ratio = (100 * flow.tests_passed) / flow.tests_total
