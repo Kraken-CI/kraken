@@ -36,7 +36,7 @@ DOCKER_COMPOSE = "#{TOOLS_DIR}/docker-compose-#{DOCKER_COMPOSE_VER}"
 ENV['DOCKER_BUILDKIT']='1'
 ENV['COMPOSE_DOCKER_CLI_BUILD']='1'
 
-kk_ver = ENV['kk_ver'] || '0.0'
+kk_ver = ENV['kk_ver'] || '0.0.0'
 ENV['KRAKEN_VERSION'] = kk_ver
 KRAKEN_VERSION_FILE = File.expand_path("kraken-version-#{kk_ver}.txt")
 
@@ -120,7 +120,7 @@ end
 task :build_ui => KK_WEB_UI_TGZ_PATH
 file KK_WEB_UI_TGZ_PATH => [NG, :gen_client] do
   Dir.chdir('ui') do
-    sh "sed -e 's/0\.0/#{kk_ver}/g' src/environments/environment.prod.ts.in > src/environments/environment.prod.ts"
+    sh "sed -e 's/0\.0\.0/#{kk_ver}/g' src/environments/environment.prod.ts.in > src/environments/environment.prod.ts"
     sh 'npx ng build --configuration production'
     sh 'cp nginx.conf dist/kraken'
     sh 'sed -i -e "s/\${DOLLAR}/\$/g" dist/kraken/nginx.conf'
@@ -730,17 +730,17 @@ end
 
 task :helm_pkg => HELM do
   sh "#{HELM} lint ./helm --strict"
-  sh "#{HELM} package ./helm --app-version #{kk_ver} --version #{kk_ver}.0 -d #{helm_dest}"
+  sh "#{HELM} package ./helm --app-version #{kk_ver} --version #{kk_ver} -d #{helm_dest}"
 end
 
 task :helm_deploy => :helm_pkg do
-  sh "#{HELM} upgrade kk --install --create-namespace --namespace kk --debug --wait --set access.external_ips={`minikube ip`} --set access.method='external-ips' kraken-ci-#{kk_ver}.0.tgz"
+  sh "#{HELM} upgrade kk --install --create-namespace --namespace kk --debug --wait --set access.external_ips={`minikube ip`} --set access.method='external-ips' kraken-ci-#{kk_ver}.tgz"
 end
 
 task :helm_upload do
   sh "#{HELM} repo index #{helm_dest} --url https://kraken.ci/helm-repo/charts"
   Dir.chdir(helm_dest) do
-    sh "git add kraken-ci-#{kk_ver}.0.tgz"
+    sh "git add kraken-ci-#{kk_ver}.tgz"
     sh "git commit -am 'added new kraken version #{kk_ver}'"
     sh "git push"
   end

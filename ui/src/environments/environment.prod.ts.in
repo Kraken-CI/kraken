@@ -1,4 +1,4 @@
 export const environment = {
     production: true,
-    krakenVersion: '0.0',
+    krakenVersion: '0.0.0',
 };
