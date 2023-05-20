@@ -5,3 +5,4 @@ setuptools==49.6.0
 giturlparse==0.10.0
 minio==7.0.0
 click==7.1.2
+urllib3==1.26.15
