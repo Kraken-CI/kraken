@@ -34,7 +34,11 @@ export class AuthService {
         if (this.session === null) {
             let token = this.cookieService.get('kk_session_token')
             if (token) {
-                this.getSession(token)
+                // as this is constructor we cannot call server api yet
+                // so call it in background, in 10ms
+                setTimeout(() => {
+                    this.getSession(token)
+                }, 10)
             }
         }
 
