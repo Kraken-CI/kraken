@@ -965,7 +965,7 @@ def refresh_schema_repo(stage_id, complete_starting_run_id=None):
             if run is not None:
                 log.set_ctx(flow_kind=run.flow.kind, flow=run.flow_id, run=run.id)
 
-        log.info('refresh schema repo for stage: %d, run: %s',
+        log.info('refresh schema repo for stage: %s, run: %s',
                  stage, run)
 
         planner_url = os.environ.get('KRAKEN_PLANNER_URL', consts.DEFAULT_PLANNER_URL)
