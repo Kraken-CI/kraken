@@ -1,5 +1,5 @@
 def stage(ctx):
-    kk_ver = "1.2.#{KK_FLOW_SEQ}"
+    kk_ver = "1.3.#{KK_FLOW_SEQ}"
 
     return {
         "parent": "root",
