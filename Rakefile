@@ -2,7 +2,7 @@ require 'json'
 require 'date'
 
 # tools versions
-NODE_VER = 'v16.13.1'
+NODE_VER = 'v18.16.0'
 OPENAPI_GENERATOR_VER = '5.3.0'
 HELM_VER = 'v3.7.2'
 DOCKER_COMPOSE_VER = '2.2.2'
