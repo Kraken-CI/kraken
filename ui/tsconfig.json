@@ -7,7 +7,7 @@
       "declaration": false,
       "downlevelIteration": true,
       "experimentalDecorators": true,
-      "module": "es2020",
+      "module": "commonjs", //"es2020",
       "moduleResolution": "node",
       "importHelpers": true,
       "target": "ES2022",
@@ -15,7 +15,7 @@
         "node_modules/@types"
       ],
       "lib": [
-        "es2018",
+        "ES2022",
         "dom"
       ],
       "allowSyntheticDefaultImports": true,
