@@ -29,7 +29,7 @@
     "codemirror": "^5.65.13",
     "hammerjs": "^2.0.8",
     "humanize-duration": "^3.27.1",
-    "luxon": "^2.3.1",
+    "luxon": "^3.3.0",
     "marked": "^4.0.10",
     "ngx-cookie-service": "^15.0.0",
     "primeflex": "^3.2.1",
