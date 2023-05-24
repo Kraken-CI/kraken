@@ -4,7 +4,7 @@ require 'date'
 # tools versions
 NODE_VER = 'v18.16.0'
 OPENAPI_GENERATOR_VER = '6.6.0'
-HELM_VER = 'v3.7.2'
+HELM_VER = 'v3.12.0'
 DOCKER_COMPOSE_VER = '2.2.2'
 PULUMI_VER = 'v3.55.0'  # 'v3.26.1'
 
