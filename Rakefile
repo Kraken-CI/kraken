@@ -3,7 +3,7 @@ require 'date'
 
 # tools versions
 NODE_VER = 'v18.16.0'
-OPENAPI_GENERATOR_VER = '5.3.0'
+OPENAPI_GENERATOR_VER = '6.6.0'
 HELM_VER = 'v3.7.2'
 DOCKER_COMPOSE_VER = '2.2.2'
 PULUMI_VER = 'v3.55.0'  # 'v3.26.1'
@@ -94,7 +94,7 @@ end
 # UI
 task :gen_client => [OPENAPI_GENERATOR, SWAGGER_FILE] do
   Dir.chdir('ui') do
-    sh "java -jar #{OPENAPI_GENERATOR} generate  -g typescript-angular -i #{SWAGGER_FILE} -o src/app/backend --additional-properties snapshot=true,ngVersion=12.0.0,modelPropertyNaming=snake_case"
+    sh "java -jar #{OPENAPI_GENERATOR} generate  -g typescript-angular -i #{SWAGGER_FILE} -o src/app/backend --additional-properties snapshot=true,ngVersion=15.0.3,modelPropertyNaming=snake_case"
   end
 end
 
