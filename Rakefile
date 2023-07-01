@@ -217,11 +217,9 @@ file './agent/venv/bin/kkagent' => './agent/venv/bin/python3' do
   end
 end
 
-task :run_agent do  # => ['./agent/venv/bin/kkagent', :build_agent] do
+task :run_agent => ['./agent/venv/bin/kkagent', :build_agent] do
   sh "rm -f #{KK_AGENT_TGZ_PATH}"
   Rake::Task["build_agent"].invoke
-  sh 'cp server/kraken/server/consts.py agent/kraken/agent/'
-  sh 'cp server/kraken/server/logs.py agent/kraken/agent/'
   sh 'rm -rf /tmp/kk-jobs/ /opt/kraken/*'
   sh 'cp agent/kkagent agent/kktool /opt/kraken'
   sh "LANGUAGE=en_US:en LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 KRAKEN_CLICKHOUSE_ADDR=#{CLICKHOUSE_ADDR} /opt/kraken/kkagent run -d /tmp/kk-jobs -s http://localhost:8080 --no-update"
@@ -400,10 +398,16 @@ agent_src = [
   'agent/kraken/agent/utils.py'
 ]
 
+file 'agent/kraken/agent/consts.py' => 'server/kraken/server/consts.py' do
+  sh 'cp server/kraken/server/consts.py agent/kraken/agent/'
+end
+
+file 'agent/kraken/agent/logs.py' => 'server/kraken/server/logs.py' do
+  sh 'cp server/kraken/server/logs.py agent/kraken/agent/'
+end
+
 task :build_agent => KK_AGENT_TGZ_PATH
 file KK_AGENT_TGZ_PATH => ['./venv/bin/python3', './venv/bin/shiv'] + agent_src do
-  sh 'cp server/kraken/server/consts.py agent/kraken/agent/'
-  sh 'cp server/kraken/server/logs.py agent/kraken/agent/'
   Dir.chdir('agent') do
     sh 'rm -rf dist-agent'
     sh '../venv/bin/pip install --target dist-agent -r requirements.txt'
