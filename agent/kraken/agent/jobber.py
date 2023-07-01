@@ -1,4 +1,4 @@
-# Copyright 2020-2022 The Kraken Authors
+# Copyright 2020-2023 The Kraken Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,7 +29,6 @@ from . import local_run
 from . import docker_run
 from . import lxd_run
 from . import utils
-from . import consts
 
 log = logging.getLogger(__name__)
 

@@ -408,7 +408,7 @@ def trigger_jobs(run, replay=False):
                         all_started_erred = False
                         # substitute vars in steps
                         for idx, s in enumerate(j['steps']):
-                            step = Step(job=job, index=idx, tool=tools[idx], fields={}, fields_masked={}, fields_raw=s)
+                            Step(job=job, index=idx, tool=tools[idx], fields={}, fields_masked={}, fields_raw=s)
 
                     # if this is rerun/replay then mark prev jobs as covered
                     if replay:

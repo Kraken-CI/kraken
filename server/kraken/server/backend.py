@@ -221,9 +221,6 @@ def _handle_get_job2(agent):
     job['flow_id'] = agent.job.run.flow_id
     job['run_id'] = agent.job.run_id
 
-    minio_bucket = minioops.get_or_create_minio_bucket_for_artifacts(agent.job.run.flow.branch_id)
-    minio_addr, minio_access_key, minio_secret_key = minioops.get_minio_addr()
-
     if not agent.job.started:
         agent.job.started = utils.utcnow()
         agent.job.state = consts.JOB_STATE_ASSIGNED
