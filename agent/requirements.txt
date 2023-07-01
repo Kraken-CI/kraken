@@ -2,7 +2,7 @@
 #pylxd==2.2.10
 distro==1.7.0
 setuptools==49.6.0
-giturlparse==0.10.0
+giturlparse @ git+https://github.com/nephila/giturlparse.git@f65f609662edb5f21dc7ccf506f54b3ac888cc89
 minio==7.0.0
 click==7.1.2
 urllib3==1.26.15

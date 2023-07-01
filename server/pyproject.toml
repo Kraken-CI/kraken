@@ -25,7 +25,7 @@ packages = [
 include = ["kraken/version.py"]
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.8"
 connexion = "^2.14.2"
 MarkupSafe = "2.1.2"
 Flask = "^2.2.3"
@@ -42,7 +42,8 @@ python-dateutil = "^2.8.2"
 gunicorn = "^20.1.0"
 RestrictedPython = "5.0"
 alembic = "^1.7.3"
-giturlparse = "^0.10.0"
+# giturlparse = "^0.10.0"
+giturlparse = { git = "https://github.com/nephila/giturlparse.git", rev = "f65f609662edb5f21dc7ccf506f54b3ac888cc89" }
 clickhouse-driver = "^0.2.5"
 minio = "^7.1.0"
 passlib = "^1.7.4"

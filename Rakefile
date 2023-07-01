@@ -395,7 +395,10 @@ agent_src = [
   'agent/kraken/agent/sysutils.py',
   'agent/kraken/agent/tool.py',
   'agent/kraken/agent/update.py',
-  'agent/kraken/agent/utils.py'
+  'agent/kraken/agent/utils.py',
+
+  'agent/requirements.txt',
+  'agent/reqs-tool.txt',
 ]
 
 file 'agent/kraken/agent/consts.py' => 'server/kraken/server/consts.py' do
