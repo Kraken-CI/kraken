@@ -458,18 +458,15 @@ def run(srv, job):
     try:
         bg_steps = []
         last_status = None
-        for idx, step in enumerate(job['steps']):
-            if step['status'] == consts.STEP_STATUS_DONE:
-                continue
-            log.set_ctx(step=idx)
 
-            step['job_id'] = job['id']
-            step['branch_id'] = job['branch_id']
-            step['flow_kind'] = job['flow_kind']
-            step['flow_id'] = job['flow_id']
-            step['run_id'] = job['run_id']
-            if 'trigger_data' in job:
-                step['trigger_data'] = job['trigger_data']
+        while True:
+            step = srv.get_job_step()
+            if step['finish']:
+                break
+
+            idx = step['index']
+
+            log.set_ctx(step=idx)
 
             try:
                 last_status, cancel, bg_step = _run_step(srv, exec_ctx, job_dir, job['id'], idx, step, tools, job['deadline'])

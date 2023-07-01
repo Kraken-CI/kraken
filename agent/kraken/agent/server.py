@@ -154,6 +154,18 @@ class Server():
 
         return {}, cfg_changes, version
 
+    def get_job_step(self):
+        self._ensure_srv_address()
+
+        request = {'address': self.my_addr, 'msg': consts.AGENT_MSG_GET_JOB_STEP}
+
+        response = _send_http_request(self.srv_addr, request)
+
+        if 'job_step' in response:
+            return response['job_step']
+
+        return {}
+
     def report_step_result(self, job_id, step_idx, result):
         request = {'address': self.my_addr,
                    'msg': consts.AGENT_MSG_STEP_RESULT,

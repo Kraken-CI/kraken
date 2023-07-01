@@ -298,9 +298,6 @@ def trigger_jobs(run, replay=False):
         if replay:
             covered_jobs = _find_covered_jobs(run)
 
-        # prepare secrets to pass them to substitute in steps
-        secrets = prepare_secrets(run)
-
         # prepare missing group
         missing_agents_group = AgentsGroup.query.filter_by(name='missing').one_or_none()
         if missing_agents_group is None:
@@ -411,15 +408,7 @@ def trigger_jobs(run, replay=False):
                         all_started_erred = False
                         # substitute vars in steps
                         for idx, s in enumerate(j['steps']):
-                            args = secrets.copy()
-                            if run.args:
-                                args.update(run.args)
-                            step = Step(job=job, index=idx, tool=tools[idx], fields={}, fields_masked={})
-                            step_ctx = prepare_context(step, args)
-                            fields, fields_masked = substitute_vars(s, args, step_ctx)
-                            del fields['tool']
-                            step.fields = fields
-                            step.fields_masked = fields_masked
+                            step = Step(job=job, index=idx, tool=tools[idx], fields={}, fields_masked={}, fields_raw=s)
 
                     # if this is rerun/replay then mark prev jobs as covered
                     if replay:
@@ -458,3 +447,18 @@ def trigger_jobs(run, replay=False):
 
     if len(schema['jobs']) == 0 or all_started_erred:
         complete_run(run, now)
+
+
+def evaluate_step_fields(step):
+    run = step.job.run
+    # prepare secrets to pass them to substitute in steps
+    secrets = prepare_secrets(run)
+    args = secrets.copy()
+    if run.args:
+        args.update(run.args)
+    step_ctx = prepare_context(step, args)
+    fields, fields_masked = substitute_vars(step.fields_raw, args, step_ctx)
+    del fields['tool']
+    step.fields = fields
+    step.fields_masked = fields_masked
+    db.session.commit()

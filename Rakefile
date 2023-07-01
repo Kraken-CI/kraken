@@ -366,8 +366,42 @@ file './venv/bin/shiv' => ['./venv/bin/python3', 'requirements.txt'] do
     sh './venv/bin/pip install -r requirements.txt'
 end
 
+agent_src = [
+  'agent/kraken/agent/__init__.py',
+  'agent/kraken/agent/agent.py',
+  'agent/kraken/agent/config.py',
+  'agent/kraken/agent/consts.py',
+  'agent/kraken/agent/docker_run.py',
+  'agent/kraken/agent/install.py',
+  'agent/kraken/agent/jobber.py',
+  'agent/kraken/agent/kraken_artifacts.py',
+  'agent/kraken/agent/kraken_cache.py',
+  'agent/kraken/agent/kraken_cloc.py',
+  'agent/kraken/agent/kraken_data.py',
+  'agent/kraken/agent/kraken_git.py',
+  'agent/kraken/agent/kraken_gotest.py',
+  'agent/kraken/agent/kraken_junit_collect.py',
+  'agent/kraken/agent/kraken_nglint.py',
+  'agent/kraken/agent/kraken_pylint.py',
+  'agent/kraken/agent/kraken_pytest.py',
+  'agent/kraken/agent/kraken_rndtest.py',
+  'agent/kraken/agent/kraken_shell.py',
+  'agent/kraken/agent/kraken_values_collect.py',
+  'agent/kraken/agent/local_run.py',
+  'agent/kraken/agent/logs.py',
+  'agent/kraken/agent/lxd_run.py',
+  'agent/kraken/agent/main.py',
+  'agent/kraken/agent/miniobase.py',
+  'agent/kraken/agent/server.py',
+  'agent/kraken/agent/sshkey.py',
+  'agent/kraken/agent/sysutils.py',
+  'agent/kraken/agent/tool.py',
+  'agent/kraken/agent/update.py',
+  'agent/kraken/agent/utils.py'
+]
+
 task :build_agent => KK_AGENT_TGZ_PATH
-file KK_AGENT_TGZ_PATH => ['./venv/bin/python3', './venv/bin/shiv'] do
+file KK_AGENT_TGZ_PATH => ['./venv/bin/python3', './venv/bin/shiv'] + agent_src do
   sh 'cp server/kraken/server/consts.py agent/kraken/agent/'
   sh 'cp server/kraken/server/logs.py agent/kraken/agent/'
   Dir.chdir('agent') do
@@ -448,9 +482,11 @@ task :server_ut do
   end
 end
 
-task :agent_ut do
+task :agent_ut => ['./agent/venv/bin/python3'] do
   Dir.chdir('agent') do
-    sh "./venv/bin/pytest -s -r A -vv #{ENV['test']}"
+    sh './venv/bin/pip install -r requirements.txt'
+    sh './venv/bin/pip install -r reqs-ut.txt'
+    sh "PYTHONPATH=. ./venv/bin/pytest -s -r A -vv #{ENV['test']}"
   end
 end
 

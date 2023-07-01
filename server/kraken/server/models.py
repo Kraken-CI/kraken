@@ -563,6 +563,7 @@ class Step(db.Model, DatesMixin):
     result = Column(JSONB)
     status = Column(Integer)
     fields_masked = Column(JSONB, nullable=True)
+    fields_raw = Column(JSONB, nullable=True)
     # services
 
     def get_json(self, with_fields=True, mask_secrets=False):

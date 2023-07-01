@@ -35,6 +35,7 @@ from . import kkrq
 from . import utils
 from . import dbutils
 from . import datastore
+from . import exec_utils
 
 log = logging.getLogger(__name__)
 
@@ -186,6 +187,191 @@ def _handle_get_job(agent):
     job['secrets'] = secrets
 
     return {'job': job}
+
+
+def _handle_get_job2(agent):
+    if agent.job is None:
+        return {'job': {}}
+
+    # handle canceling situation
+    if agent.job.state == consts.JOB_STATE_COMPLETED:
+        job = agent.job
+        agent.job = None
+        db.session.commit()
+        log.info("unassigned canceled job %s from %s", job, agent)
+        return {'job': {}}
+
+    job = agent.job.get_json(with_steps=False)
+
+    job['timeout'] = _left_time(agent.job)
+
+    # attach trigger data to job
+    if agent.job.run.flow.trigger_data:
+        job['trigger_data'] = agent.job.run.flow.trigger_data.data
+    elif agent.job.run.repo_data_id:
+        # pick any repo for now (TODO: it should be more sophisticated and handle all repos)
+        url = agent.job.run.repo_data.data[0]['repo']
+        commits = agent.job.run.repo_data.data[0]['commits']
+        job['trigger_data'] = [dict(repo=url,
+                                    after=commits[0]['id'])]
+
+    # attach storage info to job
+    job['branch_id'] = agent.job.run.flow.branch_id
+    job['flow_kind'] = agent.job.run.flow.kind
+    job['flow_id'] = agent.job.run.flow_id
+    job['run_id'] = agent.job.run_id
+
+    minio_bucket = minioops.get_or_create_minio_bucket_for_artifacts(agent.job.run.flow.branch_id)
+    minio_addr, minio_access_key, minio_secret_key = minioops.get_minio_addr()
+
+    if not agent.job.started:
+        agent.job.started = utils.utcnow()
+        agent.job.state = consts.JOB_STATE_ASSIGNED
+        db.session.commit()
+
+    # prepare secrets
+    secrets = dbutils.get_secret_values(agent.job.run.flow.branch.project)
+    job['secrets'] = secrets
+
+    return {'job': job}
+
+
+def _handle_get_job_step(agent):
+    finish_step = {'job_step': {'finish': True}}
+
+    if agent.job is None:
+        finish_step['msg'] = 'job not assigned to agent'
+        return finish_step
+
+    # handle canceling situation
+    if agent.job.state == consts.JOB_STATE_COMPLETED:
+        job = agent.job
+        agent.job = None
+        db.session.commit()
+        log.info("unassigned canceled job %s from %s", job, agent)
+        finish_step['msg'] = 'job already completed'
+        return finish_step
+
+    step = None
+    for s in sorted(agent.job.steps, key=lambda s: s.index):
+        if s.status in [consts.STEP_STATUS_DONE, consts.STEP_STATUS_ERROR]:
+            continue
+        step = s
+        break
+
+    if step is None:
+        finish_step['msg'] = 'not steps to execute'
+        return finish_step
+
+    exec_utils.evaluate_step_fields(step)
+
+    #job = agent.job.get_json()
+    step = step.get_json()
+    step['finish'] = False
+
+    # step['timeout'] = _left_time(agent.job) TODO
+
+    # prepare test list for execution
+    # TODO
+    #tests = []
+    #for tcr in agent.job.results:
+    #    tests.append(tcr.test_case.name)
+    #if tests:
+    #    job['steps'][-1]['tests'] = tests
+
+    # attach trigger data to job
+    if agent.job.run.flow.trigger_data:
+        step['trigger_data'] = agent.job.run.flow.trigger_data.data
+    elif agent.job.run.repo_data_id:
+        # pick any repo for now (TODO: it should be more sophisticated and handle all repos)
+        url = agent.job.run.repo_data.data[0]['repo']
+        commits = agent.job.run.repo_data.data[0]['commits']
+        step['trigger_data'] = [dict(repo=url,
+                                    after=commits[0]['id'])]
+
+    # attach storage info to job
+    step['branch_id'] = agent.job.run.flow.branch_id
+    step['flow_kind'] = agent.job.run.flow.kind
+    step['flow_id'] = agent.job.run.flow_id
+    step['run_id'] = agent.job.run_id
+
+    minio_bucket = minioops.get_or_create_minio_bucket_for_artifacts(agent.job.run.flow.branch_id)
+    minio_addr, minio_access_key, minio_secret_key = minioops.get_minio_addr()
+
+    # prepare step special data
+    project = agent.job.run.flow.branch.project
+    add_minio = False
+
+    # insert secret from ssh-key
+    if 'ssh-key' in step:
+        value = step['ssh-key']
+        secret = Secret.query.filter_by(project=project, name=value, deleted=None).one_or_none()
+        if secret is None:
+            raise Exception("Secret '%s' does not exist in project %s" % (value, project.id))
+        step['ssh-key'] = dict(username=secret.data['username'],
+                               key=secret.data['key'])
+
+    # insert secret from access-token
+    if 'access-token' in step:
+        value = step['access-token']
+        secret = Secret.query.filter_by(project=project, name=value).one_or_none()
+        if secret is None:
+            raise Exception("Secret '%s' does not exist in project %s" % (value, project.id))
+        step['access-token'] = secret.data['secret']
+
+    # custom fields for GIT
+    if step['tool'] == 'git':
+        # add http url to git
+        url = step['checkout']
+        url = giturlparse.parse(url)
+        if url.valid:
+            url = url.url2https
+            step['http_url'] = url
+        else:
+            log.info('invalid git url %s', step['checkout'])
+
+        # add minio info for storing git repo bundle
+        add_minio = True
+        bucket, folder = minioops.get_or_create_minio_bucket_for_git(step['checkout'], branch_id=agent.job.run.flow.branch_id)
+        step['minio_bucket'] = bucket
+        step['minio_folder'] = folder
+
+    # custom fields for ARTIFACTS
+    if step['tool'] == 'artifacts':
+        add_minio = True
+        step['minio_bucket'] = minio_bucket
+        if 'destination' not in step:
+            step['destination'] = '.'
+
+    # custom fields for CACHE
+    if step['tool'] == 'cache':
+        add_minio = True
+        bucket, folders = minioops.get_or_create_minio_bucket_for_cache(agent.job, step)
+        step['minio_bucket'] = bucket
+        if step['action'] == 'save':
+            step['minio_folder'] = folders
+        else:
+            step['minio_folders'] = folders
+
+    if step['tool_location'].startswith('minio:'):
+        add_minio = True
+
+    # add minio details
+    if add_minio:
+        step['minio_addr'] = minio_addr
+        step['minio_access_key'] = minio_access_key
+        step['minio_secret_key'] = minio_secret_key
+
+    if not agent.job.started:
+        agent.job.started = utils.utcnow()
+        agent.job.state = consts.JOB_STATE_ASSIGNED
+        db.session.commit()
+
+    # prepare secrets
+    secrets = dbutils.get_secret_values(agent.job.run.flow.branch.project)
+    step['secrets'] = secrets
+
+    return {'job_step': step}
 
 
 def _store_results(job, step, result):
@@ -637,6 +823,20 @@ def _serve_agent_request():
 
     if msg == consts.AGENT_MSG_GET_JOB:
         response = _handle_get_job(agent)
+
+        clickhouse_addr = os.environ.get('KRAKEN_CLICKHOUSE_ADDR', consts.DEFAULT_CLICKHOUSE_ADDR)
+        response['cfg'] = dict(clickhouse_addr=clickhouse_addr)
+        response['version'] = version.version
+
+    elif msg == consts.AGENT_MSG_GET_JOB2:
+        response = _handle_get_job2(agent)
+
+        clickhouse_addr = os.environ.get('KRAKEN_CLICKHOUSE_ADDR', consts.DEFAULT_CLICKHOUSE_ADDR)
+        response['cfg'] = dict(clickhouse_addr=clickhouse_addr)
+        response['version'] = version.version
+
+    elif msg == consts.AGENT_MSG_GET_JOB_STEP:
+        response = _handle_get_job_step(agent)
 
         clickhouse_addr = os.environ.get('KRAKEN_CLICKHOUSE_ADDR', consts.DEFAULT_CLICKHOUSE_ADDR)
         response['cfg'] = dict(clickhouse_addr=clickhouse_addr)

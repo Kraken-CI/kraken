@@ -91,8 +91,9 @@ class LocalExecContext:
             await self._async_pump_output(proc.stdout)
 
             if timeout:
-                await asyncio.wait([proc.wait(), self._async_monitor_proc(proc, timeout * 0.95)],
-                                   timeout=timeout)
+                proc_task = asyncio.create_task(proc.wait())
+                monitor_task = asyncio.create_task(self._async_monitor_proc(proc, timeout * 0.95))
+                await asyncio.wait([proc_task, monitor_task], timeout=timeout)
             else:
                 await proc.wait()
         except asyncio.CancelledError:

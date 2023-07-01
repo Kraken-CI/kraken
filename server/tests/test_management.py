@@ -37,7 +37,7 @@ def test_get_server_version():
     resp, code = management.get_server_version()
     assert code == 200
     assert 'version' in resp
-    assert resp['version'] == '0.0'
+    assert resp['version'] == '0.0.0'
 
 
 @pytest.mark.db
