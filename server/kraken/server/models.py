@@ -581,8 +581,10 @@ class Step(db.Model, DatesMixin):
         if with_fields:
             if mask_secrets and self.fields_masked:
                 fields = self.fields_masked
-            else:
+            elif self.fields:
                 fields = self.fields
+            else:
+                fields = self.fields_raw
 
             name = self.tool.name
             if 'name' in fields:
