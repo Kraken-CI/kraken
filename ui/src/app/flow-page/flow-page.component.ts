@@ -174,7 +174,7 @@ export class FlowPageComponent implements OnInit, OnDestroy {
     }
 
     selectRunNode(data) {
-        if (!data.run.runData) {
+        if (data.run && !data.run.runData) {
             this.prepareRunDataStr(data.run)
         }
         this.selectedNode = data
