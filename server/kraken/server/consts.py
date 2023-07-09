@@ -46,18 +46,21 @@ STEP_STATUS_NOT_STARTED = 0
 STEP_STATUS_IN_PROGRES = 1
 STEP_STATUS_DONE = 2
 STEP_STATUS_ERROR = 3
+STEP_STATUS_SKIPPED = 4
 
 STEP_STATUS_TO_INT = {
     'not-started': STEP_STATUS_NOT_STARTED,
     'in-progress': STEP_STATUS_IN_PROGRES,
     'done': STEP_STATUS_DONE,
-    'error': STEP_STATUS_ERROR
+    'error': STEP_STATUS_ERROR,
+    'skipped': STEP_STATUS_SKIPPED
 }
 STEP_STATUS_NAME = {
     STEP_STATUS_NOT_STARTED: 'not-started',
     STEP_STATUS_IN_PROGRES: 'in-progress',
     STEP_STATUS_DONE: 'done',
-    STEP_STATUS_ERROR: 'error'
+    STEP_STATUS_ERROR: 'error',
+    STEP_STATUS_SKIPPED: 'skipped',
 }
 
 TC_RESULT_NOT_RUN = 0
@@ -174,6 +177,7 @@ AGENT_MSG_GET_JOB = 'get-job'
 AGENT_MSG_GET_JOB2 = 'get-job2'
 AGENT_MSG_GET_JOB_STEP = 'get-job-step'
 AGENT_MSG_STEP_RESULT = 'step-result'
+AGENT_MSG_STEP_RESULT2 = 'step-result2'
 AGENT_MSG_DISPATCH_TESTS = 'dispatch-tests'
 AGENT_MSG_HOST_INFO = 'host-info'
 AGENT_MSG_KEEP_ALIVE = 'keep-alive'

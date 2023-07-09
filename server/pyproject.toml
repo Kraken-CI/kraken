@@ -74,6 +74,7 @@ pytest = "^7.1.2"
 pylint = "2.13.9"
 pudb = "^2021.1"
 PyHamcrest = "^2.0.3"
+pytest-cov = "^4.1.0"
 
 [tool.poetry.scripts]
 # kkserver = 'kraken.server.server:main' # this does not work due to flask problems

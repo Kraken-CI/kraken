@@ -223,11 +223,15 @@ def substitute_val(val, args, ctx):
 
     # new way of exposing context in fields
     env = SandboxedEnvironment()
-    for var in re.findall(r'#{[A-Za-z0-9_\. ]+}', val):
+    for var in re.findall(r'#{[A-Za-z0-9_\. \[\]<>=\-\+/\*&|^()]+}', val):
         expr = var[2:-1].strip()
 
         tpl = env.from_string("{{ %s }}" % expr)
-        new_str = tpl.render(**ctx)
+        try:
+            new_str = tpl.render(**ctx)
+        except Exception:
+            log.exception('IGNORED')
+            new_str = '<ERROR>'
         val = val.replace(var, new_str)
 
         if expr.startswith('secrets.'):
@@ -305,8 +309,30 @@ def prepare_context(entity, args):
         ctx['flow_label'] = run.flow.label
 
     if step:
-        ctx['job'] = step.job.get_json(with_steps=False)
+        ctx['job'] = step.job.get_json()
         ctx['step'] = step.get_json(with_fields=False)
+
+        if step.index == 0:
+            prev_ok = True
+        else:
+            prev_step = step.job.steps[step.index - 1]
+            prev_ok = prev_step.status in [consts.STEP_STATUS_DONE, consts.STEP_STATUS_SKIPPED]
+
+        was_any_error = False
+        was_no_error = True
+        for s in step.job.steps:
+            if s.index == step.index:
+                break
+            if s.status == consts.STEP_STATUS_ERROR:
+                was_any_error = True
+                was_no_error = False
+                break
+
+        ctx['prev_ok'] = prev_ok
+        ctx['always'] = True
+        ctx['never'] = False
+        ctx['was_any_error'] = was_any_error
+        ctx['was_no_error'] = was_no_error
 
     return ctx
 

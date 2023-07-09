@@ -70,7 +70,7 @@ def _assign_jobs(agents_count, idle_agents_by_group, idle_agents_by_sys_group,
     counter = 0
 
     for j in waiting_jobs:
-        log.set_ctx(branch=j.run.flow.branch_id, flow_kind=j.run.flow.kind, flow=j.run.flow_id, run=j.run.id)
+        log.set_ctx(branch=j.run.flow.branch_id, flow_kind=j.run.flow.kind, flow=j.run.flow_id, run=j.run.id, job=j.id)
         log.info('job %s, executor %s', j, j.system.executor)
 
         # system does not have to be taken into account when user selects ANY system

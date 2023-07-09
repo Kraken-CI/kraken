@@ -61,7 +61,7 @@ def test__handle_get_job_step():
         agents_group = AgentsGroup()
         tool = Tool(fields={})
         job = Job(run=run, agents_group=agents_group, system=system)
-        step = Step(job=job, index=3, tool=tool, fields={}, fields_raw={'tool': 'shell', 'tool_location': '/'})
+        step = Step(job=job, index=0, tool=tool, fields={}, fields_raw={'tool': 'shell', 'tool_location': '/'})
         agent = Agent(name='a1', address='1.2.3.4')
         agent.job = job
         job.agent_used = agent
@@ -89,7 +89,8 @@ def test__handle_get_job_step():
                          'tool_entry': None,
                          'tool_id': tool.id,
                          'tool_location': '/',
-                         'tool_version': None},
+                         'tool_version': None,
+                         'when': 'True'},
         }
 
 

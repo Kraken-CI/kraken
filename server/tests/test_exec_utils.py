@@ -60,7 +60,7 @@ def test_evaluate_step_fields():
         agents_group = AgentsGroup()
         tool = Tool(fields={})
         job = Job(run=run, agents_group=agents_group, system=system)
-        step = Step(job=job, index=3, tool=tool, fields={}, fields_raw={'tool': 'shell', 'tool_location': '/'})
+        step = Step(job=job, index=0, tool=tool, fields={}, fields_raw={'tool': 'shell', 'tool_location': '/'})
         agent = Agent(name='a1', address='1.2.3.4')
         agent.job = job
         job.agent_used = agent
@@ -72,4 +72,4 @@ def test_evaluate_step_fields():
 
         exec_utils.evaluate_step_fields(step)
 
-        assert step.fields == {'cmd': 'echo def', 'tool_location': '/'}
+        assert step.fields == {'cmd': 'echo def', 'tool_location': '/', 'when': 'True'}

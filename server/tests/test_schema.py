@@ -172,10 +172,11 @@ def test_substitute_val():
         agents_group = AgentsGroup()
         job = Job(run=run, agents_group=agents_group, system=system, name='hello')
         tool = Tool(fields={})
-        step = Step(index=3,
+        step = Step(index=0,
                     job=job,
                     tool=tool,
-                    fields={})
+                    fields={},
+                    fields_raw={})
         db.session.commit()
 
         args = {'VAR1': 'bbb', 'color': 'red'}
@@ -215,7 +216,7 @@ def test_substitute_val():
 
         val =  'aaa #{step.index} ccc'
         new_val, new_val_masked = schema.substitute_val(val, args, ctx)
-        assert new_val == 'aaa 3 ccc'
+        assert new_val == 'aaa 0 ccc'
 
         val =  'aaa #{args.color} ccc'
         new_val, new_val_masked = schema.substitute_val(val, args, ctx)
@@ -224,8 +225,8 @@ def test_substitute_val():
         ctx = schema.prepare_context(run, args)
 
         val =  'aaa #{step.name} ccc'
-        with pytest.raises(jinja2.exceptions.UndefinedError):
-            schema.substitute_val(val, args, ctx)
+        new_val, new_val_masked = schema.substitute_val(val, args, ctx)
+        assert new_val == 'aaa <ERROR> ccc'
 
         ctx = schema.prepare_context(run, args)
         val =  'aaa #{run.label} ccc'

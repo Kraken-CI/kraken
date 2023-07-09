@@ -420,7 +420,9 @@ def trigger_jobs(run, replay=False):
                                 # TODO: we should cancel these jobs if they are still running
 
                     db.session.commit()
+                    log.set_ctx(job=job.id)
                     log.info('created job %s', job.get_json(mask_secrets=True))
+                    log.set_ctx(job=None)
 
     except Exception as ex:
         log.exception('Problem with starting jobs')
@@ -458,6 +460,12 @@ def evaluate_step_fields(step):
     if run.args:
         args.update(run.args)
     step_ctx = prepare_context(step, args)
+    if 'when' in step.fields_raw:
+        if not step.fields_raw['when'].startswith('#{'):
+            step.fields_raw['when'] = '#{' + step.fields_raw['when'] + '}'
+    else:
+        step.fields_raw['when'] = '#{prev_ok}'
+    flag_modified(step, 'fields_raw')
     fields, fields_masked = substitute_vars(step.fields_raw, args, step_ctx)
     del fields['tool']
     step.fields = fields

@@ -344,6 +344,8 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
                 return 'pi pi-check-circle text-green-400'
             case 3: // error
                 return 'pi pi-exclamation-circle text-red-400'
+            case 4: // skipped
+                return 'pi pi-check-circle text-blue-400'
             default:
                 return 'pi pi-circle text-gray-600'
         }
@@ -361,6 +363,8 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
                 return 'done'
             case 3:
                 return 'error'
+            case 4:
+                return 'skipped'
             default:
                 return 'unknown'
         }

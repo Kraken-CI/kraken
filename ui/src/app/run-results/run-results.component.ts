@@ -279,7 +279,7 @@ export class RunResultsComponent implements OnInit, OnDestroy {
     }
 
     prepareJobDataStr() {
-        const data = pick(this.job, 'id', 'created', 'name')
+        const data = pick(this.job, 'id', 'created', 'name', 'steps')
         this.jobData = JSON.stringify(data, null, 4);
     }
 

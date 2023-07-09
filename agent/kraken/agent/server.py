@@ -168,7 +168,7 @@ class Server():
 
     def report_step_result(self, job_id, step_idx, result):
         request = {'address': self.my_addr,
-                   'msg': consts.AGENT_MSG_STEP_RESULT,
+                   'msg': consts.AGENT_MSG_STEP_RESULT2,
                    'job_id': job_id,
                    'step_idx': step_idx,
                    'result': result}

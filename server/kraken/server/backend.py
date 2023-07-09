@@ -79,8 +79,12 @@ def _handle_get_job(agent):
         job = agent.job
         agent.job = None
         db.session.commit()
+        log.set_ctx(job=job.id)
         log.info("unassigned canceled job %s from %s", job, agent)
+        log.set_ctx(job=None)
         return {'job': {}}
+
+    log.set_ctx(job=agent.job_id)
 
     job = agent.job.get_json()
 
@@ -186,6 +190,7 @@ def _handle_get_job(agent):
     secrets = dbutils.get_secret_values(agent.job.run.flow.branch.project)
     job['secrets'] = secrets
 
+    log.set_ctx(job=None)
     return {'job': job}
 
 
@@ -198,8 +203,12 @@ def _handle_get_job2(agent):
         job = agent.job
         agent.job = None
         db.session.commit()
+        log.set_ctx(job=job.id)
         log.info("unassigned canceled job %s from %s", job, agent)
+        log.set_ctx(job=None)
         return {'job': {}}
+
+    log.set_ctx(job=agent.job_id)
 
     job = agent.job.get_json(with_steps=False)
 
@@ -230,6 +239,7 @@ def _handle_get_job2(agent):
     secrets = dbutils.get_secret_values(agent.job.run.flow.branch.project)
     job['secrets'] = secrets
 
+    log.set_ctx(job=None)
     return {'job': job}
 
 
@@ -245,22 +255,51 @@ def _handle_get_job_step(agent):
         job = agent.job
         agent.job = None
         db.session.commit()
+        log.set_ctx(job=job.id)
         log.info("unassigned canceled job %s from %s", job, agent)
+        log.set_ctx(job=None)
         finish_step['msg'] = 'job already completed'
         return finish_step
 
+    job = agent.job
+
+    log.set_ctx(job=job.id)
+
     step = None
-    for s in sorted(agent.job.steps, key=lambda s: s.index):
-        if s.status in [consts.STEP_STATUS_DONE, consts.STEP_STATUS_ERROR]:
+    for s in sorted(job.steps, key=lambda s: s.index):
+        # log.info('job %s step %d status: %s', s.job, s.index, consts.STEP_STATUS_NAME.get(s.status, str(s.status)))
+        if s.status in [consts.STEP_STATUS_DONE, consts.STEP_STATUS_SKIPPED, consts.STEP_STATUS_ERROR]:
             continue
+
+        exec_utils.evaluate_step_fields(s)
+        log.info('job %s step %d condition %s => %s', s.job, s.index, s.fields_raw['when'], s.fields['when'])
+        if s.fields['when'] != 'True':
+            log.info('job %s step %d skipped', s.job, s.index)
+            s.status = consts.STEP_STATUS_SKIPPED
+            db.session.commit()
+            continue
+        log.info('job %s step %d to execute', s.job, s.index)
+
         step = s
         break
 
+    # if no steps to execute then it means that job is finished
     if step is None:
-        finish_step['msg'] = 'not steps to execute'
-        return finish_step
+        finish_step['msg'] = 'no steps to execute'
+        log.info("job %s no steps to execute -> job completed", job)
 
-    exec_utils.evaluate_step_fields(step)
+        job.state = consts.JOB_STATE_EXECUTING_FINISHED
+        job.finished = utils.utcnow()
+        agent.job = None
+
+        _destroy_machine_if_needed(agent, job)
+
+        db.session.commit()
+        kkrq.enq(bg_jobs.job_completed, job.id)
+        log.info('job %s finished by %s', job, agent)
+
+        log.set_ctx(job=None)
+        return finish_step
 
     #job = agent.job.get_json()
     step = step.get_json()
@@ -368,6 +407,7 @@ def _handle_get_job_step(agent):
     secrets = dbutils.get_secret_values(agent.job.run.flow.branch.project)
     step['secrets'] = secrets
 
+    log.set_ctx(job=None)
     return {'job_step': step}
 
 
@@ -614,7 +654,7 @@ def _handle_step_result(agent, req):
     for s in job.steps:
         log.info('%s: %s', s.index, consts.STEP_STATUS_NAME[s.status]
                  if s.status in consts.STEP_STATUS_NAME else s.status)
-        if s.status == consts.STEP_STATUS_DONE:
+        if s.status in [consts.STEP_STATUS_DONE, consts.STEP_STATUS_SKIPPED]:
             continue
         if s.status == consts.STEP_STATUS_ERROR:
             job_finished = True
@@ -633,6 +673,71 @@ def _handle_step_result(agent, req):
         log.info('job %s finished by %s', job, agent)
     else:
         response['timeout'] = _left_time(job)
+
+    log.set_ctx(job=None)
+    return response
+
+
+def _handle_step_result2(agent, req):
+    response = {}
+    if agent.job is None:
+        log.error('job in agent %s is missing, reporting some old job %s, step %s',
+                  agent, req['job_id'], req['step_idx'])
+        return response
+
+    if agent.job_id != req['job_id']:
+        log.error('agent %s is reporting some other job %s',
+                  agent, req['job_id'])
+        return response
+
+    log.set_ctx(job=agent.job_id)
+
+    try:
+        result = req['result']
+        step_idx = req['step_idx']
+        status = result['status']
+        del result['status']
+        if status not in consts.STEP_STATUS_TO_INT:
+            log.set_ctx(job=None)
+            raise ValueError("unknown status: %s" % status)
+    except Exception:
+        log.exception('problems with parsing request')
+        log.set_ctx(job=None)
+        return response
+
+    job = agent.job
+    step = job.steps[step_idx]
+    step.result = result
+    step.status = consts.STEP_STATUS_TO_INT[status]
+
+    # handle canceling situation
+    if job.state == consts.JOB_STATE_COMPLETED:
+        agent.job = None
+        db.session.commit()
+        log.info("canceling job %s on %s", job, agent)
+        response['cancel'] = True
+        log.set_ctx(job=None)
+        return response
+
+    db.session.commit()
+
+    # store test results
+    if 'test-results' in result:
+        _store_results(job, step, result)
+
+    # store issues
+    if 'issues' in result:
+        _store_issues(job, result)
+
+    # store artifacts
+    if 'artifacts' in result:
+        _store_artifacts(job, step)
+
+    # set, update or get data
+    if 'data' in result:
+        _handle_data(job, step, result)
+
+    response['timeout'] = _left_time(job)
 
     log.set_ctx(job=None)
     return response
@@ -841,6 +946,9 @@ def _serve_agent_request():
 
     elif msg == consts.AGENT_MSG_STEP_RESULT:
         response = _handle_step_result(agent, req)
+
+    elif msg == consts.AGENT_MSG_STEP_RESULT2:
+        response = _handle_step_result2(agent, req)
 
     elif msg == consts.AGENT_MSG_DISPATCH_TESTS:
         response = _handle_dispatch_tests(agent, req)

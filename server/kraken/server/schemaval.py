@@ -858,6 +858,7 @@ def get_schema():
 
     tools_schemas = {}
     for tool, name_ver in tools:
+        # common fields to all tools
         fields = {
             "tool": {
                 "description": tool.description,
@@ -877,7 +878,12 @@ def get_schema():
                 "description": "A name of the step, displayed in web UI.",
                 "default": "",
                 "type": "string"
-            }
+            },
+            "when": {
+                "description": "A condition when a step may be executed, default is 'prev_ok'.",
+                "default": "",
+                "type": "string"
+            },
         }
 
         if "properties" not in tool.fields:
