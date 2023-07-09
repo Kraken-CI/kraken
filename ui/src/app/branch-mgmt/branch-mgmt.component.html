@@ -222,7 +222,7 @@
   <!-- aligned to right -->
   <div style="display: flex; align-items: baseline;">
     <!-- fork button -->
-    <p-button label="Fork Branch" icon="fa fa-code-fork" styleClass="p-button-outlined" (onClick)="showForkBranchDialog()"
+    <p-button label="Fork Branch" icon="fa fa-code-branch" styleClass="p-button-outlined" (onClick)="showForkBranchDialog()"
               [disabled]="!auth.hasPermission(projectId, 'pwrusr')"
               [pTooltip]="auth.permTip(projectId, 'pwrusr')"
               [ngStyle]="{'margin-right': '10px'}"></p-button>

@@ -37,7 +37,7 @@
       <div class="grid">
         <div *ngFor="let branch of project.branches" style="padding: 15px;" class="col-6">
           <div style="font-weight: bold; font-size: 1.5em; margin: 0 0 10px 0; background: var(--kk-bg-color2); padding: 10px;">
-            <i class="fa fa-code-fork" style="vertical-align: bottom; font-size: 1.7em; margin-right: 10px;"></i>
+            <i class="fa fa-code-branch" style="vertical-align: bottom; font-size: 1.7em; margin-right: 10px;"></i>
             <a routerLink="/branches/{{ branch.id }}">
               {{ branch.name }}
             </a>
