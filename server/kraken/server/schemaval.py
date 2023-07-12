@@ -881,7 +881,7 @@ def get_schema():
             },
             "when": {
                 "description": "A condition when a step may be executed. Any Jinja2 expression can be used, e.g.: `'job.steps[step.index - 1].result.duration > 3'`. The following predefined values are available: `'prev_ok'`, `'always'`, `'never'`, `'was_any_error'`, `'was_no_error'`, `'is_ci'`, `'is_dev'`.",
-                "default": "prev_ok",
+                "default": "was_no_error",
                 "type": "string"
             },
         }

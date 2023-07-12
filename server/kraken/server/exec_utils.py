@@ -464,7 +464,7 @@ def evaluate_step_fields(step):
         if not step.fields_raw['when'].startswith('#{'):
             step.fields_raw['when'] = '#{' + step.fields_raw['when'] + '}'
     else:
-        step.fields_raw['when'] = '#{prev_ok}'
+        step.fields_raw['when'] = '#{was_no_error}'
     flag_modified(step, 'fields_raw')
     fields, fields_masked = substitute_vars(step.fields_raw, args, step_ctx)
     del fields['tool']
