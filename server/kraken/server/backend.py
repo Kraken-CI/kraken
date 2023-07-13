@@ -280,7 +280,7 @@ def _handle_get_job_step(agent):
             s.status = consts.STEP_STATUS_SKIPPED
             db.session.commit()
             continue
-        elif s.fields['when'] != 'True':
+        if s.fields['when'] != 'True':
             log.warning('job %s step %d error while evaluating when condition, probably unsupported character was used', s.job, s.index)
             s.status = consts.STEP_STATUS_ERROR
             db.session.commit()
