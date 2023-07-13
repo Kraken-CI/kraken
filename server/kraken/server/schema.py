@@ -223,11 +223,11 @@ def substitute_val(val, args, ctx):
 
     # new way of exposing context in fields
     env = SandboxedEnvironment()
-    for var in re.findall(r'#{[A-Za-z0-9_\. \[\]<>=\-\+/\*&|^()]+}', val):
+    for var in re.findall(r'#{[A-Za-z0-9_\. \[\]<>=\-\+/\*|^()]+}', val):
         expr = var[2:-1].strip()
 
-        tpl = env.from_string("{{ %s }}" % expr)
         try:
+            tpl = env.from_string("{{ %s }}" % expr)
             new_str = tpl.render(**ctx)
         except Exception:
             log.exception('IGNORED')

@@ -64,3 +64,36 @@ export function pick<T extends {}, K extends keyof T>(obj: T, ...keys: K[]) {
     .map(key => [key, obj[key]])
   )
 }
+
+export function replaceEntityIntoLink(msg: string) {
+    // turn <Entity 123> into links
+    const regex = /<([A-Za-z]+)\ (\d+)(>|[,\ >]+?.*?>)/g;
+    const m1 = msg.matchAll(regex)
+    if (m1) {
+        const m2 = [...m1]
+        for (const m of m2) {
+            let txt = m[0]
+            txt = txt.replace('<', '&lt;')
+            txt = txt.replace('>', '&gt;')
+            let entity = m[1].toLowerCase()
+            switch (entity) {
+            case 'run': entity = 'runs'; break;
+            case 'branch': entity = 'branches'; break;
+            case 'flow': entity = 'flows'; break;
+            default: entity = null
+            }
+            let newTxt = ''
+            if (entity) {
+                const entId = m[2]
+                newTxt = `<a href="/${entity}/${entId}" target="blank" style="color: #5bb7ff;">${txt}</a>`
+            } else {
+                newTxt = m[0].replaceAll('<', '&lt;').replaceAll('>', '&gt;')
+            }
+            msg = msg.replace(m[0], newTxt)
+        }
+    }
+    // msg = msg.replaceAll('<', '&lt;')
+    // msg = msg.replaceAll('>', '&gt;')
+
+    return msg
+}

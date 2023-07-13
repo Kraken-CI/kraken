@@ -17,6 +17,7 @@ import { parse } from 'ansicolor'
 import { DateTime } from 'luxon'
 
 import { ExecutionService } from '../backend/api/execution.service'
+import { replaceEntityIntoLink } from '../utils'
 
 @Component({
     selector: 'app-logs-panel',
@@ -401,7 +402,7 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
         return kv
     }
 
-    prepareLogLine(stepState, line) {
+    prepareLogLine(stepState, line, level) {
         const currTs = line.slice(0, 23)
         const currTsObj = DateTime.fromFormat(currTs, 'yyyy-MM-dd HH:mm:ss,SSS')
         if (this.logTimestamps) {
@@ -418,6 +419,9 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
             }
         }
 
+        // turn <Entity 123> into links
+        line = replaceEntityIntoLink(line)
+
         // turn ansi codes into spans with css colors
         const p = parse(line)
         const spans = []
@@ -425,6 +429,12 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
             spans.push(`<span style="${el.css}">${el.text}</span>`)
         }
         line = spans.join('')
+
+        if (level === 'warn') {
+            line = `<span style="color: yellow;">${line}</span>`
+        } else if (level === 'erro') {
+            line = `<span style="color: orange;">${line}</span>`
+        }
 
         return line
     }

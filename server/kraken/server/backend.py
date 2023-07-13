@@ -271,17 +271,26 @@ def _handle_get_job_step(agent):
         if s.status in [consts.STEP_STATUS_DONE, consts.STEP_STATUS_SKIPPED, consts.STEP_STATUS_ERROR]:
             continue
 
+        log.set_ctx(step=s.index)
+
         exec_utils.evaluate_step_fields(s)
         log.info('job %s step %d condition %s => %s', s.job, s.index, s.fields_raw['when'], s.fields['when'])
-        if s.fields['when'] != 'True':
+        if s.fields['when'] == 'False':
             log.info('job %s step %d skipped', s.job, s.index)
             s.status = consts.STEP_STATUS_SKIPPED
+            db.session.commit()
+            continue
+        elif s.fields['when'] != 'True':
+            log.warning('job %s step %d error while evaluating when condition, probably unsupported character was used', s.job, s.index)
+            s.status = consts.STEP_STATUS_ERROR
             db.session.commit()
             continue
         log.info('job %s step %d to execute', s.job, s.index)
 
         step = s
         break
+
+    log.set_ctx(step=None)
 
     # if no steps to execute then it means that job is finished
     if step is None:
@@ -300,6 +309,8 @@ def _handle_get_job_step(agent):
 
         log.set_ctx(job=None)
         return finish_step
+
+    log.set_ctx(step=step.index)
 
     #job = agent.job.get_json()
     step = step.get_json()
