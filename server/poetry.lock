@@ -479,19 +479,12 @@ orderedmultidict = ">=1.0.1"
 six = ">=1.8.0"
 
 [[package]]
-name = "giturlparse"
-version = "0.10.0"
+name = "giturlparse2"
+version = "1.0.0"
 description = "A Git URL parsing module (supports parsing and rewriting)"
 category = "main"
 optional = false
 python-versions = ">=3.8"
-develop = false
-
-[package.source]
-type = "git"
-url = "https://github.com/nephila/giturlparse.git"
-reference = "f65f609662edb5f21dc7ccf506f54b3ac888cc89"
-resolved_reference = "f65f609662edb5f21dc7ccf506f54b3ac888cc89"
 
 [[package]]
 name = "google-auth"
@@ -1472,7 +1465,7 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "f38d8a60e7b2daf068993573d521f12894a717b5560aaf1d4178384bf1e2437c"
+content-hash = "6221a362e76330fc36b63b976f0442b05bab95b1dba698955a91d6fd06f7f707"
 
 [metadata.files]
 addict = [
@@ -1925,7 +1918,10 @@ furl = [
     {file = "furl-2.1.3-py2.py3-none-any.whl", hash = "sha256:9ab425062c4217f9802508e45feb4a83e54324273ac4b202f1850363309666c0"},
     {file = "furl-2.1.3.tar.gz", hash = "sha256:5a6188fe2666c484a12159c18be97a1977a71d632ef5bb867ef15f54af39cc4e"},
 ]
-giturlparse = []
+giturlparse2 = [
+    {file = "giturlparse2-1.0.0-py2.py3-none-any.whl", hash = "sha256:1e0fa714b30931546835b13a885f07fed84c5b8c5b985e25ab019c92d0ed6ecc"},
+    {file = "giturlparse2-1.0.0.tar.gz", hash = "sha256:773fc9ad2b031f7e4da21d14d8660a52c615aba081de162a48c65756c569d3f7"},
+]
 google-auth = [
     {file = "google-auth-2.16.2.tar.gz", hash = "sha256:07e14f34ec288e3f33e00e2e3cc40c8942aa5d4ceac06256a28cd8e786591420"},
     {file = "google_auth-2.16.2-py2.py3-none-any.whl", hash = "sha256:2fef3cf94876d1a0e204afece58bb4d83fb57228aaa366c64045039fda6770a2"},

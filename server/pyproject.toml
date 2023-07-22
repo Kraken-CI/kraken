@@ -43,7 +43,8 @@ gunicorn = "^20.1.0"
 RestrictedPython = "5.0"
 alembic = "^1.7.3"
 # giturlparse = "^0.10.0"
-giturlparse = { git = "https://github.com/nephila/giturlparse.git", rev = "f65f609662edb5f21dc7ccf506f54b3ac888cc89" }
+# giturlparse = { git = "https://github.com/nephila/giturlparse.git", rev = "f65f609662edb5f21dc7ccf506f54b3ac888cc89" }
+giturlparse2 = "^1.0.0"
 clickhouse-driver = "^0.2.5"
 minio = "^7.1.0"
 passlib = "^1.7.4"
