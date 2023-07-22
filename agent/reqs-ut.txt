@@ -1,3 +1,4 @@
 pytest
 PyHamcrest
 pylint==2.13.9
+pytest-cov==4.1.0

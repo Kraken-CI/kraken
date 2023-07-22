@@ -496,7 +496,9 @@ task :agent_ut => ['./agent/venv/bin/python3'] do
   Dir.chdir('agent') do
     sh './venv/bin/pip install -r requirements.txt'
     sh './venv/bin/pip install -r reqs-ut.txt'
-    sh "PYTHONPATH=. ./venv/bin/pytest -s -r A -vv #{ENV['test']}"
+    sh "PYTHONPATH=. ./venv/bin/pytest --ignore=./dist-tool --ignore=./dist-agent --cov-branch --cov=. -s -r A -vv #{ENV['test']}"
+    sh 'rm -rf htmlcov'
+    sh './venv/bin/coverage html -i --omit=./tests/*'
   end
 end
 
