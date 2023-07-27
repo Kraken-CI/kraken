@@ -115,7 +115,7 @@ def test_get_projects():
 
 
 @pytest.mark.db
-def test_create_branch():
+def test_create_branch_new():
     app = create_app()
 
     with app.app_context():
@@ -128,6 +128,27 @@ def test_create_branch():
 
         body = dict(name='abc')
         management.create_branch(proj.id, body, token_info=token_info)
+
+
+@pytest.mark.db
+def test_create_branch_fork():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        proj = Project(name='proj-1')
+        branch = Branch(name='br', project=proj, env_vars={'aa': 'bb'})
+        db.session.commit()
+
+        body = dict(name='abc', id=branch.id, forking_model='model-1')
+        new_branch, code = management.create_branch(proj.id, body, token_info=token_info)
+
+        assert code == 201
+        assert 'aa' in new_branch['env_vars']
+        assert new_branch['env_vars']['aa'] == 'bb'
 
 
 @pytest.mark.db
@@ -946,3 +967,46 @@ def test_create_rq_entry():
 
             from kraken.server.bg import jobs as bg_jobs  # pylint: disable=import-outside-toplevel
             enq_neck.assert_called_with(bg_jobs.analyze_results_history, 4553)
+
+
+@pytest.mark.db
+def test_create_branch_env_var():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        proj = Project(name='proj-1')
+        branch = Branch(name='br', project=proj)
+        db.session.commit()
+
+        body = dict(name='!abc', value='val')
+        with pytest.raises(werkzeug.exceptions.BadRequest) as ex:
+            management.create_branch_env_var(branch.id, body, token_info=token_info)
+
+        body = dict(name='abc', value='val')
+        management.create_branch_env_var(branch.id, body, token_info=token_info)
+        assert 'abc' in branch.env_vars
+        assert branch.env_vars['abc'] == 'val'
+
+
+@pytest.mark.db
+def test_delete_branch_env_var():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+        access.init()
+        _, token_info = prepare_user()
+
+        proj = Project(name='proj-1')
+        branch = Branch(name='br', project=proj, env_vars={'aa': 'bb'})
+        db.session.commit()
+
+        with pytest.raises(werkzeug.exceptions.NotFound):
+            management.delete_branch_env_var(branch.id, 'xy', token_info=token_info)
+
+        management.delete_branch_env_var(branch.id, 'aa', token_info=token_info)
+        assert 'aa' not in branch.env_vars

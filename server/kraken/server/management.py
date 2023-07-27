@@ -167,6 +167,23 @@ def create_branch(project_id, body, token_info=None):
             BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_CI_FLOW, value=0)
             BranchSequence(branch=branch, kind=consts.BRANCH_SEQ_DEV_FLOW, value=0)
 
+        # clone some stuff from parent branch
+        # TODO: comments
+        branch.retention_policy = parent_branch.retention_policy
+        flag_modified(branch, 'retention_policy')
+
+        branch.user_data = parent_branch.user_data
+        flag_modified(branch, 'user_data')
+
+        branch.user_data_ci = parent_branch.user_data_ci
+        flag_modified(branch, 'user_data_ci')
+
+        branch.user_data_dev = parent_branch.user_data_dev
+        flag_modified(branch, 'user_data_dev')
+
+        branch.env_vars = parent_branch.env_vars
+        flag_modified(branch, 'env_vars')
+
         db.session.commit()
 
         # clone stages
@@ -1407,3 +1424,42 @@ def update_branch_retention_policy(branch_id, body, token_info=None):
     db.session.commit()
 
     return branch.retention_policy, 200
+
+
+def create_branch_env_var(branch_id, body, token_info=None):
+    branch = Branch.query.filter_by(id=branch_id).one_or_none()
+    if branch is None:
+        abort(404, "Branch not found")
+
+    access.check(token_info, branch.project_id, 'pwrusr',
+                 'only superadmin, project admin and project power user roles can create a new environment variable')
+
+    m = re.match(r'[a-zA-Z_][a-zA-Z0-9_]*', body['name'])
+    if not m:
+        abort(400, 'Environment variable name can have only A-Z, a-z, 0-9 or _ characters')
+
+    if not branch.env_vars:
+        branch.env_vars = {}
+    branch.env_vars[body['name']] = body['value']
+    flag_modified(branch, 'env_vars')
+    db.session.commit()
+
+    return {}, 201
+
+
+def delete_branch_env_var(branch_id, name, token_info=None):
+    branch = Branch.query.filter_by(id=branch_id).one_or_none()
+    if branch is None:
+        abort(404, "Branch not found")
+
+    access.check(token_info, branch.project_id, 'pwrusr',
+                 'only superadmin, project admin and project power user roles can get list of environment variables')
+
+    if name not in branch.env_vars:
+        abort(404, 'Environment variable with name %s not found' % name)
+
+    del branch.env_vars[name]
+    flag_modified(branch, 'env_vars')
+    db.session.commit()
+
+    return {}, 200

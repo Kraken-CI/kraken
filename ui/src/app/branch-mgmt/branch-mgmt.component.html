@@ -498,6 +498,46 @@
         <pre>{{ branchData }}</pre>
   </app-tabbed-page-tab>
 
+  <!-- Data -->
+  <app-tabbed-page-tab label="Env Vars">
+      <h3>Environment Variables</h3>
+      <div class="flex">
+          <div class="mr-5">
+
+              <p-table [value]="envVars">
+                  <ng-template pTemplate="header">
+                      <tr>
+                          <th class="w-20rem">Name</th>
+                          <th class="w-30rem">Value</th>
+                          <th class="w-1rem"></th>
+                      </tr>
+                  </ng-template>
+                  <ng-template pTemplate="body" let-e>
+                      <tr>
+                          <td>{{ e.name }}</td>
+                          <td>{{ e.value }}</td>
+                          <td>
+                              <button type="button" pButton icon="pi pi-trash" (click)="deleteEnvVar(e.name)" class="p-button-text p-button-danger"></button>
+                          </td>
+                      </tr>
+                  </ng-template>
+              </p-table>
+
+          </div>
+          <div class="p-component" style="width: 50%;">
+              <div class="field">
+                  <label for="varName">Name</label>
+                  <input id="varName" pInputText [(ngModel)]="varName" type="text" class="w-full">
+              </div>
+              <div class="field">
+                  <label for="varValue">Value</label>
+                  <input id="varValue" pInputText [(ngModel)]="varValue" type="text" class="w-full">
+              </div>
+              <button type="button" pButton icon="pi pi-plus" label="Add Variable" (click)="addEnvVar()"></button>
+          </div>
+      </div>
+  </app-tabbed-page-tab>
+
   <!-- Logs -->
   <app-tabbed-page-tab label="Logs">
       <app-simple-logs-panel

@@ -790,6 +790,57 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
+  /branches/{branch_id}/env_vars:
+    post:
+      tags:
+      - Management
+      summary: Create an environment variable
+      description: Create a new environment variable
+      operationId: create_branch_env_var
+      parameters:
+      - name: branch_id
+        in: path
+        description: ID of pet to return
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        description: stage
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnvVar'
+        required: false
+      responses:
+        201:
+          description: Successfully created run
+          content: {}
+  /branches/{branch_id}/env_vars/{name}:
+    delete:
+      tags:
+      - Management
+      summary: Delete a secret
+      description: Delete a secret
+      operationId: delete_branch_env_var
+      parameters:
+      - name: branch_id
+        in: path
+        description: ID of pet to return
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: name
+        in: path
+        description: A name of env var
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Successfully deleted secret
+          content: {}
   /flows/{flow_id}:
     get:
       tags:
@@ -3094,6 +3145,8 @@ components:
           properties: {}
         retention_policy:
           $ref: '#/components/schemas/RetentionPolicy'
+        env_vars:
+          type: object
     BranchSequence:
       type: object
       properties:
@@ -3250,6 +3303,16 @@ components:
                 type: string
               next_run_time:
                 type: string
+    EnvVar:
+      required:
+      - name
+      - value
+      type: object
+      properties:
+        name:
+          type: string
+        value:
+          type: string
     Agent:
       type: object
       properties:

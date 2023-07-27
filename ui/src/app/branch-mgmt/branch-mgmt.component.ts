@@ -15,7 +15,7 @@ import { MessageService } from 'primeng/api'
 import { ConfirmationService } from 'primeng/api'
 
 import { AuthService } from '../auth.service'
-import { pick } from '../utils'
+import { pick, showErrorBox } from '../utils'
 import { ManagementService } from '../backend/api/management.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
 import { Branch, RetentionPolicy } from '../backend/model/models'
@@ -110,6 +110,10 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
     } as IForm<RetentionPolicy>)
 
     logsPanelVisible = false
+
+    envVars: any[] = []
+    varName: string = ''
+    varValue: string = ''
 
     private subs: Subscription = new Subscription()
 
@@ -237,6 +241,11 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
 
                     this.retentionPolicyForm.setValue(branch.retention_policy)
 
+                    this.envVars = []
+                    for (let [n, v] of Object.entries(branch.env_vars)) {
+                        this.envVars.push({name: n, value: v})
+                    }
+
                     const crumbs = [
                         {
                             label: 'Projects',
@@ -314,16 +323,11 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
                         this.refresh()
                     },
                     (err) => {
-                        let msg = err.statusText
-                        if (err.error && err.error.detail) {
-                            msg = err.error.detail
-                        }
-                        this.msgSrv.add({
-                            severity: 'error',
-                            summary: 'New stage erred',
-                            detail: 'New stage operation erred: ' + msg,
-                            life: 10000,
-                        })
+                        showErrorBox(
+                            this.msgSrv,
+                            err,
+                            'New stage erred'
+                        )
                         this.newStageDlgVisible = false
                     }
                 )
@@ -355,16 +359,11 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
                         this.schemaCheckDisplay = true
                     },
                     (err) => {
-                        let msg = err.statusText
-                        if (err.error && err.error.detail) {
-                            msg = err.error.detail
-                        }
-                        this.msgSrv.add({
-                            severity: 'error',
-                            summary: 'Check schema erred',
-                            detail: 'Check schema operation erred: ' + msg,
-                            life: 10000,
-                        })
+                        showErrorBox(
+                            this.msgSrv,
+                            err,
+                            'Check schema erred'
+                        )
                     }
                 )
         )
@@ -387,17 +386,11 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
                             this.refresh()
                         },
                         (err) => {
-                            let msg = err.statusText
-                            if (err.error && err.error.detail) {
-                                msg = err.error.detail
-                            }
-                            this.msgSrv.add({
-                                severity: 'error',
-                                summary: 'Stage deletion erred',
-                                detail:
-                                    'Stage deletion operation erred: ' + msg,
-                                life: 10000,
-                            })
+                            showErrorBox(
+                                this.msgSrv,
+                                err,
+                                'Stage deletion erred'
+                            )
                         }
                     )
                 )
@@ -444,16 +437,11 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
                     })
                 },
                 (err) => {
-                    let msg = err.statusText
-                    if (err.error && err.error.detail) {
-                        msg = err.error.detail
-                    }
-                    this.msgSrv.add({
-                        severity: 'error',
-                        summary: 'Branch update erred',
-                        detail: 'Branch update operation erred: ' + msg,
-                        life: 10000,
-                    })
+                    showErrorBox(
+                        this.msgSrv,
+                        err,
+                        'Branch update erred'
+                    )
                 }
             )
         )
@@ -486,16 +474,11 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
                         }
                     },
                     (err) => {
-                        let msg = err.statusText
-                        if (err.error && err.error.detail) {
-                            msg = err.error.detail
-                        }
-                        this.msgSrv.add({
-                            severity: 'error',
-                            summary: 'Stage update erred',
-                            detail: 'Stage update operation erred: ' + msg,
-                            life: 10000,
-                        })
+                        showErrorBox(
+                            this.msgSrv,
+                            err,
+                            'Stage update erred'
+                        )
                     }
                 )
         )
@@ -597,16 +580,11 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
                         this.router.navigate(['/branches/' + branch.id])
                     },
                     (err) => {
-                        let msg = err.statusText
-                        if (err.error && err.error.detail) {
-                            msg = err.error.detail
-                        }
-                        this.msgSrv.add({
-                            severity: 'error',
-                            summary: 'Fork branch erred',
-                            detail: 'Fork branch operation erred: ' + msg,
-                            life: 10000,
-                        })
+                        showErrorBox(
+                            this.msgSrv,
+                            err,
+                            'Fork branch erred'
+                        )
                         this.forkBranchDlgVisible = false
                     }
                 )
@@ -627,16 +605,11 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
                     ])
                 },
                 (err) => {
-                    let msg = err.statusText
-                    if (err.error && err.error.detail) {
-                        msg = err.error.detail
-                    }
-                    this.msgSrv.add({
-                        severity: 'error',
-                        summary: 'Branch deletion erred',
-                        detail: 'Branch delete operation erred: ' + msg,
-                        life: 10000,
-                    })
+                    showErrorBox(
+                        this.msgSrv,
+                        err,
+                        'Branch deletion erred'
+                    )
                 }
             )
         )
@@ -679,16 +652,11 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
                         window.location.reload()
                     },
                     (err) => {
-                        let msg = err.statusText
-                        if (err.error && err.error.detail) {
-                            msg = err.error.detail
-                        }
-                        this.msgSrv.add({
-                            severity: 'error',
-                            summary: 'Branch move erred',
-                            detail: 'Branch move operation erred: ' + msg,
-                            life: 10000,
-                        })
+                        showErrorBox(
+                            this.msgSrv,
+                            err,
+                            'Branch move erred'
+                        )
                     }
                 )
         )
@@ -851,16 +819,67 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
                         })
                     },
                     (err) => {
-                        let msg = err.statusText
-                        if (err.error && err.error.detail) {
-                            msg = err.error.detail
-                        }
+                        showErrorBox(
+                            this.msgSrv,
+                            err,
+                            'Branch retention policy update erred'
+                        )
+                    }
+                )
+        )
+    }
+
+    addEnvVar() {
+        this.subs.add(
+            this.managementService
+                .createBranchEnvVar(this.branchId, {
+                    name: this.varName,
+                    value: this.varValue
+                })
+                .subscribe(
+                    (envVar) => {
                         this.msgSrv.add({
-                            severity: 'error',
-                            summary: 'Branch retention policy update erred',
-                            detail: 'Branch retention policy update operation erred: ' + msg,
-                            life: 10000,
+                            severity: 'success',
+                            summary: 'Creating environment variable succeeded',
+                            detail: 'Creating environment variable operation succeeded.',
                         })
+                        this.envVars.push({name: this.varName, value: this.varValue})
+                    },
+                    (err) => {
+                        showErrorBox(
+                            this.msgSrv,
+                            err,
+                            'Creating environment variable erred'
+                        )
+                    }
+                )
+        )
+    }
+
+    deleteEnvVar(name) {
+        this.subs.add(
+            this.managementService
+                .deleteBranchEnvVar(this.branchId, name)
+                .subscribe(
+                    (envVar) => {
+                        this.msgSrv.add({
+                            severity: 'success',
+                            summary: 'Deleting environment variable succeeded',
+                            detail: 'Deleting environment variable operation succeeded.',
+                        })
+                        for (let i = 0; i < this.envVars.length; i++) {
+                            const v = this.envVars[i]
+                            if (v.name === name) {
+                                this.envVars.splice(i, 1)
+                            }
+                        }
+                    },
+                    (err) => {
+                        showErrorBox(
+                            this.msgSrv,
+                            err,
+                            'Deleting environment variable erred'
+                        )
                     }
                 )
         )
