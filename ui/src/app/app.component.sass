@@ -28,25 +28,43 @@
   border-width: 0px
 
 // make top level menu white
-:host ::ng-deep .menubar.p-menubar .p-menubar-root-list > .p-menuitem > .p-menuitem-link .p-menuitem-icon
+:host ::ng-deep .menubar.p-menubar .p-menubar-root-list > .p-menuitem > .p-menuitem-content .p-menuitem-link .p-menuitem-icon
   color: white
-:host ::ng-deep .menubar.p-menubar .p-menubar-root-list > .p-menuitem > .p-menuitem-link .p-menuitem-text
+:host ::ng-deep .menubar.p-menubar .p-menubar-root-list > .p-menuitem > .p-menuitem-content .p-menuitem-link .p-menuitem-text
   color: white
-:host ::ng-deep .menubar.p-menubar .p-menubar-root-list > .p-menuitem > .p-menuitem-link .p-submenu-icon
+:host ::ng-deep .menubar.p-menubar .p-menubar-root-list > .p-menuitem > .p-menuitem-content .p-menuitem-link .p-submenu-icon
   color: white
 
 // change bg color of top menu item when hovered from light to blue-ish
 :host ::ng-deep .menubar.p-menubar .p-menubar-root-list > .p-menuitem > .p-menuitem-link:hover
   background-color: #2196F3
+:host ::ng-deep .menubar.p-menubar .p-menubar-root-list > .p-menuitem:not(.p-highlight):not(.p-disabled) > .p-menuitem-content:hover .p-menuitem-link .p-menuitem-icon
+  background-color: #2196F3
+:host ::ng-deep .menubar.p-menubar .p-menubar-root-list > .p-menuitem:not(.p-highlight):not(.p-disabled) > .p-menuitem-content:hover .p-menuitem-link .p-submenu-icon
+  background-color: #2196F3
 
 // change bg color of top menu item when activated from light to blue-ish
 :host ::ng-deep .menubar.p-menubar .p-menubar-root-list > .p-menuitem.p-menuitem-active > .p-menuitem-link
+  background-color: #0d89ec
+:host ::ng-deep .menubar.p-menubar .p-menubar-root-list > .p-menuitem:not(.p-highlight):not(.p-disabled) > .p-menuitem-content:hover
+  background-color: #0d89ec
+:host ::ng-deep .menubar.p-menubar .p-menuitem.p-highlight > .p-menuitem-content
   background-color: #0d89ec
 
 // change text color of active top menu from black to white
 :host ::ng-deep .menubar.p-menubar .p-menubar-root-list > .p-menuitem.p-menuitem-active > .p-menuitem-link .p-menuitem-text
     color: #eee
 :host ::ng-deep .menubar.p-menubar .p-menubar-root-list > .p-menuitem.p-menuitem-active > .p-menuitem-link:not(.p-disabled):hover .p-menuitem-text
+    color: #eee
+:host ::ng-deep .menubar.p-menubar .p-menubar-root-list > .p-menuitem:not(.p-highlight):not(.p-disabled) > .p-menuitem-content:hover .p-menuitem-link .p-menuitem-icon
+    color: #eee
+:host ::ng-deep .menubar.menubar.p-menubar .p-menubar-root-list > .p-menuitem:not(.p-highlight):not(.p-disabled) > .p-menuitem-content:hover .p-menuitem-link .p-submenu-icon
+    color: #eee
+:host ::ng-deep .menubar.p-menubar .p-menubar-root-list > .p-menuitem:not(.p-highlight):not(.p-disabled) > .p-menuitem-content:hover .p-menuitem-link .p-menuitem-text
+    color: #eee
+:host ::ng-deep .menubar.p-menubar .p-menubar-root-list > .p-menuitem:not(.p-highlight):not(.p-disabled) > .p-menuitem-content:hover .p-menuitem-link .p-menuitem-icon
+    color: #eee
+:host ::ng-deep .menubar.p-menubar .p-menubar-root-list > .p-menuitem:not(.p-highlight):not(.p-disabled) > .p-menuitem-content:hover .p-menuitem-link .p-submenu-icon
     color: #eee
 
 
