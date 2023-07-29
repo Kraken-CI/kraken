@@ -79,13 +79,20 @@ class LocalExecContext:
 
         self.start_time = datetime.datetime.now()
 
+        if 'branch_env' in step and step['branch_env']:
+            env = os.environ.copy()
+            env.update(step['branch_env'])
+        else:
+            env = None
+
         proc = await asyncio.create_subprocess_shell(
             cmd,
             cwd=cwd,
             limit=1024 * 128,  # 128 KiB
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.STDOUT,
-            start_new_session=True)
+            start_new_session=True,
+            env=env)
 
         try:
             await self._async_pump_output(proc.stdout)

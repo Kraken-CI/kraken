@@ -217,7 +217,7 @@ def job_rerun(job_id, token_info=None):
     job2 = Job(run=job.run, name=job.name, agents_group=job.agents_group, system=job.system, timeout=job.timeout)
 
     for s in job.steps:
-        Step(job=job2, index=s.index, tool=s.tool, fields=s.fields)
+        Step(job=job2, index=s.index, tool=s.tool, fields={}, fields_masked={}, fields_raw=s.fields_raw)
 
     job.covered = True
     job2.run.state = consts.RUN_STATE_IN_PROGRESS  # need to be set in case of replay

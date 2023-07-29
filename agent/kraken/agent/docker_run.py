@@ -253,11 +253,11 @@ class DockerExecContext:
                 exit_code, cmd, str(cwd), str(user), t0, t1, timeout))
         return logs
 
-    async def _dkr_run(self, proc_coord, cmd, cwd, deadline, user):
+    async def _dkr_run(self, proc_coord, cmd, cwd, deadline, user, env=None):
         t0, t1, timeout = utils.get_times(deadline)
         log.info("cmd '%s' in '%s', now %s, deadline %s, time: %ds", cmd, cwd, t0, t1, timeout)
 
-        exe = self.cntr.client.api.exec_create(self.cntr.id, cmd, workdir=cwd, user=user, environment=None)
+        exe = self.cntr.client.api.exec_create(self.cntr.id, cmd, workdir=cwd, user=user, environment=env)
         sock = self.cntr.client.api.exec_start(exe['Id'], socket=True)
 
         logs = ''
@@ -382,6 +382,11 @@ class DockerExecContext:
         cmd = "/kktool -m %s -r %s -s %s %s" % (mod, return_addr, step_file_path2, command)
         log.info("exec: '%s' in '%s', timeout %ss", cmd, docker_cwd, timeout)
 
+        if 'branch_env' in step and step['branch_env']:
+            env = step['branch_env']
+        else:
+            env = None
+
         if not user:
             user = 'kraken'
 
@@ -393,7 +398,7 @@ class DockerExecContext:
         # run tool
         deadline = time.time() + timeout
         try:
-            await self._dkr_run(proc_coord, cmd, docker_cwd, deadline, user)
+            await self._dkr_run(proc_coord, cmd, docker_cwd, deadline, user, env)
         except Timeout:
             if proc_coord.result == {}:
                 t0, t1, timeout = utils.get_times(deadline)

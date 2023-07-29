@@ -418,6 +418,9 @@ def _handle_get_job_step(agent):
     secrets = dbutils.get_secret_values(agent.job.run.flow.branch.project)
     step['secrets'] = secrets
 
+    # add env vars
+    step['branch_env'] = agent.job.run.flow.branch.env_vars or {}
+
     log.set_ctx(job=None)
     return {'job_step': step}
 
@@ -829,7 +832,7 @@ def _handle_dispatch_tests(agent, req):
     # create new job and its steps
     job2 = Job(run=job.run, name=job.name, agents_group=job.agents_group, system=job.system, timeout=timeout)
     for s in job.steps:
-        s2 = Step(job=job2, index=s.index, tool=s.tool, fields=s.fields.copy())
+        s2 = Step(job=job2, index=s.index, tool=s.tool, fields={}, fields_masked={}, fields_raw=s.fields_raw.copy())
         if s.index == step_idx:
             _create_test_records(s2, part2)
     db.session.commit()

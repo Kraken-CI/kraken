@@ -444,7 +444,7 @@ def run(srv, job):
     if not os.path.exists(job_dir):
         os.makedirs(job_dir)
 
-    log.info('started job in %s', job_dir)
+    log.info('started job in %s, executing in %s', job_dir, job['executor'])
 
     exec_ctx = _create_exec_context(job)
     timeout = job['deadline'] - time.time()

@@ -283,6 +283,8 @@ def prepare_context(entity, args):
     ctx['branch'] = branch.get_json(with_user_data=True)
     ctx['branch_name'] = branch.name
 
+    ctx['env'] = branch.env_vars or {}
+
     ctx['secrets'] = {}
     for s in branch.project.secrets:
         if s.deleted:

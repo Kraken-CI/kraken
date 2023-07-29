@@ -55,7 +55,8 @@ def test_handle_data():
                         "operation": "set",
                         "json_pointer": "",
                         "scope": "",
-                    })
+                    },
+                    fields_raw={})
 
         db.session.commit()
 

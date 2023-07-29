@@ -227,6 +227,11 @@ class LxdExecContext:
         cmd = "%s/kktool -m %s -r %s -s %s %s" % (lxd_cwd, mod, return_addr, dest_step_file_path, command)
         log.info("exec: '%s' in '%s', timeout %ss", cmd, lxd_cwd, timeout)
 
+        if 'branch_env' in step and step['branch_env']:
+            env = step['branch_env']
+        else:
+            env = None
+
         # setup log context
         with open(step_file_path) as f:
             data = f.read()
@@ -234,7 +239,7 @@ class LxdExecContext:
 
         deadline = time.time() + timeout
         try:
-            await self._lxd_run(cmd, lxd_cwd, deadline)
+            await self._lxd_run(cmd, lxd_cwd, deadline, env=env)
         except Timeout:
             # TODO: it should be better handled but needs testing
             if proc_coord.result == {}:

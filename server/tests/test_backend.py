@@ -74,6 +74,7 @@ def test__handle_get_job_step():
 
         assert result == {
             'job_step': {'branch_id': branch.id,
+                         'branch_env': {},
                          'finish': False,
                          'flow_id': flow.id,
                          'flow_kind': 0,
