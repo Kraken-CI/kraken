@@ -132,6 +132,7 @@ export class AppComponent implements OnInit, OnDestroy {
                         label: 'Agents',
                         icon: 'pi pi-user',
                         routerLink: '/agents',
+                        badgeStyleClass: 'p-badge ml-3',
                         badge: '0',
                     },
                     {
@@ -142,6 +143,7 @@ export class AppComponent implements OnInit, OnDestroy {
                     {
                         label: 'Discovered',
                         icon: 'pi pi-user-plus',
+                        badgeStyleClass: 'p-badge ml-3',
                         routerLink: '/discovered-agents',
                         badge: '0',
                     },
