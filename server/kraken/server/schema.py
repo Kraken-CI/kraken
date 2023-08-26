@@ -38,7 +38,8 @@ class SchemaError(Exception):
 
 
 class SchemaCodeContext(addict.Dict):
-    pass
+    def __missing__(self, key):
+        raise Exception('missing field %s' %key)
 
 
 def execute_schema_code(schema_code, context=None):

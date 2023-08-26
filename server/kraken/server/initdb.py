@@ -306,7 +306,7 @@ def _prepare_builtin_tools():
             "required": ["source"],
             "properties": {
                 "action": {
-                    "description": "An action that artifacts tool should execute. Default is `upload`.",
+                    "description": "An action that artifacts tool should execute: 'download' or 'upload'. Default is `upload`.",
                     "type": "string",
                     "enum": ["download", "upload"]
                 },
@@ -426,7 +426,7 @@ def _prepare_builtin_tools():
             "required": ["action"],
             "properties": {
                 "action": {
-                    "description": "An action that the tool should perform.",
+                    "description": "An action that the tool should perform: 'save' or 'restore'.",
                     "type": "string",
                     "enum": ["save", "restore"]
                 },
