@@ -225,7 +225,7 @@ def test_substitute_val():
 
         ctx = schema.prepare_context(run, args)
 
-        val =  'aaa #{step.name} ccc'
+        val =  'aaa #{missing} ccc'
         new_val, new_val_masked = schema.substitute_val(val, args, ctx)
         assert new_val == 'aaa <ERROR> ccc'
 

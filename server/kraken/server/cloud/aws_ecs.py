@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
 import time
 import logging
 
@@ -163,7 +164,7 @@ def create_fargate_tasks(ag, system, num,
                               task=t,
                               reason='stopping other tasks due to an error')
             except Exception:
-                log.exception('IGNORED EXCEPTION')
+                log.warning('IGNORED', exc_info=sys.exc_info())
 
     for task in tasks_ready:
         address = task['address']
@@ -192,4 +193,4 @@ def destroy_fargate_task(ag, agent):  # pylint: disable=unused-argument
                       task=task_arn,
                       reason='stopping task that completed the job')
     except Exception:
-        log.exception('IGNORED EXCEPTION')
+        log.warning('IGNORED', exc_info=sys.exc_info())

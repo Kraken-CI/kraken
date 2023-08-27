@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
 import base64
 import random
 import logging
@@ -490,7 +491,7 @@ def cleanup_dangling_vms(ag):  # pylint: disable=unused-argument
         try:
             _destroy_azure_vm(rg, vm.name, cc, nc)
         except Exception:
-            log.exception('IGNORED EXCEPTION')
+            log.warning('IGNORED', exc_info=sys.exc_info())
 
         orphaned_terminated_instances += 1
 

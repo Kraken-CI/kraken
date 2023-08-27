@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import os
+import sys
 import time
 import logging
 import datetime
@@ -76,7 +77,7 @@ def _exc_handler_with_db_rollback(fnc):
         try:
             return fnc(*args, **kwargs)
         except Exception:
-            log.exception('IGNORED EXCEPTION')
+            log.warning('IGNORED', exc_info=sys.exc_info())
             db.session.rollback()
             time.sleep(10)
         return None
@@ -574,7 +575,7 @@ def main():
             try:
                 _main_loop()
             except Exception:
-                log.exception('IGNORED EXCEPTION')
+                log.warning('IGNORED', exc_info=sys.exc_info())
                 db.session.rollback()
                 time.sleep(10)
 

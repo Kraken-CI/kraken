@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import sys
 import json
 import time
 import logging
@@ -1051,7 +1052,7 @@ def spawn_new_agents(agents_group_id):
         try:
             _, depl = ag.get_deployment()
         except Exception:
-            log.exception('IGNORED EXCEPTION')
+            log.warning('IGNORED', exc_info=sys.exc_info())
             return
 
         # check if limit of agents is reached

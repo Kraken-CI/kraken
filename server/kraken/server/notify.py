@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
 import json
 import logging
 import smtplib
@@ -260,21 +261,21 @@ def notify(run, event):
     try:
         _notify_slack(run, event, slack)
     except Exception:
-        log.exception('IGNORED EXCEPTION')
+        log.warning('IGNORED', exc_info=sys.exc_info())
 
     # email
     email = notification.get('email', None)
     try:
         _notify_email(run, event, email)
     except Exception:
-        log.exception('IGNORED EXCEPTION')
+        log.warning('IGNORED', exc_info=sys.exc_info())
 
     # github
     github = notification.get('github', None)
     try:
         _notify_github(run, event, github)
     except Exception:
-        log.exception('IGNORED EXCEPTION')
+        log.warning('IGNORED', exc_info=sys.exc_info())
 
 
 def check_email_settings():

@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import os
+import sys
 import json
 import logging
 
@@ -85,7 +86,7 @@ def _exception_handler(job, exc_type, exc_value, traceback):  # pylint: disable=
     for ex in ignore_excs:
         if ex in str(exc_value) or ex in str(traceback):
             return
-    log.exception('IGNORED')
+    log.warning('IGNORED', exc_info=sys.exc_info())
 
 
 def main():

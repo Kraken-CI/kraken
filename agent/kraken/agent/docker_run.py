@@ -15,6 +15,7 @@
 import os
 import io
 import re
+import sys
 import time
 import json
 import struct
@@ -239,11 +240,11 @@ class DockerExecContext:
             try:
                 self.cntr.kill()
             except Exception:
-                log.exception('IGNORED EXCEPTION')
+                log.warning('IGNORED', exc_info=sys.exc_info())
             try:
                 self.cntr.remove()
             except Exception:
-                log.exception('IGNORED EXCEPTION')
+                log.warning('IGNORED', exc_info=sys.exc_info())
 
     def _async_run(self, cmd, deadline, cwd='/', user='root'):
         logs, exit_code = asyncio.run(self._dkr_run(None, cmd, cwd, deadline, user))

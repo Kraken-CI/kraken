@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
 import logging
 import datetime
 
@@ -72,7 +73,7 @@ def create_vms(ag, system, num,
     try:
         sec_grp = ec2.describe_security_groups(GroupNames=[grp_name])
     except Exception:
-        log.exception('IGNORED EXCEPTION')
+        log.warning('IGNORED', exc_info=sys.exc_info())
     if not sec_grp:
         rsp = requests.get('https://checkip.amazonaws.com')
         my_ip = rsp.text.strip()
@@ -160,7 +161,7 @@ def create_vms(ag, system, num,
         try:
             i.wait_until_running()
         except Exception:
-            log.exception('IGNORED EXCEPTION')
+            log.warning('IGNORED', exc_info=sys.exc_info())
             continue
         i.load()
         name = '.'.join(i.public_dns_name.split('.')[:2])
@@ -189,7 +190,7 @@ def destroy_vm(ag, agent):  # pylint: disable=unused-argument
         i = ec2.Instance(instance_id)
         i.terminate()
     except Exception:
-        log.exception('IGNORED EXCEPTION')
+        log.warning('IGNORED', exc_info=sys.exc_info())
 
 
 def vm_exists(ag, agent):
@@ -232,7 +233,7 @@ def cleanup_dangling_vms(ag):
         vms = ec2.instances.filter(Filters=[{'Name': 'tag:kraken-group', 'Values': ['%d' % ag.id]}])
         vms = list(vms)
     except Exception:
-        log.exception('IGNORED EXCEPTION')
+        log.warning('IGNORED', exc_info=sys.exc_info())
         return 0, 0, 0, 0, 0
 
     instances = 0
@@ -272,7 +273,7 @@ def cleanup_dangling_vms(ag):
         try:
             vm.terminate()
         except Exception:
-            log.exception('IGNORED EXCEPTION')
+            log.warning('IGNORED', exc_info=sys.exc_info())
 
         orphaned_terminated_instances += 1
 

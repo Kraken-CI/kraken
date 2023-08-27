@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import sys
 import json
 import time
 import signal
@@ -128,7 +129,7 @@ class LocalExecContext:
             try:
                 line = await stream.readline()
             except ValueError:
-                log.exception('IGNORED')
+                log.warning('IGNORED', exc_info=sys.exc_info())
                 continue
             if line:
                 line = line.decode().rstrip()

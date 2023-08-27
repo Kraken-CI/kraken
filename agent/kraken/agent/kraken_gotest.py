@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
 import json
 import queue
 import logging
@@ -30,7 +31,7 @@ def _process_output(q, text):
             data = json.loads(l)
         except Exception:
             log.error('failed parsing: %s', l)
-            log.exception('IGNORED EXCEPTION')
+            log.warning('IGNORED', exc_info=sys.exc_info())
             continue
 
         if 'Output' in data:

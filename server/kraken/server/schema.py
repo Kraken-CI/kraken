@@ -14,6 +14,7 @@
 
 import os
 import re
+import sys
 import logging
 import xmlrpc.client
 
@@ -24,6 +25,7 @@ import RestrictedPython
 from RestrictedPython import compile_restricted
 from RestrictedPython import limited_builtins
 from jinja2.sandbox import SandboxedEnvironment
+from jinja2 import StrictUndefined
 
 from . import consts
 from . import schemaval
@@ -223,7 +225,7 @@ def substitute_val(val, args, ctx):
                 val_masked = val_masked.replace(var, arg_val)
 
     # new way of exposing context in fields
-    env = SandboxedEnvironment()
+    env = SandboxedEnvironment(undefined=StrictUndefined)
     for var in re.findall(r'#{[A-Za-z0-9_\. \[\]<>=\-\+/\*|^()]+}', val):
         expr = var[2:-1].strip()
 
@@ -231,7 +233,7 @@ def substitute_val(val, args, ctx):
             tpl = env.from_string("{{ %s }}" % expr)
             new_str = tpl.render(**ctx)
         except Exception:
-            log.exception('IGNORED')
+            log.warning('IGNORED', exc_info=sys.exc_info())
             new_str = '<ERROR>'
         val = val.replace(var, new_str)
 

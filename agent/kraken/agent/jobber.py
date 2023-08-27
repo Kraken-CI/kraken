@@ -175,7 +175,7 @@ async def _send_keep_alive_to_server(proc_coord):
         try:
             rsp = srv.keep_alive(proc_coord.job_id)
         except Exception:
-            log.exception('IGNORED EXCEPTION')
+            log.warning('IGNORED', exc_info=sys.exc_info())
             continue
         if rsp.get('cancel', False):
             proc_coord.cancel()

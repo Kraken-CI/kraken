@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import sys
 import json
 import time
 import logging
@@ -868,7 +869,7 @@ def _handle_host_info(agent, req):  # pylint: disable=unused-argument
         db.session.commit()
     except IntegrityError as e:
         if not isinstance(e.orig, UniqueViolation):
-            log.exception('IGNORED')
+            log.warning('IGNORED', exc_info=sys.exc_info())
 
     return resp
 
@@ -904,8 +905,8 @@ def _handle_unknown_agent(address, ip_address, agent):
         db.session.commit()
         if new:
             log.info('created new agent instance %s for address %s', agent, address)
-    except Exception as e:
-        log.warning('IGNORED EXCEPTION: %s', str(e))
+    except Exception:
+        log.warning('IGNORED', exc_info=sys.exc_info())
 
 
 def _serve_agent_request():

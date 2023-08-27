@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import os
+import sys
 import logging
 
 import connexion
@@ -75,12 +76,12 @@ def _clear_request_ctx(a):  # pylint: disable=unused-argument
     try:
         log.set_ctx(tool=None)
     except Exception:
-        log.exception('IGNORED')
+        log.warning('IGNORED', exc_info=sys.exc_info())
 
     try:
         models.db.session.remove()
     except Exception:
-        log.exception('IGNORED')
+        log.warning('IGNORED', exc_info=sys.exc_info())
 
 
 def _unhandled_error_handler(err):

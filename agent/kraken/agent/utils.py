@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import sys
 import time
 import subprocess
 import logging
@@ -208,7 +209,7 @@ def is_in_docker():
                 if 'docker' in fields[1]:
                     return True
     except Exception:
-        log.exception('IGNORED')
+        log.warning('IGNORED', exc_info=sys.exc_info())
     return False
 
 
@@ -220,7 +221,7 @@ def is_in_lxc():
                 if '.lxc' in fields[1]:
                     return True
     except Exception:
-        log.exception('IGNORED')
+        log.warning('IGNORED', exc_info=sys.exc_info())
     return False
 
 

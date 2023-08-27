@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import os
+import sys
 import time
 import json
 import logging
@@ -127,7 +128,7 @@ def _main_loop():
             executing_jobs[key] = job
 
         except Exception:
-            log.exception('IGNORED EXCEPTION')
+            log.warning('IGNORED', exc_info=sys.exc_info())
             time.sleep(1)
 
 
@@ -138,7 +139,7 @@ def main():
     try:
         _main_loop()
     except Exception:
-        log.exception('IGNORED EXCEPTION')
+        log.warning('IGNORED', exc_info=sys.exc_info())
         time.sleep(10)
 
 

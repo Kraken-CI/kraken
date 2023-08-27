@@ -14,6 +14,7 @@
 
 import os
 import re
+import sys
 import json
 import time
 import shlex
@@ -147,11 +148,11 @@ class LxdExecContext:
             try:
                 self.cntr.stop(wait=True)
             except Exception:
-                log.exception('IGNORED EXCEPTION')
+                log.warning('IGNORED', exc_info=sys.exc_info())
             try:
                 self.cntr.delete(wait=True)
             except Exception:
-                log.exception('IGNORED EXCEPTION')
+                log.warning('IGNORED', exc_info=sys.exc_info())
 
     def get_return_ip_addr(self):
         return self.lab_net.config['ipv4.address'].split('/')[0]

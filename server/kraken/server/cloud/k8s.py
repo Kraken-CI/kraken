@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
 import time
 import base64
 import logging
@@ -203,7 +204,7 @@ def destroy_pod(ag, agent):  # pylint: disable=unused-argument
     try:
         core_api.delete_namespaced_pod(pod_name, namespace)
     except Exception:
-        log.exception('IGNORED EXCEPTION')
+        log.warning('IGNORED', exc_info=sys.exc_info())
 
 
 def pod_exists(ag, agent):  # pylint: disable=unused-argument
@@ -216,7 +217,7 @@ def pod_exists(ag, agent):  # pylint: disable=unused-argument
     try:
         core_api.read_namespaced_pod(pod_name, namespace)
     except Exception:
-        log.exception('IGNORED EXCEPTION')
+        log.warning('IGNORED', exc_info=sys.exc_info())
         return False
 
     return True
@@ -260,7 +261,7 @@ def cleanup_dangling_pods(ag):
         try:
             core_api.delete_namespaced_pod(pod.metadata.name, namespace)
         except Exception:
-            log.exception('IGNORED EXCEPTION')
+            log.warning('IGNORED', exc_info=sys.exc_info())
 
         orphaned_terminated_instances += 1
 
