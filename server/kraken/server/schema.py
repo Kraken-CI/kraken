@@ -301,6 +301,8 @@ def prepare_context(entity, args):
 
     if stage:
         ctx['stage'] = stage.get_json(with_schema=False)
+    else:
+        ctx['stage'] = None
 
     if run:
         ctx['flow'] = run.flow.get_json(with_project=False, with_branch=False, with_schema=False, with_user_data=True,
@@ -309,7 +311,14 @@ def prepare_context(entity, args):
         ctx['is_ci'] = run.flow.kind == consts.FLOW_KIND_CI
         ctx['is_dev'] = run.flow.kind == consts.FLOW_KIND_DEV
         ctx['run_label'] = run.label
-        ctx['flow_label'] = run.flow.label
+        ctx['flow_label'] = run.flow.get_label()
+    else:
+        ctx['flow'] = None
+        ctx['run'] = None
+        ctx['is_ci'] = True
+        ctx['is_dev'] = False
+        ctx['run_label'] = None
+        ctx['flow_label'] = None
 
     if step:
         ctx['job'] = step.job.get_json()
@@ -332,10 +341,17 @@ def prepare_context(entity, args):
                 break
 
         ctx['prev_ok'] = prev_ok
-        ctx['always'] = True
-        ctx['never'] = False
         ctx['was_any_error'] = was_any_error
         ctx['was_no_error'] = was_no_error
+    else:
+        ctx['job'] = None
+        ctx['step'] = None
+        ctx['prev_ok'] = True
+        ctx['was_any_error'] = False
+        ctx['was_no_error'] = True
+
+    ctx['always'] = True
+    ctx['never'] = False
 
     return ctx
 

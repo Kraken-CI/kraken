@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import pytest
+from hamcrest import assert_that, has_entries, contains
 
 import jinja2
 
@@ -232,3 +233,189 @@ def test_substitute_val():
         val =  'aaa #{run.label} ccc'
         new_val, new_val_masked = schema.substitute_val(val, args, ctx)
         assert new_val == 'aaa 333. ccc'
+
+
+@pytest.mark.db
+def test_prepare_context():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+
+        proj = Project(name='proj-1', user_data={'aaa': 321})
+        branch = Branch(name='br', project=proj, user_data={'aaa': 234}, user_data_ci={'aaa': {'bbb': 234}}, user_data_dev={'aaa': 456})
+        stage = Stage(branch=branch, schema={})
+        flow = Flow(branch=branch, kind=consts.FLOW_KIND_CI, user_data={'aaa': 123})
+        run = Run(stage=stage, flow=flow, reason={'reason': 'by me'}, label='333.')
+        system = System()
+        agents_group = AgentsGroup()
+        job = Job(run=run, agents_group=agents_group, system=system, name='hello')
+        tool = Tool(fields={})
+        step = Step(index=0,
+                    job=job,
+                    tool=tool,
+                    fields={},
+                    fields_raw={})
+        db.session.commit()
+
+        args = {'a': 'b'}
+
+        built_ins = {
+            'args': args,
+            'project': has_entries({
+                'id': proj.id,
+                'name': 'proj-1',
+                'data': {
+                    'aaa': 321,
+                },
+            }),
+            'branch': has_entries({
+                'id': branch.id,
+                'name': 'br',
+                'project_id': proj.id,
+                'project_name': 'proj-1',
+                'branch_name': None,
+                'data': {
+                    'aaa': 234
+                },
+                'data_ci': {
+                    'aaa': {'bbb': 234}
+                },
+                'data_dev': {
+                    'aaa': 456
+                }
+            }),
+            'branch_name': 'br',
+            'env': {},
+            'secrets': {},
+            'stage': has_entries({
+                'id': stage.id,
+                'name': None,
+                'description': None,
+                'enabled': True,
+                'schema_from_repo_enabled': False,
+                'repo_url': None,
+                'repo_branch': None,
+                'repo_access_token': None,
+                'repo_state': 0,
+                'repo_error': None,
+                'repo_refresh_interval': None,
+                'git_clone_params': None,
+                'repo_version': None,
+                'schema_file': None
+            }),
+            'flow': has_entries({
+                'id': flow.id,
+                'label': '%d.' % flow.id,
+                'state': 'in-progress',
+                'kind': 'ci',
+                'duration': '0s',
+                'branch_name': None,
+                'args': {},
+                'trigger': None,
+                'data': {'aaa': 123}
+            }),
+            'run': has_entries({
+                'id': run.id,
+                'label': '333.',
+                'started': None,
+                'finished': None,
+                'processed_at': None,
+                'duration': '',
+                'state': 'in-progress',
+                'stage_name': None,
+                'stage_id': stage.id,
+                'flow_id': flow.id,
+                'flow_kind': 'ci',
+                'flow_label': '%d.' % flow.id,
+                'args': {},
+                'jobs_total': 0,
+                'jobs_waiting': 0,
+                'jobs_executing': 0,
+                'jobs_processing': 0,
+                'jobs_error': 0,
+                'tests_total': 0,
+                'tests_passed': 0,
+                'tests_not_run': 0,
+                'issues_total': 0,
+                'issues_new': 0,
+                'new_cnt': 0,
+                'no_change_cnt': 0,
+                'regr_cnt': 0,
+                'fix_cnt': 0,
+                'reason': 'by me'
+            }),
+            'is_ci': True,
+            'is_dev': False,
+            'run_label': '333.',
+            'flow_label': '%d.' % flow.id,
+            'job': has_entries({
+                'id': job.id,
+                'started': None,
+                'finished': None,
+                'completed': None,
+                'duration': '',
+                'name': 'hello',
+                'state': 2,
+                'completion_status': None,
+                'timeout': None,
+                'covered': False,
+                'notes': None,
+                'system_id': system.id,
+                'system': None,
+                'executor': None,
+                'run_id': run.id,
+                'agents_group_id': agents_group.id,
+                'agents_group_name': None,
+                'agent_id': 0,
+                'agent_name': '',
+                'steps': contains(has_entries({
+                    'id': step.id,
+                    'index': 0,
+                    'tool': None,
+                    'tool_id': tool.id,
+                    'tool_location': None,
+                    'tool_entry': None,
+                    'tool_version': None,
+                    'job_id': job.id,
+                    'status': None,
+                    'result': None,
+                }))
+            }),
+            'step': has_entries({
+                'id': step.id,
+                'index': 0,
+                'tool': None,
+                'tool_id': tool.id,
+                'tool_location': None,
+                'tool_entry': None,
+                'tool_version': None,
+                'job_id': job.id,
+                'status': None,
+                'result': None,
+            }),
+            'prev_ok': True,
+            'always': True,
+            'never': False,
+            'was_any_error': False,
+            'was_no_error': True,
+        }
+
+        ctx = schema.prepare_context(step, args)
+        assert_that(ctx, has_entries(built_ins))
+
+        built_ins['job'] = None
+        built_ins['step'] = None
+        ctx = schema.prepare_context(run, args)
+        assert_that(ctx, has_entries(built_ins))
+
+        built_ins['run'] = None
+        built_ins['flow'] = None
+        built_ins['run_label'] = None
+        built_ins['flow_label'] = None
+        ctx = schema.prepare_context(stage, args)
+        assert_that(ctx, has_entries(built_ins))
+
+        built_ins['stage'] = None
+        ctx = schema.prepare_context(branch, args)
+        assert_that(ctx, has_entries(built_ins))

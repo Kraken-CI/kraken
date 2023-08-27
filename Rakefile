@@ -485,7 +485,7 @@ task :server_ut do
 
   ENV['POSTGRES_URL'] = "postgresql://kkut:kkut@localhost:15432/"
   Dir.chdir('server') do
-    sh 'rm .coverage'
+    sh 'rm -f .coverage'
     sh "../venv/bin/poetry run pytest --ignore=./tests/example_tool --cov-branch --cov=. -s -r A -vv #{ENV['test']}"
     sh 'rm -rf htmlcov'
     sh '../venv/bin/poetry run coverage html -i --omit=./tests/*'
