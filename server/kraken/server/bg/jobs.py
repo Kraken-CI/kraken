@@ -993,8 +993,13 @@ def refresh_schema_repo(stage_id, complete_starting_run_id=None):
             ctx = prepare_context(stage, stage.get_default_args())
             schema_code, schema = check_and_correct_stage_schema(stage.branch, stage.name, schema_code, ctx)
         except Exception as e:
+            if run is not None:
+                now = utils.utcnow()
+                exec_utils.complete_run(run, now, "Starting run failed: %s" % str(e))
+
             stage.repo_error = str(e)
             stage.repo_state = consts.REPO_STATE_ERROR
+
             db.session.commit()
             log.exception('problem with schema, stage: %d, run: %s',
                           stage_id, complete_starting_run_id)

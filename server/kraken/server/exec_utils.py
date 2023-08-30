@@ -27,10 +27,17 @@ from . import utils
 log = logging.getLogger(__name__)
 
 
-def complete_run(run, now):
+def complete_run(run, now, note=None):
     from .bg import jobs as bg_jobs  # pylint: disable=import-outside-toplevel
     run.state = consts.RUN_STATE_COMPLETED
+    if run.started is None:
+        run.started = now
     run.finished = now
+    if note:
+        if run.note:
+            run.note += '\n' + note
+        else:
+            run.note = note
     db.session.commit()
     log.info('completed run %s, now: %s', run, run.finished)
 
@@ -427,9 +434,7 @@ def trigger_jobs(run, replay=False):
     except Exception as ex:
         log.exception('Problem with starting jobs')
         now = utils.utcnow()
-        run.started = now
-        run.note = "Triggering run's jobs failed: %s" % str(ex)
-        complete_run(run, now)
+        complete_run(run, now, "Triggering run's jobs failed: %s" % str(ex))
         return
 
     run.started = now

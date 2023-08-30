@@ -99,8 +99,10 @@
                             </div>
                         </div>
 
-                        <div *ngIf="selectedNode.run && selectedNode.run.note" style="margin-top: 1em;">
-                            <p-message severity="warn" text="Note: {{ selectedNode.run.note }}"></p-message>
+                        <div *ngIf="selectedNode.run && selectedNode.run.note"
+                             class="mt-3 p-2 w-full shadow-1 border-round-sm"
+                             style="background-color: var(--yellow-200);color: var(--yellow-800);">
+                            <pre style="white-space: pre-wrap;">{{ selectedNode.run.note }}</pre>
                         </div>
 
                         <div *ngIf="!selectedNode.run">

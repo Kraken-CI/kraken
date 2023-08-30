@@ -549,7 +549,12 @@ def update_stage(stage_id, body, token_info=None):
     if 'enabled' in body:
         stage.enabled = body['enabled']
 
-    if 'schema_code' in body:
+    if 'schema_from_repo_enabled' in body:
+        schema_from_repo_enabled = body['schema_from_repo_enabled']
+    else:
+        schema_from_repo_enabled = stage.schema_from_repo_enabled
+
+    if 'schema_code' in body and not schema_from_repo_enabled:
         prev_triggers = stage.schema['triggers']
         ctx = prepare_context(stage, stage.get_default_args())
         try:
@@ -564,11 +569,6 @@ def update_stage(stage_id, body, token_info=None):
         prepare_new_planner_triggers(stage.id, schema['triggers'], prev_triggers, stage.triggers)
         flag_modified(stage, 'triggers')
         log.info('new schema: %s', stage.schema)
-
-    if 'schema_from_repo_enabled' in body:
-        schema_from_repo_enabled = body['schema_from_repo_enabled']
-    else:
-        schema_from_repo_enabled = stage.schema_from_repo_enabled
 
     stage.schema_from_repo_enabled = schema_from_repo_enabled
     db.session.commit()
@@ -616,6 +616,10 @@ def update_stage(stage_id, body, token_info=None):
 
         from .bg import jobs as bg_jobs  # pylint: disable=import-outside-toplevel
         kkrq.enq_neck(bg_jobs.refresh_schema_repo, stage.id, 0, ignore_args=[1])
+    elif stage.repo_state == consts.REPO_STATE_ERROR:
+        stage.repo_state = consts.REPO_STATE_OK
+        stage.repo_error = ''
+        db.session.commit()
 
     result = stage.get_json()
 
