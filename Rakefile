@@ -220,7 +220,7 @@ end
 task :run_agent => ['./agent/venv/bin/kkagent', :build_agent] do
   sh "rm -f #{KK_AGENT_TGZ_PATH}"
   Rake::Task["build_agent"].invoke
-  sh 'rm -rf /tmp/kk-jobs/ /opt/kraken/*'
+  sh 'rm -rf /opt/kraken/*'
   sh 'cp agent/kkagent agent/kktool /opt/kraken'
   sh "LANGUAGE=en_US:en LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 KRAKEN_CLICKHOUSE_ADDR=#{CLICKHOUSE_ADDR} /opt/kraken/kkagent run -d /tmp/kk-jobs -s http://localhost:8080 --no-update"
 end

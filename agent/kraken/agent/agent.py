@@ -17,6 +17,7 @@ import time
 import logging
 import platform
 import traceback
+import subprocess
 
 import distro
 import pkg_resources
@@ -106,6 +107,13 @@ def _disable_masking_secrets_in_logs():
     log.set_secrets([])
 
 
+def _cleanup_workspace():
+    data_dir = config.get('data_dir')
+    jobs_dir = os.path.join(data_dir, 'jobs')
+    log.info('cleanup jobs dir %s', jobs_dir)
+    subprocess.run(f'rm -rf {jobs_dir}/*', shell=True, check=False)
+
+
 def run():
     kraken_version = pkg_resources.get_distribution('kraken-agent').version
 
@@ -158,6 +166,8 @@ def run():
                 update.update_agent(version)
 
             if job:
+                _cleanup_workspace()
+
                 log.set_ctx(job=job['id'], run=job['run_id'], flow=job['flow_id'],
                             flow_kind=job['flow_kind'], branch=job['branch_id'])
 
