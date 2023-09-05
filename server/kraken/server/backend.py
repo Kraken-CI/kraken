@@ -930,6 +930,7 @@ def _serve_agent_request():
         return json.dumps({'unauthorized': True})
 
     agent.last_seen = utils.utcnow()
+    agent.state = consts.AGENT_STATE_ACTIVE
     db.session.commit()
 
     if not agent.authorized:

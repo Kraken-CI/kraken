@@ -229,7 +229,7 @@ def _check_agents_keep_alive():
     ten_mins_ago = now - datetime.timedelta(seconds=consts.SLOW_AGENT_TIMEOUT)
 
     q = Agent.query
-    q = q.filter_by(disabled=False, deleted=None)
+    q = q.filter_by(state=consts.AGENT_STATE_ACTIVE, deleted=None)
     q = q.filter(Agent.last_seen < five_mins_ago)
 
     for a in q.all():
@@ -245,9 +245,9 @@ def _check_agents_keep_alive():
             if a.last_seen > ten_mins_ago:
                 continue
 
-        a.disabled = True
-        a.status_line = 'agent was not seen for last 5 minutes, disabled'
-        log.info('agent %s not seen for 5 minutes, disabled', a)
+        a.state = consts.AGENT_STATE_INACTIVE
+        a.status_line = 'agent was not seen for last 5 minutes, inactivated'
+        log.info('agent %s not seen for 5 minutes, inactivated', a)
         db.session.commit()
 
         if a.job:

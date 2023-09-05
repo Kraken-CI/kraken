@@ -32,7 +32,7 @@ log = logging.getLogger('scheduler')
 
 
 def _get_idle_agents():
-    all_idle_agents = Agent.query.filter_by(job=None, authorized=True, disabled=False, deleted=None).all()
+    all_idle_agents = Agent.query.filter_by(job=None, authorized=True, state=consts.AGENT_STATE_ACTIVE, disabled=False, deleted=None).all()
     agents_count = len(all_idle_agents)
     if agents_count == 0:
         return 0, {}, {}

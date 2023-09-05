@@ -356,6 +356,7 @@ def trigger_jobs(run, replay=False):
                 if agents_group is not None and agents_group.name not in agents_count:
                     q = AgentAssignment.query.filter_by(agents_group=agents_group)
                     q = q.join('agent')
+                    q = q.filter(Agent.state == consts.AGENT_STATE_ACTIVE)
                     q = q.filter(Agent.disabled.is_(False))
                     q = q.filter(Agent.authorized.is_(True))
                     cnt = q.count()
