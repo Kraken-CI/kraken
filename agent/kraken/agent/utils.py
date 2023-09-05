@@ -15,9 +15,12 @@
 import os
 import sys
 import time
-import subprocess
 import logging
 import tempfile
+import platform
+import subprocess
+
+osname = platform.system()
 
 log = logging.getLogger(__name__)
 
@@ -81,8 +84,8 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
 
     retcode = 0
 
-    with tempfile.NamedTemporaryFile(suffix=".txt", prefix="exec_") as fh:
-        fname = fh.name
+    try:
+        fh, fname = tempfile.mkstemp(".txt", "exec_")
 
         p = subprocess.Popen(cmd,
                              shell=True,
@@ -152,6 +155,9 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
             out_fragment += f.read()
             if len(out_fragment) > 0:
                 _trace_log_text(out_fragment, output_handler, text, tracing, mask, out_prefix, trace_all=True)
+    finally:
+        os.close(fh)
+        os.unlink(fname)
 
     # check if there was timeout exceeded
     if t > t_end:
@@ -202,6 +208,9 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
 
 
 def is_in_docker():
+    if osname != 'Linux':
+        return False
+
     try:
         with open('/proc/self/cgroup', 'r') as procfile:
             for line in procfile:
@@ -214,6 +223,9 @@ def is_in_docker():
 
 
 def is_in_lxc():
+    if osname != 'Linux':
+        return False
+
     try:
         with open('/proc/self/cgroup', 'r') as procfile:
             for line in procfile:

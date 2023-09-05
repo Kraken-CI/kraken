@@ -174,6 +174,7 @@ ARTIFACTS_SECTION_PUBLIC = 1
 
 
 AGENT_DIR = '/opt/kraken'
+AGENT_DIR_WIN = '%HOME%\kraken'
 
 
 AGENT_MSG_GET_JOB = 'get-job'

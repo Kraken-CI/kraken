@@ -16,6 +16,7 @@ import os
 import sys
 import shutil
 import logging
+import platform
 import subprocess
 import urllib.request
 from pathlib import Path
@@ -23,6 +24,9 @@ from urllib.parse import urljoin
 
 from . import config
 from . import consts
+
+
+osname = platform.system()
 
 
 log = logging.getLogger(__name__)
@@ -48,7 +52,10 @@ def get_blobs(dest_dir):
 
 
 def get_dest_dir(version):
-    dest_dir = Path(consts.AGENT_DIR) / version
+    if osname == 'Windows':
+        dest_dir = Path(consts.AGENT_DIR_WIN) / version
+    else:
+        dest_dir = Path(consts.AGENT_DIR) / version
     return dest_dir
 
 

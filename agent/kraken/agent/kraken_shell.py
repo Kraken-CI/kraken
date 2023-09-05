@@ -1,4 +1,4 @@
-# Copyright 2020-2022 The Kraken Authors
+# Copyright 2020-2023 The Kraken Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,9 +14,14 @@
 
 import os
 import tempfile
+import platform
+
 
 from . import utils
 from . import sshkey
+
+
+osname = platform.system()
 
 
 def run(step, **kwargs):  # pylint: disable=unused-argument
@@ -37,7 +42,12 @@ def run(step, **kwargs):  # pylint: disable=unused-argument
         cmd = '%s %s' % (shell_exe, fname)
         shell_exe = None
     else:
-        shell_exe = step.get('shell_exe', '/bin/sh')
+        if osname == 'Linux':
+            shell_exe = step.get('shell_exe', '/bin/sh')
+        elif osname == 'Windows':
+            shell_exe = None
+        else:
+            raise Exception('not implemented')
 
     # prepare env if needed
     extra_env = step.get('env', None)

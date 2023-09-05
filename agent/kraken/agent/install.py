@@ -1,4 +1,4 @@
-# Copyright 2020 The Kraken Authors
+# Copyright 2020-2023 The Kraken Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,13 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pwd
-import grp
 import logging
 import tempfile
 import platform
 import subprocess
 from pathlib import Path
+
+osname = platform.system()
+if osname == 'Linux':
+    import pwd
+    import grp
+
 
 import distro
 import pkg_resources
@@ -152,5 +156,7 @@ def install():
     s = platform.system()
     if s == 'Linux':
         install_linux()
+    elif s == 'Windows':
+        install_windows()
     else:
         raise Exception('system %s is not supported yet' % s)

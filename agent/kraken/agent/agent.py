@@ -32,6 +32,10 @@ from . import local_run
 from . import docker_run
 from . import lxd_run
 
+
+osname = platform.system()
+
+
 log = logging.getLogger(__name__)
 
 
@@ -69,6 +73,11 @@ def _collect_host_info():
             host_info['system'] = '%s-%s' % (distro.id(), distro.version())
         host_info['distro_name'] = distro.id()
         host_info['distro_version'] = distro.version()
+    elif s == 'windows':
+        if not host_info['system']:
+            host_info['system'] = platform.platform().lower()
+    else:
+        raise Exception('system not recognized, cannot return host info to Kraken Server')
 
     # detect isolation
     host_info['isolation_type'] = 'bare-metal'
@@ -84,6 +93,8 @@ def _collect_host_info():
     for mod in [local_run, docker_run, lxd_run]:
         caps = mod.detect_capabilities()
         host_info.update(caps)
+
+    log.info('reporting host info: %s', host_info)
 
     return host_info
 
@@ -111,7 +122,12 @@ def _cleanup_workspace():
     data_dir = config.get('data_dir')
     jobs_dir = os.path.join(data_dir, 'jobs')
     log.info('cleanup jobs dir %s', jobs_dir)
-    subprocess.run(f'rm -rf {jobs_dir}/*', shell=True, check=False)
+    if osname == 'Linux':
+        subprocess.run(f'rm -rf {jobs_dir}/*', shell=True, check=False)
+    elif osname == 'Windows':
+        subprocess.run(f'rmdir /q /s {jobs_dir}/*', shell=True, check=False)
+    else:
+        raise Exception('cleanup not supported in %s' % osname)
 
 
 def run():

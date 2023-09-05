@@ -19,12 +19,16 @@ import time
 import signal
 import asyncio
 import logging
-import datetime
 import zipfile
+import platform
+import datetime
 
 from . import consts
 from . import sysutils
 from . import miniobase
+
+osname = platform.system()
+
 
 log = logging.getLogger(__name__)
 
@@ -56,7 +60,12 @@ class LocalExecContext:
 
     async def _async_run_exc(self, proc_coord, tool_path, return_addr, step, step_file_path, command, cwd, timeout, user):  # pylint: disable=unused-argument
         pypath, mod = tool_path
-        cmd = "%s/kktool -m %s -r %s -s %s %s" % (consts.AGENT_DIR, mod, return_addr, step_file_path, command)
+
+        executable = os.path.join(sysutils.get_agent_dir(), 'kktool')
+        if osname == 'Windows':
+            executable = 'python.exe ' + executable
+
+        cmd = "%s -m %s -r %s -s %s %s" % (executable, mod, return_addr, step_file_path, command)
 
         if pypath and pypath.startswith('minio:'):
             tool_zip, _, _ = miniobase.download_tool(step, pypath)
@@ -132,7 +141,7 @@ class LocalExecContext:
                 log.warning('IGNORED', exc_info=sys.exc_info())
                 continue
             if line:
-                line = line.decode().rstrip()
+                line = line.decode(errors="ignore").rstrip()
                 log.info(line)
             else:
                 break

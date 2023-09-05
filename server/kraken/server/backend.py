@@ -846,6 +846,10 @@ def _handle_host_info(agent, req):  # pylint: disable=unused-argument
 
     system = req['info']['system']
 
+    if not system:
+        resp = {'error': 'empty system in host info'}
+        return resp
+
     sys = None
     if system.isdigit():
         # agent has already identified system so find its name

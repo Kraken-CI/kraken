@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright 2020-2021 The Kraken Authors
+# Copyright 2020-2023 The Kraken Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,14 +26,14 @@ from . import logs
 from . import agent
 from . import consts
 from . import config
+from . import sysutils
 from . import install as inst
 
 
+osname = platform.system()
+
+
 log = logging.getLogger('agent')
-
-
-def _get_default_data_dir():
-    return os.path.join(consts.AGENT_DIR, 'data')
 
 
 def _intro():
@@ -63,7 +63,7 @@ def main():
 
 @click.command()
 @click.option('-s', '--server', envvar='KRAKEN_SERVER_ADDR', required=True, help='Server URL')
-@click.option('-d', '--data-dir', envvar='KRAKEN_DATA_DIR', default=_get_default_data_dir(), help='Directory for presistent data')
+@click.option('-d', '--data-dir', envvar='KRAKEN_DATA_DIR', default=sysutils.get_default_data_dir(), help='Directory for presistent data')
 @click.option('-t', '--tools-dirs', envvar='KRAKEN_TOOLS_DIR', help='List of tools directories')
 @click.option('-c', '--clickhouse-addr', envvar='KRAKEN_CLICKHOUSE_ADDR', help='ClickHouse address (host:port)')
 @click.option('--system-id', envvar='KRAKEN_SYSTEM_ID',
@@ -89,7 +89,7 @@ def check_integrity():
 
 @click.command()
 @click.option('-s', '--server', envvar='KRAKEN_SERVER_ADDR', required=True, help='Server URL')
-@click.option('-d', '--data-dir', envvar='KRAKEN_DATA_DIR', default=_get_default_data_dir(), help='Directory for presistent data')
+@click.option('-d', '--data-dir', envvar='KRAKEN_DATA_DIR', default=sysutils.get_default_data_dir(), help='Directory for presistent data')
 @click.option('-t', '--tools-dirs', envvar='KRAKEN_TOOLS_DIRS', help='List of tools directories')
 @click.option('-c', '--clickhouse-addr', envvar='KRAKEN_CLICKHOUSE_ADDR', help='ClickHouse address (host:port)')
 @click.option('--no-update', default=False, is_flag=True, help='Do not update agent automatically (useful in agent development)')
