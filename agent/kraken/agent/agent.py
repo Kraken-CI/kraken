@@ -125,7 +125,7 @@ def _cleanup_workspace():
     if osname == 'Linux':
         subprocess.run(f'rm -rf {jobs_dir}/*', shell=True, check=False)
     elif osname == 'Windows':
-        subprocess.run(f'rmdir /q /s {jobs_dir}/*', shell=True, check=False)
+        subprocess.run(f'del /s {jobs_dir}\\*', shell=True, check=False)
     else:
         raise Exception('cleanup not supported in %s' % osname)
 

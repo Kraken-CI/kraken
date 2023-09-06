@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import sys
 import logging
 import platform
@@ -24,13 +23,9 @@ import pkg_resources
 
 from . import logs
 from . import agent
-from . import consts
 from . import config
 from . import sysutils
 from . import install as inst
-
-
-osname = platform.system()
 
 
 log = logging.getLogger('agent')

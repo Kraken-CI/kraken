@@ -18,18 +18,17 @@ import platform
 import subprocess
 from pathlib import Path
 
-osname = platform.system()
-if osname == 'Linux':
-    import pwd
-    import grp
-
-
 import distro
 import pkg_resources
 
 from . import update
 from . import consts
 from . import config
+
+osname = platform.system()
+if osname == 'Linux':
+    import pwd
+    import grp
 
 log = logging.getLogger(__name__)
 
@@ -156,7 +155,5 @@ def install():
     s = platform.system()
     if s == 'Linux':
         install_linux()
-    elif s == 'Windows':
-        install_windows()
     else:
         raise Exception('system %s is not supported yet' % s)

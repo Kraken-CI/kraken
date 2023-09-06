@@ -68,7 +68,7 @@ def get_ifaces():
                 name = 'lo'
             lst.append((name, ip))
     else:
-        raise Exception('get_ifaces not implemented on %' % osname)
+        raise Exception('get_ifaces not implemented on %s' % osname)
 
     return lst
 

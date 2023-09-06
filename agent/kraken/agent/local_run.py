@@ -23,7 +23,6 @@ import zipfile
 import platform
 import datetime
 
-from . import consts
 from . import sysutils
 from . import miniobase
 
