@@ -294,12 +294,12 @@ def prepare_context(entity, args):
             continue
         if s.kind == consts.SECRET_KIND_SSH_KEY:
             ctx['secrets'][s.name] = {
-                'user': s.data['username'],
-                'key': s.data['key'],
-                'password': s.data['key']
+                'user': s.data['username'].encode('unicode-escape').decode(),
+                'key': s.data['key'].encode('unicode-escape').decode(),
+                'password': s.data['key'].encode('unicode-escape').decode()
             }
         elif s.kind == consts.SECRET_KIND_SIMPLE:
-            ctx['secrets'][s.name] = s.data['secret']
+            ctx['secrets'][s.name] = s.data['secret'].encode('unicode-escape').decode()
 
     if stage:
         ctx['stage'] = stage.get_json(with_schema=False)

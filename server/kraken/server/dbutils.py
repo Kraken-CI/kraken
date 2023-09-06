@@ -53,7 +53,7 @@ def get_secret_values(project):
         if s.deleted:
             continue
         if s.kind == consts.SECRET_KIND_SSH_KEY:
-            secrets.append(s.data['key'])
+            secrets.append(s.data['key'].encode('unicode-escape').decode())
         elif s.kind == consts.SECRET_KIND_SIMPLE:
-            secrets.append(s.data['secret'])
+            secrets.append(s.data['secret'].encode('unicode-escape').decode())
     return secrets
