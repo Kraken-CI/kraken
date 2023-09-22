@@ -669,3 +669,67 @@ def test_load_remote_tool():
         finally:
             del os.environ['MINIO_ROOT_USER']
             del os.environ['MINIO_ROOT_PASSWORD']
+
+
+@pytest.mark.db
+def test_trigger_flow_1():
+    app = create_app()
+
+    with app.app_context():
+        initdb._prepare_initial_preferences()
+
+        #with patch('kraken.server.bg.jobs.log') as mylog, patch('kraken.server.kkrq.enq'):
+        #    jobs._analyze_results_history(77777777)
+        #    mylog.error.assert_called_with('got unknown run to analyze results history: %s', 77777777)
+
+        project = Project()
+        branch = Branch(project=project, branch_name='master')
+        stage = Stage(branch=branch,
+                      schema={
+                          'parent': 'root',
+                          'jobs': [{
+                              'steps': [{
+                                  'tool': 'git',
+                                  'checkout': 'https://github.com/Kraken-CI/kraken.git'
+                              }]
+                          }]
+                      })
+        db.session.commit()
+
+        # bad trigger data
+        with patch('kraken.server.exec_utils.start_run') as sr, patch('kraken.server.exec_utils.create_a_flow') as caf:
+            trigger_data = dict(trigger='bad')
+            jobs.trigger_flow(project.id, trigger_data)
+
+            sr.assert_not_called()
+            caf.assert_not_called()
+
+        # trigger the first flow in a branch
+        with patch('kraken.server.exec_utils.start_run') as sr, patch('kraken.server.exec_utils.create_a_flow') as caf:
+            trigger_data = dict(trigger='github-push', ref='refs/heads/master')
+            jobs.trigger_flow(project.id, trigger_data)
+
+            sr.assert_not_called()
+            caf.assert_called()
+            assert type(caf.call_args.args[0]) == Branch
+            assert caf.call_args.args[0].id == branch.id
+            assert caf.call_args.args[1] == 'ci'
+            assert caf.call_args.args[2] == {}
+
+        # prepare prev flow
+        flow = Flow(branch=branch, kind=0)
+        db.session.commit()
+
+        # trigger the first flow in a branch
+        with patch('kraken.server.exec_utils.start_run') as sr, patch('kraken.server.exec_utils.create_a_flow') as caf:
+            trigger_data = dict(trigger='github-push', ref='refs/heads/master',
+                                repo='https://github.com/Kraken-CI/kraken.git')
+            jobs.trigger_flow(project.id, trigger_data)
+
+            caf.assert_not_called()
+            sr.assert_called()
+            assert type(sr.call_args.args[0]) == Stage
+            # assert sr.call_args.args[0].id == stage.id
+            assert type(sr.call_args.args[1]) == Flow
+            # assert sr.call_args.args[1].id == flow.id
+            assert sr.call_args.kwargs['reason'] == {'reason': 'github push'}

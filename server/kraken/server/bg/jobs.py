@@ -839,7 +839,7 @@ def trigger_run(stage_id, flow_kind=consts.FLOW_KIND_CI, reason=None):
         exec_utils.start_run(stage, flow, reason=reason, repo_data=repo_data)
 
 
-def trigger_flow(project_id, trigger_data=None):
+def trigger_flow(project_id, trigger_data):
     log.reset_ctx()
     app = _create_app('trigger_flow_%d' % project_id)
 
@@ -891,11 +891,15 @@ def trigger_flow(project_id, trigger_data=None):
         except Exception:
             log.warning('cannot parse trigger git url: %s', trigger_git_url)
 
-        # find stages that use repo from trigger
+        # find stages that use the repo that appears in trigger data
+        # and are root
         matching_stages = []
         for stage in branch.stages:
             if stage.deleted:
                 continue
+            if stage.schema['parent'] != 'root':
+                continue
+
             found = False
             for job in stage.schema['jobs']:
                 for step in job['steps']:
@@ -931,12 +935,6 @@ def trigger_flow(project_id, trigger_data=None):
             if not stage.enabled:
                 log.info('stage %s not started - disabled', stage)
                 continue
-            parent_name = stage.schema['parent']
-            if parent_name != 'root':
-                parent_stage = name_stages[parent_name]
-                if parent_stage.id not in run_stages:
-                    # TODO: we should wait when parent is run and then trigger this stage
-                    continue
 
             if not last_flow.trigger_data:
                 last_flow.trigger_data = trigger_data
