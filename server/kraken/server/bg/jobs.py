@@ -921,7 +921,6 @@ def trigger_flow(project_id, trigger_data):
 
         # map runs to stages
         run_stages = {run.stage_id: run for run in last_flow.runs if not run.deleted}
-        name_stages = {stage.name: stage for stage in branch.stages if not stage.deleted}
 
         # change trigger_data into db record
         trigger_data = RepoChanges(data=[trigger_data])
