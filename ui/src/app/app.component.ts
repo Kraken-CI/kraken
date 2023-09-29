@@ -150,9 +150,19 @@ export class AppComponent implements OnInit, OnDestroy {
                     {
                         label: 'Download',
                         icon: 'pi pi-download',
-                        command: (event) => {
-                            this.downloadAgentInstallSh()
-                        },
+                        items: [{
+                            label: 'For Linux',
+                            icon: 'fa-brands fa-linux',
+                            command: (event) => {
+                                this.downloadAgentInstallScript('sh')
+                            },
+                        }, {
+                            label: 'For Windows',
+                            icon: 'fa-brands fa-windows',
+                            command: (event) => {
+                                this.downloadAgentInstallScript('bat')
+                            },
+                        }]
                     },
                 ],
             },
@@ -293,7 +303,7 @@ export class AppComponent implements OnInit, OnDestroy {
         this.auth.loginWith(id_provider)
     }
 
-    downloadAgentInstallSh() {
+    downloadAgentInstallScript(scriptType: string) {
         if (!this.settings || !this.settings.general) {
             this.msgSrv.add({
                 severity: 'error',
@@ -319,7 +329,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
         // invoke download
         const link = document.createElement('a')
-        link.href = '/bk/install/kraken-agent-install.sh'
+        link.href = '/bk/install/kraken-agent-install.' + scriptType
         document.body.appendChild(link)
         link.click()
         link.remove()

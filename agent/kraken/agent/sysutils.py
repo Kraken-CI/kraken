@@ -95,3 +95,19 @@ def get_agent_dir():
 def get_default_data_dir():
     data_dir = os.path.join(get_agent_dir(), 'data')
     return data_dir
+
+
+def rm_item(path, check=True):
+    if osname == 'Linux':
+        cmd = f'sudo rm -f {path}'
+    elif osname == 'Windows':
+        cmd = f'powershell Remove-Item -Recurse -Force {path}'
+    subprocess.run(cmd, shell=True, check=check)
+
+
+def mk_link(src, dest):
+    if osname == 'Linux':
+        cmd = f'sudo ln -s {src} {dest}'
+    elif osname == 'Windows':
+        cmd = f'mklink {dest} {src}'
+    subprocess.run(cmd, shell=True, check=True)

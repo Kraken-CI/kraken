@@ -24,6 +24,7 @@ from urllib.parse import urljoin
 
 from . import config
 from . import consts
+from . import sysutils
 
 
 osname = platform.system()
@@ -51,11 +52,15 @@ def get_blobs(dest_dir):
     return a, t
 
 
-def get_dest_dir(version):
+def get_agent_dir():
     if osname == 'Windows':
-        dest_dir = Path(consts.AGENT_DIR_WIN) / version
+        return consts.AGENT_DIR_WIN
     else:
-        dest_dir = Path(consts.AGENT_DIR) / version
+        return consts.AGENT_DIR
+
+
+def get_dest_dir(version):
+    dest_dir = Path(get_agent_dir()) / version
     return dest_dir
 
 
@@ -68,18 +73,19 @@ def prepare_dest_dir(version):
 
 
 def make_links_to_new_binaries(dest_dir):
-    if os.path.exists('/opt/kraken/kkagent'):
-        subprocess.run('sudo rm -f /opt/kraken/kkagent', shell=True, check=True)
-    cmd = 'sudo ln -s %s/kkagent /opt/kraken/kkagent' % dest_dir
-    subprocess.run(cmd, shell=True, check=True)
+    agent_dir = get_agent_dir()
 
-    if os.path.exists('/opt/kraken/kktool'):
-        subprocess.run('sudo rm -f /opt/kraken/kktool', shell=True, check=True)
-    cmd = 'sudo ln -s %s/kktool /opt/kraken/kktool' % dest_dir
-    subprocess.run(cmd, shell=True, check=True)
+    for f in ['kkagent', 'kktool']:
+        src_path = os.path.join(dest_dir, f)
+        dest_path = os.path.join(agent_dir, f)
 
-    cmd = "sudo bash -c 'chown kraken:kraken /opt/kraken/*'"
-    subprocess.run(cmd, shell=True, check=True)
+        if os.path.exists(dest_path):
+            sysutils.rm_item(dest_path)
+        sysutils.mk_link(src_path, dest_path)
+
+    if osname == 'Linux':
+        cmd = "sudo bash -c 'chown kraken:kraken %s/*'" % agent_dir
+        subprocess.run(cmd, shell=True, check=True)
 
 
 def update_agent(version):
@@ -98,9 +104,9 @@ def update_agent(version):
 
     # check binaries integrity
     try:
-        cmd = [agent_path, 'check-integrity']
+        cmd = [sys.executable, agent_path, 'check-integrity']
         subprocess.run(cmd, check=True)
-        cmd = [tool_path, 'check-integrity']
+        cmd = [sys.executable, tool_path, 'check-integrity']
         subprocess.run(cmd, check=True)
     except Exception:
         log.exception('blobs integrity check failed, aborted agent update')
@@ -110,9 +116,11 @@ def update_agent(version):
     # now we can safely make links to new bins
     make_links_to_new_binaries(dest_dir)
 
-    cmd = 'rm -rf /opt/kraken/.shiv'
-    subprocess.run(cmd, shell=True, check=True)
+    if osname == 'Linux':
+        sysutils.rm_item('/opt/kraken/.shiv')
+    elif osname == 'Windows':
+        sysutils.rm_item('%USERPROFILE%\\.shiv')
 
     # start new kkagent
-    log.info('restarting agent to new version: %s', version)
-    os.execl('/opt/kraken/kkagent', '/opt/kraken/kkagent', *sys.argv[1:])
+    log.info('restarting agent to new version: %s with python %s and args %s', version, sys.executable, sys.argv)
+    os.execl(sys.executable, *sys.argv)

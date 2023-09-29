@@ -31,6 +31,7 @@ from . import update
 from . import local_run
 from . import docker_run
 from . import lxd_run
+from . import sysutils
 
 
 osname = platform.system()
@@ -122,12 +123,8 @@ def _cleanup_workspace():
     data_dir = config.get('data_dir')
     jobs_dir = os.path.join(data_dir, 'jobs')
     log.info('cleanup jobs dir %s', jobs_dir)
-    if osname == 'Linux':
-        subprocess.run(f'rm -rf {jobs_dir}/*', shell=True, check=False)
-    elif osname == 'Windows':
-        subprocess.run(f'del /s {jobs_dir}\\*', shell=True, check=False)
-    else:
-        raise Exception('cleanup not supported in %s' % osname)
+    p = os.path.join(jobs_dir, '*')
+    sysutils.rm_item(p, check=False)
 
 
 def run():
