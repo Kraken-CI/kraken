@@ -1,4 +1,4 @@
-# Copyright 2020-2021 The Kraken Authors
+# Copyright 2020-2023 The Kraken Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ import time
 import logging
 import platform
 import traceback
-import subprocess
 
 import distro
 import pkg_resources

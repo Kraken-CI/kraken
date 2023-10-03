@@ -55,8 +55,7 @@ def get_blobs(dest_dir):
 def get_agent_dir():
     if osname == 'Windows':
         return consts.AGENT_DIR_WIN
-    else:
-        return consts.AGENT_DIR
+    return consts.AGENT_DIR
 
 
 def get_dest_dir(version):
