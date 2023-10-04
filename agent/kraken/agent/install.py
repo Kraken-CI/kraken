@@ -161,7 +161,7 @@ if ($UserID) {{
     New-LocalUser {kraken_user} -Password $SecPassword -FullName {kraken_user} -Description "Kraken user for kkagent service"
     # get admin group name
     $SID = New-Object System.Security.Principal.SecurityIdentifier("S-1-5-32-544")
-    $AdminGroupName = $SID.Translate([System.Security.Principal.NTAccount]).Value.Split('\')[-1]
+    $AdminGroupName = $SID.Translate([System.Security.Principal.NTAccount]).Value.Split('\\')[-1]
     Add-LocalGroupMember -Group $AdminGroupName -Member {kraken_user}
     Write-Host "Created {kraken_user} account with admin rights"
 }}
