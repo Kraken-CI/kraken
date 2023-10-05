@@ -1,4 +1,4 @@
-# Copyright 2020-2021 The Kraken Authors
+# Copyright 2020-2023 The Kraken Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import re
 import sys
 import time
 import logging
@@ -212,10 +213,14 @@ def is_in_docker():
         return False
 
     try:
-        with open('/proc/self/cgroup', 'r') as procfile:
-            for line in procfile:
+        with open('/proc/self/cgroup', 'r') as f:
+            for line in f:
                 fields = line.strip().split('/')
                 if 'docker' in fields[1]:
+                    return True
+        with open('/proc/self/mountinfo', 'r') as f:
+            for line in f:
+                if re.search('/containers/[a-z0-9]{64}/hostname', line):
                     return True
     except Exception:
         log.warning('IGNORED', exc_info=sys.exc_info())
