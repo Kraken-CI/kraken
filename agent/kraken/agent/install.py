@@ -183,7 +183,7 @@ PS_SETUP_SERVICE = """class nssm {{
     }}
 }}
 
-function Setup-Service([string] $DestDir, [string] $KrakenURL, [string] $KrakenUser, [string] $KrakenPassword)
+function Setup-Service([string] $DestDir, [string] $KrakenUser, [string] $KrakenPassword)
 {{
 
     $NSSMPath = Join-Path $DestDir 'nssm-2.24\\win64\\nssm.exe'
@@ -214,7 +214,7 @@ function Setup-Service([string] $DestDir, [string] $KrakenURL, [string] $KrakenU
         $NSSM.Run("restart $ServiceName")
     }} else {{
         # it does not exist, so install the service using NSSM
-        $NSSM.Run("install $ServiceName `"$PythonPath`" $DestDir\\kkagent run -s $KrakenURL")
+        $NSSM.Run("install $ServiceName `"$PythonPath`" $DestDir\\kkagent run")
         $NSSM.Run("set $ServiceName DisplayName $ServiceName")
         $NSSM.Run("set $ServiceName Description '$ServiceDescription'")
         $NSSM.Run("set $ServiceName AppDirectory $DestDir")
@@ -237,7 +237,7 @@ function Setup-Service([string] $DestDir, [string] $KrakenURL, [string] $KrakenU
     Write-Host 'Kraken Agent service configured'
 }}
 
-Setup-Service 'c:\\kraken' {kraken_url} {kraken_user} {kraken_password}
+Setup-Service 'c:\\kraken' {kraken_user} {kraken_password}
 """
 
 def _powershell(code):
@@ -275,8 +275,7 @@ def install_windows():
     update.make_links_to_new_binaries(dest_dir)
 
     # setup service
-    ps = PS_SETUP_SERVICE.format(kraken_url='http://192.168.68.121:8080',
-                                 kraken_user='kraken',
+    ps = PS_SETUP_SERVICE.format(kraken_user='kraken',
                                  kraken_password='kraken',
                                  server_addr=config.get('server'),
                                  data_dir=data_dir,
