@@ -99,7 +99,7 @@ def get_default_data_dir():
 
 def rm_item(path, check=True):
     if osname == 'Linux':
-        cmd = f'sudo rm -f {path}'
+        cmd = f'sudo rm -rf {path}'
     elif osname == 'Windows':
         cmd = f'powershell Remove-Item -Recurse -Force {path}'
     subprocess.run(cmd, shell=True, check=check)
