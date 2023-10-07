@@ -99,6 +99,7 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
                              cwd=cwd,
                              stdout=fh,
                              stderr=stderr)
+        log.info("exec: pid: %s", p.pid)
 
         # if 'clone' in cmd:
         #     from pudb.remote import set_trace
@@ -156,9 +157,15 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
             out_fragment += f.read()
             if len(out_fragment) > 0:
                 _trace_log_text(out_fragment, output_handler, text, tracing, mask, out_prefix, trace_all=True)
+
+    except Exception:
+        log.exception('problem during executing cmd %s', cmd_trc)
     finally:
-        os.close(fh)
-        os.unlink(fname)
+        try:
+            os.close(fh)
+            os.unlink(fname)
+        except Exception:
+            log.exception('problem during closing exec log file %s', fname)
 
     # check if there was timeout exceeded
     if t > t_end:

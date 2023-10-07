@@ -171,8 +171,6 @@ services:
     environment:
       - MINIO_ROOT_USER
       - MINIO_ROOT_PASSWORD
-      - MINIO_ACCESS_KEY
-      - MINIO_SECRET_KEY
     command: server --address :$KRAKEN_MINIO_PORT --console-address :$KRAKEN_MINIO_CONSOLE_PORT /data
     volumes:
       - minio:/data

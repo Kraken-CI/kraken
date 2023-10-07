@@ -32,20 +32,36 @@ def run(step, **kwargs):  # pylint: disable=unused-argument
 
     # prepare script if needed
     if script:
-        fh = tempfile.NamedTemporaryFile(mode='w', prefix='kk-shell-', suffix='.sh', delete=False)
-        fh.write('set -ex\n')
-        fh.write(script)
+        if osname == 'Linux':
+            suffix = '.sh'
+        else:
+            suffix = '.bat'
+
+        fh = tempfile.NamedTemporaryFile(mode='wb', prefix='kk-shell-', suffix=suffix, delete=False)
+
+        if osname == 'Linux':
+            fh.write('set -ex\n')
+        fh.write(script.encode('utf-8'))
         fname = fh.name
         fh.close()
 
-        shell_exe = step.get('shell_exe', '/bin/bash')
-        cmd = '%s %s' % (shell_exe, fname)
+        if osname == 'Linux':
+            shell_exe = step.get('shell_exe', '/bin/bash')
+        elif osname == 'Windows':
+            shell_exe = step.get('shell_exe', None)
+        else:
+            raise Exception('not implemented')
+
+        if shell_exe:
+            cmd = '%s %s' % (shell_exe, fname)
+        else:
+            cmd = fname
         shell_exe = None
     else:
         if osname == 'Linux':
             shell_exe = step.get('shell_exe', '/bin/sh')
         elif osname == 'Windows':
-            shell_exe = None
+            shell_exe = step.get('shell_exe', None)
         else:
             raise Exception('not implemented')
 
