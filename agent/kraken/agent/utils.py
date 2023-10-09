@@ -72,7 +72,7 @@ def _trace_log_text(log_text, output_handler, text, tracing, mask, out_prefix, t
     return text_left
 
 
-def _cleanup_process(p):
+def _cleanup_process(p, cmd_trc):
     # once again at the end check if it completed, if not terminate or even kill the process
     if not p:
         return
@@ -183,7 +183,7 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
 
     except Exception:
         log.exception('problem during executing cmd %s', cmd_trc)
-        _cleanup_process(p)
+        _cleanup_process(p, cmd_trc)
         raise
     finally:
         try:
@@ -198,7 +198,7 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
         retcode = 10000
 
     # once again at the end check if it completed, if not terminate or even kill the process
-    _cleanup_process(p)
+    _cleanup_process(p, cmd_trc)
 
     # not good, cannot kill process
     if p and p.poll() is None:
