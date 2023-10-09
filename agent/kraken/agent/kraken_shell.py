@@ -37,11 +37,11 @@ def run(step, **kwargs):  # pylint: disable=unused-argument
         else:
             suffix = '.bat'
 
-        fh = tempfile.NamedTemporaryFile(mode='wb', prefix='kk-shell-', suffix=suffix, delete=False)
+        fh = tempfile.NamedTemporaryFile(mode='w', prefix='kk-shell-', suffix=suffix, delete=False, encoding='utf-8')
 
         if osname == 'Linux':
             fh.write('set -ex\n')
-        fh.write(script.encode('utf-8'))
+        fh.write(script)
         fname = fh.name
         fh.close()
 

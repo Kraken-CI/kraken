@@ -72,6 +72,27 @@ def _trace_log_text(log_text, output_handler, text, tracing, mask, out_prefix, t
     return text_left
 
 
+def _cleanup_process(p):
+    # once again at the end check if it completed, if not terminate or even kill the process
+    if not p:
+        return
+    p.poll()
+    if p.returncode is not None:
+        return
+    log.warning("terminating misbehaving cmd '%s'", cmd_trc)
+    p.terminate()
+    for _ in range(10):
+        if p.poll():
+            break
+        time.sleep(0.1)
+    if p.poll() is None:
+        log.warning("killing bad cmd '%s'", cmd_trc)
+        p.kill()
+        for _ in range(10):
+            if p.poll():
+                break
+            time.sleep(0.1)
+
 def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=subprocess.STDOUT, tracing=True, raise_on_error=False,
             callback=None, cb_period=5, mask=None, out_prefix='output: ', ignore_output=False, executable=None):
     # pylint: disable=too-many-statements,too-many-branches,too-many-locals
@@ -86,6 +107,11 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
     retcode = 0
 
     try:
+        t_trace = t = time.time()
+        t_cb = t - cb_period - 1  # force callback on first loop iteration
+        t_end = t + timeout
+        p = None
+
         fh, fname = tempfile.mkstemp(".txt", "exec_")
 
         p = subprocess.Popen(cmd,
@@ -106,9 +132,6 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
         #     set_trace(term_size=(208, 80))
 
         # read the output while process is working
-        t_trace = t = time.time()
-        t_cb = t - cb_period - 1  # force callback on first loop iteration
-        t_end = t + timeout
         if ignore_output:
             text = None
         else:
@@ -160,6 +183,8 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
 
     except Exception:
         log.exception('problem during executing cmd %s', cmd_trc)
+        _cleanup_process(p)
+        raise
     finally:
         try:
             os.close(fh)
@@ -173,24 +198,10 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
         retcode = 10000
 
     # once again at the end check if it completed, if not terminate or even kill the process
-    p.poll()
-    if p.returncode is None:
-        log.warning("terminating misbehaving cmd '%s'", cmd_trc)
-        p.terminate()
-        for _ in range(10):
-            if p.poll():
-                break
-            time.sleep(0.1)
-        if p.poll() is None:
-            log.warning("killing bad cmd '%s'", cmd_trc)
-            p.kill()
-            for _ in range(10):
-                if p.poll():
-                    break
-                time.sleep(0.1)
+    _cleanup_process(p)
 
     # not good, cannot kill process
-    if p.poll() is None:
+    if p and p.poll() is None:
         log.error("cannot kill cmd '%s'", cmd_trc)
 
     if callback:
@@ -200,12 +211,12 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
     if output_handler is None and not ignore_output:
         out = "".join(text)
 
-    if raise_on_error and p.returncode != 0:
+    if raise_on_error and p and p.returncode != 0:
         raise Exception("cmd failed: %s, exitcode: %d, out: %s" % (cmd_trc, p.returncode, out))
 
     # make sure that when there is error 'if retcode' turns True
     if retcode == 0:
-        if p.returncode is None:
+        if not p or p.returncode is None:
             retcode = -1
         else:
             retcode = p.returncode
