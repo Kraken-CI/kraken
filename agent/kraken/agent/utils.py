@@ -21,6 +21,8 @@ import tempfile
 import platform
 import subprocess
 
+import chardet
+
 osname = platform.system()
 
 log = logging.getLogger(__name__)
@@ -33,6 +35,9 @@ def _get_size(fname):
 
 
 def _trace_log_text2(log_text, output_handler, text, tracing, mask, out_prefix, trace_all):
+    enc = chardet.detect(log_text)
+    log_text = log_text.decode(enc['encoding'], 'ignore')
+
     if trace_all and not log_text.endswith('\n'):
         log_text += '\n'
 
@@ -58,7 +63,7 @@ def _trace_log_text2(log_text, output_handler, text, tracing, mask, out_prefix, 
 
 
 def _trace_log_text(log_text, output_handler, text, tracing, mask, out_prefix, trace_all=False):
-    text_left = ''
+    text_left = b''
     # cut log to chunks to not get over log.info msg limit
     for i in range(0, len(log_text), 2048):
         chunk = log_text[i:i + 2048]
@@ -117,7 +122,6 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
         p = subprocess.Popen(cmd,
                              shell=True,
                              executable=executable,
-                             universal_newlines=True,
                              # TODO: this requires doing os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
                              # like in local_run.py
                              # start_new_session=True,
@@ -138,9 +142,9 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
             text = []
         out_size = 0
         completed = False
-        out_fragment = ""
+        out_fragment = b""
         t0_frag = time.time()
-        with open(fname) as f:
+        with open(fname, 'rb') as f:
             while t < t_end and not completed:
                 t = time.time()
 
