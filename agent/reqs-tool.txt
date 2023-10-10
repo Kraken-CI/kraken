@@ -1,3 +1,4 @@
 distro==1.7.0
 giturlparse2==1.0.0
 minio==7.0.0
+chardet==5.2.0
