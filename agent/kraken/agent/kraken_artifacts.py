@@ -1,4 +1,4 @@
-# Copyright 2020 The Kraken Authors
+# Copyright 2020-2023 The Kraken Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -44,6 +44,9 @@ def _upload_all(mc, minio_bucket, cwd, source, rundir, dest, report_artifact):
             dest_f = os.path.join(rundir, dest, f_path)
             dest_f = os.path.normpath(dest_f)
 
+            if os.sep == '\\':
+                dest_f = dest_f.replace('\\', '/')
+
             log.info('store %s -> %s / %s', f, minio_bucket, dest_f)
             mc.fput_object(minio_bucket, dest_f, f)
 
@@ -67,17 +70,23 @@ def _upload_all(mc, minio_bucket, cwd, source, rundir, dest, report_artifact):
 
 def _download_dir(mc, minio_bucket, subdir, src_dir, dest):
     cnt = 0
-    src = os.path.join(subdir, src_dir) + '/'
-    objects = mc.list_objects(minio_bucket, src)
-    log.info('objects in %s: %s', src, objects)
+    src = os.path.join(subdir, src_dir) + os.sep
+    remote_src = src
+    if os.sep == '\\':
+        remote_src = remote_src.replace('\\', '/')
+    objects = mc.list_objects(minio_bucket, remote_src)
+    log.info('objects in %s: %s', remote_src, objects)
     for r in objects:
         log.info('obj %s', r.object_name)
+        host_src = r.object_name
+        if os.sep == '\\':
+            host_src = host_src.replace('/', '\\')
         if r.is_dir:
-            next_dir = os.path.join(src_dir, r.object_name)
-            next_dest = os.path.join(dest, r.object_name)
+            next_dir = os.path.join(src_dir, host_src)
+            next_dest = os.path.join(dest, host_src)
             cnt += _download_dir(mc, minio_bucket, subdir, next_dir, next_dest)
         else:
-            dest_file = os.path.join(src_dir, os.path.relpath(r.object_name, src))
+            dest_file = os.path.join(src_dir, os.path.relpath(host_src, src))
             mc.fget_object(minio_bucket, r.object_name, dest_file)
             log.info('downloaded %s -> %s', r.object_name, dest_file)
             cnt += 1
@@ -86,7 +95,10 @@ def _download_dir(mc, minio_bucket, subdir, src_dir, dest):
 
 def _download_file_or_dir(mc, minio_bucket, subdir, source, dest):
     cnt = 0
-    dest_file = os.path.realpath(os.path.join(dest, source))
+    host_source = source
+    if os.sep == '\\':
+        host_source = host_source.replace('/', '\\')
+    dest_file = os.path.realpath(os.path.join(dest, host_source))
     src = '%s/%s' % (subdir, source)
     try:
         log.info('try download %s -> %s', src, dest_file)
