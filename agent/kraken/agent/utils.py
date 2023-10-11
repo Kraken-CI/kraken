@@ -35,13 +35,12 @@ def _get_size(fname):
 
 
 def _trace_log_text2(log_text, output_handler, text, tracing, mask, out_prefix, trace_all):
-    enc = chardet.detect(log_text)
-    log_text = log_text.decode(enc['encoding'], 'ignore')
+    log_text = log_text.replace(b'\r\n', b'\n')
 
-    if trace_all and not log_text.endswith('\n'):
-        log_text += '\n'
+    if trace_all and not log_text.endswith(b'\n'):
+        log_text += b'\n'
 
-    lines = log_text.rsplit('\n', 1)
+    lines = log_text.rsplit(b'\n', 1)
     if len(lines) == 1:
         # no new lines so nothing new to print
         log_text_left = lines[0]
@@ -49,6 +48,9 @@ def _trace_log_text2(log_text, output_handler, text, tracing, mask, out_prefix, 
         # some new line, so print all to last \n and the rest leave for the next iteration
         frag_to_print_now = lines[0]
         log_text_left = lines[1]
+
+        enc = chardet.detect(frag_to_print_now)
+        frag_to_print_now = frag_to_print_now.decode(enc['encoding'], 'ignore')
 
         if output_handler:
             output_handler(frag_to_print_now)

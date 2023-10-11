@@ -34,26 +34,31 @@ def run(step, **kwargs):  # pylint: disable=unused-argument
     if script:
         if osname == 'Linux':
             suffix = '.sh'
+            shell_exe = step.get('shell_exe', '/bin/bash')
+        elif osname == 'Windows':
+            shell_exe = step.get('shell_exe', None)
+            if shell_exe and 'powershell' in shell_exe.lower():
+                suffix = '.ps1'
+            else:
+                suffix = '.bat'
         else:
-            suffix = '.bat'
+            raise Exception('not implemented')
 
         fh = tempfile.NamedTemporaryFile(mode='w', prefix='kk-shell-', suffix=suffix, delete=False, encoding='utf-8')
 
         if osname == 'Linux':
             fh.write('set -ex\n')
+        elif osname == 'Windows' and (not shell_exe or 'powershell' not in shell_exe.lower()):
+            fh.write('@echo on\n')
         fh.write(script)
         fname = fh.name
         fh.close()
 
-        if osname == 'Linux':
-            shell_exe = step.get('shell_exe', '/bin/bash')
-        elif osname == 'Windows':
-            shell_exe = step.get('shell_exe', None)
-        else:
-            raise Exception('not implemented')
-
         if shell_exe:
-            cmd = '%s %s' % (shell_exe, fname)
+            if 'powershell' in shell_exe.lower():
+                cmd = '%s -executionpolicy bypass -nologo "& ""%s"""' % (shell_exe, fname)
+            else:
+                cmd = '%s %s' % (shell_exe, fname)
         else:
             cmd = fname
         shell_exe = None
