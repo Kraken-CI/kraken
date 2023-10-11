@@ -160,7 +160,7 @@ def execute(cmd, timeout=60, cwd=None, env=None, output_handler=None, stderr=sub
                 s = _get_size(fname)
                 ds = s - out_size
                 out_size = s
-                frag = ''
+                frag = b''
                 if ds > 0:
                     frag = f.read(ds)
                 if len(frag) == 0:
