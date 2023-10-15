@@ -50,7 +50,7 @@ def _trace_log_text2(log_text, output_handler, text, tracing, mask, out_prefix, 
         log_text_left = lines[1]
 
         enc = chardet.detect(frag_to_print_now)
-        frag_to_print_now = frag_to_print_now.decode(enc['encoding'], 'ignore')
+        frag_to_print_now = frag_to_print_now.decode(enc.get('encoding', 'utf-8'), 'ignore')
 
         if output_handler:
             output_handler(frag_to_print_now)
