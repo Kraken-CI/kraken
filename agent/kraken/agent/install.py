@@ -20,7 +20,7 @@ import subprocess
 from pathlib import Path
 
 import distro
-import pkg_resources
+import importlib.metadata
 
 from . import update
 from . import consts
@@ -114,7 +114,7 @@ def install_linux():
     # TODO: add to lxd group if present
 
     # install bin files
-    kraken_version = pkg_resources.get_distribution('kraken-agent').version
+    kraken_version = importlib.metadata.version('kraken-agent')
     dest_dir = update.get_dest_dir(kraken_version)
     run('sudo rm -rf %s' % dest_dir)
     run('sudo mkdir -p %s' % dest_dir)
@@ -257,7 +257,7 @@ def install_windows():
     _powershell(ps)
 
     # install bin files
-    kraken_version = pkg_resources.get_distribution('kraken-agent').version
+    kraken_version = importlib.metadata.version('kraken-agent')
     dest_dir = update.get_dest_dir(kraken_version)
     if os.path.exists(dest_dir):
         run('rmdir /s /q %s' % dest_dir)

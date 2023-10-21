@@ -17,9 +17,10 @@
 import sys
 import logging
 import platform
+import importlib.metadata
 
 import click
-import pkg_resources
+
 
 from . import logs
 from . import agent
@@ -40,7 +41,7 @@ def _intro():
         sys.exit(1)
 
     logs.setup_logging('agent')
-    kraken_version = pkg_resources.get_distribution('kraken-agent').version
+    kraken_version = importlib.metadata.version('kraken-agent')
     log.info('Starting Kraken Agent, version %s', kraken_version)
     log.info('using Python version %s', platform.python_version())
 

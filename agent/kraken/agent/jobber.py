@@ -22,7 +22,7 @@ import asyncio
 import traceback
 # import socketserver
 import threading
-import pkg_resources
+import importlib.metadata
 
 from . import config
 from . import local_run
@@ -48,10 +48,11 @@ def _load_tools_list():
         spec = finder.find_spec(name)
         tools[n] = spec.origin
 
-    for entry_point in pkg_resources.iter_entry_points('kraken.tools'):
+    eps = importlib.metadata.entry_points()
+    for entry_point in eps.select(group='kraken.tools'):
         entry_point.load()
         # log.info("TOOL %s: %s", entry_point.name, entry_point.module_name)
-        tools[entry_point.name] = (None, entry_point.module_name)
+        tools[entry_point.name] = (None, entry_point.module)
 
     return tools
 

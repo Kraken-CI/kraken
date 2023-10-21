@@ -19,7 +19,7 @@ import platform
 import traceback
 
 import distro
-import pkg_resources
+import importlib.metadata
 
 from . import logs
 from . import utils
@@ -127,7 +127,7 @@ def _cleanup_workspace():
 
 
 def run():
-    kraken_version = pkg_resources.get_distribution('kraken-agent').version
+    kraken_version = importlib.metadata.version('kraken-agent')
 
     # allow running kktool from current dir in container
     os.environ["PATH"] += os.pathsep + os.getcwd()
