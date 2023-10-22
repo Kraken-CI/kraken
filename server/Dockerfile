@@ -1,4 +1,4 @@
-FROM krakenci/srv-builder:202301171057 as builder
+FROM krakenci/srv-builder:202310222140 as builder
 
 # install python dependencies first
 COPY pyproject.toml poetry.lock /server/
@@ -16,7 +16,7 @@ RUN \
 
 
 ##############################################################################################################
-FROM krakenci/srv-base:202301171056 as controller
+FROM krakenci/srv-base:202310222131 as controller
 RUN apt-get update && apt-get install -y --no-install-recommends supervisor && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /venv /venv
 COPY supervisor.conf /etc/supervisor.conf
@@ -26,7 +26,7 @@ LABEL kkver=${kkver} kkname=server
 
 
 ##############################################################################################################
-FROM krakenci/srv-base:202301171056 as server
+FROM krakenci/srv-base:202310222131 as server
 RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
 WORKDIR /server
 COPY --from=builder /venv /venv
@@ -39,7 +39,7 @@ LABEL kkver=${kkver} kkname=server
 
 
 ##############################################################################################################
-FROM krakenci/srv-base:202301171056 as rq
+FROM krakenci/srv-base:202310222131 as rq
 RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
 WORKDIR /server
 RUN groupadd user && useradd --create-home --home-dir /home/user -g user user

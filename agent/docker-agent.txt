@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 WORKDIR /opt/kraken
 # python3-docker is required to run docker from docker
 # python3-setuptools are required by python3-docker

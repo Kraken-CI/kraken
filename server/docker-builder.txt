@@ -1,4 +1,4 @@
-FROM krakenci/srv-base:202301171056
+FROM krakenci/srv-base:202310222131
 
 ENV \
         PIP_DEFAULT_TIMEOUT=100 \
