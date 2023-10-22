@@ -40,7 +40,7 @@ def enq(func, *args, **kwargs):
     q = rq.Queue('kq', connection=rds)
     # job timeout is 20mins (1200s), interval between retries is 60s
     j = q.enqueue(func, args=args, kwargs=kwargs, retry=rq.Retry(max=2, interval=5), job_timeout=1200)
-    log.info('put to bg processing: %s', j)
+    log.info('put to bg processing: %s', j.id)
     return j
 
 
