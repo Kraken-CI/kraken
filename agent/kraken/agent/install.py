@@ -18,9 +18,9 @@ import tempfile
 import platform
 import subprocess
 from pathlib import Path
+import importlib.metadata
 
 import distro
-import importlib.metadata
 
 from . import update
 from . import consts

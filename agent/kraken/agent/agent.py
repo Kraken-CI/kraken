@@ -17,9 +17,9 @@ import time
 import logging
 import platform
 import traceback
+import importlib.metadata
 
 import distro
-import importlib.metadata
 
 from . import logs
 from . import utils
