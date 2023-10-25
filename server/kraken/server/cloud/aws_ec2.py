@@ -93,17 +93,51 @@ def create_vms(ag, system, num,
     # get AMI ID
     ami_id = system.name
 
+    # determine AMI platform: Linux or Windows
+    try:
+        images = ec2.describe_images(ImageIds=[ami_id])
+        image = images['Images'][0]
+        os_platform = image['PlatformDetails'].lower()
+    except Exception:
+        # log.exception('problem with provided AMI ID %s' % ami_id)
+        log.warning('problem with provided AMI ID %s' % ami_id, exc_info=sys.exc_info())
+        os_platform = 'linux'
+        # return
+
     # define tags
     tags = [{'ResourceType': 'instance',
              'Tags': [{'Key': 'kraken-group', 'Value': '%d' % ag.id}]}]
 
     # prepare init script
-    init_script = """#!/usr/bin/env bash
-                     exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
-                     wget -O agent {server_url}/bk/install/agent
-                     chmod a+x agent
-                     ./agent install -s {server_url} -c {clickhouse_addr} --system-id {system_id}
-                  """
+    if os_platform == 'windows':
+        init_script = """<powershell>
+                         Start-Transcript -Path "C:\\kk-starter.log" -Append
+                         $PythonPath = Get-Command 'python.exe' | Select -ExpandProperty 'path'
+                         Write-Host "Path to Python: $PythonPath"
+                         $KKAgentURL = "{server_url}/bk/install/agent"
+                         $KKAgentPath = Join-Path $env:Temp 'kkagent'
+                         if (Test-Path -Path $KKAgentPath -PathType Leaf) {
+                             Remove-Item $KKAgentPath
+                         }
+                         Invoke-WebRequest $KKAgentURL -OutFile $KKAgentPath
+                         Write-Host "Downloaded Kraken Agent to $KKAgentPath"
+                         $Cmd = "$KKAgentPath install -s {server_url} -c {clickhouse_addr} --system-id {system_id}"
+                         Write-Host "Invoke cmd: $PythonPath $Cmd"
+                         $p = Start-Process -PassThru -NoNewWindow -Wait -FilePath $PythonPath -ArgumentList $Cmd
+                         if ($p.ExitCode -gt 0) {
+                             throw "Installing Kraken Agent failed"
+                         }
+                         Remove-Item $KKAgentPath
+                         Write-Host 'Kraken Agent installed'
+                         </powershell>
+                      """
+    else:
+        init_script = """#!/usr/bin/env bash
+                         exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+                         wget -O agent {server_url}/bk/install/agent
+                         chmod a+x agent
+                        ./agent install -s {server_url} -c {clickhouse_addr} --system-id {system_id}
+                      """
     init_script = init_script.format(server_url=server_url, clickhouse_addr=clickhouse_addr,
                                      system_id=system.id)
     if aws.get('init_script', False):
