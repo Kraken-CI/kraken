@@ -48,11 +48,17 @@ def _load_tools_list():
         spec = finder.find_spec(name)
         tools[n] = spec.origin
 
-    eps = importlib.metadata.entry_points()
-    for entry_point in eps['kraken.tools']:
-        entry_point.load()
-        # log.info("TOOL %s: %s", entry_point.name, entry_point.module_name)
-        tools[entry_point.name] = (None, entry_point.module)
+    if sys.version_info.minor < 9:  # if older than 3.9
+        import pkg_resources
+        for entry_point in pkg_resources.iter_entry_points('kraken.tools'):
+            entry_point.load()
+            tools[entry_point.name] = (None, entry_point.module_name)
+    else:
+        eps = importlib.metadata.entry_points()
+        for entry_point in eps['kraken.tools']:
+            entry_point.load()
+            # log.info("TOOL %s: %s", entry_point.name, entry_point.module_name)
+            tools[entry_point.name] = (None, entry_point.module)
 
     return tools
 
