@@ -2,7 +2,7 @@ poetry==1.2.2
 shiv==1.0.1
 wheel
 fabric==3.1.0
-boto3==1.17.104
-awscli==1.19.104
+boto3==1.28.73
+awscli==1.29.73
 rsa>=4.7 # not directly required, pinned by Snyk to avoid a vulnerability
 poetry-arbitrary-version-plugin==0.9.2
