@@ -84,7 +84,12 @@ def create_vms(ag, system, num,
         ip_perms = [{
             # SSH ingress open to only the specified IP address
             'IpProtocol': 'tcp', 'FromPort': 22, 'ToPort': 22,
-            'IpRanges': [{'CidrIp': '%s/32' % my_ip}]}]
+            'IpRanges': [{'CidrIp': '%s/32' % my_ip}]
+        }, {
+            # RDP ingress open to only the specified IP address
+            'IpProtocol': 'tcp', 'FromPort': 3389, 'ToPort': 3389,
+            'IpRanges': [{'CidrIp': '%s/32' % my_ip}]
+        }]
         sec_grp.authorize_ingress(IpPermissions=ip_perms)
         sec_grp_id = sec_grp.id
     else:
@@ -116,17 +121,17 @@ def create_vms(ag, system, num,
                          Write-Host "Path to Python: $PythonPath"
                          $KKAgentURL = "{server_url}/bk/install/agent"
                          $KKAgentPath = Join-Path $env:Temp 'kkagent'
-                         if (Test-Path -Path $KKAgentPath -PathType Leaf) {
+                         if (Test-Path -Path $KKAgentPath -PathType Leaf) {{
                              Remove-Item $KKAgentPath
-                         }
+                         }}
                          Invoke-WebRequest $KKAgentURL -OutFile $KKAgentPath
                          Write-Host "Downloaded Kraken Agent to $KKAgentPath"
                          $Cmd = "$KKAgentPath install -s {server_url} -c {clickhouse_addr} --system-id {system_id}"
                          Write-Host "Invoke cmd: $PythonPath $Cmd"
                          $p = Start-Process -PassThru -NoNewWindow -Wait -FilePath $PythonPath -ArgumentList $Cmd
-                         if ($p.ExitCode -gt 0) {
+                         if ($p.ExitCode -gt 0) {{
                              throw "Installing Kraken Agent failed"
-                         }
+                         }}
                          Remove-Item $KKAgentPath
                          Write-Host 'Kraken Agent installed'
                          </powershell>
