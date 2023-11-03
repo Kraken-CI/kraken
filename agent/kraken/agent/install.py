@@ -253,7 +253,7 @@ def _powershell(code):
 def install_windows():
     # create kraken user
     ps = PS_CREATE_KRAKEN_USER.format(kraken_user='kraken',
-                                      kraken_password='kraken')
+                                      kraken_password='kraken!1q2w3e')
     _powershell(ps)
 
     # install bin files
