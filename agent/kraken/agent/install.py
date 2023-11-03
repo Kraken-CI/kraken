@@ -251,9 +251,12 @@ def _powershell(code):
 
 
 def install_windows():
+    kraken_user = 'kraken'
+    kraken_password = '!1q2w3e^@W#Q$8e'
+
     # create kraken user
-    ps = PS_CREATE_KRAKEN_USER.format(kraken_user='kraken',
-                                      kraken_password='!1q2w3e^@W#Q$8e')
+    ps = PS_CREATE_KRAKEN_USER.format(kraken_user=kraken_user,
+                                      kraken_password=kraken_password)
     _powershell(ps)
 
     # install bin files
@@ -275,8 +278,8 @@ def install_windows():
     update.make_links_to_new_binaries(dest_dir)
 
     # setup service
-    ps = PS_SETUP_SERVICE.format(kraken_user='kraken',
-                                 kraken_password='kraken',
+    ps = PS_SETUP_SERVICE.format(kraken_user=kraken_user,
+                                 kraken_password=kraken_password,
                                  server_addr=config.get('server'),
                                  data_dir=data_dir,
                                  tools_dirs=config.get('tools_dirs') or '',
