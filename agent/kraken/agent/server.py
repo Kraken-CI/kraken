@@ -132,7 +132,11 @@ class Server():
 
         response = _send_http_request(self.srv_addr, request)
 
-        return response
+        cfg_changes = {}
+        if 'cfg' in response:
+            cfg_changes = config.merge(response['cfg'])
+
+        return response, cfg_changes
 
     def get_job(self):
         self._ensure_srv_address()

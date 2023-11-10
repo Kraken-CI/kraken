@@ -63,6 +63,7 @@ def _collect_host_info():
     host_info = {}
 
     sys = config.get('system_id', '')
+    log.info('forced system: %s', sys)
     host_info['system'] = sys
 
     # collect basic host and its system information
@@ -153,7 +154,9 @@ def run():
 
     host_info = _collect_host_info()
     while True:
-        resp = srv.report_host_info(host_info)
+        resp, cfg_changes = srv.report_host_info(host_info)
+        if cfg_changes:
+            _apply_cfg_changes(cfg_changes)
         log.info('RESP %s', resp)
         if 'unauthorized' not in resp:
             break
@@ -161,6 +164,8 @@ def run():
         time.sleep(10)
     agent_id = resp.get('agent_id', None)
     log.set_ctx(agent=agent_id)
+
+    log.info('reported host info: %s', host_info)
 
     one_job = config.get('one_job', False)
     if one_job:

@@ -55,9 +55,8 @@ def _load_tools_list():
             tools[entry_point.name] = (None, entry_point.module_name)
     else:
         eps = importlib.metadata.entry_points()
-        for entry_point in eps['kraken.tools']:
+        for entry_point in eps.select(group='kraken.tools'):
             entry_point.load()
-            # log.info("TOOL %s: %s", entry_point.name, entry_point.module_name)
             tools[entry_point.name] = (None, entry_point.module)
 
     return tools

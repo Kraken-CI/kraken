@@ -223,7 +223,7 @@ function Setup-Service([string] $DestDir, [string] $KrakenUser, [string] $Kraken
         $ComputerName = Get-WmiObject -Namespace 'root\\cimv2' -Class 'Win32_ComputerSystem' | Select -ExpandProperty 'Name'
         $NSSM.Run("set $ServiceName ObjectName $ComputerName\\$KrakenUser $KrakenPassword")
 
-        $NSSM.Run("set $ServiceName AppEnvironmentExtra KRAKEN_SERVER_ADDR={server_addr} KRAKEN_CLICKHOUSE_ADDR={clickhouse_addr} KRAKEN_DATA_DIR={data_dir} KRAKEN_TOOLS_DIRS={tools_dirs} KRAKEN_SYSTEM_ID={system_id}")
+        $NSSM.Run("set $ServiceName AppEnvironmentExtra KRAKEN_SERVER_ADDR={server_addr} KRAKEN_CLICKHOUSE_ADDR={clickhouse_addr} KRAKEN_DATA_DIR={data_dir} KRAKEN_SYSTEM_ID={system_id} KRAKEN_TOOLS_DIRS={tools_dirs}")
 
         $NSSM.Run("start $ServiceName")
     }}
@@ -242,6 +242,7 @@ Setup-Service 'c:\\kraken' {kraken_user} {kraken_password}
 
 def _powershell(code):
     f = tempfile.NamedTemporaryFile(delete=False, suffix='.ps1')
+    f.write(b'Start-Transcript -Path "C:\\kk-starter.log" -Append\n')
     f.write(bytes(code, 'utf-8'))
     f.close()
     cmd = 'powershell.exe -ExecutionPolicy Bypass -Command "& %s"' % f.name
@@ -272,8 +273,8 @@ def install_windows():
         run('mkdir %s' % data_dir)
     tmp_dir = Path(tempfile.gettempdir())
     agent_path, tool_path = update.get_blobs(tmp_dir)
-    run('move %s %s' % (agent_path, dest_dir))
-    run('move %s %s' % (tool_path, dest_dir))
+    run('copy %s %s' % (agent_path, dest_dir))
+    run('copy %s %s' % (tool_path, dest_dir))
 
     update.make_links_to_new_binaries(dest_dir)
 

@@ -128,7 +128,7 @@ def create_vms(ag, system, num,
                          Write-Host "Downloaded Kraken Agent to $KKAgentPath"
                          $Cmd = "$KKAgentPath install -s {server_url} -c {clickhouse_addr} --system-id {system_id}"
                          Write-Host "Invoke cmd: $PythonPath $Cmd"
-                         $p = Start-Process -PassThru -NoNewWindow -Wait -FilePath $PythonPath -ArgumentList $Cmd
+                         $p = Start-Process -PassThru -NoNewWindow -Wait -FilePath $PythonPath -RedirectStandardError c:\\kk-install-out.log -RedirectStandardOutput c:\\kk-install-err.log -ArgumentList $Cmd
                          if ($p.ExitCode -gt 0) {{
                              throw "Installing Kraken Agent failed"
                          }}

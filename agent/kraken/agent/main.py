@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import sys
 import logging
 import platform
@@ -47,6 +48,15 @@ def _intro():
 
 
 def _load_cfg(**kwargs):
+    log.info('Env:')
+    for k, v in os.environ.items():
+        if k.startswith('KRAKEN'):
+            log.info('  %s: %s', k, v)
+
+    log.info('Start config:')
+    for k, v in kwargs.items():
+        log.info('  %s: %s', k, v)
+
     config.set_config(kwargs)
 
 

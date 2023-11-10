@@ -915,6 +915,7 @@ def _handle_unknown_agent(address, ip_address, agent):
 
 def _serve_agent_request():
     log.reset_ctx()
+    log.set_ctx(tool='backend')
     req = request.get_json()
     # log.info('request headers: %s', request.headers)
     # log.info('request remote_addr: %s', request.remote_addr)
@@ -975,6 +976,10 @@ def _serve_agent_request():
 
     elif msg == consts.AGENT_MSG_HOST_INFO:
         response = _handle_host_info(agent, req)
+
+        clickhouse_addr = os.environ.get('KRAKEN_CLICKHOUSE_ADDR', consts.DEFAULT_CLICKHOUSE_ADDR)
+        response['cfg'] = dict(clickhouse_addr=clickhouse_addr)
+        response['version'] = version.version
 
     elif msg == consts.AGENT_MSG_KEEP_ALIVE:
         response = _handle_keep_alive(agent, req)
