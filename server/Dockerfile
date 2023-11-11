@@ -16,8 +16,7 @@ RUN \
 
 
 ##############################################################################################################
-FROM krakenci/srv-base:202310222131 as controller
-RUN apt-get update && apt-get install -y --no-install-recommends supervisor && rm -rf /var/lib/apt/lists/*
+FROM krakenci/srv-base:202311110705 as controller
 COPY --from=builder /venv /venv
 COPY supervisor.conf /etc/supervisor.conf
 CMD /venv/bin/python3 -m kraken.migrations.apply && supervisord -c /etc/supervisor.conf
@@ -26,8 +25,7 @@ LABEL kkver=${kkver} kkname=server
 
 
 ##############################################################################################################
-FROM krakenci/srv-base:202310222131 as server
-RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
+FROM krakenci/srv-base:202311110705 as server
 WORKDIR /server
 COPY --from=builder /venv /venv
 COPY kkagent /server
@@ -39,8 +37,7 @@ LABEL kkver=${kkver} kkname=server
 
 
 ##############################################################################################################
-FROM krakenci/srv-base:202310222131 as rq
-RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
+FROM krakenci/srv-base:202311110705 as rq
 WORKDIR /server
 RUN groupadd user && useradd --create-home --home-dir /home/user -g user user
 USER user
