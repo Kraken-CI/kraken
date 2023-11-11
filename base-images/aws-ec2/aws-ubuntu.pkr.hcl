@@ -8,12 +8,12 @@ packer {
 }
 
 source "amazon-ebs" "ubuntu" {
-  ami_name      = "kraken-ubuntu-20.04-4"
+  ami_name      = "kraken-ubuntu-22.04-6"
   instance_type = "t2.micro"
   region        = "ca-central-1"
   source_ami_filter {
     filters = {
-      name                = "ubuntu/images/*ubuntu-*-20.04-amd64-server-*"
+      name                = "ubuntu/images/*ubuntu-*-22.04-amd64-server-*"
       root-device-type    = "ebs"
       virtualization-type = "hvm"
     }
@@ -57,10 +57,12 @@ build {
       "sudo bash -c \"echo 'kraken ALL = NOPASSWD: ALL' > /etc/sudoers.d/kraken\"",
 
       # install docker stuff
-      "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -",
-      "sudo add-apt-repository 'deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable'",
+      "sudo install -m 0755 -d /etc/apt/keyrings",
+      "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg",
+      "sudo chmod a+r /etc/apt/keyrings/docker.gpg",
+      "echo 'deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu jammy stable' | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null",
       "sudo apt update",
-      "sudo apt-get install -y docker-ce",
+      "sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin",
 
       # Setup kraken agent
       #"wget http://lab.kraken.ci/bk/install/kraken-agent-install.sh",
@@ -72,8 +74,8 @@ build {
       #"systemctl status kraken-agent"
 
       # kraken build deps
-      "sudo apt-get install -y rake xz-utils openjdk-13-jre-headless apt-transport-https software-properties-common nodejs npm",
-      "wget https://github.com/mikefarah/yq/releases/download/v4.2.0/yq_linux_amd64",
+      "sudo apt-get install -y rake xz-utils openjdk-17-jre-headless apt-transport-https software-properties-common nodejs npm libpq-dev gcc libpython3-dev libldap-dev libsasl2-dev",
+      "wget https://github.com/mikefarah/yq/releases/download/v4.35.2/yq_linux_amd64",
       "sudo mv yq_linux_amd64 /usr/bin/yq",
       "sudo chmod a+x /usr/bin/yq",
 

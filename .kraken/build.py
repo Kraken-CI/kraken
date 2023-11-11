@@ -73,7 +73,7 @@ def stage(ctx):
         "parameters": [{
             "name": "AMI",
             "type": "string",
-            "default": "ami-0967f290f3533e5a8",
+            "default": "ami-0eb20d74951847b28", # my made by packer
             "description": "AMI for Building"
         }],
         "configs": [],
