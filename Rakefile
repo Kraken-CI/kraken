@@ -84,7 +84,7 @@ file './agent/venv/bin/python3' do
 end
 
 task :prepare_env => ['./venv/bin/python3', './agent/venv/bin/python3', 'server/kraken/version.py'] do
-  sh 'sudo DEBIAN_FRONTEND=noninteractive apt-get install -y openjdk-13-jre-headless python3-venv libpq-dev gcc libpython3-dev libldap-dev libsasl2-dev'
+  sh 'sudo DEBIAN_FRONTEND=noninteractive apt-get install -y openjdk-17-jre-headless python3-venv libpq-dev gcc libpython3-dev libldap-dev libsasl2-dev'
   sh 'cp README.md server/'
   sh 'cd server && ../venv/bin/poetry install'
   sh 'rm server/README.md'
