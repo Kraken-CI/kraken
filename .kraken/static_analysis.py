@@ -3,7 +3,7 @@ def stage(ctx):
         # "system": "krakenci/ubuntu:20.04",
         # "agents_group": "docker",
         # "executor": "docker",
-        "system": "ami-0eb20d74951847b28", # my made by packer
+        "system": "ami-0cadd1022dfb6633a", # my made by packer
         "agents_group": "aws-t2-micro",
         "config": "default"
     }]
@@ -77,7 +77,7 @@ def stage(ctx):
                 "timeout": 300
             }],
             "environments": [{
-                "system": "ami-0eb20d74951847b28", # my made by packer
+                "system": "ami-0cadd1022dfb6633a", # my made by packer
                 "agents_group": "aws-t3-micro",
                 "config": "default"
             }]
