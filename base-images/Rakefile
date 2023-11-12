@@ -1,6 +1,6 @@
 images = {
   'bld-kraken'       => ['bld-kraken:20221115'],
-  'bld-kraken-22.04' => ['bld-kraken-22.04:20230121'],
+  'bld-kraken-22.04' => ['bld-kraken-22.04:20231112'],
 
   'kraken-agent-base-22.04' => ['kraken-agent-base-22.04:20231111'],
 

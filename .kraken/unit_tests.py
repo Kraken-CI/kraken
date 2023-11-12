@@ -70,7 +70,7 @@ def stage(ctx):
                 "cwd": "kraken/server"
             }],
             "environments": [{
-                "system": "krakenci/bld-kraken:20221115",
+                "system": "krakenci/bld-kraken-22.04:20231112",
                 "agents_group": "docker",
                 "executor": "docker",
                 #"system": "ubuntu:20.04",

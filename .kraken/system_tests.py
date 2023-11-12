@@ -12,10 +12,6 @@ def stage(ctx):
             "name": "systest",
             "timeout": 2000,
             "steps": [{
-                "tool": "shell",
-                "cmd": "sudo apt update && sudo apt-get install -y python3-pip",
-                "timeout": 300
-            }, {
                 "tool": "artifacts",
                 "action": "download",
                 "source": "kraken.tar.gz"
@@ -49,7 +45,7 @@ def stage(ctx):
                 "file_glob": "tests/systests-results.xml"
             }],
             "environments": [{
-                "system": "krakenci/bld-kraken",
+                "system": "krakenci/bld-kraken-22.04:20231112",
                 "executor": "docker",
             	"agents_group": "all",
                 "config": "default"

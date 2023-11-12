@@ -8,7 +8,7 @@ packer {
 }
 
 source "amazon-ebs" "ubuntu" {
-  ami_name      = "kraken-ubuntu-22.04-6"
+  ami_name      = "kraken-ubuntu-22.04-7"
   instance_type = "t2.micro"
   region        = "ca-central-1"
   source_ami_filter {
@@ -74,7 +74,8 @@ build {
       #"systemctl status kraken-agent"
 
       # kraken build deps
-      "sudo apt-get install -y rake xz-utils openjdk-17-jre-headless apt-transport-https software-properties-common nodejs npm libpq-dev gcc libpython3-dev libldap-dev libsasl2-dev",
+      "curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash - ",
+      "sudo apt-get install -y rake xz-utils openjdk-17-jre-headless apt-transport-https software-properties-common nodejs libpq-dev gcc libpython3-dev python3-dev libldap-dev libsasl2-dev python3-wheel python3-pip cloc",
       "wget https://github.com/mikefarah/yq/releases/download/v4.35.2/yq_linux_amd64",
       "sudo mv yq_linux_amd64 /usr/bin/yq",
       "sudo chmod a+x /usr/bin/yq",

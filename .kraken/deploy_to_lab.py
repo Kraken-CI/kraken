@@ -25,10 +25,6 @@ def stage(ctx):
                 "cwd": "kraken"
             }, {
                 "tool": "shell",
-                "cmd": "sudo apt update && sudo apt-get install -y --no-install-recommends python3-setuptools python3-wheel python3-pip python3-venv",
-                "timeout": 300
-            }, {
-                "tool": "shell",
                 "cmd": 'printf "$labenv" > lab.env',
                 "cwd": "kraken",
                 "env": {
@@ -44,7 +40,7 @@ def stage(ctx):
                 "timeout": 1000
             }],
             "environments": [{
-                "system": "krakenci/bld-kraken",
+                "system": "krakenci/bld-kraken-22.04:20231112",
                 "executor": "docker",
                 "agents_group": "external",
                 "config": "default"

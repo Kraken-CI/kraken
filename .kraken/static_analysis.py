@@ -19,10 +19,6 @@ def stage(ctx):
             "name": "pylint agent",
             "steps": [{
                 "tool": "shell",
-                "cmd": "sudo apt update && sudo apt-get install -y --no-install-recommends python3-setuptools python3-wheel python3-pip gcc python3-dev || ps axf",
-                "timeout": 300
-            }, {
-                "tool": "shell",
                 "cmd": "sudo pip3 install pylint"
             }, {
                 "tool": "artifacts",
@@ -49,10 +45,6 @@ def stage(ctx):
         }, {
             "name": "pylint server + client",
             "steps": [{
-                "tool": "shell",
-                "cmd": "sudo apt update && sudo apt-get install -y --no-install-recommends python3-setuptools python3-wheel python3-pip gcc python3-dev libpq-dev python3-venv || ps axf",
-                "timeout": 300
-            }, {
                 "tool": "artifacts",
                 "action": "download",
                 "source": "kraken.tar.gz"
@@ -92,10 +84,6 @@ def stage(ctx):
         }, {
             "name": "ng lint",
             "steps": [{
-                "tool": "shell",
-                "cmd": "curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash - && sudo DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends git nodejs",
-                "timeout": 300
-            }, {
                 "tool": "artifacts",
                 "action": "download",
                 "source": "kraken.tar.gz"
@@ -115,10 +103,6 @@ def stage(ctx):
         }, {
             "name": "cloc",
             "steps": [{
-                "tool": "shell",
-                "cmd": "sudo apt update && sudo apt-get install -y --no-install-recommends cloc || ps axf",
-                "timeout": 300
-            }, {
                 "tool": "artifacts",
                 "action": "download",
                 "source": "kraken.tar.gz"
