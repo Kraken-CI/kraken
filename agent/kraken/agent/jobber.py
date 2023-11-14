@@ -226,6 +226,7 @@ async def _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeou
 
     # wait for any task to complete
     done, _ = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+    log.info('jobber async_exec_tool finished tasks: %s', done)
 
     for t in done:
         ex = None
@@ -251,6 +252,8 @@ async def _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeou
             await subprocess_task
         except asyncio.CancelledError:
             pass
+
+    log.info('jobber async_exec_tool completed')
 
 
 def _exec_tool_inner(kk_srv, exec_ctx, tool_path, command, cwd, timeout, user, step, step_file_path, job_id, idx, cancel_event=None):
