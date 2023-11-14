@@ -170,8 +170,11 @@ async def _async_tcp_server(server):
     try:
         await server.serve_forever()
     finally:
+        log.info('jobber closing http server 1')
         server.close()
+        log.info('jobber closing http server 2')
         await server.wait_closed()
+        log.info('jobber closed http server')
 
 
 async def _send_keep_alive_to_server(proc_coord):
@@ -239,7 +242,7 @@ async def _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeou
                 proc_coord.result = {'status': 'error', 'reason': 'exception', 'msg': str(ex)}
 
     # stop internal http server if not stopped yet
-    if tcp_server_task not in done:
+    if tcp_server_task not in done and not tcp_server_task.done():
         log.info('jobber async_exec_tool wait for http server')
         tcp_server_task.cancel()
         log.info('jobber async_exec_tool http server canceled')
@@ -249,7 +252,7 @@ async def _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeou
             pass
         log.info('jobber async_exec_tool waited for http server')
 
-    if cancel_task and cancel_task in done:
+    if cancel_task and (cancel_task in done or cancel_task.done()):
         log.info('jobber async_exec_tool wait for subprocess')
         subprocess_task.cancel()
         log.info('jobber async_exec_tool subprocess cancel')
@@ -263,10 +266,6 @@ async def _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeou
 
 
 def _exec_tool_inner(kk_srv, exec_ctx, tool_path, command, cwd, timeout, user, step, step_file_path, job_id, idx, cancel_event=None):
-    # TODO is it still needed
-    # if tool_path.endswith('.py'):
-    #     tool_path = "%s %s" % (sys.executable, tool_path)
-
     proc_coord = ProcCoord(kk_srv, command, job_id, idx)
     f = _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeout, user, step, step_file_path, cancel_event)
     try:
