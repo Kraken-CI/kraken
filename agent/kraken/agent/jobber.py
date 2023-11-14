@@ -240,18 +240,24 @@ async def _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeou
 
     # stop internal http server if not stopped yet
     if tcp_server_task not in done:
+        log.info('jobber async_exec_tool wait for http server')
         tcp_server_task.cancel()
+        log.info('jobber async_exec_tool http server canceled')
         try:
             await tcp_server_task
         except asyncio.CancelledError:
             pass
+        log.info('jobber async_exec_tool waited for http server')
 
     if cancel_task and cancel_task in done:
+        log.info('jobber async_exec_tool wait for subprocess')
         subprocess_task.cancel()
+        log.info('jobber async_exec_tool subprocess cancel')
         try:
             await subprocess_task
         except asyncio.CancelledError:
             pass
+        log.info('jobber async_exec_tool waited for subprocess')
 
     log.info('jobber async_exec_tool completed')
 
