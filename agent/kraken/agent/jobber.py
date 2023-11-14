@@ -147,7 +147,7 @@ class RequestHandler():
                 break
             try:
                 data = data.decode()
-                #log.info("received %s from %s", data, addr)
+                log.info("received %s from %s", data, addr)
                 data = json.loads(data)
             except Exception:
                 log.exception('problem with decoding data %s from %s', data, addr)

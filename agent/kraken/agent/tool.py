@@ -183,7 +183,10 @@ def execute(sock, module, command, step_file_path):
     except Exception:
         log.exception('tool interrupted by exception')
         exc = traceback.format_exc()
-        sock.send_json({'status': 'error', 'reason': 'exception', 'msg': exc})
+        result = {'status': 'error', 'reason': 'exception', 'msg': exc}
+        sock.send_json(result)
+
+    log.info('step tool result sent: %s', result)
 
 
 class JsonSocket(socket.socket):
@@ -242,6 +245,8 @@ def main():
     else:
         sock = StdoutSock()
         execute(sock, args.module, args.command, args.step_file)
+
+    log.info('step tool completed')
 
 
 if __name__ == '__main__':
