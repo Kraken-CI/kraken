@@ -61,6 +61,11 @@ def cancel_job(job, note, cmplt_status):
     job.completion_status = cmplt_status
     job.notes = note
     job.finished = utils.utcnow()
+    for s in job.steps:
+        if s.status == consts.STEP_STATUS_IN_PROGRES:
+            s.status = consts.STEP_STATUS_ERROR
+        elif s.status == consts.STEP_STATUS_NOT_STARTED or s.status is None:
+            s.status = consts.STEP_STATUS_SKIPPED
     db.session.commit()
     kkrq.enq(bg_jobs.job_completed, job.id)
     log.info('job %s canceled because: %s', job, note, job=job.id)
