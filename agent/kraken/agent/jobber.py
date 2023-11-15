@@ -272,9 +272,10 @@ def _exec_tool_inner(kk_srv, exec_ctx, tool_path, command, cwd, timeout, user, s
     f = _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeout, user, step, step_file_path, cancel_event)
     try:
         if hasattr(asyncio, 'run'):
-            asyncio.run(f)  # this is available since Python 3.7
+            asyncio.run(f, debug=True)  # this is available since Python 3.7
         else:
             loop = asyncio.get_event_loop()
+            loop.set_debug()
             loop.run_until_complete(f)
             loop.close()
     except asyncio.CancelledError:
