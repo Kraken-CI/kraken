@@ -243,6 +243,8 @@ async def _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeou
 
     # stop internal http server if not stopped yet
     if tcp_server_task not in done and not tcp_server_task.done():
+        log.info('jobber async_exec_tool close http server')
+        server.close()
         log.info('jobber async_exec_tool wait for http server')
         tcp_server_task.cancel()
         log.info('jobber async_exec_tool http server canceled')
