@@ -170,10 +170,9 @@ async def _async_tcp_server(server):
     try:
         await server.serve_forever()
     finally:
-        log.info('jobber closing http server 1')
         server.close()
-        log.info('jobber closing http server 2')
-        await server.wait_closed()
+        log.info('jobber closing http server 1')
+        # await server.wait_closed()  # TODO: this hangs indefinitelly, check https://github.com/python/cpython/issues/104344
         log.info('jobber closed http server')
 
 
