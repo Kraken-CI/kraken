@@ -186,7 +186,7 @@ def execute(sock, module, command, step_file_path):
         result = {'status': 'error', 'reason': 'exception', 'msg': exc}
         sock.send_json(result)
 
-    log.info('step tool result sent: %s', result)
+    # log.info('step tool result sent: %s', result)
 
 
 class JsonSocket(socket.socket):

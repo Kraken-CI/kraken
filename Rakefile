@@ -296,7 +296,8 @@ task :run_agent_in_lxd do
   Rake::Task["build_agent"].invoke
   Dir.chdir('agent') do
     systems = [
-      ['ubuntu:20.04', 'u20'],
+      #['ubuntu:20.04', 'u20'],
+      ['images:ubuntu/mantic/amd64', 'u2310'],
     ]
 
     sh 'lxc network delete kk-net || true'
@@ -324,12 +325,12 @@ task :run_agent_in_lxd do
       end
 
       sh "lxc exec #{cntr_name} -- apt-get update"
-      sh "lxc exec #{cntr_name} -- apt-get install -y python3-docker docker.io"
+      sh "lxc exec #{cntr_name} -- apt-get install -y python3-docker docker.io wget python3.12"
+      sh "lxc exec #{cntr_name} -- ln -sf /usr/bin/python3.12 /usr/bin/python3"
 
-      sh "lxc exec #{cntr_name} -- curl -o agent http://#{LOCALHOST_IP}:8080/bk/install/agent"
-      sh "lxc exec #{cntr_name} -- chmod a+x agent"
-      sh "lxc exec #{cntr_name} -- ./agent install -s http://#{LOCALHOST_IP}:8080"
-      #sh "lxc exec #{cntr_name} -- journalctl -u kraken-agent.service"
+      sh "lxc exec #{cntr_name} -- wget http://#{LOCALHOST_IP}:4200/bk/install/kraken-agent-install.sh"
+      sh "lxc exec #{cntr_name} -- chmod a+x kraken-agent-install.sh"
+      sh "lxc exec #{cntr_name} -- ./kraken-agent-install.sh"
       sh "lxc exec #{cntr_name} -- journalctl -f -u kraken-agent.service"
     end
   end

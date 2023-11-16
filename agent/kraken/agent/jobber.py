@@ -144,10 +144,12 @@ class RequestHandler():
             # data = await reader.read(8192)
             data = await reader.readline()
             if not data:
+                writer.close()
+                await writer.wait_closed()
                 break
             try:
                 data = data.decode()
-                log.info("received %s from %s", data, addr)
+                # log.info("received %s from %s", data, addr)
                 data = json.loads(data)
             except Exception:
                 log.exception('problem with decoding data %s from %s', data, addr)
@@ -171,9 +173,7 @@ async def _async_tcp_server(server):
         await server.serve_forever()
     finally:
         server.close()
-        log.info('jobber closing http server 1')
-        # await server.wait_closed()  # TODO: this hangs indefinitelly, check https://github.com/python/cpython/issues/104344
-        log.info('jobber closed http server')
+        await server.wait_closed()
 
 
 async def _send_keep_alive_to_server(proc_coord):
@@ -228,7 +228,6 @@ async def _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeou
 
     # wait for any task to complete
     done, _ = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
-    log.info('jobber async_exec_tool finished tasks: %s', done)
 
     for t in done:
         ex = None
@@ -242,28 +241,18 @@ async def _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeou
 
     # stop internal http server if not stopped yet
     if tcp_server_task not in done and not tcp_server_task.done():
-        log.info('jobber async_exec_tool close http server')
-        server.close()
-        log.info('jobber async_exec_tool wait for http server')
         tcp_server_task.cancel()
-        log.info('jobber async_exec_tool http server canceled')
         try:
             await tcp_server_task
         except asyncio.CancelledError:
             pass
-        log.info('jobber async_exec_tool waited for http server')
 
     if cancel_task and (cancel_task in done or cancel_task.done()):
-        log.info('jobber async_exec_tool wait for subprocess')
         subprocess_task.cancel()
-        log.info('jobber async_exec_tool subprocess cancel')
         try:
             await subprocess_task
         except asyncio.CancelledError:
             pass
-        log.info('jobber async_exec_tool waited for subprocess')
-
-    log.info('jobber async_exec_tool completed')
 
 
 def _exec_tool_inner(kk_srv, exec_ctx, tool_path, command, cwd, timeout, user, step, step_file_path, job_id, idx, cancel_event=None):
@@ -271,10 +260,9 @@ def _exec_tool_inner(kk_srv, exec_ctx, tool_path, command, cwd, timeout, user, s
     f = _async_exec_tool(exec_ctx, proc_coord, tool_path, command, cwd, timeout, user, step, step_file_path, cancel_event)
     try:
         if hasattr(asyncio, 'run'):
-            asyncio.run(f, debug=True)  # this is available since Python 3.7
+            asyncio.run(f)  # this is available since Python 3.7
         else:
             loop = asyncio.get_event_loop()
-            loop.set_debug()
             loop.run_until_complete(f)
             loop.close()
     except asyncio.CancelledError:

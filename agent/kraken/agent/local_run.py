@@ -121,7 +121,7 @@ class LocalExecContext:
                 time.sleep(1)
             await proc.wait()
             raise
-        log.info('async run completed, %s', command)
+        # log.info('async run completed, %s', command)
         #proc_coord.proc_retcode = proc.returncode
 
     async def async_run(self, proc_coord, tool_path, return_addr, step, step_file_path, command, cwd, timeout, user):  # pylint: disable=unused-argument
