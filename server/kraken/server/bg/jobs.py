@@ -1084,8 +1084,8 @@ def spawn_new_agents(agents_group_id):
                 sys_id = job.system_id
                 system = job.system
 
-            jobs[sys_id] += 1
-            systems_by_id[sys_id] = system
+            jobs[system.id] += 1
+            systems_by_id[system.id] = system
 
         log.set_ctx(job=None)
 
