@@ -1067,29 +1067,32 @@ def spawn_new_agents(agents_group_id):
             log.warning('in agents group id:%d cannot spawn more agents, limit %d reached', agents_group_id, limit)
             return
 
-        # find waiting jobs assigned to this agents group
+        # find waiting jobs assigned to this agents group and count systems
         jobs = defaultdict(int)
+        systems_by_id = {}
         q = Job.query.filter_by(covered=False, deleted=None, state=consts.JOB_STATE_QUEUED)
         q = q.filter_by(agents_group=ag)
         for job in q.all():
-            sys_id = job.system_id if job.system.executor == 'local' else 0
+            log.set_ctx(job=job.id)
+            if (job.system.executor == 'local' and job.system.name == 'any') or job.system.executor != 'local':
+                sys_name = depl['default_image']
+                system = System.query.filter_by(name=sys_name).one_or_none()
+                if system is None:
+                    log.warning('job %s: cannot find system for default image %s', job, sys_name)
+                    continue
+            else:
+                sys_id = job.system_id
+                system = job.system
+
             jobs[sys_id] += 1
+            systems_by_id[sys_id] = system
+
+        log.set_ctx(job=None)
 
         # go through systems needed and the counts and spawn agents
         for sys_id, needed_count in jobs.items():
-            log.info('agents group %d, system id %d: needed %d', agents_group_id, sys_id, needed_count)
-
-            # find system info
-            if sys_id != 0:
-                system = System.query.filter_by(id=sys_id).one_or_none()
-                if system is None:
-                    log.warning('cannot find system id:%d', sys_id)
-                    continue
-            else:
-                system = System.query.filter_by(name=depl['default_image']).one_or_none()
-                if system is None:
-                    log.warning('cannot find system id:%d', sys_id)
-                    continue
+            system = systems_by_id[sys_id]
+            log.info('agents group %s, system %s: needed %d', ag, system, needed_count)
 
             # check if there is enough agents with proper system
             q = Agent.query.filter_by(authorized=True, disabled=False, deleted=None)
