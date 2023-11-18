@@ -45,7 +45,7 @@ class StructLogger(logging.Logger):
         extra.update(StructLogger.context)
         extra.update(kwargs)
         extra = {k: v for k, v in extra.items() if v is not None}
-        super()._log(level, msg, args, exc_info, extra, stack_info)
+        super()._log(level, msg, args, exc_info, extra, stack_info, stacklevel=2)
 
     def set_initial_ctx(self, **kwargs):
         if not StructLogger.initial_context:
