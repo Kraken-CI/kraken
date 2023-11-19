@@ -223,6 +223,13 @@ export class AppComponent implements OnInit, OnDestroy {
                     },
                 ],
             },
+            {
+                label: 'Docs',
+                icon: 'fa-solid fa-book',
+                url: 'https://kraken.ci/docs',
+                target: 'blank',
+            },
+
         ]
 
         this.logoutMenuItems = [
