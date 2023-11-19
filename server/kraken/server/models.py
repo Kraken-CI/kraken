@@ -131,7 +131,7 @@ class Branch(db.Model, DatesMixin):
                     project_name=self.project.name,
                     branch_name=self.branch_name,
                     retention_policy=retention_policy,
-                    env_vars=self.env_vars)
+                    env_vars=self.env_vars or {})
 
         if with_results:
             data['ci_flows'] = [f.get_json() for f in self.ci_flows[:10]]
