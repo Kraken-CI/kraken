@@ -1010,7 +1010,6 @@ def refresh_schema_repo(stage_id, complete_starting_run_id=None):
         stage.repo_state = consts.REPO_STATE_OK
         stage.repo_error = ''
         stage.repo_version = version
-        stage.schema_from_repo_enabled = True
         if stage.triggers is None:
             stage.triggers = {}
         prepare_new_planner_triggers(stage.id, schema['triggers'], prev_triggers, stage.triggers)
