@@ -29,7 +29,7 @@ from jinja2 import StrictUndefined
 
 from . import consts
 from . import schemaval
-from .models import Secret, Step, Run, Stage, Branch
+from .models import Secret, Step, Run, Stage, Branch, AgentsGroup
 
 
 log = logging.getLogger(__name__)
@@ -172,6 +172,18 @@ def check_and_correct_stage_schema(branch, stage_name, schema_code, context=None
                         raise SchemaError("Type of '%s' secret should be Simple" % value)
                     if field == 'ssh-key' and secret.kind != consts.SECRET_KIND_SSH_KEY:
                         raise SchemaError("Type of '%s' secret should be SSH Username & Key" % value)
+
+        # check job environments
+        for env in job['environments']:
+            # check agents groups
+            ag_name = env['agents_group']
+            if ag_name == 'all' or '#' in ag_name:
+                continue
+            ag = AgentsGroup.query.filter_by(project=branch.project,
+                                             name=ag_name,
+                                             deleted=None).one_or_none()
+            if ag is None:
+                raise SchemaError("Cannot find %s agents group" % ag_name)
 
     # TODO: check if git url is valid according to giturlparse
     return schema_code, schema
