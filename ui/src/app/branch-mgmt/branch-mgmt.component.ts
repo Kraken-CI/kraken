@@ -725,6 +725,7 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
                 descr: fv['description'],
                 default: fv['default'],
                 value: fv['default'] !== undefined ? fv['default'] : '',
+                base: fv['base'],
             }
             if (fv['type'] === 'array') {
                 if (fv['items']['type'] === 'object') {
@@ -747,32 +748,34 @@ export class BranchMgmtComponent implements OnInit, OnDestroy {
         const json = {}
         for (const fv of this.stepFields) {
             const fn = fv.name
-            if (fv['type'] === 'string') {
-                if (fv['default'] !== undefined && fv['default'] === fv.value) {
-                    // nothing
-                } else if (fv['enum']) {
-                    json[fn] = fv['enum'][0]
-                } else {
-                    json[fn] = fv.value
+            if (fv['type']) {
+                if (fv['type'] === 'string') {
+                    if (fv['default'] !== undefined && fv['default'] === fv.value) {
+                        // nothing
+                    } else if (fv['enum']) {
+                        json[fn] = fv['enum'][0]
+                    } else {
+                        json[fn] = fv.value
+                    }
+                } else if (fv['type'] === 'integer') {
+                    if (fv['default'] !== undefined && fv['default'] === fv.value) {
+                        // nothing
+                    } else if (fv['minimum']) {
+                        json[fn] = fv['minimum']
+                    } else {
+                        json[fn] = fv.value
+                    }
+                } else if (fv['type'] === 'boolean') {
+                    if (fv['default'] !== undefined && fv['default'] === fv.value) {
+                        // nothing
+                    } else {
+                        json[fn] = false
+                    }
+                } else if (fv['type'].startsWith('array')) {
+                    json[fn] = []
+                } else if (fv['type'] === 'object') {
+                    json[fn] = {}
                 }
-            } else if (fv['type'] === 'integer') {
-                if (fv['default'] !== undefined && fv['default'] === fv.value) {
-                    // nothing
-                } else if (fv['minimum']) {
-                    json[fn] = fv['minimum']
-                } else {
-                    json[fn] = fv.value
-                }
-            } else if (fv['type'] === 'boolean') {
-                if (fv['default'] !== undefined && fv['default'] === fv.value) {
-                    // nothing
-                } else {
-                    json[fn] = false
-                }
-            } else if (fv['type'].startsWith('array')) {
-                json[fn] = []
-            } else if (fv['type'] === 'object') {
-                json[fn] = {}
             }
 
             if (fn === 'tool') {

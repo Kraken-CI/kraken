@@ -144,7 +144,7 @@
             <table class="step-help-table">
                 <ng-container *ngFor="let f of stepFields">
                     <tr *ngIf="f.name !== 'tool'">
-                        <td class="step-help-name">{{ f.name }}</td>
+                        <td class="step-help-name" [ngClass]="{'text-400': f.base}">{{ f.name }}</td>
                         <td class="step-help-type">{{ f.type }}</td>
                         <td class="step-help-value">
                             <input type="text" [(ngModel)]="f.value" pInputText (keyup)="generateStep2()" class="p-inputtext-sm" *ngIf="f.type === 'string'" />

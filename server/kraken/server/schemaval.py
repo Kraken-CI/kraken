@@ -862,27 +862,32 @@ def get_schema():
         fields = {
             "tool": {
                 "description": tool.description,
-                "const": name_ver
+                "const": name_ver,
+                "base": True
             },
             "attempts": {
                 "description": "A number of times the step is retried if if it returns error.",
                 "default": 1,
-                "type": "integer"
+                "type": "integer",
+                "base": True
             },
             "sleep_time_after_attempt": {
                 "description": "A sleep time between subsequent execution attempts.",
                 "default": 0,
-                "type": "integer"
+                "type": "integer",
+                "base": True
             },
             "name": {
                 "description": "A name of the step, displayed in web UI.",
                 "default": "",
-                "type": "string"
+                "type": "string",
+                "base": True
             },
             "when": {
                 "description": "A condition when a step may be executed. Any Jinja2 expression can be used, e.g.: `'job.steps[step.index - 1].result.duration > 3'`. The following predefined values are available: `'prev_ok'`, `'always'`, `'never'`, `'was_any_error'`, `'was_no_error'`, `'is_ci'`, `'is_dev'`.",
                 "default": "was_no_error",
-                "type": "string"
+                "type": "string",
+                "base": True
             },
         }
 
