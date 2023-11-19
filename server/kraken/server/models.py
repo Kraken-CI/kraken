@@ -1,4 +1,4 @@
-# Copyright 2020-2022 The Kraken Authors
+# Copyright 2020-2023 The Kraken Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import logging
+import datetime
 
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Column, Boolean, DateTime, ForeignKey, Integer, Unicode, UnicodeText, String
@@ -569,6 +570,9 @@ class Step(db.Model, DatesMixin):
     # services
 
     def get_json(self, with_fields=True, mask_secrets=False):
+        if self.result and 'duration' in self.result:
+            d = datetime.timedelta(seconds=self.result['duration'])
+            self.result['duration'] = duration_to_txt(d)
         data = dict(id=self.id,
                     index=self.index,
                     tool=self.tool.name,

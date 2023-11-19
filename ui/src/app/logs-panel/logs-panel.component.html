@@ -31,8 +31,8 @@
                         <span class="text-600">Status:</span> {{ getStepStatus(step) }}
                     </span>
                     <ng-container *ngIf="step.result">
-                        <span *ngIf="step.result.duration >= 0" class="mr-4">
-                            <span class="text-600">Duration:</span> {{ step.result.duration }}s
+                        <span *ngIf="step.result.duration" class="mr-4">
+                            <span class="text-600">Duration:</span> {{ step.result.duration }}
                         </span>
                         <ng-container *ngIf="step.result['reason']">
                             <span class="mr-4">
