@@ -866,8 +866,9 @@ def create_group(body, token_info=None):
     access.check(token_info, '', 'admin',
                  'only superadmin can create an agents group')
 
-    group = AgentsGroup.query.filter_by(name=body['name']).one_or_none()
+    group = AgentsGroup.query.filter_by(name=body['name'], deleted=None).one_or_none()
     if group is not None:
+        log.info("Group with name %s already exists %s", body['name'], group)
         abort(400, "Group with name %s already exists" % body['name'])
 
     project = None

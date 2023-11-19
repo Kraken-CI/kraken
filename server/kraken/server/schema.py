@@ -179,8 +179,7 @@ def check_and_correct_stage_schema(branch, stage_name, schema_code, context=None
             ag_name = env['agents_group']
             if ag_name == 'all' or '#' in ag_name:
                 continue
-            ag = AgentsGroup.query.filter_by(project=branch.project,
-                                             name=ag_name,
+            ag = AgentsGroup.query.filter_by(name=ag_name,
                                              deleted=None).one_or_none()
             if ag is None:
                 raise SchemaError("Cannot find %s agents group" % ag_name)

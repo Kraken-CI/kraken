@@ -9,6 +9,7 @@ import { MessageService, MenuItem } from 'primeng/api'
 import { AuthService } from '../auth.service'
 import { ManagementService } from '../backend/api/management.service'
 import { BreadcrumbsService } from '../breadcrumbs.service'
+import { showErrorBox } from '../utils'
 
 @Component({
     selector: 'app-groups-page',
@@ -136,20 +137,11 @@ export class GroupsPageComponent implements OnInit, OnDestroy {
                                     this.switchToTab(this.tabs.length - 1)
                                 },
                                 (err) => {
-                                    let msg = err.statusText
-                                    if (err.error && err.error.message) {
-                                        msg = err.error.message
-                                    }
-                                    this.msgSrv.add({
-                                        severity: 'error',
-                                        summary: 'Cannot get group',
-                                        detail:
-                                            'Getting group with ID ' +
-                                            groupId +
-                                            ' erred: ' +
-                                            msg,
-                                        life: 10000,
-                                    })
+                                    showErrorBox(
+                                        this.msgSrv,
+                                        err,
+                                        'Getting group details erred'
+                                    )
                                     this.router.navigate(['/agents-groups/all'])
                                 }
                             )
@@ -208,18 +200,11 @@ export class GroupsPageComponent implements OnInit, OnDestroy {
                     this.router.navigate(['/agents-groups/' + data.id])
                 },
                 (err) => {
-                    console.info(err)
-                    let msg = err.statusText
-                    if (err.error && err.error.message) {
-                        msg = err.error.message
-                    }
-                    this.msgSrv.add({
-                        severity: 'error',
-                        summary: 'Adding new group erred',
-                        detail: 'Adding new group operation erred: ' + msg,
-                        life: 10000,
-                    })
-                    this.newGroupDlgVisible = false
+                    showErrorBox(
+                        this.msgSrv,
+                        err,
+                        'Adding new group erred'
+                    )
                 }
             )
         )
@@ -320,16 +305,11 @@ export class GroupsPageComponent implements OnInit, OnDestroy {
                         })
                     },
                     (err) => {
-                        let msg = err.statusText
-                        if (err.error && err.error.message) {
-                            msg = err.error.message
-                        }
-                        this.msgSrv.add({
-                            severity: 'error',
-                            summary: 'Group update failed',
-                            detail: 'Updating group erred: ' + msg,
-                            life: 10000,
-                        })
+                        showErrorBox(
+                            this.msgSrv,
+                            err,
+                            'Group update erred'
+                        )
                     }
                 )
         )
