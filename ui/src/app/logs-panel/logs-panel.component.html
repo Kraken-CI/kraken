@@ -93,7 +93,7 @@
                          class="flex">
                         <div style="width: 3rem; color: #888; text-align: right; margin-right: 0.5rem; flex: none;">{{ stepsStates[idx].start + l_idx  }}</div>
                         <div style="white-space: pre-wrap; overflow-x: auto; word-break: break-word; margin: 0;"
-                             [innerHTML]="prepareLogLine(stepsStates[idx], l.message, l.level) | noSanitize">
+                             [innerHTML]="prepareLogLine(stepsStates[idx], l) | noSanitize">
                         </div>
                     </div>
                 </div>

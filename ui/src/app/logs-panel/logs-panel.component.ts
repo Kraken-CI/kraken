@@ -14,10 +14,9 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser'
 import { Subscription } from 'rxjs'
 
 import { parse } from 'ansicolor'
-import { DateTime } from 'luxon'
 
 import { ExecutionService } from '../backend/api/execution.service'
-import { replaceEntityIntoLink } from '../utils'
+import { replaceEntityIntoLink, datetimeToLocal } from '../utils'
 
 @Component({
     selector: 'app-logs-panel',
@@ -402,20 +401,16 @@ export class LogsPanelComponent implements OnInit, OnDestroy {
         return kv
     }
 
-    prepareLogLine(stepState, line, level) {
-        const currTs = line.slice(0, 23)
-        const currTsObj = DateTime.fromFormat(currTs, 'yyyy-MM-dd HH:mm:ss,SSS')
+    prepareLogLine(stepState, logEntry) {
+        let line = logEntry.message
+        const level = logEntry.level
         if (this.logTimestamps) {
-            // fix missing timestamps
-            if (currTsObj.isValid) {
-                stepState.prevTs = currTs
-            } else if (stepState.prevTs) {
-                line = stepState.prevTs + ' ' + line
+            const currTs = logEntry.time
+            if (currTs) {
+                stepState.prevTs = datetimeToLocal(currTs, 'yy-LL-dd HH:mm:ss')
             }
-        } else {
-            // strip timestamps
-            if (currTsObj.isValid) {
-                line = line.slice(24)
+            if (stepState.prevTs) {
+                line = stepState.prevTs + ' ' + line
             }
         }
 
