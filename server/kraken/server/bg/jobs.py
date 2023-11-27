@@ -1077,8 +1077,8 @@ def spawn_new_agents(agents_group_id):
                 sys_name = depl['default_image']
                 system = System.query.filter_by(name=sys_name).one_or_none()
                 if system is None:
-                    log.warning('job %s: cannot find system for default image %s', job, sys_name)
-                    continue
+                    system = System(name=sys_name, executor='local')
+                    db.session.commit()
             else:
                 sys_id = job.system_id
                 system = job.system
