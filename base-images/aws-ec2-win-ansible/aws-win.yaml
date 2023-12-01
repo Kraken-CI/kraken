@@ -1,0 +1,124 @@
+---
+- name: Create Windows AMI
+  hosts: localhost
+  vars:
+    ansible_python_interpreter: ./venv/bin/python3
+  gather_facts: no
+  tasks:
+    - include_vars: aws-vars.yaml
+
+    - name: create rsa key pair
+      amazon.aws.ec2_key:
+        name: kk-win-ansible
+        key_type: rsa
+      register: key
+
+# this should (can) be executed once, only when the key is created
+#    - name: download private key
+#      copy: content="{{ key.key.private_key }}" dest="kk-win-ansible.pem" mode=0600
+
+    - name: create security group
+      amazon.aws.ec2_group:
+        name: rdp
+        description: allow remote windows
+        vpc_id: "{{ vpc }}"
+        region: "{{ region }}"
+        rules:
+          - proto: tcp
+            ports: 3389
+            cidr_ip: 0.0.0.0/0
+          - proto: tcp
+            ports: 5986
+            cidr_ip: 0.0.0.0/0
+      register: sgroup
+
+    - name: create instance
+      amazon.aws.ec2_instance:
+        name: kk-win-base-ansible
+        vpc_subnet_id: "{{ subnet }}"
+        image_id: ami-0075388e70a5122c9  # Windows_Server-2022-English-Full-Base-2023.10.11
+        instance_type: t2.micro
+        key_name: "{{ key.key.name }}"
+        security_group: "{{ sgroup.group_id }}"
+        state: present
+        volumes:
+          - device_name: /dev/sda1
+            ebs:
+              volume_size: 30
+              volume_type: gp2
+              delete_on_termination: true
+        user_data: "{{ lookup('file','user_data_script.txt') }}"
+        wait: true
+      register: instance
+
+    - name: get the Administrator password
+      community.aws.ec2_win_password:
+        instance_id: "{{ instance.instances[0].instance_id }}"
+        region: ca-central-1
+        key_file: kk-win-ansible.pem
+        wait: true
+      register: password
+
+    - name: show EC2 instance address
+      debug:
+        msg: "{{ instance.instances[0].public_dns_name }}"
+
+    - name: Add a host
+      ansible.builtin.add_host:
+        name: '{{ instance.instances[0].public_dns_name }}'
+        ansible_user: administrator
+        ansible_password: 1q2w3e4r!
+        ansible_port: 5986
+        ansible_connection: winrm
+        ansible_winrm_server_cert_validation: ignore
+
+    - name: Wait for WinRM to come up
+      wait_for:
+        host: "{{ instance.instances[0].public_dns_name }}"
+        port: 5986
+        delay: 20
+        timeout: 320
+
+    - name: Wait for WinRM to come up 2
+      delegate_to: "{{ instance.instances[0].public_dns_name }}"
+      wait_for_connection:
+        delay: 60
+        timeout: 300
+
+    - name: Check WinRM connectivity
+      delegate_to: "{{ instance.instances[0].public_dns_name }}"
+      win_ping:
+
+    - name: Ensure Git is installed through Chocolatey
+      delegate_to: "{{ instance.instances[0].public_dns_name }}"
+      win_chocolatey:
+        name: git
+        version: 2.42.0
+        pinned: true
+        state: present
+
+    - name: Ensure Python is installed through Chocolatey
+      delegate_to: "{{ instance.instances[0].public_dns_name }}"
+      win_chocolatey:
+        name: python
+        version: 3.12.0
+        pinned: true
+        state: present
+
+    - name: Remove run-once so user-data script from kraken could run
+      delegate_to: "{{ instance.instances[0].public_dns_name }}"
+      win_file:
+        path: C:\ProgramData\Amazon\EC2Launch\state\.run-once
+        state: absent
+
+    - name: Create an AMI from an existing instance
+      amazon.aws.ec2_ami:
+        instance_id: "{{ instance.instances[0].instance_id }}"
+        name: kraken-windows-6
+        wait: yes
+        state: present
+      register: ami
+
+    - name: show AMI ID
+      debug:
+        msg: "{{ ami.image_id }}"
