@@ -126,7 +126,7 @@ Write-Host 'Kraken Agent installed'
 
 
 def serve_agent_blob(blob):
-    if blob not in ['agent', 'tool', 'kraken-agent-install.sh', 'kraken-agent-install.bat']:
+    if blob not in ['agent', 'tool', 'kraken-agent-install.sh', 'kraken-agent-install.bat', 'nssm-2.24.zip']:
         abort(404)
 
     if blob.startswith('kraken-agent-install.'):
@@ -161,5 +161,8 @@ def serve_agent_blob(blob):
         resp.headers.set("Content-Disposition", "attachment", filename=blob)
         return resp
 
-    p = os.path.join(KKAGENT_DIR, 'kk' + blob)
+    if blob in ['agent', 'tool']:
+        blob = 'kk' + blob
+
+    p = os.path.join(KKAGENT_DIR, blob)
     return send_file(p)

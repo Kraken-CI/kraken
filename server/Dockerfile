@@ -30,6 +30,7 @@ WORKDIR /server
 COPY --from=builder /venv /venv
 COPY kkagent /server
 COPY kktool /server
+COPY nssm-2.24.zip /server
 # tips for running gunicorn in container: https://pythonspeed.com/articles/gunicorn-in-docker/
 CMD /venv/bin/gunicorn -b 0.0.0.0:${KRAKEN_SERVER_PORT} --timeout 600 -w 2 --worker-tmp-dir /dev/shm --log-file=- "kraken.server.server:create_app()"
 ARG kkver=0.0

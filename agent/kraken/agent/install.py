@@ -191,7 +191,7 @@ function Setup-Service([string] $DestDir, [string] $KrakenUser, [string] $Kraken
     if (Test-Path -Path $NSSMPath -PathType Leaf) {{
         Write-Host "Path to existing NSSM: $NSSMPath"
     }} else {{
-        Invoke-WebRequest 'http://nssm.cc/release/nssm-2.24.zip' -OutFile 'nssm-2.24.zip'
+        Invoke-WebRequest '{server_addr}/bk/install/nssm-2.24.zip' -OutFile 'nssm-2.24.zip'
         Expand-Archive 'nssm-2.24.zip' -DestinationPath $DestDir
         Remove-Item 'nssm-2.24.zip'
         Write-Host "Downloaded NSSM: $NSSMPath"

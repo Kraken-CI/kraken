@@ -449,8 +449,12 @@ task :publish_client => './venv/bin/python3' do
   end
 end
 
+file 'server/nssm-2.24.zip' do
+  sh 'wget -nv http://nssm.cc/release/nssm-2.24.zip -O server/nssm-2.24.zip'
+end
+
 task :build_server => KK_SERVER_TGZ_PATH
-file KK_SERVER_TGZ_PATH => ['./venv/bin/python3', 'server/kraken/version.py']  do
+file KK_SERVER_TGZ_PATH => ['./venv/bin/python3', 'server/kraken/version.py', 'server/nssm-2.24.zip']  do
   Dir.chdir('server') do
     sh 'rm -rf dist'
     sh 'cp ../README.md .'
