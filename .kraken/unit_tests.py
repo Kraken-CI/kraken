@@ -81,6 +81,7 @@ def stage(ctx):
         "notification": {
             "slack": {"channel": "kk-results"},
             "email": "godfryd@gmail.com",
-            "github": {"credentials": "#{KK_SECRET_SIMPLE_gh_status_creds}"}
+            "github": {"credentials": "#{KK_SECRET_SIMPLE_gh_status_creds}"},
+            "discord": {"webhook": "#{secrets.discord_webhook}"}
         }
     }
