@@ -830,6 +830,17 @@ SCHEMA = {
                             "type": "string"
                         }
                     }
+                },
+                "discord": {
+                    "description": "It sends run results to indicated Discord channel.",
+                    "type": "object",
+                    "additionalProperties": False,
+                    "properties": {
+                        "webhook": {
+                            "description": "Webhook of Discord channel",
+                            "type": "string"
+                        }
+                    }
                 }
             }
         }
