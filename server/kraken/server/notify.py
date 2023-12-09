@@ -1,4 +1,4 @@
-# Copyright 2020 The Kraken Authors
+# Copyright 2020-2023 The Kraken Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import requests
 
 from .models import get_setting
 from .schema import prepare_secrets, substitute_vars, prepare_context
+from . import utils
 
 
 log = logging.getLogger(__name__)
@@ -243,6 +244,151 @@ def _notify_github(run, event, gh):
     log.info('github resp: %s, %s', r, r.text)
 
 
+def _notify_discord(run, event, discord):
+    if event == 'start':
+        return
+    if discord is None:
+        return
+
+    webhook = discord.get('webhook', None)
+    if webhook is None:
+        return
+
+    server_url = _get_srv_url()
+
+    if run.jobs_error and run.jobs_error > 0:
+        embed_color = 15158332
+        status = 'errors'
+    else:
+        embed_color = 3066993
+        status = 'success'
+
+    title = f"Run {run.label} of {run.stage.name} completed with {status}"
+    description = 'Branch [%s](%s) [%s](%s), flow [%s](%s)'
+    description %= (run.flow.branch.name,
+                    urljoin(server_url, '/branches/%s' % run.flow.branch.id),
+                    'CI' if run.flow.kind == 0 else 'Dev',
+                    urljoin(server_url, '/branches/%s/%s' % (run.flow.branch.id, 'ci' if run.flow.kind == 0 else 'dev')),
+                    run.flow.get_label(),
+                    urljoin(server_url, '/flows/%d' % run.flow.id))
+
+    if run.repo_data and run.repo_data.data:
+        description += '\nGit: '
+        rc = run.repo_data.data[0]
+
+        # prepare repo url
+        repo_url = rc['repo']
+        if repo_url and repo_url.endswith('.git'):
+            repo_url = repo_url[:-4]
+
+        commits = rc.get('commits', None)
+        pr = rc.get('pull_request', None)
+
+        # prepare diff url
+        start_commit = ''
+        last_commit = ''
+        if commits:
+            start_commit = rc['before']
+            last_commit = rc['after']
+        elif pr:
+            start_commit = pr['base']['sha']
+            last_commit = rc['after']
+
+        if start_commit and last_commit:
+            diff_url = f'{repo_url}/compare/{start_commit}...{last_commit}'
+
+        if repo_url:
+            description += f'[repo]({repo_url})'
+        if diff_url:
+            if repo_url:
+                description += ', '
+            else:
+                description += '\n'
+            description += f' [diff]({diff_url})'
+
+        if commits and len(commits) > 0:
+            description += '\nPush:'
+            for c in commits:
+                if c.get('url', None):
+                    c_url = c['url']
+                else:
+                    c_url = repo_url + '/commit/' + c['commit']
+                description += f"\n[{c['id'][:8]}]({c_url}) "
+                description += f"{c['author']['name']}, "
+                description += c['message'][:40]
+
+        elif pr:
+            description += '\nPull Request'
+            description += f" [#{pr['number']}]({pr['html_url']})"
+            description += f" by {pr['user']['login']}\n"
+            description += f"{pr['title']}\n"
+            description += f"branch: {pr['head']['ref']}\n"
+            description += f"commits: {pr['commits']}"
+
+
+    fields = [{
+	'name': 'Jobs erred',
+	'value': f'{run.jobs_error}/{run.jobs_total}',
+	'inline': True,
+    }]
+
+    if run.tests_total > 0:
+        ratio = run.tests_passed * 100 / float(run.tests_total)
+        fields.append({
+	    'name': 'Tests',
+	    'value': f'{ratio:.1f}%, {run.tests_passed}/{run.tests_total}',
+	    'inline': True,
+        })
+
+    if run.regr_cnt > 0 or run.fix_cnt > 0 or run.issues_new > 0:
+        fields.append({
+	    'name': '\u200b',
+	    'value': '\u200b',
+	    'inline': False,
+        })
+
+    if run.regr_cnt > 0:
+        fields.append({
+            "name": "Regressions",
+            "value": '%d' % run.regr_cnt,
+            "inline": True
+        })
+    if run.fix_cnt > 0:
+        fields.append({
+            "name": "Fixes",
+            "value": '%d' % run.fix_cnt,
+            "inline": True
+        })
+    if run.issues_new > 0:
+        fields.append({
+            "name": "New Issues",
+            "value": '%d' % run.issues_new,
+            "inline": True
+        })
+
+    data = {'embeds': [{
+        "avatar_url": "https://lab.kraken.ci/favicon.png",
+        "color": embed_color,
+        "author": {
+            "name": f'Project {run.flow.branch.project.name}',
+            "url": urljoin(server_url, '/projects/%d' % run.flow.branch.project.id),
+            "icon_url": "https://lab.kraken.ci/favicon.png"
+        },
+        "title": title,
+        "url": urljoin(server_url, '/runs/%d' % run.id),
+        "description": description,
+        "fields": fields,
+        "timestamp": utils.utcnow().isoformat()
+    }]}
+
+    log.info('discord webhook: %s/..., data: %s', webhook.rsplit('/', 1)[0], data)
+
+    # sending post to discord
+    r = requests.post(webhook, json=data)
+
+    log.info('discord resp: %s, %s', r, r.text)
+
+
 def notify(run, event):
     notification = run.stage.schema.get('notification', None)
     if notification is None:
@@ -274,6 +420,13 @@ def notify(run, event):
     github = notification.get('github', None)
     try:
         _notify_github(run, event, github)
+    except Exception:
+        log.warning('IGNORED', exc_info=sys.exc_info())
+
+    # discord
+    discord = notification.get('discord', None)
+    try:
+        _notify_discord(run, event, discord)
     except Exception:
         log.warning('IGNORED', exc_info=sys.exc_info())
 
