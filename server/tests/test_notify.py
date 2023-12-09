@@ -5,7 +5,7 @@ import pytest
 
 from kraken.server import consts, initdb
 from kraken.server.models import db, Project, Branch, Flow, Secret, Stage, AgentsGroup, Agent, Tool
-from kraken.server.models import Run, Step, System, Job, RepoChanges, set_setting
+from kraken.server.models import Run, System, Job, RepoChanges, set_setting
 
 from common import create_app
 

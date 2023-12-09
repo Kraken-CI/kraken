@@ -24,7 +24,7 @@ def stage(ctx):
             }],
             "environments": [{
                 "system": "any",
-                "agents_group": "all",
+                "agents_group": "linux",
                 "config": "default"
             }]
         }],
