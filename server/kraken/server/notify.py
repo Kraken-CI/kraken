@@ -263,7 +263,7 @@ def _notify_discord(run, event, discord):
         embed_color = 3066993
         status = 'success'
 
-    title = f"%s flow %s: %s completed with %s" % (
+    title = "%s flow %s: %s completed with %s" % (
         'CI' if run.flow.kind == 0 else 'Dev',
         run.flow.get_label(),
         run.stage.name,
