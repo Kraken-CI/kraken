@@ -100,7 +100,7 @@ GH_PUSH = [{"ref": "refs/heads/master", "repo": "https://github.com/Kraken-CI/kr
 
 GH_PR = [{"repo": "https://github.com/Kraken-CI/kraken.git", "after": "0905154a46fd12f78fd981ec18ac913b6367394d", "action": "opened", "before": "504e67e6d0fd05367e89284677f36bf29afb8758", "sender": {"id": 176567, "url": "https://api.github.com/users/godfryd", "type": "User", "login": "godfryd", "html_url": "https://github.com/godfryd", "avatar_url": "https://avatars.githubusercontent.com/u/176567?v=4"}, "trigger": "github-pull_request", "pull_request": {"id": 1630547580, "url": "https://api.github.com/repos/Kraken-CI/kraken/pulls/318", "base": {"ref": "master", "sha": "504e67e6d0fd05367e89284677f36bf29afb8758"}, "repo": {"id": 280832057, "url": "https://api.github.com/repos/Kraken-CI/kraken", "name": "kraken", "user": {"id": 68497961, "url": "https://api.github.com/users/Kraken-CI", "type": "Organization", "login": "Kraken-CI", "html_url": "https://github.com/Kraken-CI", "avatar_url": "https://avatars.githubusercontent.com/u/68497961?v=4"}}, "head": {"ref": "snyk-upgrade-160424302bef9627fc16d2a157018edc", "sha": "0905154a46fd12f78fd981ec18ac913b6367394d", "repo": {"id": 280832057, "url": "https://api.github.com/repos/Kraken-CI/kraken", "name": "kraken", "git_url": "git://github.com/Kraken-CI/kraken.git", "created_at": "2020-07-19T09:22:37Z", "updated_at": "2023-12-03T23:41:39Z"}, "user": {"id": 68497961, "url": "https://api.github.com/users/Kraken-CI", "type": "Organization", "login": "Kraken-CI", "html_url": "https://github.com/Kraken-CI", "avatar_url": "https://avatars.githubusercontent.com/u/68497961?v=4"}}, "user": {"id": 176567, "type": "User", "login": "godfryd", "html_url": "https://github.com/godfryd", "avatar_url": "https://avatars.githubusercontent.com/u/176567?v=4"}, "title": "[Snyk] Upgrade luxon from 3.3.0 to 3.4.4", "number": 318, "commits": 1, "diff_url": "https://github.com/Kraken-CI/kraken/pull/318.diff", "html_url": "https://github.com/Kraken-CI/kraken/pull/318", "additions": 5, "deletions": 5, "created_at": "2023-12-05T14:45:14Z", "updated_at": "2023-12-05T14:45:14Z", "changed_files": 2}}]
 
-@pytest.mark.parametrize("repo_changes", [GH_PUSH, GH_PR])
+@pytest.mark.parametrize("repo_changes", [None, GH_PUSH, GH_PR])
 def test_notify_discord_end(repo_changes):
     app = create_app()
 
@@ -124,7 +124,10 @@ def test_notify_discord_end(repo_changes):
                               }
                           }
                       })
-        rc = RepoChanges(data=repo_changes)
+
+        rc = None
+        if repo_changes:
+            rc = RepoChanges(data=repo_changes)
         flow = Flow(branch=branch, kind=consts.FLOW_KIND_CI, user_data={'aaa': 123}, trigger_data=rc,
                     label='kk-123')
         run = Run(stage=stage, flow=flow, reason={'reason': 'by me'}, label='333.', args={})
@@ -141,16 +144,14 @@ def test_notify_discord_end(repo_changes):
         run.tests_total = 200
         db.session.commit()
 
-        #with patch('requests.post') as rp, patch('kraken.server.notify._get_srv_url', return_value='http://aa.pl'):
-        if True:
+        with patch('requests.post') as rp, patch('kraken.server.notify._get_srv_url', return_value='http://aa.pl'):
             notify.notify(run, 'end')
             rp.assert_called_once()
-            assert rp.call_args[0][0] == 'https://api.github.com/repos/Kraken-CI/kraken/statuses/sha1'
-            assert rp.call_args[1]['auth'] == ('user', 'token')
-            assert 'data' in rp.call_args[1]
-            data = rp.call_args[1]['data']
-            data = json.loads(data)
-            assert data['state'] == 'pending'
-            assert data['context'] == 'kraken / stag [lbl]'
-            assert data['target_url'] == 'http://aa.pl/runs/%d' % run.id
-            assert data['description'] == 'waiting for results'
+            assert rp.call_args[0][0] == 'https://discord.com/api/webhooks/1181460671498567741/CFddN6qIAJIhbUP5YUHys0lgxwUe99OzpUAe27M6VA9BIPE0qKhGnUBmvVz43QO3l-1e'
+            assert 'json' in rp.call_args[1]
+            data = rp.call_args[1]['json']
+            assert 'embeds' in data
+            assert len(data['embeds']) == 1
+            embed = data['embeds'][0]
+            assert 'title' in embed
+            assert 'completed with' in embed['title']

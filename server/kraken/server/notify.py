@@ -263,8 +263,13 @@ def _notify_discord(run, event, discord):
         embed_color = 3066993
         status = 'success'
 
-    title = f"Run {run.label} of {run.stage.name} completed with {status}"
-    description = 'Branch [%s](%s) [%s](%s), flow [%s](%s)'
+    title = f"%s flow %s: %s completed with %s" % (
+        'CI' if run.flow.kind == 0 else 'Dev',
+        run.flow.get_label(),
+        run.stage.name,
+        status)
+
+    description = 'Branch [%s](%s), %s [flows](%s), flow [%s](%s)'
     description %= (run.flow.branch.name,
                     urljoin(server_url, '/branches/%s' % run.flow.branch.id),
                     'CI' if run.flow.kind == 0 else 'Dev',
