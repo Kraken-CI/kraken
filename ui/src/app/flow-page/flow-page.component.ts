@@ -430,6 +430,7 @@ export class FlowPageComponent implements OnInit, OnDestroy {
     }
 
     checkFlowCommits() {
+        this.hasFlowCommits = false
         this.repoChangesCount = ''
         if (
             this.flow &&
@@ -444,7 +445,6 @@ export class FlowPageComponent implements OnInit, OnDestroy {
                 this.repoChangesCount = this.flow.trigger.commits.length.toFixed(0)
             }
         }
-        this.hasFlowCommits = false
     }
 
     checkFlowArtifacts() {
