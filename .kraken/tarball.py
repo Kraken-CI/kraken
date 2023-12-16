@@ -30,6 +30,7 @@ def stage(ctx):
         }],
         "notification": {
             "slack": {"channel": "kk-results"},
-            "email": "godfryd@gmail.com"
+            "email": "godfryd@gmail.com",
+            "discord": {"webhook": "#{secrets.discord_webhook}"}
         }
     }
