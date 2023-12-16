@@ -52,6 +52,10 @@ export class FlowPageComponent implements OnInit, OnDestroy {
     logsPanelVisible = false
     runLogsPanelVisible = false
 
+    hasFlowCommits = false
+    repoChangesCount = ''
+    hasFlowArtifacts = false
+
     private subs: Subscription = new Subscription()
 
     constructor(
@@ -200,6 +204,10 @@ export class FlowPageComponent implements OnInit, OnDestroy {
                 this.projectId = flow.project_id
                 this.flow = flow
                 this.prepareFlowDataStr()
+
+                this.checkFlowCommits()
+                this.checkFlowArtifacts()
+
                 const crumbs = [
                     {
                         label: 'Projects',
@@ -421,18 +429,25 @@ export class FlowPageComponent implements OnInit, OnDestroy {
         }
     }
 
-    hasFlowCommits() {
+    checkFlowCommits() {
+        this.repoChangesCount = ''
         if (
             this.flow &&
             this.flow.trigger &&
             (this.flow.trigger.commits || this.flow.trigger.pull_request)
         ) {
-            return true
+            this.hasFlowCommits = true
+
+            if (this.flow.trigger.commits) {
+                this.repoChangesCount = this.flow.trigger.commits.length.toFixed(0)
+            } else {
+                this.repoChangesCount = this.flow.trigger.commits.length.toFixed(0)
+            }
         }
-        return false
+        this.hasFlowCommits = false
     }
 
-    hasFlowArtifacts() {
+    checkFlowArtifacts() {
         if (
             this.flow &&
             this.flow.artifacts &&
@@ -441,9 +456,10 @@ export class FlowPageComponent implements OnInit, OnDestroy {
                 (this.flow.artifacts['public'] &&
                     this.flow.artifacts['public'].count > 0))
         ) {
-            return true
+            this.hasFlowArtifacts = true
+        } else {
+            this.hasFlowArtifacts = false
         }
-        return false
     }
 
     hasFlowReports() {

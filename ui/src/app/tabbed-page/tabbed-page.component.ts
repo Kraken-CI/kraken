@@ -18,6 +18,7 @@ import { Subscription } from 'rxjs'
 
 import { PrimeTemplate } from 'primeng/api'
 import { MenuItem } from 'primeng/api'
+import { TabMenu } from 'primeng/tabmenu'
 
 @Component({
     selector: 'app-tabbed-page-tab',
@@ -30,6 +31,7 @@ import { MenuItem } from 'primeng/api'
 })
 export class TabbedPageTabComponent {
     @Input() label: string = ''
+    @Input() badge: string = ''
 
     _visible: boolean = true
     active = false
@@ -59,6 +61,8 @@ export class TabbedPageComponent
     implements OnInit, OnDestroy, AfterContentInit
 {
     _baseLinkUrl: string = ''
+
+    itemsChanged = true
 
     @Output() tabChanged: EventEmitter<any> = new EventEmitter()
 
@@ -100,7 +104,11 @@ export class TabbedPageComponent
             }
         }
         if (changed) {
+            this.itemsChanged = false
+
             this.initTabs()
+
+            setTimeout(() => this.itemsChanged = true, 0)
         }
     }
 
@@ -136,11 +144,15 @@ export class TabbedPageComponent
 
         this.tabMenuItems = []
         for (const t of this.tabs) {
-            this.tabMenuItems.push({
+            const mi: MenuItem = {
                 label: t.label,
                 routerLink: this.prepareMenuItemRouterLink(t.label),
                 visible: t.visible,
-            })
+            }
+            if (t.badge) {
+                mi.badge = t.badge
+            }
+            this.tabMenuItems.push(mi)
         }
 
         if (this.tabMenuItems.length > 0) {

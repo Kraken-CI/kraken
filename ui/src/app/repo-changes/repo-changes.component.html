@@ -4,7 +4,7 @@
     <a href="{{ diffUrl }}" target="blank" style="margin-left: 20px;" *ngIf="diffUrl">diff</a>
   </p>
 
-  <div *ngIf="changes.commits">
+  <div *ngIf="changes && changes.commits">
     <div *ngFor="let c of changes.commits" style="margin-bottom: 10px;">
       <a href="{{ c.url || repoUrl + '/commit/' + c.commit }}" target="blank"><b>{{ c.id.slice(0,8) }}</b></a>
       by <a href="mailto:{{ c.author.email }}">{{ c.author.name }}</a>

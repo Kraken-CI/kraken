@@ -1,7 +1,7 @@
 <div>
     <ng-container *ngTemplateOutlet="headerTemplate"></ng-container>
 
-    <p-tabMenu [model]="tabMenuItems" [activeItem]="activeTab">
+    <p-tabMenu [model]="tabMenuItems" [activeItem]="activeTab" *ngIf="itemsChanged">
     </p-tabMenu>
 
     <div class="m-3">

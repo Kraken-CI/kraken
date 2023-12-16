@@ -165,14 +165,14 @@
     </app-tabbed-page-tab>
 
     <!-- 3. REPO CHANGES TAB -->
-    <app-tabbed-page-tab label="Repo Changes" [visible]="hasFlowCommits()">
-        <ng-container *ngIf="hasFlowCommits()">
+    <app-tabbed-page-tab label="Repo Changes" [visible]="hasFlowCommits" [badge]="repoChangesCount">
+        <ng-container *ngIf="hasFlowCommits">
             <app-repo-changes [changes]="flow.trigger"></app-repo-changes>
         </ng-container>
     </app-tabbed-page-tab>
 
     <!-- 4. ARTIFACTS TAB -->
-    <app-tabbed-page-tab label="Artifacts" [visible]="hasFlowArtifacts()">
+    <app-tabbed-page-tab label="Artifacts" [visible]="hasFlowArtifacts">
         <ng-container *ngIf="flow && flow.artifacts.public && flow.artifacts.public.count > 0">
             <h3>Public</h3>
             <div style="display: flex;">
