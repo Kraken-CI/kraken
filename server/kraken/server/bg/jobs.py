@@ -850,11 +850,11 @@ def trigger_flow(project_id, trigger_data):
             return
         log.info('triggering flow for project %s', project)
 
-        if trigger_data['trigger'] in ['github-push', 'gitea-push', 'gitlab-Push Hook']:
+        if trigger_data['trigger'] in ['github-push', 'gitea-push', 'gitlab-Push Hook', 'radicle-push']:
             branch_name = trigger_data['ref'].split('/')[-1]
             flow_kind = 'ci'
             flow_kind_no = 0
-        elif trigger_data['trigger'] in ['github-pull_request', 'gitea-pull_request', 'gitlab-Merge Request Hook']:
+        elif trigger_data['trigger'] in ['github-pull_request', 'gitea-pull_request', 'gitlab-Merge Request Hook', 'radicle-patch']:
             branch_name = trigger_data['pull_request']['base']['ref']
             flow_kind = 'dev'
             flow_kind_no = 1
@@ -864,7 +864,6 @@ def trigger_flow(project_id, trigger_data):
 
         reason = trigger_data['trigger'].replace('-', ' ').replace('_', ' ')
         reason = reason.replace('Hook', '').strip()
-        reason = dict(reason=reason)
 
         branch = Branch.query.filter_by(project=project, branch_name=branch_name).one_or_none()
         if branch is None:
@@ -881,7 +880,7 @@ def trigger_flow(project_id, trigger_data):
 
         # handle the case when this is the first flow in the branch
         if last_flow is None:
-            exec_utils.create_a_flow(branch, flow_kind, {})
+            exec_utils.create_a_flow(branch, flow_kind, {}, reason)
             return
 
         trigger_git_url = trigger_data['repo']
@@ -939,11 +938,12 @@ def trigger_flow(project_id, trigger_data):
                 last_flow.trigger_data = trigger_data
                 db.session.commit()
 
-            exec_utils.start_run(stage, last_flow, reason=reason)
+            run_reason = dict(reason=reason)
+            exec_utils.start_run(stage, last_flow, reason=run_reason)
             started_something = True
 
         if not started_something:
-            exec_utils.create_a_flow(branch, flow_kind, {}, trigger_data)
+            exec_utils.create_a_flow(branch, flow_kind, {}, reason, trigger_data)
 
 
 def refresh_schema_repo(stage_id, complete_starting_run_id=None):

@@ -209,7 +209,7 @@ def start_run(stage, flow, reason, args=None, repo_data=None):
     return run
 
 
-def create_a_flow(branch, kind, body, trigger_data=None):
+def create_a_flow(branch, kind, body, reason, trigger_data=None):
     if kind == 'dev':
         kind = consts.FLOW_KIND_DEV
     else:
@@ -240,8 +240,6 @@ def create_a_flow(branch, kind, body, trigger_data=None):
              'ci' if kind == 0 else 'dev',
              flow, branch)
 
-    reason = dict(reason='manual')
-
     for stage in branch.stages:
         if stage.deleted:
             continue
@@ -252,7 +250,8 @@ def create_a_flow(branch, kind, body, trigger_data=None):
             log.info('stage %s not started - disabled', stage)
             continue
 
-        start_run(stage, flow, reason=reason, args=args.get(stage.name, {}))
+        run_reason = dict(reason=reason)
+        start_run(stage, flow, reason=run_reason, args=args.get(stage.name, {}), repo_data=trigger_data)
 
     return flow
 

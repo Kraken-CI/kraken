@@ -32,13 +32,17 @@ log = logging.getLogger(__name__)
 def handle_github_webhook(project_id):
     payload = request.get_data()
     log.info('GITHUB for project_id:%s, payload: %s', project_id, payload)
-
-    # check event
     event = request.headers.get('X-GitHub-Event')
+    signature = request.headers.get("X-Hub-Signature")
+    log.info('GITHUB event:%s, signature: %s', event, signature)
+    return _handle_github_webhook(project_id, payload, event, signature)
+
+
+def _handle_github_webhook(project_id, payload, event, signature):
+    # check event
     if event is None:
         log.warning('missing github event type in request header')
         abort(400, "missing github event type in request header")
-    log.info('EVENT %s', event)
     if event not in ['push', 'pull_request']:
         msg = 'unsupported event'
         log.info(msg)
@@ -59,15 +63,14 @@ def handle_github_webhook(project_id):
     if my_secret:
         my_secret = bytes(my_secret, 'ascii')
     if my_secret is not None:
-        github_sig = request.headers.get("X-Hub-Signature")
-        if github_sig is None:
+        if signature is None:
             log.warning('missing signature in request header')
             abort(400, "missing signature in request header")
-        github_digest_parts = github_sig.split("=", 1)
+        github_digest_parts = signature.split("=", 1)
         my_digest = hmac.new(my_secret, payload, hashlib.sha1).hexdigest()
 
         if len(github_digest_parts) < 2 or github_digest_parts[0] != "sha1" or not hmac.compare_digest(github_digest_parts[1], my_digest):
-            log.warning('bad signature %s vs %s', github_sig, my_digest)
+            log.warning('bad signature %s vs %s', signature, my_digest)
             abort(400, "Invalid signature")
 
     req = json.loads(payload)
@@ -129,7 +132,6 @@ def _handle_gitea_webhook(project_id, payload, event, signature):
     if event is None:
         log.warning('missing gitea event type in request header')
         abort(400, "missing gitea event type in request header")
-    log.info('EVENT %s', event)
     if event not in ['push', 'pull_request']:
         msg = 'unsupported event'
         log.info(msg)
@@ -211,6 +213,7 @@ def handle_gitlab_webhook(project_id):
     log.info('GITLAB for project_id:%s, payload: %s', project_id, payload)
     event = request.headers.get('X-Gitlab-Event')
     token = request.headers.get('X-Gitlab-Token')
+    log.info('GITLAB event:%s', event)
     return _handle_gitlab_webhook(project_id, payload, event, token)
 
 
@@ -219,7 +222,6 @@ def _handle_gitlab_webhook(project_id, payload, event, token):
     if event is None:
         log.warning('missing gitlab event type in request header')
         abort(400, "missing gitlab event type in request header")
-    log.info('EVENT %s', event)
     if event not in ['Push Hook', 'Merge Request Hook']:
         msg = 'unsupported event'
         log.info(msg)
@@ -305,6 +307,113 @@ def _handle_gitlab_webhook(project_id, payload, event, token):
     return "", 204
 
 
+### RADICLE #############
+
+def handle_radicle_webhook(project_id):
+    payload = request.get_data()
+    log.info('RADICLE for project_id:%s, payload: %s', project_id, payload)
+    event = request.headers.get('X-Radicle-Event-Type')
+    event_key = request.headers.get('X-Event-Key')
+    hook_uuid = request.headers.get('X-Hook-UUID')
+    request_uuid = request.headers.get('X-Request-UUID')
+    signature = request.headers.get('X-Hub-Signature-256')
+    log.info('RADICLE event:%s, signature: %s', event, signature)
+    return _handle_radicle_webhook(project_id, payload, event, signature)
+
+
+def _handle_radicle_webhook(project_id, payload, event, signature):
+    # check event
+    if event is None:
+        log.warning('missing radicle event type in request header')
+        abort(400, "missing radicle event type in request header")
+    if event not in ['push', 'patch']:
+        msg = 'unsupported event'
+        log.info(msg)
+        return msg, 204
+
+    # check project
+    project = Project.query.filter_by(id=project_id).one_or_none()
+    if project is None:
+        log.warning('cannot find project %s', project_id)
+        abort(400, "Invalid project id")
+
+    if not project.webhooks or not project.webhooks.get('radicle_enabled', False):
+        log.info('webhooks from radicle disabled')
+        abort(400, "webhooks from radicle disabled")
+
+    # check secret
+    my_secret = project.webhooks.get('radicle_secret', None)
+    if my_secret:
+        my_secret = bytes(my_secret, 'ascii')
+    if my_secret is not None:
+        if signature is None:
+            log.warning('missing signature in request header')
+            abort(400, "missing signature in request header")
+        digest_parts = signature.split("=", 1)
+        my_digest = hmac.new(my_secret, payload, hashlib.sha1).hexdigest()
+
+        if len(digest_parts) < 2 or digest_parts[0] != "sha256" or not hmac.compare_digest(digest_parts[1], my_digest):
+            log.warning('bad signature %s vs %s', signature, my_digest)
+            abort(400, "Invalid signature")
+
+    req = json.loads(payload)
+
+    # trigger running the project flow via rq
+    if event == 'push':
+        trigger_data = dict(trigger='radicle-' + event,
+                            # ref=req['ref'], TODO
+                            before=req['before'],
+                            after=req['after'],
+                            repo=req['repository']['clone_url'],
+                            pusher=dict(#full_name=req['author'],
+                                        username=req['author']['alias'],
+                                        #email=req['author']
+                            ),
+                            commits=req['commits'])
+    elif event == 'patch':
+        action = req['action']
+        if action not in ['created', 'updated']:
+            msg = 'unsupported action %s' % action
+            log.info(msg)
+            return msg, 204
+
+        patch = req['patch']
+
+        before = patch['before']
+        after = patch['after']
+
+        if after == before:
+            msg = 'patch with no commits, dropped'
+            log.info(msg)
+            return msg, 204
+
+        # get base url
+        base_url = req['repository']['clone_url']
+        base_url = base_url.rsplit('/', 2)[0]
+
+        trigger_data = dict(trigger='radicle-' + event,
+                            action=action,
+                            # pull_request=dict(head=dict(ref=obj['source_branch']),
+                            #                   base=dict(ref=obj['target_branch'],
+                            #                             sha=before),
+                            #                   user=dict(login=req['user']['username'],
+                            #                             html_url='%s/%s' % (base_url, req['user']['username'])),
+                            #                   html_url=obj['url'],
+                            #                   number=obj['id'],
+                            #                   updated_at=dateutil.parser.parse(obj['updated_at']).isoformat(),
+                            #                   title=obj['title']),
+                            before=before,
+                            after=after,
+                            repo=base_url,
+                            sender=dict(#full_name=req['author'],
+                                        username=patch['author']['alias'],
+                                        #email=req['author']
+                            ))
+    kkrq.enq(bg_jobs.trigger_flow, project.id, trigger_data)
+
+    return "", 204
+
+
 ### BLUEPRINT #############
 
 def create_blueprint():
@@ -313,5 +422,6 @@ def create_blueprint():
     bp.add_url_rule('/<int:project_id>/github', view_func=handle_github_webhook, methods=['POST'])
     bp.add_url_rule('/<int:project_id>/gitea', view_func=handle_gitea_webhook, methods=['POST'])
     bp.add_url_rule('/<int:project_id>/gitlab', view_func=handle_gitlab_webhook, methods=['POST'])
+    bp.add_url_rule('/<int:project_id>/radicle', view_func=handle_radicle_webhook, methods=['POST'])
 
     return bp

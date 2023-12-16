@@ -2,10 +2,13 @@
 __pycache__
 *pyc
 *jar
+TODO
 node_modules
 venv
+/archive
 /old
 /tools
+/agent/.coverage
 /agent/kraken/agent/consts.py
 /agent/kraken/agent/logs.py
 /agent/kraken_agent.egg-info
@@ -20,6 +23,7 @@ venv
 /server/kkagent
 /server/kktool
 /server/tests/example_tool/vendor/
+/server/nssm-2.24.zip
 /client/dist/
 /client/kraken/client/version.py
 /client/kraken/client/toolops.py

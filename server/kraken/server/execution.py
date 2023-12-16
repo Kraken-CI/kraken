@@ -44,7 +44,7 @@ def create_flow(branch_id, kind, body, token_info=None):
     log.set_ctx(branch=branch.id)
 
     try:
-        flow = exec_utils.create_a_flow(branch, kind, body)
+        flow = exec_utils.create_a_flow(branch, kind, body, 'manual')
     except SchemaError as e:
         abort(400, str(e))
 

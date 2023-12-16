@@ -1,0 +1,39 @@
+{
+  "author": {
+    "id": "did:key:z6MkltRpzcq2ybm13yQpyre58JUeMvZY6toxoZVpLZ8YabRa",
+    "alias": "my_alias"
+  },
+  "before": "193ed2f675ac6b0d1ab79ed65057c8a56a4fab23",
+  "after": "4671d7bf0f0ccc651e096232ef8cc46ade041cfa",
+  "commits": [
+    {
+      "id": "4671d7bf0f0ccc651e096232ef8cc46ade041cfa",
+      "title": "Updates Readme",
+      "message": "Adds description in Readme",
+      "timestamp": "2023-09-30T18:20:43+03:00",
+      "url": "rad:z3gqcJUoA1n9HaHKufZs5FCSGazv5/commits/4671d7bf0f0ccc651e096232ef8cc46ade041cfa",
+      "author": {
+        "name": "Me",
+        "email": "me@mail.com"
+      },
+      "added": [],
+      "modified": [
+        "Readme.md"
+      ],
+      "removed": []
+    }
+  ],
+  "repository": {
+    "id": "rad:z3gqcJUoA1n9HaHKufZs5FCSGazv5",
+    "name": "heartwood",
+    "description": "Radicle is a sovereign peer-to-peer network for code collaboration, built on top of Git.",
+    "private": false,
+    "default_branch": "main",
+    "url": "rad:z3gqcJUoA1n9HaHKufZs5FCSGazv5",
+    "clone_url": "https://seed.radicle.xyz/z3gqcJUoA1n9HaHKufZs5FCSGazv5.git",
+    "delegates": [
+      "did:key:z6MkltRpzcq2ybm13yQpyre58JUeMvZY6toxoZVpLZ8YabRa",
+      "did:key:z6MkltRpzcq2ybm13yQpyre58JUeMvZY6toxoZVpLZ8YabRb"
+    ]
+  }
+}

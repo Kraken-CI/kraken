@@ -1,0 +1,59 @@
+{
+  "action": "created",
+  "patch": {
+    "id": "41aafe22200464bf905b143d4233f7f1fa4a9210",
+    "author": {
+      "id": "did:key:z6MkltRpzcq2ybm13yQpyre58JUeMvZY6toxoZVpLZ8YabRa",
+      "alias": "my_alias"
+    },
+    "title": "Add description in README",
+    "state": {
+      "status": "Open",
+      "conflicts": [
+        {
+          "revisionId": "string",
+          "oid": "string"
+        }
+      ]
+    },
+    "before": "193ed2f675ac6b0d1ab79ed65057c8a56a4fab23",
+    "after": "f0f5d38ffa8d54a7cc737fc4e75ab1e2e178eaa1",
+    "url": "rad:z3gqcJUoA1n9HaHKufZs5FCSGazv5/patches/41aafe22200464bf905b143d4233f7f1fa4a9210",
+    "target": "delegates",
+    "labels": [
+      "small",
+      "goodFirstIssue",
+      "enhancement",
+      "bug"
+    ],
+    "assignees": [
+      "did:key:z6MkltRpzcq2ybm13yQpyre58JUeMvZY6toxoZVpLZ8YabRa"
+    ],
+    "revisions": [
+      {
+        "id": "41aafe22200464bf905b143d4233f7f1fa4a9123",
+        "author": {
+          "id": "did:key:z6MkltRpzcq2ybm13yQpyre58JUeMvZY6toxoZVpLZ8YabRa",
+          "alias": "my_alias"
+        },
+        "description": "The revision description",
+        "base": "193ed2f675ac6b0d1ab79ed65057c8a56a4fab23",
+        "oid": "f0f5d38ffa8d54a7cc737fc4e75ab1e2e178eaa1",
+        "timestamp": 1699437445
+      }
+    ]
+  },
+  "repository": {
+    "id": "rad:z3gqcJUoA1n9HaHKufZs5FCSGazv5",
+    "name": "heartwood",
+    "description": "Radicle is a sovereign peer-to-peer network for code collaboration, built on top of Git.",
+    "private": false,
+    "default_branch": "main",
+    "url": "rad:z3gqcJUoA1n9HaHKufZs5FCSGazv5",
+    "clone_url": "https://seed.radicle.xyz/z3gqcJUoA1n9HaHKufZs5FCSGazv5.git",
+    "delegates": [
+      "did:key:z6MkltRpzcq2ybm13yQpyre58JUeMvZY6toxoZVpLZ8YabRa",
+      "did:key:z6MkltRpzcq2ybm13yQpyre58JUeMvZY6toxoZVpLZ8YabRb"
+    ]
+  }
+}
