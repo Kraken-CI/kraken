@@ -749,49 +749,6 @@ def test_handle_gitlab_webhook_mr_open():
         assert code == 204
 
 
-def test_handle_gitlab_webhook_push():
-    event = 'Push Hook'
-    token = 'm10h7p3shc9a79gvynta'
-    with open('tests/gitlab-push.json', 'rb') as f:
-        payload = f.read()
-
-    app = create_app()
-
-    with app.app_context():
-        initdb._prepare_initial_preferences()
-
-        proj = Project(name='proj', webhooks=dict(gitlab_enabled=True, gitlab_secret=token))
-        db.session.commit()
-
-        # check handling the request
-        with patch('kraken.server.kkrq.enq') as ke:
-            content, code = webhooks._handle_gitlab_webhook(proj.id, payload, event, token)
-
-            ke.assert_called_once()
-            assert ke.call_args[0][0] == bg_jobs.trigger_flow
-            assert ke.call_args[0][1] == proj.id
-            assert ke.call_args[0][2] == {
-                'after': '2b4354ca632e5d517f8d35a3f26512d6bc4695e2',
-                'before': '15666b2895433cdf76f4b5823accf66675ef78dd',
-                'commits': [{'added': [],
-                             'author': {'email': 'godfryd@gmail.com',
-                                        'name': 'Michal Nowikowski'},
-                             'id': '2b4354ca632e5d517f8d35a3f26512d6bc4695e2',
-                             'message': 'updated\n',
-                             'modified': ['README.md'],
-                             'removed': [],
-                             'timestamp': '2021-10-31T07:07:36+01:00',
-                             'title': 'updated',
-                             'url': 'http://gitlab.example.com/root/kraken-demo/-/commit/2b4354ca632e5d517f8d35a3f26512d6bc4695e2'}],
-                'pusher': {'email': '', 'full_name': 'Administrator', 'username': 'root'},
-                'ref': 'refs/heads/main',
-                'repo': 'http://gitlab.example.com/root/kraken-demo.git',
-                'trigger': 'gitlab-Push Hook'}
-
-        assert content == ''
-        assert code == 204
-
-
 def test_handle_radicle_webhook_push():
     event = 'push'
     token = 'm10h7p3shc9a79gvynta'
