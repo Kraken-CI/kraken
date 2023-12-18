@@ -258,12 +258,12 @@ def _notify_discord(run, event, discord):
 
     if run.jobs_error and run.jobs_error > 0:
         embed_color = 15158332
-        status = 'errors'
+        status = 'erred'
     else:
         embed_color = 3066993
-        status = 'success'
+        status = 'succeeded'
 
-    title = "%s flow %s: %s completed with %s" % (
+    title = "%s flow %s: %s %s" % (
         'CI' if run.flow.kind == 0 else 'Dev',
         run.flow.get_label(),
         run.stage.name,
@@ -278,7 +278,7 @@ def _notify_discord(run, event, discord):
                     urljoin(server_url, '/flows/%d' % run.flow.id))
 
     if run.repo_data and run.repo_data.data:
-        description += '\nGit: '
+        description += ', git '
         rc = run.repo_data.data[0]
 
         # prepare repo url
@@ -320,7 +320,7 @@ def _notify_discord(run, event, discord):
                     c_url = repo_url + '/commit/' + c['commit']
                 description += f"\n[{c['id'][:8]}]({c_url}) "
                 description += f"{c['author']['name']}, "
-                description += c['message'][:40]
+                description += c['message'][:100]
 
         elif pr:
             description += '\nPull Request'

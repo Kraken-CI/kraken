@@ -154,4 +154,4 @@ def test_notify_discord_end(repo_changes):
             assert len(data['embeds']) == 1
             embed = data['embeds'][0]
             assert 'title' in embed
-            assert 'completed with' in embed['title']
+            assert 'erred' in embed['title']
