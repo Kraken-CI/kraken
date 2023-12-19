@@ -826,18 +826,17 @@ def test_handle_radicle_webhook_patch():
                 'before': '193ed2f675ac6b0d1ab79ed65057c8a56a4fab23',
                 'pull_request': {'head': {'ref': 'bbb'},
                                  'base': {'ref': 'main', 'sha': ''},
-                                 'user': {'login': 'root',
+                                 'user': {'login': 'my_alias',
                                           'html_url': 'http://gitlab.example.com/root'},
-                                 'html_url': 'http://gitlab.example.com/root/kraken-demo/-/merge_requests/2',
-                                 'number': 2,
-                                 'title': 'Bbb',
-                                 'updated_at': '2021-11-01T06:15:26+00:00'},
-                'repo': 'http://gitlab.example.com/root/kraken-demo.git',
-                'sender': {'avatar_url': 'https://www.gravatar.com/avatar/e64c7d89f26bd1972efa854d13d7dd61?s=80&d=identicon',
-                           'email': '[REDACTED]',
-                           'id': 1,
-                           'name': 'Administrator',
-                           'username': 'root'},
+                                 'html_url': 'rad:z3gqcJUoA1n9HaHKufZs5FCSGazv5/patches/41aafe22200464bf905b143d4233f7f1fa4a9210',  # TODO
+                                 'number': '41aafe22200464bf905b143d4233f7f1fa4a9210',  # TODO
+                                 'title': 'Add description in README',
+                                 'updated_at': '2021-11-01T06:15:26+00:00',
+                                 'commits': 1},
+                'repo': 'https://seed.radicle.xyz/z3gqcJUoA1n9HaHKufZs5FCSGazv5.git',
+                'sender': {#'email': '[REDACTED]',
+                           #'fullname': 'Administrator',
+                           'login': 'my_alias'},
                 'trigger': 'radicle-patch'}
 
         assert content == ''

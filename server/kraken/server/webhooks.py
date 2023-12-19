@@ -387,26 +387,24 @@ def _handle_radicle_webhook(project_id, payload, event, signature):
             log.info(msg)
             return msg, 204
 
-        # get base url
-        base_url = req['repository']['clone_url']
-        base_url = base_url.rsplit('/', 2)[0]
-
         trigger_data = dict(trigger='radicle-' + event,
                             action=action,
-                            # pull_request=dict(head=dict(ref=obj['source_branch']),
-                            #                   base=dict(ref=obj['target_branch'],
-                            #                             sha=before),
-                            #                   user=dict(login=req['user']['username'],
-                            #                             html_url='%s/%s' % (base_url, req['user']['username'])),
-                            #                   html_url=obj['url'],
-                            #                   number=obj['id'],
-                            #                   updated_at=dateutil.parser.parse(obj['updated_at']).isoformat(),
-                            #                   title=obj['title']),
+                            pull_request=dict(#head=dict(ref=obj['source_branch']),
+                                              #base=dict(ref=obj['target_branch'],
+                                              #          sha=before),
+                                              user=dict(login=patch['author']['alias']),
+                                                        #html_url='%s/%s' % (base_url, req['user']['username'])),
+                                              html_url=patch['url'],
+                                              number=patch['id'],
+                                              #updated_at=dateutil.parser.parse(obj['updated_at']).isoformat(),
+                                              title=patch['title'],
+                                              commits=len(patch['revisions']),
+                            ),
                             before=before,
                             after=after,
-                            repo=base_url,
+                            repo=req['repository']['clone_url'],
                             sender=dict(#full_name=req['author'],
-                                        username=patch['author']['alias'],
+                                        login=patch['author']['alias'],
                                         #email=req['author']
                             ))
     kkrq.enq(bg_jobs.trigger_flow, project.id, trigger_data)
