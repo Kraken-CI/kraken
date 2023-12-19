@@ -841,7 +841,18 @@ SCHEMA = {
                             "type": "string"
                         }
                     }
-                }
+                },
+                "radicle": {
+                    "description": "It sends run results to associated patch request page on Radicle instance.",
+                    "type": "object",
+                    "additionalProperties": False,
+                    "properties": {
+                        "credentials": {
+                            "description": "Credentials (user:password) that allows access to the project on Radicle instance.",
+                            "type": "string"
+                        }
+                    }
+                },
             }
         }
     },

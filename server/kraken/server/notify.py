@@ -244,6 +244,69 @@ def _notify_github(run, event, gh):
     log.info('github resp: %s, %s', r, r.text)
 
 
+def _notify_radicle(run, event, radicle):
+    if radicle is None:
+        return
+    if not run.flow.trigger_data:
+        return
+
+    # prepare radicle credentials
+    creds = radicle.get('credentials', None)
+    if creds is None:
+        log.error('no radicle credentials')
+        return
+    creds = creds.split(':')
+    if len(creds) != 2:
+        log.error('radicle credentials should have user:token form')
+        return
+    creds = tuple(creds)  # requests require tuple, not list
+
+    # prepare data for radicle status
+    context = 'kraken / %s [%s]' % (run.stage.name, run.flow.get_label())
+
+    if event == 'start':
+        state = 'pending'
+        descr = 'waiting for results'
+    elif event == 'end':
+        state = 'success'
+        descr = []
+        if run.regr_cnt > 0:
+            descr.append('regressions: %d' % run.regr_cnt)
+            state = 'failure'
+        if run.fix_cnt > 0:
+            descr.append('fixes: %d' % run.fix_cnt)
+        if run.issues_new > 0:
+            descr.append('new issues: %d' % run.issues_new)
+            state = 'failure'
+        descr = ', '.join(descr)
+    else:
+        log.error('unsupported event %s', event)
+        return
+
+    server_url = _get_srv_url()
+    run_url = urljoin(server_url, '/runs/%d' % run.id)
+
+    head = run.flow.trigger_data.data[0]['after']
+    repo_parts = run.flow.trigger_data.data[0]['repo'].split('/')
+    org = repo_parts[-2]
+    repo_name = repo_parts[-1]
+    if repo_name.endswith('.git'):
+        repo_name = repo_name[:-4]
+    url = 'https://api.github.com/repos/%s/%s/statuses/%s' % (org, repo_name, head)
+
+    data = {
+        'state': state,
+        'context': context,
+        'target_url': run_url,
+        'description': descr
+    }
+
+    log.info('radicle data %s', data)
+    r = requests.post(url, data=json.dumps(data), auth=creds)
+
+    log.info('radicle resp: %s, %s', r, r.text)
+
+
 def _notify_discord(run, event, discord):
     if event == 'start':
         return
@@ -425,6 +488,13 @@ def notify(run, event):
     github = notification.get('github', None)
     try:
         _notify_github(run, event, github)
+    except Exception:
+        log.warning('IGNORED', exc_info=sys.exc_info())
+
+    # radicle
+    radicle = notification.get('radicle', None)
+    try:
+        _notify_radicle(run, event, radicle)
     except Exception:
         log.warning('IGNORED', exc_info=sys.exc_info())
 
