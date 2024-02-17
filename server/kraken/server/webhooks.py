@@ -1,4 +1,4 @@
-# Copyright 2020 The Kraken Authors
+# Copyright 2020-2023 The Kraken Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@ import json
 import hmac
 import hashlib
 import logging
+import datetime
 
 from flask import Blueprint, request, abort
 import dateutil.parser
@@ -350,7 +351,7 @@ def _handle_radicle_webhook(project_id, payload, event, signature):
             log.warning('missing signature in request header')
             abort(400, "missing signature in request header")
         digest_parts = signature.split("=", 1)
-        my_digest = hmac.new(my_secret, payload, hashlib.sha1).hexdigest()
+        my_digest = hmac.new(my_secret, payload, hashlib.sha256).hexdigest()
 
         if len(digest_parts) < 2 or digest_parts[0] != "sha256" or not hmac.compare_digest(digest_parts[1], my_digest):
             log.warning('bad signature %s vs %s', signature, my_digest)
@@ -362,9 +363,10 @@ def _handle_radicle_webhook(project_id, payload, event, signature):
     if event == 'push':
         trigger_data = dict(trigger='radicle-' + event,
                             # ref=req['ref'], TODO
+                            ref="refs/heads/" + req['repository']['default_branch'], # TODO
                             before=req['before'],
                             after=req['after'],
-                            repo=req['repository']['clone_url'],
+                            repo=req['repository']['http_url'],
                             pusher=dict(#full_name=req['author'],
                                         username=req['author']['alias'],
                                         #email=req['author']

@@ -752,7 +752,7 @@ def test_handle_gitlab_webhook_mr_open():
 def test_handle_radicle_webhook_push():
     event = 'push'
     token = 'm10h7p3shc9a79gvynta'
-    signature = 'sha256=22318d6814f8ec5425c1e524d78fe59ede27b550'
+    signature = 'sha256=f43d428bd697df32de3d8c512330b0f2d1c57e4b0775ee10b65c09a3f5eb0063'
     with open('tests/radicle-push.json', 'rb') as f:
         payload = f.read()
 
@@ -801,7 +801,7 @@ def test_handle_radicle_webhook_push():
 def test_handle_radicle_webhook_patch():
     event = 'patch'
     secret = 'm10h7p3shc9a79gvynta'
-    signature = 'sha256=8bf8cee08d22aa1b5f9192ff9014cbd1c0a761b0'
+    signature = 'sha256=19eca79a91d257dc8502829793cf609316346921c4bdc0903b20afea98ec242a'
     with open('tests/radicle-patch.json', 'rb') as f:
         payload = f.read()
 

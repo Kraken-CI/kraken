@@ -28,6 +28,7 @@ export class ProjectSettingsComponent implements OnInit, OnDestroy {
             github_enabled: false,
             gitea_enabled: false,
             gitlab_enabled: false,
+            radicle_enabled: false,
         },
     }
     projectData = ''
@@ -75,6 +76,11 @@ export class ProjectSettingsComponent implements OnInit, OnDestroy {
             name: 'gitea',
             displayName: 'Gitea',
             logoUrl: '/assets/gitea-logo.svg',
+        },
+        {
+            name: 'radicle',
+            displayName: 'Radicle',
+            logoUrl: '/assets/radicle-logo.svg',
         },
     ]
 
