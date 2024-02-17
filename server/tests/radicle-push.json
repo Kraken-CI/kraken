@@ -12,6 +12,7 @@
       "message": "Adds description in Readme",
       "timestamp": "2023-09-30T18:20:43+03:00",
       "url": "rad:z3gqcJUoA1n9HaHKufZs5FCSGazv5/commits/4671d7bf0f0ccc651e096232ef8cc46ade041cfa",
+      "http_url": "https://app.radicle.xyz/seeds/127.0.0.1:8080/rad:z4YcZBHaffu4yFaTXpMzZPgv3XqTt/commits/42f8e30a020fe6c19fc522633c0fe6c1caea42aa",
       "author": {
         "name": "Me",
         "email": "me@mail.com"
@@ -30,6 +31,7 @@
     "private": false,
     "default_branch": "main",
     "url": "rad:z3gqcJUoA1n9HaHKufZs5FCSGazv5",
+    "http_url": "http://app.radicle.xyz/seeds/127.0.0.1:8080/rad:z4YcZBHaffu4yFaTXpMzZPgv3XqTt",
     "clone_url": "https://seed.radicle.xyz/z3gqcJUoA1n9HaHKufZs5FCSGazv5.git",
     "delegates": [
       "did:key:z6MkltRpzcq2ybm13yQpyre58JUeMvZY6toxoZVpLZ8YabRa",

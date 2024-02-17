@@ -50,6 +50,7 @@
     "private": false,
     "default_branch": "main",
     "url": "rad:z3gqcJUoA1n9HaHKufZs5FCSGazv5",
+    "http_url": "http://app.radicle.xyz/seeds/127.0.0.1:8080/rad:z4YcZBHaffu4yFaTXpMzZPgv3XqTt",
     "clone_url": "https://seed.radicle.xyz/z3gqcJUoA1n9HaHKufZs5FCSGazv5.git",
     "delegates": [
       "did:key:z6MkltRpzcq2ybm13yQpyre58JUeMvZY6toxoZVpLZ8YabRa",

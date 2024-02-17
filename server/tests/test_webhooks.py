@@ -752,7 +752,7 @@ def test_handle_gitlab_webhook_mr_open():
 def test_handle_radicle_webhook_push():
     event = 'push'
     token = 'm10h7p3shc9a79gvynta'
-    signature = 'sha256=f43d428bd697df32de3d8c512330b0f2d1c57e4b0775ee10b65c09a3f5eb0063'
+    signature = 'sha256=85d37e7888ceb48d4e782475858a742baf1cf2a835c3319be0b3b9577b39626b'
     with open('tests/radicle-push.json', 'rb') as f:
         payload = f.read()
 
@@ -783,15 +783,16 @@ def test_handle_radicle_webhook_push():
                                             'removed': [],
                              'timestamp': '2023-09-30T18:20:43+03:00',
                              'title': 'Updates Readme',
-                             'url': 'rad:z3gqcJUoA1n9HaHKufZs5FCSGazv5/commits/4671d7bf0f0ccc651e096232ef8cc46ade041cfa'}],
+                             'url': 'rad:z3gqcJUoA1n9HaHKufZs5FCSGazv5/commits/4671d7bf0f0ccc651e096232ef8cc46ade041cfa',
+                             'http_url': 'https://app.radicle.xyz/seeds/127.0.0.1:8080/rad:z4YcZBHaffu4yFaTXpMzZPgv3XqTt/commits/42f8e30a020fe6c19fc522633c0fe6c1caea42aa'}],
 
                 'pusher': {
                     #'email': '',
                     #'full_name': 'Administrator',
                     'username': 'my_alias'
                 },
-                #'ref': 'refs/heads/main',
-                'repo': 'https://seed.radicle.xyz/z3gqcJUoA1n9HaHKufZs5FCSGazv5.git',
+                'ref': 'refs/heads/main',
+                'repo': 'http://app.radicle.xyz/seeds/127.0.0.1:8080/rad:z4YcZBHaffu4yFaTXpMzZPgv3XqTt',
                 'trigger': 'radicle-push'}
 
         assert content == ''
@@ -801,7 +802,7 @@ def test_handle_radicle_webhook_push():
 def test_handle_radicle_webhook_patch():
     event = 'patch'
     secret = 'm10h7p3shc9a79gvynta'
-    signature = 'sha256=19eca79a91d257dc8502829793cf609316346921c4bdc0903b20afea98ec242a'
+    signature = 'sha256=719a4f0b75353472b2737bb1f6dea0c69c667f57f7379d87849109010361c1aa'
     with open('tests/radicle-patch.json', 'rb') as f:
         payload = f.read()
 
@@ -827,13 +828,14 @@ def test_handle_radicle_webhook_patch():
                 'pull_request': {'head': {'ref': 'bbb'},
                                  'base': {'ref': 'main', 'sha': ''},
                                  'user': {'login': 'my_alias',
-                                          'html_url': 'http://gitlab.example.com/root'},
+                                          #'html_url': 'http://gitlab.example.com/root'
+                                          },
                                  'html_url': 'rad:z3gqcJUoA1n9HaHKufZs5FCSGazv5/patches/41aafe22200464bf905b143d4233f7f1fa4a9210',  # TODO
                                  'number': '41aafe22200464bf905b143d4233f7f1fa4a9210',  # TODO
                                  'title': 'Add description in README',
                                  'updated_at': '2021-11-01T06:15:26+00:00',
                                  'commits': 1},
-                'repo': 'https://seed.radicle.xyz/z3gqcJUoA1n9HaHKufZs5FCSGazv5.git',
+                'repo': 'http://app.radicle.xyz/seeds/127.0.0.1:8080/rad:z4YcZBHaffu4yFaTXpMzZPgv3XqTt',
                 'sender': {#'email': '[REDACTED]',
                            #'fullname': 'Administrator',
                            'login': 'my_alias'},
