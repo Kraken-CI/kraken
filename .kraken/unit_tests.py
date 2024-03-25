@@ -40,14 +40,8 @@ def stage(ctx):
                 #"system": "krakenci/ubuntu:20.04",
                 #"agents_group": "docker",
                 #"executor": "docker",
-
-                #"system": "Canonical:0001-com-ubuntu-server-focal:20_04-lts:20.04.202109080",
-                #"agents_group": "azure-vm",
-
-                "system": "krakenci/bld-kraken-22.04:20231112",
-                "agents_group": "docker",
-                "executor": "docker",
-
+                "system": "Canonical:0001-com-ubuntu-server-focal:20_04-lts:20.04.202109080",
+                "agents_group": "azure-vm",
                 "config": "default"
             }]
         }, {
