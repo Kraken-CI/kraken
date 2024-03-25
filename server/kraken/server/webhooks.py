@@ -363,7 +363,7 @@ def _handle_radicle_webhook(project_id, payload, event, signature):
     if event == 'push':
         trigger_data = dict(trigger='radicle-' + event,
                             # ref=req['ref'], TODO
-                            ref="refs/heads/" + req['repository']['default_branch'],
+                            ref="refs/heads/" + req['branch'],
                             before=req['before'],
                             after=req['after'],
                             repo=req['repository']['http_url'],
@@ -394,6 +394,7 @@ def _handle_radicle_webhook(project_id, payload, event, signature):
                             pull_request=dict(#head=dict(ref=obj['source_branch']),
                                               #base=dict(ref=obj['target_branch'],
                                               #          sha=before),
+                                              base=dict(ref=req['repository']['default_branch']),  # TODO
                                               user=dict(login=patch['author']['alias']),
                                                         #html_url='%s/%s' % (base_url, req['user']['username'])),
                                               html_url=patch['url'],
