@@ -299,6 +299,9 @@ export class BranchResultsComponent implements OnInit, OnDestroy {
                     html = `<p>`
                     html += `<a href="${url}" target="blank" style="font-size: 1.5em; font-weight: bold;">${url}</a>`
 
+                    if (!rd.commits) {
+                        continue
+                    }
                     for (const c of commits.slice(0, 7)) {
                         html += '<div style="margin: 0 0 10px 12px;">'
                         html += `<b>${c.id.slice(0, 8)}</b>`
