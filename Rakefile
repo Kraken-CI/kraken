@@ -445,7 +445,7 @@ end
 
 task :publish_client => './venv/bin/python3' do
   Dir.chdir('client') do
-    sh "../venv/bin/poetry publish -u godfryd -p #{ENV['PYPI_PASSWORD']} --override-version #{kk_ver}"
+    sh "../venv/bin/poetry publish -u __token__ -p #{ENV['PYPI_CLIENT_TOKEN']} --override-version #{kk_ver}"
   end
 end
 
@@ -467,7 +467,7 @@ end
 task :publish_server => './venv/bin/python3' do
   Dir.chdir('server') do
     sh 'cp ../README.md .'
-    sh "../venv/bin/poetry publish -u godfryd -p #{ENV['PYPI_PASSWORD']} --override-version #{kk_ver}"
+    sh "../venv/bin/poetry publish -u __token__ -p #{ENV['PYPI_SERVER_TOKEN']} --override-version #{kk_ver}"
     sh 'rm README.md'
   end
 end

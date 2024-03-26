@@ -41,7 +41,8 @@ def stage(ctx):
                 "timeout": 300,
                 "env": {
                     "kk_ver": kk_ver,
-                    "PYPI_PASSWORD": "#{KK_SECRET_SIMPLE_pypi_password}"
+                    "PYPI_CLIENT_TOKEN": "#{secrets.pypi_client_token}",
+                    "PYPI_SERVER_TOKEN": "#{secrets.pypi_server_token}"
                 }
             }, {
                 "tool": "shell",
