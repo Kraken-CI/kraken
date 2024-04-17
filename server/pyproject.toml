@@ -39,7 +39,7 @@ apscheduler = "^3.8.0"
 tzlocal = "2.1"  # this is required by apscheduler that still relies on pytz; aps 4.x will have this fixed and then this line can be removed
 pytimeparse = "^1.1.8"
 python-dateutil = "^2.8.2"
-gunicorn = "^20.1.0"
+gunicorn = ">=20.1,<23.0"
 RestrictedPython = "5.0"
 alembic = "^1.7.3"
 # giturlparse = "^0.10.0"
