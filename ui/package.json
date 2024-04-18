@@ -28,7 +28,7 @@
     "chartjs-plugin-zoom": "^1.2.1",
     "codemirror": "^5.65.13",
     "hammerjs": "^2.0.8",
-    "humanize-duration": "^3.27.1",
+    "humanize-duration": "^3.31.0",
     "luxon": "^3.3.0",
     "marked": "^5.1.2",
     "ngx-cookie-service": "^16.0.0",
