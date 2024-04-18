@@ -31,7 +31,7 @@
     "humanize-duration": "^3.27.1",
     "luxon": "^3.3.0",
     "marked": "^5.1.2",
-    "ngx-cookie-service": "^16.0.0",
+    "ngx-cookie-service": "^16.1.0",
     "primeflex": "^3.2.1",
     "primeicons": "^6.0.1",
     "primeng": "^16.1.0",
