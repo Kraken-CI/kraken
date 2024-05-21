@@ -6,3 +6,4 @@ boto3==1.28.73
 awscli==1.29.73
 rsa>=4.7 # not directly required, pinned by Snyk to avoid a vulnerability
 poetry-arbitrary-version-plugin==0.9.2
+requests>=2.32.0 # not directly required, pinned by Snyk to avoid a vulnerability
