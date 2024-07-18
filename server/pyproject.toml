@@ -48,7 +48,7 @@ giturlparse2 = "^1.0.0"
 clickhouse-driver = "^0.2.5"
 minio = "^7.1.0"
 passlib = "^1.7.4"
-sentry-sdk = {extras = ["flask"], version = "^1.5.0"}
+sentry-sdk = {extras = ["flask"], version = ">=1.5,<3.0"}
 boto3 = "^1.18.52"
 jsonschema = "^4.5.0"
 rq = "^1.10.0"
