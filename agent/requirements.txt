@@ -3,7 +3,7 @@
 distro==1.7.0
 setuptools==49.6.0
 giturlparse2==1.0.0
-minio==7.0.0
+minio==7.2.11
 click==7.1.2
 urllib3==1.26.15
 chardet==5.2.0
